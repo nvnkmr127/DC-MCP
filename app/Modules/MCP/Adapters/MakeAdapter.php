@@ -644,6 +644,61 @@ class MakeAdapter extends BaseAdapter
     }
 
     /**
+     * Trigger a Make scenario but require CEO approval first.
+     * Creates a pending task suggestion of type 'automation' instead of firing directly.
+     * The CEO approves from the AI Suggestions page, which then calls triggerScenario().
+     *
+     * @param string $eventType
+     * @param array $data  payload to send when approved
+     * @param string $label human-readable label shown to CEO
+     * @param string|null $connectionId
+     */
+    public function queueTriggerForApproval(string $eventType, array $data, string $label, ?string $connectionId = null): void
+    {
+        $connection = $connectionId
+            ? McpConnection::find($connectionId)
+            : McpConnection::where('provider', 'make')->where('status', 'active')->first();
+
+        if (!$connection) {
+            return;
+        }
+
+        \App\Modules\TaskEngine\Models\TaskSuggestion::create([
+            'organization_id' => $connection->organization_id,
+            'title'           => "Make.com: {$label}",
+            'description'     => "Approve to trigger the Make.com scenario for event: {$eventType}.",
+            'role_required'   => 'ceo',
+            'priority'        => 'medium',
+            'suggested_by'    => 'make_automation',
+            'status'          => 'pending',
+            'meta'            => [
+                'automation'       => true,
+                'event_type'       => $eventType,
+                'payload'          => $data,
+                'connection_id'    => $connection->id,
+            ],
+        ]);
+    }
+
+    /**
+     * Fire a queued automation trigger after CEO approval.
+     * Called by TaskSuggestionService when approving an automation suggestion.
+     */
+    public function fireApprovedTrigger(\App\Modules\TaskEngine\Models\TaskSuggestion $suggestion): bool
+    {
+        $meta         = $suggestion->meta ?? [];
+        $eventType    = $meta['event_type']   ?? null;
+        $payload      = $meta['payload']      ?? [];
+        $connectionId = $meta['connection_id'] ?? null;
+
+        if (!$eventType) {
+            return false;
+        }
+
+        return $this->triggerScenario($eventType, $payload, $connectionId);
+    }
+
+    /**
      * Get a Guzzle client instance for webhook push.
      *
      * @return \GuzzleHttp\Client

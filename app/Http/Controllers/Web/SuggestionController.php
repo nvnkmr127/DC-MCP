@@ -101,6 +101,38 @@ class SuggestionController extends Controller
         return back()->with('success', 'Suggestion dismissed.');
     }
 
+    /**
+     * Create a task suggestion from a client email (Zoho Mail → Task flow).
+     * CEO hits "Create Task" on an email in the briefing.
+     */
+    public function fromEmail(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'subject'    => 'required|string|max:255',
+            'from'       => 'required|string|max:255',
+            'body'       => 'nullable|string|max:2000',
+            'client_id'  => 'nullable|uuid',
+            'project_id' => 'nullable|uuid',
+        ]);
+
+        $user = $request->user();
+
+        TaskSuggestion::create([
+            'organization_id' => $user->organization_id,
+            'title'           => "Follow up: {$validated['subject']}",
+            'description'     => "Client email from {$validated['from']}.\n\n" . ($validated['body'] ?? ''),
+            'client_id'       => $validated['client_id'] ?? null,
+            'project_id'      => $validated['project_id'] ?? null,
+            'role_required'   => 'project_manager',
+            'priority'        => 'high',
+            'suggested_by'    => 'zoho_mail',
+            'status'          => 'pending',
+            'meta'            => ['email_from' => $validated['from'], 'email_subject' => $validated['subject']],
+        ]);
+
+        return back()->with('success', 'Task suggestion created from email.');
+    }
+
     public function bulkApprove(Request $request): RedirectResponse
     {
         $user  = $request->user();

@@ -8,7 +8,7 @@ import {
     LayoutDashboard, FolderKanban, CheckSquare, Users, BarChart3,
     Settings, Bell, Search, ChevronLeft, ChevronRight,
     Briefcase, Calendar, Plug, LogOut, User, Sun, ChevronDown,
-    Command, Plus, Zap, HelpCircle, Sparkles,
+    Command, Plus, Zap, HelpCircle, Sparkles, PenTool, Globe,
 } from 'lucide-react';
 
 interface NavItem {
@@ -26,11 +26,13 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Tasks',          href: '/tasks',         icon: CheckSquare,     section: 'main' },
     { label: 'Calendar',       href: '/calendar',      icon: Calendar,        section: 'main' },
     { label: 'Clients',        href: '/clients',       icon: Briefcase,       section: 'main' },
+    { label: 'Content',        href: '/content',       icon: PenTool,         section: 'main' },
     { label: 'Daily Briefing', href: '/briefings',    icon: Sun,      section: 'insights' },
     { label: 'AI Suggestions', href: '/suggestions',  icon: Sparkles, section: 'insights', roles: ['ceo', 'project_manager'] },
     { label: 'Reports',        href: '/reports',      icon: BarChart3, section: 'insights' },
     { label: 'Team',           href: '/settings/team', icon: Users,           section: 'manage', roles: ['ceo', 'project_manager'] },
-    { label: 'MCP Connect',    href: '/settings/mcp',  icon: Plug,            section: 'manage', roles: ['ceo', 'project_manager'] },
+    { label: 'MCP Connect',    href: '/settings/mcp',         icon: Plug,   section: 'manage', roles: ['ceo', 'project_manager'] },
+    { label: 'Client Portal',  href: '/settings/client-portal', icon: Globe, section: 'manage', roles: ['ceo'] },
     { label: 'Settings',       href: '/settings',      icon: Settings,        section: 'manage' },
 ];
 

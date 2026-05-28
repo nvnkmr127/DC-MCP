@@ -13,6 +13,9 @@ use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\McpController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\SuggestionController;
+use App\Http\Controllers\Web\ContentCalendarController;
+use App\Http\Controllers\Web\ClientPortalController;
+use App\Modules\ClientPortal\Http\Controllers\PortalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +24,15 @@ use App\Http\Controllers\Web\SuggestionController;
 | Route names are prefixed with "web." to avoid conflicts with API routes
 | that share the same resource names.
 */
+
+// ─── Client Portal (separate auth — magic link based) ───────────────────────
+Route::prefix('portal')->name('portal.')->group(function () {
+    Route::get('/login',           [PortalController::class, 'showLogin'])->name('login');
+    Route::get('/auth/{token}',    [PortalController::class, 'handleMagicLink'])->name('magic');
+    Route::post('/logout',         [PortalController::class, 'logout'])->name('logout');
+    Route::get('/dashboard',       [PortalController::class, 'dashboard'])->name('dashboard');
+    Route::post('/requests',       [PortalController::class, 'submitRequest'])->name('requests.store');
+});
 
 // Auth (guest only)
 Route::middleware('guest')->group(function () {
@@ -83,11 +95,30 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/clients/{client}',          [ClientController::class, 'update'])->name('web.clients.update');
     Route::delete('/clients/{client}',         [ClientController::class, 'destroy'])->name('web.clients.destroy');
 
+    // Content Calendar
+    Route::get('/content',                                    [ContentCalendarController::class, 'index'])->name('web.content.index');
+    Route::post('/content',                                   [ContentCalendarController::class, 'store'])->name('web.content.store');
+    Route::patch('/content/{contentItem}',                    [ContentCalendarController::class, 'update'])->name('web.content.update');
+    Route::delete('/content/{contentItem}',                   [ContentCalendarController::class, 'destroy'])->name('web.content.destroy');
+    Route::post('/content/{contentItem}/convert-to-task',     [ContentCalendarController::class, 'convertToTask'])->name('web.content.convert');
+
+    // Client Portal Management (CEO only)
+    Route::get('/settings/client-portal',                                     [ClientPortalController::class, 'manage'])->name('web.settings.portal');
+    Route::get('/settings/client-portal/{client}',                            [ClientPortalController::class, 'showClient'])->name('web.settings.portal.client');
+    Route::post('/settings/client-portal/{client}/invite',                    [ClientPortalController::class, 'inviteUser'])->name('web.settings.portal.invite');
+    Route::post('/settings/client-portal/users/{portalUser}/resend',          [ClientPortalController::class, 'resendInvite'])->name('web.settings.portal.resend');
+    Route::post('/settings/client-portal/users/{portalUser}/toggle',          [ClientPortalController::class, 'toggleUser'])->name('web.settings.portal.toggle');
+    Route::post('/settings/client-portal/share',                              [ClientPortalController::class, 'share'])->name('web.settings.portal.share');
+    Route::delete('/settings/client-portal/shares/{portalShare}',             [ClientPortalController::class, 'revokeShare'])->name('web.settings.portal.revoke');
+    Route::post('/settings/client-portal/requests/{portalRequest}/to-task',   [ClientPortalController::class, 'convertRequestToTask'])->name('web.settings.portal.request.task');
+    Route::post('/settings/client-portal/requests/{portalRequest}/close',     [ClientPortalController::class, 'closeRequest'])->name('web.settings.portal.request.close');
+
     // AI Task Suggestions (Founder approval flow)
     Route::get('/suggestions',                            [SuggestionController::class, 'index'])->name('web.suggestions.index');
     Route::post('/suggestions/{suggestion}/approve',      [SuggestionController::class, 'approve'])->name('web.suggestions.approve');
     Route::post('/suggestions/{suggestion}/reject',       [SuggestionController::class, 'reject'])->name('web.suggestions.reject');
     Route::post('/suggestions/bulk-approve',              [SuggestionController::class, 'bulkApprove'])->name('web.suggestions.bulk-approve');
+    Route::post('/suggestions/from-email',                [SuggestionController::class, 'fromEmail'])->name('web.suggestions.from-email');
 
     // Daily Briefings
     Route::get('/briefings',                   [BriefingController::class, 'index'])->name('web.briefings.index');

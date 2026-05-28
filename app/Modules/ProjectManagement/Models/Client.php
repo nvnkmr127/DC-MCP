@@ -69,4 +69,14 @@ class Client extends BaseModel
     {
         return $this->hasMany(Project::class);
     }
+
+    public function portalUsers(): HasMany
+    {
+        return $this->hasMany(\App\Modules\ClientPortal\Models\PortalUser::class, 'client_id');
+    }
+
+    public function contentItems(): HasMany
+    {
+        return $this->hasMany(\App\Modules\ContentCalendar\Models\ContentItem::class, 'client_id');
+    }
 }
