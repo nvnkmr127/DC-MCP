@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Modules\ProjectManagement\Models;
+
+use App\Shared\Models\BaseModel;
+use App\Shared\Traits\HasOrganization;
+use App\Shared\Traits\HasClientScope;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Client extends BaseModel
+{
+    use HasOrganization, HasClientScope, SoftDeletes;
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'clients';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'organization_id',
+        'name',
+        'email',
+        'phone',
+        'company',
+        'website',
+        'industry',
+        'tier',
+        'status',
+        'notes',
+        'metadata',
+        'assigned_to',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'metadata' => 'array',
+        'deleted_at' => 'datetime',
+    ];
+
+    /**
+     * Get the user assigned to this client.
+     *
+     * @return BelongsTo
+     */
+    public function manager(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Auth\Models\User::class, 'assigned_to');
+    }
+
+    /**
+     * Get the projects for the client.
+     *
+     * @return HasMany
+     */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
+}

@@ -1,0 +1,148 @@
+<?php
+
+namespace App\Modules\Auth\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
+
+    /**
+     * The "type" of the primary key ID.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'organization_id',
+        'name',
+        'email',
+        'password',
+        'avatar_url',
+        'phone',
+        'timezone',
+        'is_active',
+        'preferences',
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'id' => 'string',
+        'organization_id' => 'string',
+        'is_active' => 'boolean',
+        'preferences' => 'array',
+        'email_verified_at' => 'datetime',
+        'last_active_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    /**
+     * The boot function to generate UUID v4 for User.
+     */
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->id)) {
+                $model->id = (string) Str::uuid();
+            }
+        });
+    }
+
+    /**
+     * Get the organization that owns this user.
+     */
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * Get the roles assigned to this user.
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id')
+            ->withPivot('assigned_by', 'assigned_at');
+    }
+
+    /**
+     * Check if the user has any of the specified roles.
+     *
+     * @param array|string $roles
+     * @return bool
+     */
+    public function hasRoles(array|string $roles): bool
+    {
+        if (is_string($roles)) {
+            return $this->roles->contains('slug', $roles);
+        }
+
+        foreach ($roles as $role) {
+            if ($this->roles->contains('slug', $role)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the user has a specific permission on a resource.
+     *
+     * @param string $resource
+     * @param string $action
+     * @return bool
+     */
+    public function hasPermission(string $resource, string $action): bool
+    {
+        // CEO has full access to everything in their organization
+        if ($this->hasRoles('ceo')) {
+            return true;
+        }
+
+        foreach ($this->roles as $role) {
+            if ($role->hasPermission($resource, $action)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}

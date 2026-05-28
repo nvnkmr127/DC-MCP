@@ -1,0 +1,114 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+@source '../**/*.ts';
+@source '../**/*.tsx';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Brand palette */
+    --color-brand-50:  #f0f4ff;
+    --color-brand-100: #e0e9ff;
+    --color-brand-200: #c7d7fe;
+    --color-brand-300: #a5b9fd;
+    --color-brand-400: #8196fb;
+    --color-brand-500: #6171f6;
+    --color-brand-600: #4f56ea;
+    --color-brand-700: #4144d4;
+    --color-brand-800: #3538aa;
+    --color-brand-900: #2f3187;
+
+    /* Sidebar dark */
+    --color-sidebar-bg:      #1a1d23;
+    --color-sidebar-hover:   #252930;
+    --color-sidebar-active:  #2d3139;
+    --color-sidebar-border:  #2a2e38;
+    --color-sidebar-text:    #9ba3b2;
+    --color-sidebar-active-text: #ffffff;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ─── Sidebar dark scrollbar ─────────────────────────────── */
+.sidebar-scroll::-webkit-scrollbar-thumb { background: #3a3f4a; }
+
+/* ─── Prose styles (briefings) ───────────────────────────── */
+.prose { max-width: none; }
+.prose p { margin-bottom: 0.75rem; }
+.prose h1, .prose h2, .prose h3 { font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+.prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+.prose ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+.prose li { margin-bottom: 0.25rem; }
+.prose strong { font-weight: 600; }
+.prose a { color: #4f56ea; text-decoration: underline; }
+
+/* ─── Focus ring ─────────────────────────────────────────── */
+.focus-ring {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+.focus-ring:focus-visible {
+    outline-color: #4f56ea;
+    outline-offset: 2px;
+}
+
+/* ─── Enterprise card ────────────────────────────────────── */
+.card {
+    background: #ffffff;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,.04), 0 1px 2px -1px rgba(0,0,0,.04);
+}
+.card:hover {
+    box-shadow: 0 4px 12px 0 rgba(0,0,0,.06), 0 1px 3px 0 rgba(0,0,0,.04);
+}
+
+/* ─── Badge pulse ────────────────────────────────────────── */
+@keyframes badge-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .6; }
+}
+.badge-pulse { animation: badge-pulse 2s ease-in-out infinite; }
+
+/* ─── Skeleton shimmer ───────────────────────────────────── */
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+}
+.skeleton {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+}
+
+/* ─── Tooltip ────────────────────────────────────────────── */
+[data-tooltip] { position: relative; }
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 6px);
+    transform: translateX(-50%);
+    background: #1a1d23;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .15s;
+    z-index: 50;
+}
+[data-tooltip]:hover::after { opacity: 1; }
