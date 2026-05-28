@@ -68,6 +68,12 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Dashboard Builder (DataViz)
+    Route::get('/dashboard-builder', fn() => \Inertia\Inertia::render('DataViz/Index'))->name('web.dashboard-builder');
+
+    // Help
+    Route::get('/help', fn() => \Inertia\Inertia::render('Help/Index'))->name('web.help');
+
     // Projects
     Route::get('/projects',                    [ProjectController::class, 'index'])->name('web.projects.index');
     Route::get('/projects/create',             [ProjectController::class, 'create'])->name('web.projects.create');
