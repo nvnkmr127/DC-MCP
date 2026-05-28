@@ -4,7 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import {
     Plus, X, ChevronLeft, ChevronRight, TrendingUp, DollarSign,
-    PieChart, ArrowDownRight,
+    PieChart, ArrowDownRight, AlertTriangle,
 } from 'lucide-react';
 
 // ── Indian Rupee formatter ──────────────────────────────────────────────────
@@ -241,6 +241,21 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
                         </button>
                     </div>
                 </div>
+
+                {/* ── Burn alerts ─────────────────────────────────────────── */}
+                {budgets.filter(b => b.utilization > 90).length > 0 && (
+                    <div className="space-y-1.5">
+                        {budgets.filter(b => b.utilization > 90).map(b => (
+                            <div key={b.id} className="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-xl px-4 py-2.5">
+                                <AlertTriangle size={14} className="text-rose-500 shrink-0" />
+                                <p className="text-sm text-rose-700 font-medium">
+                                    Budget alert: <strong>{b.client?.name ?? 'Unknown'}</strong> — {CHANNEL_CONFIG[b.channel]?.label ?? b.channel} is{' '}
+                                    <strong>{b.utilization}%</strong> spent ({fmt(b.spent_amount)} / {fmt(b.allocated_budget)})
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                )}
 
                 {/* ── Stats ────────────────────────────────────────────────── */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

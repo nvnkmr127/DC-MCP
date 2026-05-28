@@ -6,14 +6,27 @@ import type { Task, Comment, Attachment, TimeEntry } from '@/types';
 import {
     MessageSquare, Paperclip, Clock, Send,
     Upload, Play, Square, Trash2, Edit, ArrowLeft,
+    GitFork, AlertCircle, X, Search,
 } from 'lucide-react';
 
-interface Props {
-    task: Task & { comments: Comment[]; attachments: Attachment[]; time_entries: TimeEntry[] };
+interface TaskDep {
+    id: string; title: string; status: string; project_id: string;
+    project?: { name: string } | null;
 }
 
-export default function TaskShow({ task }: Props) {
-    const [activeTab, setActiveTab] = useState<'comments' | 'attachments' | 'time'>('comments');
+interface Props {
+    task: Task & {
+        comments: Comment[];
+        attachments: Attachment[];
+        time_entries: TimeEntry[];
+        dependencies?: TaskDep[];
+    };
+    projectTasks?: TaskDep[];
+}
+
+export default function TaskShow({ task, projectTasks = [] }: Props) {
+    const [activeTab, setActiveTab] = useState<'comments' | 'attachments' | 'time' | 'dependencies'>('comments');
+    const [depSearch, setDepSearch] = useState('');
     const [timerRunning, setTimerRunning] = useState(false);
     const [timerSeconds, setTimerSeconds] = useState(0);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -79,12 +92,37 @@ export default function TaskShow({ task }: Props) {
     }
 
     const totalLogged = task.time_entries.reduce((s, e) => s + e.hours, 0);
+    const dependencies = task.dependencies ?? [];
+    const blockers = dependencies.filter(d => d.status !== 'done' && d.status !== 'cancelled');
+    const isBlocked = blockers.length > 0;
+
+    const availableDeps = projectTasks.filter(t =>
+        t.id !== task.id &&
+        !dependencies.some(d => d.id === t.id) &&
+        t.title.toLowerCase().includes(depSearch.toLowerCase())
+    );
 
     return (
         <AppLayout>
             <Head title={task.title} />
 
             <div className="max-w-5xl mx-auto">
+                {/* Blocked banner */}
+                {isBlocked && (
+                    <div className="mb-4 flex items-center gap-2.5 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3">
+                        <AlertCircle size={16} className="text-rose-500 shrink-0" />
+                        <p className="text-sm text-rose-700 font-medium flex-1">
+                            This task is blocked by {blockers.length} unfinished {blockers.length === 1 ? 'dependency' : 'dependencies'}:{' '}
+                            {blockers.map((b, i) => (
+                                <span key={b.id}>
+                                    <Link href={`/tasks/${b.id}`} className="underline hover:text-rose-900">{b.title}</Link>
+                                    {i < blockers.length - 1 ? ', ' : ''}
+                                </span>
+                            ))}
+                        </p>
+                    </div>
+                )}
+
                 {/* Breadcrumb + actions */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -142,6 +180,7 @@ export default function TaskShow({ task }: Props) {
                                     { key: 'comments', label: 'Comments', icon: MessageSquare, count: task.comments.length },
                                     { key: 'attachments', label: 'Files', icon: Paperclip, count: task.attachments.length },
                                     { key: 'time', label: 'Time', icon: Clock, count: null },
+                                    { key: 'dependencies', label: 'Dependencies', icon: GitFork, count: dependencies.length || null },
                                 ].map(({ key, label, icon: Icon, count }) => (
                                     <button
                                         key={key}
@@ -326,6 +365,66 @@ export default function TaskShow({ task }: Props) {
                                                 </div>
                                             ))}
                                         </div>
+                                    </div>
+                                )}
+
+                                {activeTab === 'dependencies' && (
+                                    <div className="space-y-4">
+                                        {/* Current dependencies */}
+                                        {dependencies.length === 0 ? (
+                                            <p className="text-sm text-gray-400 text-center py-4">No dependencies. This task can start immediately.</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Blocked by</p>
+                                                {dependencies.map(dep => (
+                                                    <div key={dep.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg group">
+                                                        <span className={cn('w-2 h-2 rounded-full shrink-0',
+                                                            dep.status === 'done' ? 'bg-emerald-400' : dep.status === 'in_progress' ? 'bg-blue-400' : 'bg-rose-400'
+                                                        )} />
+                                                        <div className="flex-1 min-w-0">
+                                                            <Link href={`/tasks/${dep.id}`} className="text-sm font-medium text-gray-800 hover:text-indigo-600 truncate block">
+                                                                {dep.title}
+                                                            </Link>
+                                                            <p className="text-xs text-gray-400 capitalize">{dep.status.replace('_', ' ')}{dep.project ? ` · ${dep.project.name}` : ''}</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => { if (confirm('Remove this dependency?')) router.delete(`/tasks/${task.id}/dependencies/${dep.id}`, { preserveScroll: true }); }}
+                                                            className="p-1.5 text-gray-300 hover:text-rose-500 transition-colors rounded opacity-0 group-hover:opacity-100 shrink-0"
+                                                        >
+                                                            <X size={13} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Add dependency */}
+                                        {projectTasks.length > 0 && (
+                                            <div>
+                                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Add dependency</p>
+                                                <div className="relative mb-2">
+                                                    <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                                    <input
+                                                        value={depSearch}
+                                                        onChange={e => setDepSearch(e.target.value)}
+                                                        placeholder="Search tasks in project…"
+                                                        className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1 max-h-48 overflow-y-auto">
+                                                    {availableDeps.slice(0, 10).map(t => (
+                                                        <button key={t.id} onClick={() => router.post(`/tasks/${task.id}/dependencies`, { depends_on_task_id: t.id }, { preserveScroll: true })}
+                                                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 text-left group transition-colors">
+                                                            <span className="text-sm text-gray-700 flex-1 truncate">{t.title}</span>
+                                                            <span className="text-xs text-gray-400 capitalize shrink-0">{t.status.replace('_', ' ')}</span>
+                                                        </button>
+                                                    ))}
+                                                    {availableDeps.length === 0 && (
+                                                        <p className="text-xs text-gray-400 text-center py-3">No matching tasks</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

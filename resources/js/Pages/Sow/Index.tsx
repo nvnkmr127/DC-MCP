@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Plus, X, FileText, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X, FileText, Trash2, ChevronDown, ChevronUp, Upload, CheckCircle2, RotateCcw, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+interface DeliverableSubmission {
+    id: string; status: 'submitted' | 'approved' | 'revision_requested';
+    file_url: string | null; external_link: string | null;
+    notes: string | null; reviewer_notes: string | null;
+    revision_number: number; reviewed_at: string | null;
+    submitter: { id: string; name: string } | null;
+}
 
 interface Deliverable {
     id: string; title: string; service_type: string; frequency: string;
     quantity_per_period: number; notes: string | null;
+    latest_submission: DeliverableSubmission | null;
 }
 interface Sow {
     id: string; title: string; description: string | null; status: string;
@@ -17,7 +26,58 @@ interface Sow {
 }
 interface Client { id: string; name: string; company: string; }
 interface Retainer { id: string; name: string; client_id: string; }
-interface Props { sows: Sow[]; clients: Client[]; retainers: Retainer[]; }
+interface Props { sows: Sow[]; clients: Client[]; retainers: Retainer[]; canReview?: boolean; }
+
+const SUBMISSION_CONFIG: Record<string, { label: string; badge: string; icon: React.ReactNode }> = {
+    submitted:          { label: 'Submitted',         badge: 'bg-blue-100 text-blue-700',   icon: <Clock className="w-3 h-3" /> },
+    approved:           { label: 'Approved',          badge: 'bg-emerald-100 text-emerald-700', icon: <CheckCircle2 className="w-3 h-3" /> },
+    revision_requested: { label: 'Revision Needed',   badge: 'bg-amber-100 text-amber-700', icon: <RotateCcw className="w-3 h-3" /> },
+};
+
+function SubmitDeliverableModal({ deliverable, onClose }: { deliverable: Deliverable; onClose: () => void }) {
+    const form = useForm({ file_url: '', external_link: '', notes: '' });
+    return (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-[15px] font-bold text-gray-900">Submit Deliverable</h2>
+                    <button onClick={onClose}><X className="w-4 h-4 text-gray-400" /></button>
+                </div>
+                <p className="text-sm text-gray-600">{deliverable.title}</p>
+                <form onSubmit={e => {
+                    e.preventDefault();
+                    form.post(`/sow/deliverables/${deliverable.id}/submit`, { onSuccess: onClose });
+                }} className="space-y-3">
+                    <div>
+                        <label className="text-xs text-gray-500 font-medium">File URL</label>
+                        <input type="url" value={form.data.file_url} onChange={e => form.setData('file_url', e.target.value)}
+                            placeholder="https://drive.google.com/..."
+                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                        <label className="text-xs text-gray-500 font-medium">External Link</label>
+                        <input type="url" value={form.data.external_link} onChange={e => form.setData('external_link', e.target.value)}
+                            placeholder="Loom / Notion / Figma link…"
+                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div>
+                        <label className="text-xs text-gray-500 font-medium">Notes</label>
+                        <textarea value={form.data.notes} onChange={e => form.setData('notes', e.target.value)} rows={3}
+                            placeholder="Context, instructions for reviewer…"
+                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
+                        <button type="submit" disabled={form.processing}
+                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                            {form.processing ? 'Submitting…' : 'Submit'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
 
 const STATUS_STYLES: Record<string, string> = {
     draft:   'bg-gray-100 text-gray-600',
@@ -43,8 +103,10 @@ const SERVICE_COLORS: Record<string, string> = {
 
 type DeliverableForm = { title: string; service_type: string; frequency: string; quantity_per_period: string; notes: string };
 
-function SowCard({ sow }: { sow: Sow }) {
+function SowCard({ sow, canReview }: { sow: Sow; canReview?: boolean }) {
     const [expanded, setExpanded] = useState(false);
+    const [submitting, setSubmitting] = useState<Deliverable | null>(null);
+    const [revNotes, setRevNotes] = useState<Record<string, string>>({});
 
     return (
         <div className="bg-white rounded-xl border border-gray-200">
@@ -81,25 +143,80 @@ function SowCard({ sow }: { sow: Sow }) {
             </div>
 
             {expanded && sow.deliverables.length > 0 && (
-                <div className="border-t border-gray-100 px-5 py-3">
-                    <div className="space-y-2">
-                        {sow.deliverables.map(d => (
-                            <div key={d.id} className="flex items-center gap-3 text-sm">
-                                <span className={cn('px-2 py-0.5 rounded text-xs font-medium', SERVICE_COLORS[d.service_type] ?? SERVICE_COLORS.other)}>
-                                    {SERVICE_LABELS[d.service_type] ?? d.service_type}
-                                </span>
-                                <span className="text-gray-700 flex-1">{d.title}</span>
-                                <span className="text-xs text-gray-400 capitalize">{d.frequency.replace('_', ' ')} × {d.quantity_per_period}</span>
+                <div className="border-t border-gray-100 px-5 py-3 space-y-3">
+                    {sow.deliverables.map(d => {
+                        const sub = d.latest_submission;
+                        const subCfg = sub ? SUBMISSION_CONFIG[sub.status] : null;
+                        return (
+                            <div key={d.id} className="space-y-2">
+                                <div className="flex items-center gap-3 text-sm">
+                                    <span className={cn('px-2 py-0.5 rounded text-xs font-medium shrink-0', SERVICE_COLORS[d.service_type] ?? SERVICE_COLORS.other)}>
+                                        {SERVICE_LABELS[d.service_type] ?? d.service_type}
+                                    </span>
+                                    <span className="text-gray-700 flex-1">{d.title}</span>
+                                    <span className="text-xs text-gray-400 capitalize shrink-0">{d.frequency.replace('_', ' ')} × {d.quantity_per_period}</span>
+                                    {subCfg && (
+                                        <span className={cn('flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium shrink-0', subCfg.badge)}>
+                                            {subCfg.icon} {subCfg.label}
+                                        </span>
+                                    )}
+                                    <button onClick={() => setSubmitting(d)}
+                                        className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium shrink-0 px-2 py-1 rounded hover:bg-indigo-50">
+                                        <Upload className="w-3 h-3" />
+                                        {sub ? 'Re-submit' : 'Submit'}
+                                    </button>
+                                </div>
+
+                                {/* Reviewer actions — only for CEO/PM when submission is pending */}
+                                {canReview && sub && sub.status === 'submitted' && (
+                                    <div className="ml-4 p-3 bg-amber-50 border border-amber-100 rounded-lg space-y-2">
+                                        <p className="text-xs font-medium text-amber-700">Submitted by {sub.submitter?.name} · Rev #{sub.revision_number}</p>
+                                        {sub.notes && <p className="text-xs text-gray-600">{sub.notes}</p>}
+                                        <input type="text" placeholder="Reviewer notes (optional)…"
+                                            value={revNotes[sub.id] ?? ''}
+                                            onChange={e => setRevNotes(prev => ({ ...prev, [sub.id]: e.target.value }))}
+                                            className="w-full border border-amber-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-amber-400" />
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => router.post(`/deliverables/${sub.id}/approve`, { reviewer_notes: revNotes[sub.id] ?? '' })}
+                                                className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700">
+                                                <CheckCircle2 className="w-3 h-3" /> Approve
+                                            </button>
+                                            <button
+                                                onClick={() => router.post(`/deliverables/${sub.id}/revision`, { reviewer_notes: revNotes[sub.id] ?? '' })}
+                                                className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 text-white text-xs font-medium rounded-lg hover:bg-amber-600">
+                                                <RotateCcw className="w-3 h-3" /> Request Revision
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Approved banner */}
+                                {sub && sub.status === 'approved' && sub.reviewer_notes && (
+                                    <div className="ml-4 p-2.5 bg-emerald-50 border border-emerald-100 rounded-lg">
+                                        <p className="text-xs text-emerald-700">{sub.reviewer_notes}</p>
+                                    </div>
+                                )}
+
+                                {/* Revision notes */}
+                                {sub && sub.status === 'revision_requested' && sub.reviewer_notes && (
+                                    <div className="ml-4 p-2.5 bg-amber-50 border border-amber-100 rounded-lg">
+                                        <p className="text-xs font-medium text-amber-700 mb-0.5">Revision requested:</p>
+                                        <p className="text-xs text-amber-800">{sub.reviewer_notes}</p>
+                                    </div>
+                                )}
                             </div>
-                        ))}
-                    </div>
+                        );
+                    })}
                 </div>
             )}
+
+            {submitting && <SubmitDeliverableModal deliverable={submitting} onClose={() => setSubmitting(null)} />}
         </div>
     );
 }
 
-export default function SowIndex({ sows, clients, retainers }: Props) {
+export default function SowIndex({ sows, clients, retainers, canReview }: Props) {
     const [showCreate, setShowCreate] = useState(false);
     const [deliverables, setDeliverables] = useState<DeliverableForm[]>([
         { title: '', service_type: 'seo', frequency: 'monthly', quantity_per_period: '1', notes: '' }
@@ -153,7 +270,7 @@ export default function SowIndex({ sows, clients, retainers }: Props) {
                             <p className="text-gray-500 text-sm">No SOWs yet. Create your first Statement of Work.</p>
                         </div>
                     )}
-                    {sows.map(sow => <SowCard key={sow.id} sow={sow} />)}
+                    {sows.map(sow => <SowCard key={sow.id} sow={sow} canReview={canReview} />)}
                 </div>
             </div>
 

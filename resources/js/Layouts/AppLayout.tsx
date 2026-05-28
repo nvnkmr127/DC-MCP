@@ -10,7 +10,8 @@ import {
     Briefcase, Calendar, Plug, LogOut, User, Sun, ChevronDown,
     Command, Plus, Zap, HelpCircle, Sparkles, PenTool, Globe,
     TrendingUp, GitBranch, ClipboardList, Activity, FileText,
-    DollarSign, CreditCard, UserCheck, Target,
+    DollarSign, CreditCard, UserCheck, Target, Flag, Clock,
+    Users2, RotateCcw,
 } from 'lucide-react';
 
 interface NavItem {
@@ -37,7 +38,11 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'P&L',            href: '/financials',    icon: DollarSign,   section: 'main', roles: ['ceo'] },
     { label: 'Payroll',        href: '/payroll',       icon: CreditCard,   section: 'main', roles: ['ceo'] },
     { label: 'Onboarding',     href: '/onboarding',    icon: UserCheck,    section: 'main', roles: ['ceo', 'project_manager'] },
-    { label: 'Ad Budgets',     href: '/campaign-budgets', icon: Target,   section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Ad Budgets',     href: '/campaign-budgets', icon: Target,      section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Goals',          href: '/goals',            icon: Flag,        section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Timesheets',     href: '/timesheets',        icon: Clock,       section: 'main' },
+    { label: '1:1 Notes',      href: '/one-on-one',        icon: Users2,      section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Recurring',      href: '/recurring-tasks',   icon: RotateCcw,   section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Daily Briefing', href: '/briefings',    icon: Sun,      section: 'insights' },
     { label: 'AI Suggestions', href: '/suggestions',  icon: Sparkles, section: 'insights', roles: ['ceo', 'project_manager'] },
     { label: 'Reports',        href: '/reports',      icon: BarChart3, section: 'insights' },

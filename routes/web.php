@@ -27,6 +27,12 @@ use App\Http\Controllers\Web\PayrollController;
 use App\Http\Controllers\Web\OnboardingController;
 use App\Http\Controllers\Web\CampaignBudgetController;
 use App\Http\Controllers\Web\VendorController;
+use App\Http\Controllers\Web\TimesheetController;
+use App\Http\Controllers\Web\ClientCommunicationController;
+use App\Http\Controllers\Web\GoalController;
+use App\Http\Controllers\Web\DeliverableController;
+use App\Http\Controllers\Web\OneOnOneController;
+use App\Http\Controllers\Web\RecurringTaskController;
 use App\Modules\ClientPortal\Http\Controllers\PortalController;
 
 /*
@@ -221,6 +227,47 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/vendors',                                  [VendorController::class, 'store'])->name('web.vendors.store');
     Route::patch('/vendors/{vendorContract}',                [VendorController::class, 'update'])->name('web.vendors.update');
     Route::delete('/vendors/{vendorContract}',               [VendorController::class, 'destroy'])->name('web.vendors.destroy');
+
+    // Timesheets
+    Route::get('/timesheets',                                [TimesheetController::class, 'index'])->name('web.timesheets.index');
+    Route::post('/timesheets/timer/start',                   [TimesheetController::class, 'startTimer'])->name('web.timesheets.timer.start');
+    Route::post('/timesheets/timer/{timeEntry}/stop',        [TimesheetController::class, 'stopTimer'])->name('web.timesheets.timer.stop');
+
+    // Client Communications
+    Route::post('/clients/{client}/communications',          [ClientCommunicationController::class, 'store'])->name('web.client-communications.store');
+    Route::patch('/client-communications/{communication}',   [ClientCommunicationController::class, 'update'])->name('web.client-communications.update');
+    Route::delete('/client-communications/{communication}',  [ClientCommunicationController::class, 'destroy'])->name('web.client-communications.destroy');
+
+    // Goals / OKRs
+    Route::get('/goals',                                     [GoalController::class, 'index'])->name('web.goals.index');
+    Route::post('/goals',                                    [GoalController::class, 'store'])->name('web.goals.store');
+    Route::patch('/goals/{goal}',                            [GoalController::class, 'update'])->name('web.goals.update');
+    Route::delete('/goals/{goal}',                           [GoalController::class, 'destroy'])->name('web.goals.destroy');
+    Route::patch('/goals/{goal}/kr',                         [GoalController::class, 'updateKeyResult'])->name('web.goals.kr');
+
+    // Deliverable Submissions
+    Route::post('/sow/deliverables/{sowDeliverable}/submit',        [DeliverableController::class, 'submit'])->name('web.deliverables.submit');
+    Route::post('/deliverables/{deliverableSubmission}/approve',    [DeliverableController::class, 'approve'])->name('web.deliverables.approve');
+    Route::post('/deliverables/{deliverableSubmission}/revision',   [DeliverableController::class, 'requestRevision'])->name('web.deliverables.revision');
+
+    // Task Dependencies
+    Route::post('/tasks/{task}/dependencies',                [TaskController::class, 'addDependency'])->name('web.tasks.dependencies.add');
+    Route::delete('/tasks/{task}/dependencies/{dependency}', [TaskController::class, 'removeDependency'])->name('web.tasks.dependencies.remove');
+
+    // 1:1 Notes
+    Route::get('/one-on-one',                                [OneOnOneController::class, 'index'])->name('web.one-on-one.index');
+    Route::post('/one-on-one',                               [OneOnOneController::class, 'store'])->name('web.one-on-one.store');
+    Route::patch('/one-on-one/{oneOnOneNote}',               [OneOnOneController::class, 'update'])->name('web.one-on-one.update');
+    Route::post('/one-on-one/{oneOnOneNote}/action-item',    [OneOnOneController::class, 'toggleActionItem'])->name('web.one-on-one.action-item');
+
+    // Upsell Flag
+    Route::patch('/clients/{client}/upsell',                 [ClientController::class, 'flagUpsell'])->name('web.clients.upsell');
+
+    // Recurring Tasks
+    Route::get('/recurring-tasks',                           [RecurringTaskController::class, 'index'])->name('web.recurring-tasks.index');
+    Route::post('/recurring-tasks',                          [RecurringTaskController::class, 'store'])->name('web.recurring-tasks.store');
+    Route::patch('/recurring-tasks/{recurringTaskRule}',     [RecurringTaskController::class, 'update'])->name('web.recurring-tasks.update');
+    Route::delete('/recurring-tasks/{recurringTaskRule}',    [RecurringTaskController::class, 'destroy'])->name('web.recurring-tasks.destroy');
 });
 
 // Client Portal (client-facing, no main auth required)

@@ -13,6 +13,7 @@ use App\Modules\ProjectManagement\Models\Comment;
 use App\Modules\ProjectManagement\Models\Attachment;
 use App\Modules\ProjectManagement\Models\TimeEntry;
 use App\Modules\ProjectManagement\Models\TaskLog;
+use App\Modules\ProjectManagement\Models\TaskDependency;
 use App\Modules\Auth\Models\User;
 
 class TaskController extends Controller
@@ -108,6 +109,24 @@ class TaskController extends Controller
             'timeEntries.user:id,name',
         ]);
 
+        $depIds = TaskDependency::where('task_id', $task->id)->pluck('depends_on_task_id');
+        $depTasks = Task::whereIn('id', $depIds)->with('project:id,name')->get()->map(fn($t) => [
+            'id'         => $t->id,
+            'title'      => $t->title,
+            'status'     => $t->status,
+            'project_id' => $t->project_id,
+            'project'    => $t->project ? ['name' => $t->project->name] : null,
+        ]);
+
+        $projectTasks = $task->project_id
+            ? Task::where('project_id', $task->project_id)
+                ->where('id', '!=', $task->id)
+                ->select('id', 'title', 'status', 'project_id')
+                ->orderBy('title')
+                ->get()
+                ->map(fn($t) => ['id' => $t->id, 'title' => $t->title, 'status' => $t->status, 'project_id' => $t->project_id])
+            : [];
+
         $attachments = Attachment::where('attachable_type', 'task')
             ->where('attachable_id', $task->id)
             ->with('uploader:id,name')
@@ -127,11 +146,11 @@ class TaskController extends Controller
             'task' => array_merge(
                 $task->toArray(),
                 [
-                    'project_id'  => $task->project_id,
-                    'project'     => $task->project ? ['id' => $task->project->id, 'name' => $task->project->name] : null,
-                    'assignee'    => $task->assignee ? ['id' => $task->assignee->id, 'name' => $task->assignee->name] : null,
-                    'due_date'    => $task->due_date?->toDateString(),
-                    'comments'    => $task->comments->map(fn($c) => [
+                    'project_id'   => $task->project_id,
+                    'project'      => $task->project ? ['id' => $task->project->id, 'name' => $task->project->name] : null,
+                    'assignee'     => $task->assignee ? ['id' => $task->assignee->id, 'name' => $task->assignee->name] : null,
+                    'due_date'     => $task->due_date?->toDateString(),
+                    'comments'     => $task->comments->map(fn($c) => [
                         'id'         => $c->id,
                         'body'       => $c->body,
                         'user'       => ['id' => $c->user?->id, 'name' => $c->user?->name],
@@ -145,8 +164,10 @@ class TaskController extends Controller
                         'logged_date' => $e->logged_date?->toDateString(),
                         'user'        => ['id' => $e->user?->id, 'name' => $e->user?->name],
                     ]),
+                    'dependencies' => $depTasks,
                 ]
             ),
+            'projectTasks' => $projectTasks,
         ]);
     }
 
@@ -295,5 +316,35 @@ class TaskController extends Controller
         Storage::disk($attachment->storage_disk)->delete($attachment->storage_path);
         $attachment->delete();
         return back()->with('success', 'Attachment deleted.');
+    }
+
+    public function addDependency(Request $request, Task $task): \Illuminate\Http\RedirectResponse
+    {
+        abort_if($task->organization_id !== $request->user()->organization_id, 403);
+
+        $validated = $request->validate([
+            'depends_on_task_id' => 'required|uuid|different:task.id',
+        ]);
+
+        $depTask = Task::where('organization_id', $request->user()->organization_id)
+            ->findOrFail($validated['depends_on_task_id']);
+
+        TaskDependency::firstOrCreate([
+            'task_id'            => $task->id,
+            'depends_on_task_id' => $depTask->id,
+        ]);
+
+        return back()->with('success', 'Dependency added.');
+    }
+
+    public function removeDependency(Request $request, Task $task, Task $dependency): \Illuminate\Http\RedirectResponse
+    {
+        abort_if($task->organization_id !== $request->user()->organization_id, 403);
+
+        TaskDependency::where('task_id', $task->id)
+            ->where('depends_on_task_id', $dependency->id)
+            ->delete();
+
+        return back()->with('success', 'Dependency removed.');
     }
 }

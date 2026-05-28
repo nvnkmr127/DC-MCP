@@ -18,8 +18,11 @@ class SowController extends Controller
     {
         $orgId = $request->user()->organization_id;
 
+        $role = $request->user()->role ?? '';
+        $canReview = in_array($role, ['ceo', 'project_manager']);
+
         $sows = ClientSow::where('organization_id', $orgId)
-            ->with(['client:id,name,company', 'deliverables', 'retainer:id,name'])
+            ->with(['client:id,name,company', 'deliverables.latestSubmission.submitter:id,name', 'retainer:id,name'])
             ->orderByDesc('created_at')
             ->get()
             ->map(fn($s) => [
@@ -36,6 +39,20 @@ class SowController extends Controller
                     'frequency'          => $d->frequency,
                     'quantity_per_period'=> $d->quantity_per_period,
                     'notes'              => $d->notes,
+                    'latest_submission'  => $d->latestSubmission ? [
+                        'id'             => $d->latestSubmission->id,
+                        'status'         => $d->latestSubmission->status,
+                        'file_url'       => $d->latestSubmission->file_url,
+                        'external_link'  => $d->latestSubmission->external_link,
+                        'notes'          => $d->latestSubmission->notes,
+                        'reviewer_notes' => $d->latestSubmission->reviewer_notes,
+                        'revision_number'=> $d->latestSubmission->revision_number,
+                        'reviewed_at'    => $d->latestSubmission->reviewed_at?->toISOString(),
+                        'submitter'      => $d->latestSubmission->submitter ? [
+                            'id'   => $d->latestSubmission->submitter->id,
+                            'name' => $d->latestSubmission->submitter->name,
+                        ] : null,
+                    ] : null,
                 ])->values(),
                 'client'   => $s->client ? ['id' => $s->client->id, 'name' => $s->client->company ?? $s->client->name] : null,
                 'retainer' => $s->retainer ? ['id' => $s->retainer->id, 'name' => $s->retainer->name] : null,
@@ -57,6 +74,7 @@ class SowController extends Controller
             'sows'      => $sows,
             'clients'   => $clients,
             'retainers' => $retainers,
+            'canReview' => $canReview,
         ]);
     }
 

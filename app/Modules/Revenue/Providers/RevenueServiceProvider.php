@@ -7,6 +7,7 @@ use App\Modules\Revenue\Services\ClientHealthService;
 use App\Modules\Revenue\Services\FinancialService;
 use App\Modules\Revenue\Services\OnboardingService;
 use App\Modules\Revenue\Services\RevenueService;
+use App\Modules\Revenue\Console\Commands\CheckBudgetBurnCommand;
 
 class RevenueServiceProvider extends ModuleServiceProvider
 {
@@ -26,5 +27,13 @@ class RevenueServiceProvider extends ModuleServiceProvider
         $this->app->singleton(FinancialService::class);
         $this->app->singleton(OnboardingService::class);
         $this->app->singleton(RevenueService::class);
+    }
+
+    public function boot(): void
+    {
+        parent::boot();
+        if ($this->app->runningInConsole()) {
+            $this->commands([CheckBudgetBurnCommand::class]);
+        }
     }
 }

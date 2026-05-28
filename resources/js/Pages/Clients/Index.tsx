@@ -1,9 +1,52 @@
 import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import type { Client, PaginatedResponse } from '@/types';
-import { Plus, Search, Building2, Globe, Mail, Phone } from 'lucide-react';
+import { Plus, Search, Building2, Globe, Mail, Phone, DollarSign, X } from 'lucide-react';
+
+const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
+
+function UpsellModal({ client, onClose }: { client: Client & { projects_count: number; upsell_potential?: number | null; upsell_notes?: string | null; upsell_flagged?: boolean }; onClose: () => void }) {
+    const form = useForm({
+        upsell_notes: client.upsell_notes ?? '',
+        upsell_potential: client.upsell_potential ? String(client.upsell_potential) : '',
+    });
+    return (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-[15px] font-bold text-gray-900">Flag for Upsell — {client.name}</h2>
+                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                </div>
+                <form onSubmit={e => {
+                    e.preventDefault();
+                    form.patch(`/clients/${client.id}/upsell`, { onSuccess: onClose });
+                }} className="space-y-3">
+                    <div>
+                        <label className="text-xs text-gray-500 font-medium">Upsell Opportunity Notes</label>
+                        <textarea value={form.data.upsell_notes} onChange={e => form.setData('upsell_notes', e.target.value)} rows={3}
+                            placeholder="Why is this client ready for an upsell? What services?"
+                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 resize-none" />
+                    </div>
+                    <div>
+                        <label className="text-xs text-gray-500 font-medium">Potential Value (₹/month)</label>
+                        <input type="number" value={form.data.upsell_potential}
+                            onChange={e => form.setData('upsell_potential', e.target.value)}
+                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400" />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
+                        <button type="submit" disabled={form.processing}
+                            className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 disabled:opacity-50">
+                            {form.processing ? 'Saving…' : 'Flag for Upsell'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
 
 const TIER_CONFIG: Record<string, { label: string; badge: string; dot: string }> = {
     standard:   { label: 'Standard',   badge: 'bg-gray-100 text-gray-600',    dot: 'bg-gray-400' },
@@ -18,12 +61,16 @@ const STATUS_CONFIG: Record<string, { label: string; badge: string; dot: string 
 };
 
 interface Props {
-    clients: PaginatedResponse<Client & { projects_count: number }>;
+    clients: PaginatedResponse<Client & { projects_count: number; upsell_flagged?: boolean; upsell_potential?: number | null; upsell_notes?: string | null }>;
     filters: { tier?: string; status?: string; search?: string };
 }
 
 export default function ClientsIndex({ clients, filters }: Props) {
     const [search, setSearch] = useState(filters.search ?? '');
+    const [upsellClient, setUpsellClient] = useState<(Client & { projects_count: number; upsell_potential?: number | null; upsell_notes?: string | null; upsell_flagged?: boolean }) | null>(null);
+
+    const upsellClients = clients.data.filter(c => c.upsell_flagged);
+    const upsellPotential = upsellClients.reduce((s, c) => s + (c.upsell_potential ?? 0), 0);
 
     function handleSearch(e: React.FormEvent) {
         e.preventDefault();
@@ -40,6 +87,17 @@ export default function ClientsIndex({ clients, filters }: Props) {
     return (
         <AppLayout title="Clients">
             <Head title="Clients" />
+
+            {/* ── Upsell banner ── */}
+            {upsellClients.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 flex items-center gap-3">
+                    <DollarSign size={16} className="text-amber-600 shrink-0" />
+                    <p className="text-sm text-amber-800 font-medium">
+                        <strong>{upsellClients.length}</strong> client{upsellClients.length > 1 ? 's' : ''} flagged for upsell
+                        {upsellPotential > 0 && <> — <strong>{fmt(upsellPotential)}</strong>/mo potential</>}
+                    </p>
+                </div>
+            )}
 
             {/* ── Toolbar ── */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
@@ -121,6 +179,8 @@ export default function ClientsIndex({ clients, filters }: Props) {
                 </div>
             )}
 
+            {upsellClient && <UpsellModal client={upsellClient} onClose={() => setUpsellClient(null)} />}
+
             {/* ── Grid ── */}
             {clients.data.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -130,7 +190,10 @@ export default function ClientsIndex({ clients, filters }: Props) {
                         return (
                             <div
                                 key={client.id}
-                                className="group bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-150 p-5"
+                                className={cn(
+                                    'group bg-white rounded-xl border hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] transition-all duration-150 p-5',
+                                    client.upsell_flagged ? 'border-amber-200 hover:border-amber-300' : 'border-gray-100 hover:border-gray-200',
+                                )}
                             >
                                 {/* Header */}
                                 <div className="flex items-start justify-between gap-3 mb-4">
@@ -189,6 +252,28 @@ export default function ClientsIndex({ clients, filters }: Props) {
                                             <span className="truncate">{client.website.replace(/^https?:\/\//, '')}</span>
                                         </a>
                                     )}
+                                </div>
+
+                                {/* Upsell footer */}
+                                <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between">
+                                    {client.upsell_flagged ? (
+                                        <span className="flex items-center gap-1 text-[11px] font-medium text-amber-600">
+                                            <DollarSign size={11} />
+                                            {client.upsell_potential ? fmt(client.upsell_potential) + '/mo' : 'Upsell flagged'}
+                                        </span>
+                                    ) : <span />}
+                                    <button
+                                        onClick={() => setUpsellClient(client)}
+                                        className={cn(
+                                            'flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-lg transition-colors',
+                                            client.upsell_flagged
+                                                ? 'text-amber-600 bg-amber-50 hover:bg-amber-100'
+                                                : 'text-gray-400 hover:text-amber-600 hover:bg-amber-50 opacity-0 group-hover:opacity-100',
+                                        )}
+                                    >
+                                        <DollarSign size={11} />
+                                        {client.upsell_flagged ? 'Edit Upsell' : 'Flag Upsell'}
+                                    </button>
                                 </div>
                             </div>
                         );

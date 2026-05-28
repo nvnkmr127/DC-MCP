@@ -71,8 +71,26 @@ class ClientController extends Controller
     {
         $client->load(['projects' => fn($q) => $q->withCount('tasks')->orderByDesc('updated_at')]);
 
+        $communications = \App\Modules\Revenue\Models\ClientCommunication::where('client_id', $client->id)
+            ->with('user:id,name')
+            ->orderByDesc('communicated_at')
+            ->get()
+            ->map(fn($c) => [
+                'id'               => $c->id,
+                'type'             => $c->type,
+                'contact_person'   => $c->contact_person,
+                'subject'          => $c->subject,
+                'notes'            => $c->notes,
+                'outcome'          => $c->outcome,
+                'next_action'      => $c->next_action,
+                'next_action_date' => $c->next_action_date?->toDateString(),
+                'communicated_at'  => $c->communicated_at->toDateString(),
+                'logged_by'        => $c->user?->name,
+            ]);
+
         return Inertia::render('Clients/Show', [
-            'client' => $client,
+            'client'         => $client,
+            'communications' => $communications,
         ]);
     }
 
@@ -103,5 +121,29 @@ class ClientController extends Controller
     {
         $client->delete();
         return redirect()->route('web.clients.index')->with('success', 'Client deleted.');
+    }
+
+    public function flagUpsell(Request $request, Client $client): \Illuminate\Http\RedirectResponse
+    {
+        abort_if($client->organization_id !== $request->user()->organization_id, 403);
+
+        if ($request->boolean('clear')) {
+            $client->update(['upsell_flagged' => false, 'upsell_notes' => null, 'upsell_potential' => null, 'upsell_flagged_at' => null]);
+            return back()->with('success', 'Upsell flag cleared.');
+        }
+
+        $validated = $request->validate([
+            'upsell_notes'     => 'nullable|string|max:1000',
+            'upsell_potential' => 'nullable|numeric|min:0',
+        ]);
+
+        $client->update([
+            'upsell_flagged'    => true,
+            'upsell_notes'      => $validated['upsell_notes'] ?? null,
+            'upsell_potential'  => $validated['upsell_potential'] ?? null,
+            'upsell_flagged_at' => now(),
+        ]);
+
+        return back()->with('success', 'Client flagged for upsell.');
     }
 }

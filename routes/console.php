@@ -16,6 +16,9 @@ Artisan::command('inspire', function () {
 // SLA checks every 30 minutes
 Schedule::command('tasks:check-slas')->everyThirtyMinutes();
 
+// Campaign budget burn alerts — check hourly for 70%/90% threshold breaches
+Schedule::command('budgets:check-burn')->hourly()->name('budget-burn-alerts')->withoutOverlapping();
+
 // Spawn recurring tasks daily at 7:00 AM IST (01:30 UTC) — after briefings are generated
 Schedule::command('tasks:spawn-recurring')->dailyAt('01:30')->timezone('UTC')->name('spawn-recurring-tasks')->withoutOverlapping();
 
