@@ -103,6 +103,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get tasks assigned to this user.
+     */
+    public function assignedTasks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Modules\ProjectManagement\Models\Task::class, 'assigned_to');
+    }
+
+    /**
      * Check if the user has any of the specified roles.
      *
      * @param array|string $roles

@@ -8,6 +8,7 @@ use App\Modules\ProjectManagement\Models\Project;
 use App\Modules\MCP\Models\McpConnection;
 use App\Modules\MCP\Adapters\GoogleCalendarAdapter;
 use App\Modules\MCP\Adapters\GmailAdapter;
+use App\Modules\MCP\Adapters\NotionAdapter;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -151,7 +152,25 @@ class BriefingDataCollector
                 ->toArray();
         }
 
-        // 5. Emails (Gmail)
+        // 5. Notion recent updates (CEO/PM/Analyst)
+        $notionUpdates = [];
+        if ($isCeo || $isPm || $isAnalyst) {
+            $notionConnection = McpConnection::where('organization_id', $orgId)
+                ->where('provider', 'notion')
+                ->where('status', 'active')
+                ->first();
+
+            if ($notionConnection) {
+                try {
+                    $notionAdapter = app(NotionAdapter::class);
+                    $notionUpdates = $notionAdapter->getRecentUpdates(24);
+                } catch (\Exception $e) {
+                    // Ignore
+                }
+            }
+        }
+
+        // 6. Emails (Gmail)
         $unreadEmails = [];
         $gmailConnection = McpConnection::where('organization_id', $orgId)
             ->where('provider', 'gmail')
@@ -175,7 +194,7 @@ class BriefingDataCollector
             }
         }
 
-        // 6. Team blockers & overdue (PM/CEO)
+        // 7. Team blockers & overdue (PM/CEO)
         $overdueByMember = [];
         $blockedCount = 0;
 
@@ -201,7 +220,7 @@ class BriefingDataCollector
                 ->count();
         }
 
-        // 7. Reports due today (Analyst/PM)
+        // 8. Reports due today (Analyst/PM)
         $reportsDue = [];
         if ($isAnalyst || $isPm) {
             // Check scheduled reports in report_schedules if table exists
@@ -259,6 +278,9 @@ class BriefingDataCollector
             'metrics' => [
                 'meta_ads' => $metaAds,
                 'alerts' => $campaignAlerts
+            ],
+            'notion' => [
+                'recent_updates' => $notionUpdates
             ],
             'emails' => [
                 'unread_client_emails' => $unreadEmails

@@ -7,6 +7,7 @@ use App\Modules\DailyBriefing\Services\BriefingDataCollector;
 use App\Modules\DailyBriefing\Services\BriefingGenerator;
 use App\Modules\MCP\Adapters\GmailAdapter;
 use App\Modules\MCP\Adapters\ZohoCliqAdapter;
+use App\Modules\TaskEngine\Services\TaskSuggestionService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -31,15 +32,28 @@ class GenerateDailyBriefingJob implements ShouldQueue
         BriefingDataCollector $collector,
         BriefingGenerator $generator,
         GmailAdapter $gmailAdapter,
-        ZohoCliqAdapter $cliqAdapter
+        ZohoCliqAdapter $cliqAdapter,
+        TaskSuggestionService $suggestionService,
     ): void {
         $date = Carbon::parse($this->date ?? now()->toDateString());
 
         try {
-            $data = $collector->collect($this->user, $date);
-            $briefing = $generator->generate($this->user, $data);
+            $data   = $collector->collect($this->user, $date);
+            $result = $generator->generate($this->user, $data);
 
-            // Attempt to deliver via configured channels
+            $briefing    = $result['briefing'];
+            $suggestions = $result['suggestions'];
+
+            // Persist AI task suggestions for founder approval
+            if (!empty($suggestions)) {
+                try {
+                    $suggestionService->parseAndStoreFromBriefing($briefing, $suggestions);
+                } catch (\Exception $e) {
+                    Log::warning("Could not store task suggestions for briefing {$briefing->id}: " . $e->getMessage());
+                }
+            }
+
+            // Deliver via configured channels
             $deliveredVia = [];
 
             if ($gmailAdapter->sendBriefingEmail($this->user, $briefing)) {

@@ -104,12 +104,19 @@ class SlaEngine
             }
         }
 
-        // 3. Fallback to CEO if no one assigned or PM is missing
-        if (empty($recipients)) {
+        // 3. Always include CEO on SLA breaches (not warnings)
+        if ($type === 'sla_breached') {
             $ceo = User::where('organization_id', $task->organization_id)
-                ->whereHas('roles', function ($query) {
-                    $query->where('slug', 'ceo');
-                })->first();
+                ->whereHas('roles', fn($q) => $q->where('slug', 'ceo'))
+                ->first();
+            if ($ceo && !in_array($ceo->id, array_map(fn($r) => $r->id, $recipients))) {
+                $recipients[] = $ceo;
+            }
+        } elseif (empty($recipients)) {
+            // Fallback to CEO for warnings when no one else is assigned
+            $ceo = User::where('organization_id', $task->organization_id)
+                ->whereHas('roles', fn($q) => $q->where('slug', 'ceo'))
+                ->first();
             if ($ceo) {
                 $recipients[] = $ceo;
             }

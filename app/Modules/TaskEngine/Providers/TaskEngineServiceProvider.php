@@ -6,6 +6,8 @@ use App\Shared\Providers\ModuleServiceProvider;
 use App\Modules\TaskEngine\Services\TaskSpawnerService;
 use App\Modules\TaskEngine\Services\SlaEngine;
 use App\Modules\TaskEngine\Services\TaskDependencyService;
+use App\Modules\TaskEngine\Services\TaskSuggestionService;
+use App\Modules\TaskEngine\Services\AutoAssignmentEngine;
 use App\Modules\TaskEngine\Console\Commands\CheckSlasCommand;
 
 class TaskEngineServiceProvider extends ModuleServiceProvider
@@ -34,6 +36,8 @@ class TaskEngineServiceProvider extends ModuleServiceProvider
         $this->app->singleton(TaskSpawnerService::class);
         $this->app->singleton(SlaEngine::class);
         $this->app->singleton(TaskDependencyService::class);
+        $this->app->singleton(AutoAssignmentEngine::class);
+        $this->app->singleton(TaskSuggestionService::class);
     }
 
     /**

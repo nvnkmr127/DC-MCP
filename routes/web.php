@@ -12,6 +12,7 @@ use App\Http\Controllers\Web\CalendarController;
 use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\McpController;
 use App\Http\Controllers\Web\SettingsController;
+use App\Http\Controllers\Web\SuggestionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -81,6 +82,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clients/{client}/edit',       [ClientController::class, 'edit'])->name('web.clients.edit');
     Route::patch('/clients/{client}',          [ClientController::class, 'update'])->name('web.clients.update');
     Route::delete('/clients/{client}',         [ClientController::class, 'destroy'])->name('web.clients.destroy');
+
+    // AI Task Suggestions (Founder approval flow)
+    Route::get('/suggestions',                            [SuggestionController::class, 'index'])->name('web.suggestions.index');
+    Route::post('/suggestions/{suggestion}/approve',      [SuggestionController::class, 'approve'])->name('web.suggestions.approve');
+    Route::post('/suggestions/{suggestion}/reject',       [SuggestionController::class, 'reject'])->name('web.suggestions.reject');
+    Route::post('/suggestions/bulk-approve',              [SuggestionController::class, 'bulkApprove'])->name('web.suggestions.bulk-approve');
 
     // Daily Briefings
     Route::get('/briefings',                   [BriefingController::class, 'index'])->name('web.briefings.index');

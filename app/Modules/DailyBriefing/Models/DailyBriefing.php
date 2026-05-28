@@ -37,4 +37,9 @@ class DailyBriefing extends BaseModel
     {
         return $this->belongsTo(\App\Modules\Auth\Models\User::class);
     }
+
+    public function suggestions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Modules\TaskEngine\Models\TaskSuggestion::class, 'briefing_id');
+    }
 }

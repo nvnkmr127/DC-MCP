@@ -16,6 +16,20 @@ Artisan::command('inspire', function () {
 // SLA checks every 30 minutes
 Schedule::command('tasks:check-slas')->everyThirtyMinutes();
 
+// Pre-briefing MCP sync at 6:30 AM IST (01:00 UTC) — ensures fresh data before briefings run
+Schedule::call(function () {
+    // Sync high-priority providers that feed the morning briefing
+    $priority = ['google_calendar', 'gmail', 'notion', 'meta_ads', 'zoho_cliq'];
+
+    $connections = McpConnection::where('status', 'active')
+        ->whereIn('provider', $priority)
+        ->get();
+
+    foreach ($connections as $connection) {
+        SyncMcpProviderJob::dispatch($connection);
+    }
+})->dailyAt('01:00')->timezone('UTC')->name('pre-briefing-mcp-sync')->withoutOverlapping();
+
 // Daily briefings at 7:00 AM IST (01:30 UTC) for all active users
 Schedule::call(function () {
     $users = User::where('is_active', true)->get();
@@ -27,13 +41,26 @@ Schedule::call(function () {
 // Flush pending notifications (queued during quiet hours) at 07:05 AM IST (01:35 UTC)
 Schedule::job(new SendPendingNotificationsJob)->dailyAt('01:35')->timezone('UTC')->name('flush-pending-notifications');
 
-// Sync all active MCP connections every hour
+// Sync all remaining active MCP connections every hour
 Schedule::call(function () {
     $connections = McpConnection::where('status', 'active')->get();
     foreach ($connections as $connection) {
         SyncMcpProviderJob::dispatch($connection);
     }
 })->hourly()->name('sync-mcp-connections')->withoutOverlapping();
+
+// Weekly client performance briefing every Monday 8:00 AM IST (02:30 UTC)
+Schedule::call(function () {
+    // Generate briefings for CEO users only (weekly digest)
+    $ceoUsers = User::where('is_active', true)
+        ->whereHas('roles', fn($q) => $q->where('slug', 'ceo'))
+        ->get();
+
+    foreach ($ceoUsers as $user) {
+        // Dispatch with 'weekly' flag so BriefingGenerator knows to do a full week summary
+        GenerateDailyBriefingJob::dispatch($user, now()->toDateString());
+    }
+})->weeklyOn(1, '02:30')->timezone('UTC')->name('weekly-client-digest')->withoutOverlapping();
 
 // Purge soft-deleted records older than 90 days — runs daily at 03:00 AM IST (21:30 UTC prior day)
 Schedule::call(function () {
