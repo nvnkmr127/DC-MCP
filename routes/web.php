@@ -13,6 +13,15 @@ use App\Http\Controllers\Web\NotificationController;
 use App\Http\Controllers\Web\McpController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\SuggestionController;
+use App\Http\Controllers\Web\ContentCalendarController;
+use App\Http\Controllers\Web\ClientPortalController;
+use App\Http\Controllers\Web\RetainerController;
+use App\Http\Controllers\Web\InvoiceController;
+use App\Http\Controllers\Web\ProspectController;
+use App\Http\Controllers\Web\StandupController;
+use App\Http\Controllers\Web\SowController;
+use App\Http\Controllers\Web\CapacityController;
+use App\Modules\ClientPortal\Http\Controllers\PortalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,11 +92,30 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/clients/{client}',          [ClientController::class, 'update'])->name('web.clients.update');
     Route::delete('/clients/{client}',         [ClientController::class, 'destroy'])->name('web.clients.destroy');
 
+    // Content Calendar
+    Route::get('/content',                                    [ContentCalendarController::class, 'index'])->name('web.content.index');
+    Route::post('/content',                                   [ContentCalendarController::class, 'store'])->name('web.content.store');
+    Route::patch('/content/{contentItem}',                    [ContentCalendarController::class, 'update'])->name('web.content.update');
+    Route::delete('/content/{contentItem}',                   [ContentCalendarController::class, 'destroy'])->name('web.content.destroy');
+    Route::post('/content/{contentItem}/convert-to-task',     [ContentCalendarController::class, 'convertToTask'])->name('web.content.convert');
+
+    // Client Portal Management (CEO only)
+    Route::get('/settings/client-portal',                                     [ClientPortalController::class, 'manage'])->name('web.settings.portal');
+    Route::get('/settings/client-portal/{client}',                            [ClientPortalController::class, 'showClient'])->name('web.settings.portal.client');
+    Route::post('/settings/client-portal/{client}/invite',                    [ClientPortalController::class, 'inviteUser'])->name('web.settings.portal.invite');
+    Route::post('/settings/client-portal/users/{portalUser}/resend',          [ClientPortalController::class, 'resendInvite'])->name('web.settings.portal.resend');
+    Route::post('/settings/client-portal/users/{portalUser}/toggle',          [ClientPortalController::class, 'toggleUser'])->name('web.settings.portal.toggle');
+    Route::post('/settings/client-portal/share',                              [ClientPortalController::class, 'share'])->name('web.settings.portal.share');
+    Route::delete('/settings/client-portal/shares/{portalShare}',             [ClientPortalController::class, 'revokeShare'])->name('web.settings.portal.revoke');
+    Route::post('/settings/client-portal/requests/{portalRequest}/to-task',   [ClientPortalController::class, 'convertRequestToTask'])->name('web.settings.portal.request.task');
+    Route::post('/settings/client-portal/requests/{portalRequest}/close',     [ClientPortalController::class, 'closeRequest'])->name('web.settings.portal.request.close');
+
     // AI Task Suggestions (Founder approval flow)
     Route::get('/suggestions',                            [SuggestionController::class, 'index'])->name('web.suggestions.index');
     Route::post('/suggestions/{suggestion}/approve',      [SuggestionController::class, 'approve'])->name('web.suggestions.approve');
     Route::post('/suggestions/{suggestion}/reject',       [SuggestionController::class, 'reject'])->name('web.suggestions.reject');
     Route::post('/suggestions/bulk-approve',              [SuggestionController::class, 'bulkApprove'])->name('web.suggestions.bulk-approve');
+    Route::post('/suggestions/from-email',                [SuggestionController::class, 'fromEmail'])->name('web.suggestions.from-email');
 
     // Daily Briefings
     Route::get('/briefings',                   [BriefingController::class, 'index'])->name('web.briefings.index');
@@ -124,4 +152,45 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/settings/organization',                 [SettingsController::class, 'updateOrganization'])->name('web.settings.organization.update');
     Route::get('/settings/team',                           [SettingsController::class, 'team'])->name('web.settings.team');
     Route::post('/settings/team/invite',                   [SettingsController::class, 'invite'])->name('web.settings.team.invite');
+
+    // Revenue — Retainers
+    Route::get('/retainers',                               [RetainerController::class, 'index'])->name('web.retainers.index');
+    Route::post('/retainers',                              [RetainerController::class, 'store'])->name('web.retainers.store');
+    Route::patch('/retainers/{retainer}',                  [RetainerController::class, 'update'])->name('web.retainers.update');
+    Route::delete('/retainers/{retainer}',                 [RetainerController::class, 'destroy'])->name('web.retainers.destroy');
+
+    // Revenue — Invoices
+    Route::post('/invoices',                               [InvoiceController::class, 'store'])->name('web.invoices.store');
+    Route::patch('/invoices/{invoice}',                    [InvoiceController::class, 'update'])->name('web.invoices.update');
+    Route::delete('/invoices/{invoice}',                   [InvoiceController::class, 'destroy'])->name('web.invoices.destroy');
+
+    // Sales Pipeline — Prospects
+    Route::get('/prospects',                               [ProspectController::class, 'index'])->name('web.prospects.index');
+    Route::post('/prospects',                              [ProspectController::class, 'store'])->name('web.prospects.store');
+    Route::patch('/prospects/{prospect}',                  [ProspectController::class, 'update'])->name('web.prospects.update');
+    Route::delete('/prospects/{prospect}',                 [ProspectController::class, 'destroy'])->name('web.prospects.destroy');
+    Route::post('/prospects/{prospect}/activity',          [ProspectController::class, 'addActivity'])->name('web.prospects.activity');
+
+    // EOD Standup
+    Route::get('/standup',                                 [StandupController::class, 'index'])->name('web.standup.index');
+    Route::post('/standup',                                [StandupController::class, 'store'])->name('web.standup.store');
+    Route::post('/standup/{standup}/reviewed',             [StandupController::class, 'markReviewed'])->name('web.standup.reviewed');
+
+    // SOW Tracker
+    Route::get('/sow',                                     [SowController::class, 'index'])->name('web.sow.index');
+    Route::post('/sow',                                    [SowController::class, 'store'])->name('web.sow.store');
+    Route::patch('/sow/{sow}',                             [SowController::class, 'update'])->name('web.sow.update');
+    Route::delete('/sow/{sow}',                            [SowController::class, 'destroy'])->name('web.sow.destroy');
+
+    // Team Capacity
+    Route::get('/capacity',                                [CapacityController::class, 'index'])->name('web.capacity.index');
+});
+
+// Client Portal (client-facing, no main auth required)
+Route::prefix('portal')->name('portal.')->group(function () {
+    Route::get('/login',              [PortalController::class, 'showLogin'])->name('login');
+    Route::get('/auth/{token}',       [PortalController::class, 'handleMagicLink'])->name('magic-link');
+    Route::post('/logout',            [PortalController::class, 'logout'])->name('logout');
+    Route::get('/dashboard',          [PortalController::class, 'dashboard'])->name('dashboard');
+    Route::post('/requests',          [PortalController::class, 'submitRequest'])->name('requests.store');
 });

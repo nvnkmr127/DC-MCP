@@ -16,6 +16,12 @@ Artisan::command('inspire', function () {
 // SLA checks every 30 minutes
 Schedule::command('tasks:check-slas')->everyThirtyMinutes();
 
+// Spawn recurring tasks daily at 7:00 AM IST (01:30 UTC) — after briefings are generated
+Schedule::command('tasks:spawn-recurring')->dailyAt('01:30')->timezone('UTC')->name('spawn-recurring-tasks')->withoutOverlapping();
+
+// EOD standup reminder at 6:00 PM IST (12:30 UTC)
+Schedule::command('standup:send-reminders')->dailyAt('12:30')->timezone('UTC')->name('standup-reminders')->withoutOverlapping();
+
 // Pre-briefing MCP sync at 6:30 AM IST (01:00 UTC) — ensures fresh data before briefings run
 Schedule::call(function () {
     // Sync high-priority providers that feed the morning briefing

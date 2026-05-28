@@ -8,7 +8,9 @@ use App\Modules\TaskEngine\Services\SlaEngine;
 use App\Modules\TaskEngine\Services\TaskDependencyService;
 use App\Modules\TaskEngine\Services\TaskSuggestionService;
 use App\Modules\TaskEngine\Services\AutoAssignmentEngine;
+use App\Modules\TaskEngine\Services\RecurringTaskEngine;
 use App\Modules\TaskEngine\Console\Commands\CheckSlasCommand;
+use App\Modules\TaskEngine\Console\Commands\SpawnRecurringTasksCommand;
 
 class TaskEngineServiceProvider extends ModuleServiceProvider
 {
@@ -38,6 +40,7 @@ class TaskEngineServiceProvider extends ModuleServiceProvider
         $this->app->singleton(TaskDependencyService::class);
         $this->app->singleton(AutoAssignmentEngine::class);
         $this->app->singleton(TaskSuggestionService::class);
+        $this->app->singleton(RecurringTaskEngine::class);
     }
 
     /**
@@ -50,6 +53,7 @@ class TaskEngineServiceProvider extends ModuleServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 CheckSlasCommand::class,
+                SpawnRecurringTasksCommand::class,
             ]);
         }
     }

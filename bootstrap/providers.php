@@ -12,4 +12,8 @@ return [
     App\Modules\DataViz\Providers\DataVizServiceProvider::class,
     App\Modules\TaskEngine\Providers\TaskEngineServiceProvider::class,
     App\Modules\Notifications\Providers\NotificationsServiceProvider::class,
+    App\Modules\ContentCalendar\Providers\ContentCalendarServiceProvider::class,
+    App\Modules\ClientPortal\Providers\ClientPortalServiceProvider::class,
+    App\Modules\Revenue\Providers\RevenueServiceProvider::class,
+    App\Modules\Standup\Providers\StandupServiceProvider::class,
 ];

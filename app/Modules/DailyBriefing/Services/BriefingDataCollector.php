@@ -4,11 +4,15 @@ namespace App\Modules\DailyBriefing\Services;
 
 use App\Modules\Auth\Models\User;
 use App\Modules\ProjectManagement\Models\Task;
+use App\Modules\ProjectManagement\Models\Client;
 use App\Modules\ProjectManagement\Models\Project;
 use App\Modules\MCP\Models\McpConnection;
 use App\Modules\MCP\Adapters\GoogleCalendarAdapter;
 use App\Modules\MCP\Adapters\GmailAdapter;
 use App\Modules\MCP\Adapters\NotionAdapter;
+use App\Modules\Revenue\Models\ClientRetainer;
+use App\Modules\Revenue\Models\Invoice;
+use App\Modules\Standup\Models\EodStandup;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -256,6 +260,79 @@ class BriefingDataCollector
             }
         }
 
+        // 9. Client health alerts (CEO/PM)
+        $clientHealthAlerts = [];
+        if ($isCeo || $isPm) {
+            $clientHealthAlerts = Client::where('organization_id', $orgId)
+                ->where('status', 'active')
+                ->whereIn('health_status', ['red', 'yellow'])
+                ->select('id', 'name', 'company', 'health_score', 'health_status', 'health_breakdown')
+                ->orderBy('health_score')
+                ->get()
+                ->map(fn($c) => [
+                    'id'     => $c->id,
+                    'name'   => $c->company ?? $c->name,
+                    'score'  => $c->health_score,
+                    'status' => $c->health_status,
+                ])
+                ->toArray();
+        }
+
+        // 10. Overdue invoices & upcoming renewals (CEO)
+        $overdueInvoices = [];
+        $renewalAlerts   = [];
+        if ($isCeo) {
+            $overdueInvoices = Invoice::where('organization_id', $orgId)
+                ->where('status', 'sent')
+                ->whereDate('due_date', '<', $date)
+                ->with('client:id,name,company')
+                ->get()
+                ->map(fn($i) => [
+                    'invoice_number' => $i->invoice_number,
+                    'amount'         => (float) $i->amount,
+                    'currency'       => $i->currency,
+                    'due_date'       => $i->due_date?->toDateString(),
+                    'client'         => $i->client?->company ?? $i->client?->name,
+                ])
+                ->toArray();
+
+            $renewalAlerts = ClientRetainer::where('organization_id', $orgId)
+                ->where('status', 'active')
+                ->whereDate('next_renewal_date', '<=', $date->copy()->addDays(30))
+                ->whereDate('next_renewal_date', '>=', $date)
+                ->with('client:id,name,company')
+                ->orderBy('next_renewal_date')
+                ->get()
+                ->map(fn($r) => [
+                    'name'              => $r->name,
+                    'monthly_value'     => (float) $r->monthly_value,
+                    'next_renewal_date' => $r->next_renewal_date?->toDateString(),
+                    'client'            => $r->client?->company ?? $r->client?->name,
+                ])
+                ->toArray();
+        }
+
+        // 11. Yesterday's standup summary (CEO/PM)
+        $standupSummary = [];
+        if ($isCeo || $isPm) {
+            $yesterday = $date->copy()->subDay()->toDateString();
+            $standups = EodStandup::where('organization_id', $orgId)
+                ->whereDate('date', $yesterday)
+                ->with('user:id,name')
+                ->get();
+
+            $standupSummary = [
+                'date'          => $yesterday,
+                'submitted'     => $standups->count(),
+                'blocker_count' => $standups->filter(fn($s) => !empty(trim((string) $s->blockers)))->count(),
+                'blockers'      => $standups
+                    ->filter(fn($s) => !empty(trim((string) $s->blockers)))
+                    ->map(fn($s) => ['user' => $s->user?->name, 'blockers' => $s->blockers])
+                    ->values()
+                    ->toArray(),
+            ];
+        }
+
         return [
             'user' => [
                 'name' => $user->name,
@@ -291,7 +368,15 @@ class BriefingDataCollector
             ],
             'reports' => [
                 'due_today' => $reportsDue
-            ]
+            ],
+            'client_health' => [
+                'alerts' => $clientHealthAlerts,
+            ],
+            'revenue' => [
+                'overdue_invoices' => $overdueInvoices,
+                'renewal_alerts'   => $renewalAlerts,
+            ],
+            'standup' => $standupSummary,
         ];
     }
 }
