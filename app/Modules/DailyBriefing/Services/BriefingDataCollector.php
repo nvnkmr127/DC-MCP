@@ -12,6 +12,10 @@ use App\Modules\MCP\Adapters\GmailAdapter;
 use App\Modules\MCP\Adapters\NotionAdapter;
 use App\Modules\Revenue\Models\ClientRetainer;
 use App\Modules\Revenue\Models\Invoice;
+use App\Modules\Revenue\Models\Expense;
+use App\Modules\Revenue\Models\PayrollRecord;
+use App\Modules\Revenue\Models\ClientOnboarding;
+use App\Modules\Revenue\Services\FinancialService;
 use App\Modules\Standup\Models\EodStandup;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -377,6 +381,39 @@ class BriefingDataCollector
                 'renewal_alerts'   => $renewalAlerts,
             ],
             'standup' => $standupSummary,
+            'financials' => $isCeo ? $this->collectFinancials($orgId) : [],
         ];
+    }
+
+    private function collectFinancials(string $orgId): array
+    {
+        $monthYear = now()->format('Y-m');
+
+        try {
+            $financialService = app(FinancialService::class);
+            $pnl = $financialService->getPnl($orgId, $monthYear);
+
+            $stalledOnboarding = ClientOnboarding::where('organization_id', $orgId)
+                ->whereNotIn('stage', ['active'])
+                ->where('updated_at', '<', now()->subDays(5))
+                ->with('client:id,name,company')
+                ->get()
+                ->map(fn($o) => [
+                    'client' => $o->client?->company ?? $o->client?->name,
+                    'stage'  => $o->stage,
+                    'days_stalled' => now()->diffInDays($o->updated_at),
+                ])
+                ->toArray();
+
+            return [
+                'mrr'               => $pnl['revenue']['mrr'],
+                'net_profit'        => $pnl['net_profit'],
+                'profit_margin'     => $pnl['profit_margin'],
+                'total_costs'       => $pnl['costs']['total'],
+                'stalled_onboarding'=> $stalledOnboarding,
+            ];
+        } catch (\Exception $e) {
+            return [];
+        }
     }
 }

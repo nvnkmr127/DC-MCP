@@ -10,6 +10,7 @@ import {
     Briefcase, Calendar, Plug, LogOut, User, Sun, ChevronDown,
     Command, Plus, Zap, HelpCircle, Sparkles, PenTool, Globe,
     TrendingUp, GitBranch, ClipboardList, Activity, FileText,
+    DollarSign, CreditCard, UserCheck, Target,
 } from 'lucide-react';
 
 interface NavItem {
@@ -33,6 +34,10 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'SOW',            href: '/sow',          icon: FileText,     section: 'main',     roles: ['ceo', 'project_manager'] },
     { label: 'Capacity',       href: '/capacity',     icon: Activity,     section: 'main',     roles: ['ceo', 'project_manager'] },
     { label: 'Standup',        href: '/standup',      icon: ClipboardList, section: 'main' },
+    { label: 'P&L',            href: '/financials',    icon: DollarSign,   section: 'main', roles: ['ceo'] },
+    { label: 'Payroll',        href: '/payroll',       icon: CreditCard,   section: 'main', roles: ['ceo'] },
+    { label: 'Onboarding',     href: '/onboarding',    icon: UserCheck,    section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Ad Budgets',     href: '/campaign-budgets', icon: Target,   section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Daily Briefing', href: '/briefings',    icon: Sun,      section: 'insights' },
     { label: 'AI Suggestions', href: '/suggestions',  icon: Sparkles, section: 'insights', roles: ['ceo', 'project_manager'] },
     { label: 'Reports',        href: '/reports',      icon: BarChart3, section: 'insights' },

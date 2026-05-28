@@ -44,6 +44,9 @@ class User extends Authenticatable
         'timezone',
         'is_active',
         'preferences',
+        'monthly_salary',
+        'billable_rate',
+        'bank_account_last4',
     ];
 
     /**
@@ -62,13 +65,15 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'id' => 'string',
+        'id'              => 'string',
         'organization_id' => 'string',
-        'is_active' => 'boolean',
-        'preferences' => 'array',
+        'is_active'       => 'boolean',
+        'preferences'     => 'array',
         'email_verified_at' => 'datetime',
-        'last_active_at' => 'datetime',
-        'password' => 'hashed',
+        'last_active_at'  => 'datetime',
+        'password'        => 'hashed',
+        'monthly_salary'  => 'decimal:2',
+        'billable_rate'   => 'decimal:2',
     ];
 
     /**

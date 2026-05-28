@@ -21,6 +21,12 @@ use App\Http\Controllers\Web\ProspectController;
 use App\Http\Controllers\Web\StandupController;
 use App\Http\Controllers\Web\SowController;
 use App\Http\Controllers\Web\CapacityController;
+use App\Http\Controllers\Web\FinancialController;
+use App\Http\Controllers\Web\ExpenseController;
+use App\Http\Controllers\Web\PayrollController;
+use App\Http\Controllers\Web\OnboardingController;
+use App\Http\Controllers\Web\CampaignBudgetController;
+use App\Http\Controllers\Web\VendorController;
 use App\Modules\ClientPortal\Http\Controllers\PortalController;
 
 /*
@@ -184,6 +190,37 @@ Route::middleware(['auth'])->group(function () {
 
     // Team Capacity
     Route::get('/capacity',                                [CapacityController::class, 'index'])->name('web.capacity.index');
+
+    // P&L / Financials
+    Route::get('/financials',                              [FinancialController::class, 'index'])->name('web.financials.index');
+
+    // Expenses
+    Route::post('/expenses',                               [ExpenseController::class, 'store'])->name('web.expenses.store');
+    Route::patch('/expenses/{expense}',                    [ExpenseController::class, 'update'])->name('web.expenses.update');
+    Route::delete('/expenses/{expense}',                   [ExpenseController::class, 'destroy'])->name('web.expenses.destroy');
+
+    // Payroll
+    Route::get('/payroll',                                 [PayrollController::class, 'index'])->name('web.payroll.index');
+    Route::post('/payroll',                                [PayrollController::class, 'store'])->name('web.payroll.store');
+    Route::post('/payroll/{payrollRecord}/paid',           [PayrollController::class, 'markPaid'])->name('web.payroll.paid');
+    Route::post('/payroll/bulk-generate',                  [PayrollController::class, 'bulkGenerate'])->name('web.payroll.bulk-generate');
+
+    // Client Onboarding
+    Route::get('/onboarding',                              [OnboardingController::class, 'index'])->name('web.onboarding.index');
+    Route::post('/onboarding',                             [OnboardingController::class, 'store'])->name('web.onboarding.store');
+    Route::post('/onboarding/{onboarding}/advance',        [OnboardingController::class, 'advance'])->name('web.onboarding.advance');
+    Route::post('/onboarding/{onboarding}/checklist',      [OnboardingController::class, 'toggleChecklist'])->name('web.onboarding.checklist');
+    Route::post('/onboarding/{onboarding}/nps',            [OnboardingController::class, 'submitNps'])->name('web.onboarding.nps');
+
+    // Campaign Budgets
+    Route::get('/campaign-budgets',                          [CampaignBudgetController::class, 'index'])->name('web.campaign-budgets.index');
+    Route::post('/campaign-budgets',                         [CampaignBudgetController::class, 'store'])->name('web.campaign-budgets.store');
+    Route::patch('/campaign-budgets/{campaignBudget}/spend', [CampaignBudgetController::class, 'updateSpend'])->name('web.campaign-budgets.spend');
+
+    // Vendor Contracts
+    Route::post('/vendors',                                  [VendorController::class, 'store'])->name('web.vendors.store');
+    Route::patch('/vendors/{vendorContract}',                [VendorController::class, 'update'])->name('web.vendors.update');
+    Route::delete('/vendors/{vendorContract}',               [VendorController::class, 'destroy'])->name('web.vendors.destroy');
 });
 
 // Client Portal (client-facing, no main auth required)
