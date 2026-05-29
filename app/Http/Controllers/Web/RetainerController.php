@@ -96,14 +96,17 @@ class RetainerController extends Controller
         abort_if($retainer->organization_id !== $request->user()->organization_id, 403);
 
         $validated = $request->validate([
-            'name'              => 'sometimes|string|max:255',
-            'monthly_value'     => 'sometimes|numeric|min:0',
-            'billing_cycle'     => 'sometimes|in:monthly,quarterly,annual',
-            'status'            => 'sometimes|in:active,paused,cancelled',
-            'end_date'          => 'sometimes|nullable|date',
-            'next_renewal_date' => 'sometimes|nullable|date',
-            'auto_renew'        => 'sometimes|boolean',
-            'notes'             => 'sometimes|nullable|string|max:1000',
+            'name'                => 'sometimes|string|max:255',
+            'monthly_value'       => 'sometimes|numeric|min:0',
+            'billing_cycle'       => 'sometimes|in:monthly,quarterly,annual',
+            'status'              => 'sometimes|in:active,paused,cancelled',
+            'end_date'            => 'sometimes|nullable|date',
+            'next_renewal_date'   => 'sometimes|nullable|date',
+            'auto_renew'          => 'sometimes|boolean',
+            'notes'               => 'sometimes|nullable|string|max:1000',
+            'renewal_date'        => 'sometimes|nullable|date',
+            'renewal_alert_days'  => 'sometimes|integer|min:1|max:365',
+            'renewal_status'      => 'sometimes|in:active,renewed,churned,pending',
         ]);
 
         $retainer->update($validated);

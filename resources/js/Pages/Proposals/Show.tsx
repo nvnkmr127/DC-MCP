@@ -1,0 +1,109 @@
+import React from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import AppLayout from '@/Layouts/AppLayout';
+import { cn } from '@/lib/utils';
+import { ArrowLeft, Send, CheckCircle, XCircle } from 'lucide-react';
+
+interface Proposal {
+    id: string; title: string; status: string; valid_until: string | null;
+    total_value: number; subtotal: number; discount: number; tax_amount: number;
+    notes: string | null; sent_at: string | null; accepted_at: string | null;
+    client: { id: string; name: string } | null;
+    line_items: Array<{ id: string; service: string; description: string | null; unit_price: number; quantity: number; frequency: string; }>;
+}
+interface Props { proposal: Proposal; }
+
+const STATUS_STYLES: Record<string, string> = {
+    draft: 'bg-gray-100 text-gray-600', sent: 'bg-blue-100 text-blue-700',
+    accepted: 'bg-emerald-100 text-emerald-700', rejected: 'bg-rose-100 text-rose-600', expired: 'bg-amber-100 text-amber-700',
+};
+const FREQ_LABELS: Record<string, string> = { one_time: 'One Time', monthly: 'Monthly', quarterly: 'Quarterly', annual: 'Annual' };
+
+const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
+
+export default function ProposalShow({ proposal }: Props) {
+    return (
+        <AppLayout title={proposal.title}>
+            <Head title={proposal.title} />
+            <div className="max-w-3xl space-y-5">
+                <Link href="/proposals" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 w-fit">
+                    <ArrowLeft size={14} /> Back to Proposals
+                </Link>
+
+                <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <h1 className="text-xl font-bold text-gray-900">{proposal.title}</h1>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                                {proposal.client?.name ?? '—'}
+                                {proposal.valid_until ? ` · Valid until ${new Date(proposal.valid_until).toLocaleDateString('en-IN')}` : ''}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold capitalize', STATUS_STYLES[proposal.status] ?? STATUS_STYLES.draft)}>
+                                {proposal.status}
+                            </span>
+                            {proposal.status === 'draft' && (
+                                <button onClick={() => router.post(`/proposals/${proposal.id}/send`)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+                                    <Send size={13} /> Send
+                                </button>
+                            )}
+                            {proposal.status === 'sent' && (
+                                <>
+                                    <button onClick={() => router.post(`/proposals/${proposal.id}/accept`)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700">
+                                        <CheckCircle size={13} /> Accept
+                                    </button>
+                                    <button onClick={() => router.post(`/proposals/${proposal.id}/reject`)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white text-sm font-medium rounded-lg hover:bg-rose-700">
+                                        <XCircle size={13} /> Reject
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-gray-100">
+                                <th className="text-left text-xs font-semibold text-gray-500 pb-2">Service</th>
+                                <th className="text-right text-xs font-semibold text-gray-500 pb-2">Qty</th>
+                                <th className="text-right text-xs font-semibold text-gray-500 pb-2">Unit Price</th>
+                                <th className="text-right text-xs font-semibold text-gray-500 pb-2">Frequency</th>
+                                <th className="text-right text-xs font-semibold text-gray-500 pb-2">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {proposal.line_items.map(li => (
+                                <tr key={li.id}>
+                                    <td className="py-3">
+                                        <p className="text-sm font-medium text-gray-900">{li.service}</p>
+                                        {li.description && <p className="text-xs text-gray-500">{li.description}</p>}
+                                    </td>
+                                    <td className="py-3 text-right text-sm text-gray-600">{li.quantity}</td>
+                                    <td className="py-3 text-right text-sm text-gray-600">{fmt(li.unit_price)}</td>
+                                    <td className="py-3 text-right text-xs text-gray-500">{FREQ_LABELS[li.frequency] ?? li.frequency}</td>
+                                    <td className="py-3 text-right text-sm font-medium text-gray-900">{fmt(li.unit_price * li.quantity)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                            <tr className="border-t border-gray-200">
+                                <td colSpan={4} className="pt-3 text-right text-sm font-bold text-gray-900">Total</td>
+                                <td className="pt-3 text-right text-sm font-bold text-gray-900">{fmt(proposal.total_value)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    {proposal.notes && (
+                        <div className="pt-4 border-t border-gray-100">
+                            <p className="text-xs text-gray-500 font-medium mb-1">Notes</p>
+                            <p className="text-sm text-gray-700 leading-relaxed">{proposal.notes}</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </AppLayout>
+    );
+}

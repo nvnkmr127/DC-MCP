@@ -146,4 +146,16 @@ class ClientController extends Controller
 
         return back()->with('success', 'Client flagged for upsell.');
     }
+
+    public function updateSuccessScore(Request $request, Client $client): \Illuminate\Http\RedirectResponse
+    {
+        abort_if($client->organization_id !== $request->user()->organization_id, 403);
+
+        $validated = $request->validate([
+            'overall_score' => 'required|integer|min:0|max:100',
+        ]);
+
+        $client->update(['success_score' => $validated['overall_score']]);
+        return back()->with('success', 'Success score updated.');
+    }
 }

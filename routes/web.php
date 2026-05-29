@@ -34,6 +34,27 @@ use App\Http\Controllers\Web\DeliverableController;
 use App\Http\Controllers\Web\OneOnOneController;
 use App\Http\Controllers\Web\RecurringTaskController;
 use App\Modules\ClientPortal\Http\Controllers\PortalController;
+use App\Http\Controllers\Web\PaymentReceiptController;
+use App\Http\Controllers\Web\GSTReportController;
+use App\Http\Controllers\Web\LeaveController;
+use App\Http\Controllers\Web\ProposalController;
+use App\Http\Controllers\Web\PerformanceReviewController;
+use App\Http\Controllers\Web\AnnouncementController;
+use App\Http\Controllers\Web\HiringController;
+use App\Http\Controllers\Web\ProjectTemplateController;
+use App\Http\Controllers\Web\IssueController;
+use App\Http\Controllers\Web\RateCardController;
+use App\Http\Controllers\Web\ClientReportController;
+use App\Http\Controllers\Web\FreelancerController;
+use App\Http\Controllers\Web\KnowledgeBaseController;
+use App\Http\Controllers\Web\ClientSurveyController;
+use App\Http\Controllers\Web\CampaignResultController;
+use App\Http\Controllers\Web\AuditChecklistController;
+use App\Http\Controllers\Web\SprintController;
+use App\Http\Controllers\Web\AssetApprovalController;
+use App\Http\Controllers\Web\WorkflowController;
+use App\Http\Controllers\Web\PurchaseOrderController;
+use App\Http\Controllers\Web\CreditNoteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -268,13 +289,162 @@ Route::middleware(['auth'])->group(function () {
 
     // Upsell Flag
     Route::patch('/clients/{client}/upsell',                 [ClientController::class, 'flagUpsell'])->name('web.clients.upsell');
+    Route::post('/clients/{client}/success-score',           [ClientController::class, 'updateSuccessScore'])->name('web.clients.success-score');
 
     // Recurring Tasks
     Route::get('/recurring-tasks',                           [RecurringTaskController::class, 'index'])->name('web.recurring-tasks.index');
     Route::post('/recurring-tasks',                          [RecurringTaskController::class, 'store'])->name('web.recurring-tasks.store');
     Route::patch('/recurring-tasks/{recurringTaskRule}',     [RecurringTaskController::class, 'update'])->name('web.recurring-tasks.update');
     Route::delete('/recurring-tasks/{recurringTaskRule}',    [RecurringTaskController::class, 'destroy'])->name('web.recurring-tasks.destroy');
+
+    // Payment Receipts
+    Route::post('/invoices/{invoice}/payments',              [PaymentReceiptController::class, 'store'])->name('web.payments.store');
+    Route::delete('/payments/{receipt}',                     [PaymentReceiptController::class, 'destroy'])->name('web.payments.destroy');
+
+    // GST Report
+    Route::get('/gst-report',                                [GSTReportController::class, 'index'])->name('web.gst-report.index');
+
+    // Leave Management
+    Route::get('/leave',                                     [LeaveController::class, 'index'])->name('web.leave.index');
+    Route::post('/leave',                                    [LeaveController::class, 'store'])->name('web.leave.store');
+    Route::post('/leave/{leave}/approve',                    [LeaveController::class, 'approve'])->name('web.leave.approve');
+    Route::post('/leave/{leave}/reject',                     [LeaveController::class, 'reject'])->name('web.leave.reject');
+    Route::delete('/leave/{leave}',                          [LeaveController::class, 'destroy'])->name('web.leave.destroy');
+
+    // Proposals
+    Route::get('/proposals',                                 [ProposalController::class, 'index'])->name('web.proposals.index');
+    Route::post('/proposals',                                [ProposalController::class, 'store'])->name('web.proposals.store');
+    Route::get('/proposals/{proposal}',                      [ProposalController::class, 'show'])->name('web.proposals.show');
+    Route::patch('/proposals/{proposal}',                    [ProposalController::class, 'update'])->name('web.proposals.update');
+    Route::delete('/proposals/{proposal}',                   [ProposalController::class, 'destroy'])->name('web.proposals.destroy');
+    Route::post('/proposals/{proposal}/send',                [ProposalController::class, 'markSent'])->name('web.proposals.send');
+    Route::post('/proposals/{proposal}/accept',              [ProposalController::class, 'accept'])->name('web.proposals.accept');
+    Route::post('/proposals/{proposal}/reject',              [ProposalController::class, 'reject'])->name('web.proposals.reject');
+
+    // Performance Reviews
+    Route::get('/reviews',                                   [PerformanceReviewController::class, 'index'])->name('web.reviews.index');
+    Route::post('/reviews',                                  [PerformanceReviewController::class, 'store'])->name('web.reviews.store');
+    Route::patch('/reviews/{review}',                        [PerformanceReviewController::class, 'update'])->name('web.reviews.update');
+    Route::post('/reviews/{review}/submit',                  [PerformanceReviewController::class, 'submit'])->name('web.reviews.submit');
+    Route::post('/reviews/{review}/acknowledge',             [PerformanceReviewController::class, 'acknowledge'])->name('web.reviews.acknowledge');
+
+    // Announcements
+    Route::get('/announcements',                             [AnnouncementController::class, 'index'])->name('web.announcements.index');
+    Route::post('/announcements',                            [AnnouncementController::class, 'store'])->name('web.announcements.store');
+    Route::patch('/announcements/{announcement}',            [AnnouncementController::class, 'update'])->name('web.announcements.update');
+    Route::delete('/announcements/{announcement}',           [AnnouncementController::class, 'destroy'])->name('web.announcements.destroy');
+
+    // Hiring Pipeline
+    Route::get('/hiring',                                    [HiringController::class, 'index'])->name('web.hiring.index');
+    Route::post('/hiring/openings',                          [HiringController::class, 'storeOpening'])->name('web.hiring.openings.store');
+    Route::patch('/hiring/openings/{opening}',               [HiringController::class, 'updateOpening'])->name('web.hiring.openings.update');
+    Route::delete('/hiring/openings/{opening}',              [HiringController::class, 'destroyOpening'])->name('web.hiring.openings.destroy');
+    Route::post('/hiring/openings/{opening}/candidates',     [HiringController::class, 'storeCandidate'])->name('web.hiring.candidates.store');
+    Route::patch('/hiring/candidates/{candidate}',           [HiringController::class, 'updateCandidate'])->name('web.hiring.candidates.update');
+    Route::delete('/hiring/candidates/{candidate}',          [HiringController::class, 'destroyCandidate'])->name('web.hiring.candidates.destroy');
+
+    // Project Templates
+    Route::get('/project-templates',                         [ProjectTemplateController::class, 'index'])->name('web.project-templates.index');
+    Route::post('/project-templates',                        [ProjectTemplateController::class, 'store'])->name('web.project-templates.store');
+    Route::patch('/project-templates/{template}',            [ProjectTemplateController::class, 'update'])->name('web.project-templates.update');
+    Route::delete('/project-templates/{template}',           [ProjectTemplateController::class, 'destroy'])->name('web.project-templates.destroy');
+    Route::post('/project-templates/{template}/create-project', [ProjectTemplateController::class, 'createProject'])->name('web.project-templates.create-project');
+
+    // Issues
+    Route::get('/issues',                                    [IssueController::class, 'index'])->name('web.issues.index');
+    Route::post('/issues',                                   [IssueController::class, 'store'])->name('web.issues.store');
+    Route::patch('/issues/{issue}',                          [IssueController::class, 'update'])->name('web.issues.update');
+    Route::delete('/issues/{issue}',                         [IssueController::class, 'destroy'])->name('web.issues.destroy');
+    Route::post('/issues/{issue}/task',                      [IssueController::class, 'convertToTask'])->name('web.issues.task');
+
+    // Rate Cards
+    Route::get('/rate-cards',                                [RateCardController::class, 'index'])->name('web.rate-cards.index');
+    Route::post('/rate-cards',                               [RateCardController::class, 'store'])->name('web.rate-cards.store');
+    Route::patch('/rate-cards/{rateCard}',                   [RateCardController::class, 'update'])->name('web.rate-cards.update');
+    Route::delete('/rate-cards/{rateCard}',                  [RateCardController::class, 'destroy'])->name('web.rate-cards.destroy');
+
+    // Client Reports
+    Route::get('/client-reports',                            [ClientReportController::class, 'index'])->name('web.client-reports.index');
+    Route::post('/client-reports',                           [ClientReportController::class, 'store'])->name('web.client-reports.store');
+    Route::patch('/client-reports/{report}',                 [ClientReportController::class, 'update'])->name('web.client-reports.update');
+    Route::delete('/client-reports/{report}',                [ClientReportController::class, 'destroy'])->name('web.client-reports.destroy');
+    Route::post('/client-reports/{report}/send',             [ClientReportController::class, 'markSent'])->name('web.client-reports.send');
+    Route::post('/client-reports/{report}/draft',            [ClientReportController::class, 'generateDraft'])->name('web.client-reports.draft');
+
+    // Bulk Task Creator
+    Route::post('/projects/{project}/bulk-tasks',            [TaskController::class, 'bulkStore'])->name('web.projects.bulk-tasks');
+
+    // Freelancers
+    Route::get('/freelancers',                               [FreelancerController::class, 'index'])->name('web.freelancers.index');
+    Route::post('/freelancers',                              [FreelancerController::class, 'store'])->name('web.freelancers.store');
+    Route::patch('/freelancers/{freelancer}',                [FreelancerController::class, 'update'])->name('web.freelancers.update');
+    Route::delete('/freelancers/{freelancer}',               [FreelancerController::class, 'destroy'])->name('web.freelancers.destroy');
+    Route::post('/freelancers/{freelancer}/assignments',     [FreelancerController::class, 'storeAssignment'])->name('web.freelancers.assignments.store');
+    Route::patch('/freelancer-assignments/{assignment}',     [FreelancerController::class, 'updateAssignment'])->name('web.freelancer-assignments.update');
+    Route::delete('/freelancer-assignments/{assignment}',    [FreelancerController::class, 'destroyAssignment'])->name('web.freelancer-assignments.destroy');
+
+    // Knowledge Base
+    Route::get('/knowledge-base',                            [KnowledgeBaseController::class, 'index'])->name('web.knowledge-base.index');
+    Route::post('/knowledge-base',                           [KnowledgeBaseController::class, 'store'])->name('web.knowledge-base.store');
+    Route::get('/knowledge-base/{article}',                  [KnowledgeBaseController::class, 'show'])->name('web.knowledge-base.show');
+    Route::patch('/knowledge-base/{article}',                [KnowledgeBaseController::class, 'update'])->name('web.knowledge-base.update');
+    Route::delete('/knowledge-base/{article}',               [KnowledgeBaseController::class, 'destroy'])->name('web.knowledge-base.destroy');
+
+    // NPS Surveys
+    Route::get('/client-surveys',                            [ClientSurveyController::class, 'index'])->name('web.client-surveys.index');
+    Route::post('/client-surveys/send',                      [ClientSurveyController::class, 'send'])->name('web.client-surveys.send');
+    Route::delete('/client-surveys/{survey}',                [ClientSurveyController::class, 'destroy'])->name('web.client-surveys.destroy');
+
+    // Campaign Performance
+    Route::post('/campaign-results',                         [CampaignResultController::class, 'store'])->name('web.campaign-results.store');
+    Route::patch('/campaign-results/{result}',               [CampaignResultController::class, 'update'])->name('web.campaign-results.update');
+    Route::delete('/campaign-results/{result}',              [CampaignResultController::class, 'destroy'])->name('web.campaign-results.destroy');
+
+    // Audit Checklists
+    Route::get('/audit-checklists',                          [AuditChecklistController::class, 'index'])->name('web.audit-checklists.index');
+    Route::post('/audit-checklists',                         [AuditChecklistController::class, 'store'])->name('web.audit-checklists.store');
+    Route::patch('/audit-checklists/{checklist}',            [AuditChecklistController::class, 'update'])->name('web.audit-checklists.update');
+    Route::delete('/audit-checklists/{checklist}',           [AuditChecklistController::class, 'destroy'])->name('web.audit-checklists.destroy');
+
+    // Sprints
+    Route::get('/sprints',                                   [SprintController::class, 'index'])->name('web.sprints.index');
+    Route::post('/sprints',                                  [SprintController::class, 'store'])->name('web.sprints.store');
+    Route::patch('/sprints/{sprint}',                        [SprintController::class, 'update'])->name('web.sprints.update');
+    Route::delete('/sprints/{sprint}',                       [SprintController::class, 'destroy'])->name('web.sprints.destroy');
+    Route::post('/sprints/{sprint}/tasks',                   [SprintController::class, 'addTask'])->name('web.sprints.tasks.add');
+    Route::delete('/sprints/{sprint}/tasks/{task}',          [SprintController::class, 'removeTask'])->name('web.sprints.tasks.remove');
+
+    // Asset Approvals
+    Route::get('/asset-approvals',                           [AssetApprovalController::class, 'index'])->name('web.asset-approvals.index');
+    Route::post('/asset-approvals',                          [AssetApprovalController::class, 'store'])->name('web.asset-approvals.store');
+    Route::patch('/asset-approvals/{approval}',              [AssetApprovalController::class, 'update'])->name('web.asset-approvals.update');
+    Route::delete('/asset-approvals/{approval}',             [AssetApprovalController::class, 'destroy'])->name('web.asset-approvals.destroy');
+
+    // Workflows
+    Route::get('/workflows',                                 [WorkflowController::class, 'index'])->name('web.workflows.index');
+    Route::post('/workflows',                                [WorkflowController::class, 'store'])->name('web.workflows.store');
+    Route::patch('/workflows/{workflow}',                    [WorkflowController::class, 'update'])->name('web.workflows.update');
+    Route::delete('/workflows/{workflow}',                   [WorkflowController::class, 'destroy'])->name('web.workflows.destroy');
+    Route::post('/workflows/{workflow}/toggle',              [WorkflowController::class, 'toggleActive'])->name('web.workflows.toggle');
+
+    // Purchase Orders
+    Route::get('/purchase-orders',                           [PurchaseOrderController::class, 'index'])->name('web.purchase-orders.index');
+    Route::post('/purchase-orders',                          [PurchaseOrderController::class, 'store'])->name('web.purchase-orders.store');
+    Route::patch('/purchase-orders/{po}',                    [PurchaseOrderController::class, 'update'])->name('web.purchase-orders.update');
+    Route::delete('/purchase-orders/{po}',                   [PurchaseOrderController::class, 'destroy'])->name('web.purchase-orders.destroy');
+    Route::post('/purchase-orders/{po}/status',              [PurchaseOrderController::class, 'updateStatus'])->name('web.purchase-orders.status');
+
+    // Credit Notes
+    Route::get('/credit-notes',                              [CreditNoteController::class, 'index'])->name('web.credit-notes.index');
+    Route::post('/credit-notes',                             [CreditNoteController::class, 'store'])->name('web.credit-notes.store');
+    Route::patch('/credit-notes/{note}',                     [CreditNoteController::class, 'update'])->name('web.credit-notes.update');
+    Route::delete('/credit-notes/{note}',                    [CreditNoteController::class, 'destroy'])->name('web.credit-notes.destroy');
+    Route::post('/credit-notes/{note}/apply',                [CreditNoteController::class, 'apply'])->name('web.credit-notes.apply');
 });
+
+// NPS Survey (public, no auth)
+Route::get('/survey/{token}',  [ClientSurveyController::class, 'showForm'])->name('survey.form');
+Route::post('/survey/{token}', [ClientSurveyController::class, 'respond'])->name('survey.respond');
 
 // Client Portal (client-facing, no main auth required)
 Route::prefix('portal')->name('portal.')->group(function () {

@@ -3,7 +3,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn, formatDate } from '@/lib/utils';
 import type { Client, Project } from '@/types';
-import { ArrowLeft, Edit, Trash2, Globe, Mail, Phone, Building2, ExternalLink, Plus, X, MessageSquare, Phone as PhoneIcon, AtSign } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Globe, Mail, Phone, Building2, ExternalLink, Plus, X, MessageSquare, Phone as PhoneIcon, AtSign, Star } from 'lucide-react';
 
 interface Communication {
     id: string; type: string; contact_person: string | null; subject: string; notes: string;
@@ -23,6 +23,7 @@ const COMM_TYPE_STYLES: Record<string, string> = {
 interface Props {
     client: Client & {
         projects: Array<Project & { tasks_count: number }>;
+        success_score: number | null;
     };
     communications: Communication[];
 }
@@ -128,9 +129,39 @@ function AddCommModal({ clientId, onClose }: { clientId: string; onClose: () => 
     );
 }
 
+function ScoreModal({ clientId, current, onClose }: { clientId: string; current: number | null; onClose: () => void }) {
+    const form = useForm({ overall_score: String(current ?? 0) });
+    return (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-[15px] font-bold text-gray-900">Update Success Score</h2>
+                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                </div>
+                <form onSubmit={e => { e.preventDefault(); form.post(`/clients/${clientId}/success-score`, { onSuccess: onClose }); }} className="space-y-3">
+                    <div>
+                        <label className="text-xs text-gray-500 font-medium">Score (0–100)</label>
+                        <input type="number" min={0} max={100} value={form.data.overall_score}
+                            onChange={e => form.setData('overall_score', e.target.value)}
+                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
+                        <button type="submit" disabled={form.processing}
+                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                            {form.processing ? 'Saving…' : 'Save'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
 export default function ClientShow({ client, communications }: Props) {
     const [activeTab, setActiveTab] = useState<'projects' | 'comms'>('projects');
     const [commOpen, setCommOpen] = useState(false);
+    const [scoreOpen, setScoreOpen] = useState(false);
     const tier   = TIER_CONFIG[client.tier]   ?? TIER_CONFIG.standard;
     const status = STATUS_CONFIG[client.status] ?? STATUS_CONFIG.inactive;
 
@@ -242,7 +273,7 @@ export default function ClientShow({ client, communications }: Props) {
                 </div>
 
                 {/* Stats strip */}
-                <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-4 gap-4 mb-4">
                     {[
                         { label: 'Total Projects', value: client.projects.length },
                         { label: 'Active Projects', value: activeProjects },
@@ -253,6 +284,14 @@ export default function ClientShow({ client, communications }: Props) {
                             <p className="text-[11px] text-gray-400 mt-0.5">{stat.label}</p>
                         </div>
                     ))}
+                    <button onClick={() => setScoreOpen(true)}
+                        className="bg-white rounded-xl border border-gray-100 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-center hover:border-indigo-200 transition-colors group">
+                        <div className="flex items-center justify-center gap-1 mb-0.5">
+                            <Star size={14} className={client.success_score !== null ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
+                            <p className="text-2xl font-bold text-gray-900">{client.success_score ?? '—'}</p>
+                        </div>
+                        <p className="text-[11px] text-gray-400">Success Score</p>
+                    </button>
                 </div>
 
                 {activeTab === 'projects' ? (
@@ -349,6 +388,7 @@ export default function ClientShow({ client, communications }: Props) {
                 )}
 
                 {commOpen && <AddCommModal clientId={client.id} onClose={() => setCommOpen(false)} />}
+                {scoreOpen && <ScoreModal clientId={client.id} current={client.success_score} onClose={() => setScoreOpen(false)} />}
             </div>
         </AppLayout>
     );

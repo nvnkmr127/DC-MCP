@@ -318,6 +318,34 @@ class TaskController extends Controller
         return back()->with('success', 'Attachment deleted.');
     }
 
+    public function bulkStore(Request $request, Project $project): \Illuminate\Http\RedirectResponse
+    {
+        abort_if($project->organization_id !== $request->user()->organization_id, 403);
+
+        $data = $request->validate([
+            'tasks'                  => 'required|array|min:1',
+            'tasks.*.title'          => 'required|string|max:300',
+            'tasks.*.priority'       => 'nullable|in:urgent,high,medium,low',
+            'tasks.*.due_date'       => 'nullable|date',
+            'tasks.*.assigned_to'    => 'nullable|uuid|exists:users,id',
+        ]);
+
+        foreach ($data['tasks'] as $taskData) {
+            Task::create([
+                'organization_id' => $request->user()->organization_id,
+                'created_by'      => $request->user()->id,
+                'project_id'      => $project->id,
+                'title'           => $taskData['title'],
+                'priority'        => $taskData['priority'] ?? 'medium',
+                'due_date'        => $taskData['due_date'] ?? null,
+                'assigned_to'     => $taskData['assigned_to'] ?? null,
+                'status'          => 'todo',
+            ]);
+        }
+
+        return back()->with('success', count($data['tasks']) . ' tasks created.');
+    }
+
     public function addDependency(Request $request, Task $task): \Illuminate\Http\RedirectResponse
     {
         abort_if($task->organization_id !== $request->user()->organization_id, 403);

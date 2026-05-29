@@ -11,7 +11,11 @@ import {
     Command, Plus, Zap, HelpCircle, Sparkles, PenTool, Globe,
     TrendingUp, GitBranch, ClipboardList, Activity, FileText,
     DollarSign, CreditCard, UserCheck, Target, Flag, Clock,
-    Users2, RotateCcw,
+    Users2, RotateCcw, Bug, Layers, GitMerge, CheckCircle2,
+    ListChecks, Star, ReceiptText, Package, Percent,
+    FileCheck, MessageSquare, UserPlus, BookOpen, Smile,
+    BarChart2, Workflow, ShoppingCart, FileX, Trophy, Send,
+    Megaphone,
 } from 'lucide-react';
 
 interface NavItem {
@@ -43,18 +47,43 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Timesheets',     href: '/timesheets',        icon: Clock,       section: 'main' },
     { label: '1:1 Notes',      href: '/one-on-one',        icon: Users2,      section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Recurring',      href: '/recurring-tasks',   icon: RotateCcw,   section: 'main', roles: ['ceo', 'project_manager'] },
+    // Projects extended
+    { label: 'Issues',         href: '/issues',           icon: Bug,        section: 'main' },
+    { label: 'Sprints',        href: '/sprints',          icon: GitMerge,   section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Templates',      href: '/project-templates', icon: Layers,    section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Asset Approvals', href: '/asset-approvals', icon: CheckCircle2, section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Audit Checklists', href: '/audit-checklists', icon: ListChecks, section: 'main' },
+    // Finance extended
+    { label: 'Proposals',      href: '/proposals',        icon: Send,       section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Client Reports', href: '/client-reports',   icon: FileCheck,  section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'NPS Surveys',    href: '/client-surveys',   icon: Smile,      section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'GST Report',     href: '/gst-report',       icon: Percent,    section: 'main', roles: ['ceo'] },
+    { label: 'Rate Card',      href: '/rate-cards',       icon: ReceiptText, section: 'main', roles: ['ceo'] },
+    { label: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart, section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Credit Notes',   href: '/credit-notes',     icon: FileX,      section: 'main', roles: ['ceo'] },
+    // Daily Briefing / Insights
     { label: 'Daily Briefing', href: '/briefings',    icon: Sun,      section: 'insights' },
     { label: 'AI Suggestions', href: '/suggestions',  icon: Sparkles, section: 'insights', roles: ['ceo', 'project_manager'] },
     { label: 'Reports',        href: '/reports',      icon: BarChart3, section: 'insights' },
+    // HR section
+    { label: 'Leave',           href: '/leave',         icon: Calendar,       section: 'hr' },
+    { label: 'Reviews',         href: '/reviews',       icon: Star,           section: 'hr', roles: ['ceo', 'project_manager'] },
+    { label: 'Announcements',   href: '/announcements', icon: Megaphone,      section: 'hr' },
+    { label: 'Hiring',          href: '/hiring',        icon: UserPlus,       section: 'hr', roles: ['ceo', 'project_manager'] },
+    { label: 'Freelancers',     href: '/freelancers',   icon: Users2,         section: 'hr', roles: ['ceo', 'project_manager'] },
+    { label: 'Knowledge Base',  href: '/knowledge-base', icon: BookOpen,      section: 'hr' },
+    // Manage
     { label: 'Team',           href: '/settings/team', icon: Users,           section: 'manage', roles: ['ceo', 'project_manager'] },
     { label: 'MCP Connect',    href: '/settings/mcp',           icon: Plug,   section: 'manage', roles: ['ceo', 'project_manager'] },
     { label: 'Client Portal',  href: '/settings/client-portal', icon: Globe,  section: 'manage', roles: ['ceo'] },
+    { label: 'Workflows',      href: '/workflows',              icon: Workflow, section: 'manage', roles: ['ceo', 'project_manager'] },
     { label: 'Settings',       href: '/settings',               icon: Settings, section: 'manage' },
 ];
 
 const NAV_SECTIONS = [
     { key: 'main',     label: 'Workspace' },
     { key: 'insights', label: 'Insights' },
+    { key: 'hr',       label: 'HR' },
     { key: 'manage',   label: 'Manage' },
 ];
 
