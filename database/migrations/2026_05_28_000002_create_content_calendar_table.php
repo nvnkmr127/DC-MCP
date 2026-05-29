@@ -17,6 +17,7 @@ return new class extends Migration
             $table->uuid('created_by')->nullable();
             $table->uuid('approved_by')->nullable();
             $table->uuid('task_id')->nullable();
+
             $table->string('title');
             $table->text('body')->nullable();
             $table->enum('type', ['social_post', 'blog', 'ad_campaign'])->default('social_post');
@@ -28,10 +29,12 @@ return new class extends Migration
                 'idea', 'in_progress', 'in_review', 'approved',
                 'scheduled', 'published', 'cancelled',
             ])->default('idea');
+
             $table->date('due_date')->nullable();
             $table->timestamp('scheduled_at')->nullable();
             $table->timestamp('published_at')->nullable();
             $table->timestamp('approved_at')->nullable();
+
             $table->jsonb('meta')->nullable();
             $table->jsonb('tags')->nullable();
             $table->unsignedSmallInteger('sort_order')->default(0);
@@ -42,7 +45,12 @@ return new class extends Migration
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->foreign('project_id')->references('id')->on('projects')->onDelete('set null');
             $table->foreign('assigned_to')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('approved_by')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('task_id')->references('id')->on('tasks')->onDelete('set null');
+
             $table->index(['organization_id', 'status']);
+            $table->index(['organization_id', 'client_id']);
+            $table->index(['organization_id', 'scheduled_at']);
             $table->index(['organization_id', 'due_date']);
         });
     }

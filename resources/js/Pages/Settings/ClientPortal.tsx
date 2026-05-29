@@ -1,71 +1,78 @@
 import React, { useState } from 'react';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { cn, timeAgo } from '@/lib/utils';
-import { Plus, X, UserCheck, UserX, RotateCcw, CheckCircle2, ArrowRight, ExternalLink } from 'lucide-react';
+import {
+    Globe, Users, Plus, Mail, CheckCircle2, Clock, X,
+    AlertTriangle, ArrowRight, RefreshCw, ToggleLeft, ToggleRight,
+    MessageSquare, Link2, Trash2,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface PortalUser {
-    id: string; name: string; email: string; is_active: boolean;
-    last_login_at: string | null; invite_sent_at: string | null;
-    client: { id: string; name: string } | null;
+    id: string;
+    name: string;
+    email: string;
+    is_active: boolean;
+    last_login_at: string | null;
 }
-interface PortalRequest {
-    id: string; title: string; description: string | null; status: string;
+
+interface ClientRow {
+    id: string;
+    name: string;
+    company: string | null;
+    portal_users: PortalUser[];
+    pending_requests: number;
+}
+
+interface PortalRequestRow {
+    id: string;
+    title: string;
+    description: string | null;
+    type: string;
+    status: string;
+    priority: string;
     created_at: string;
+    task_id: string | null;
     client: { id: string; name: string } | null;
     portal_user: { name: string; email: string } | null;
 }
-interface Client { id: string; name: string; company: string; }
+
 interface Props {
-    portalUsers: PortalUser[];
-    requests: PortalRequest[];
-    clients: Client[];
+    clients: ClientRow[];
+    pendingRequests: PortalRequestRow[];
 }
 
-const STATUS_STYLES: Record<string, string> = {
-    open:        'bg-blue-100 text-blue-700',
-    in_progress: 'bg-amber-100 text-amber-700',
-    closed:      'bg-gray-100 text-gray-500',
-    converted:   'bg-emerald-100 text-emerald-700',
-};
+function InviteModal({ client, onClose }: { client: ClientRow; onClose: () => void }) {
+    const { data, setData, post, processing } = useForm({ name: '', email: '' });
 
-function InviteModal({ clients, onClose }: { clients: Client[]; onClose: () => void }) {
-    const form = useForm({ client_id: '', name: '', email: '' });
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(`/settings/client-portal/${client.id}/invite`, { onSuccess: onClose });
+    };
+
     return (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-[15px] font-bold text-gray-900">Invite Client Contact</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+                <div className="flex items-center justify-between px-6 py-4 border-b">
+                    <h2 className="font-semibold text-gray-900">Invite Client Contact</h2>
+                    <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X className="w-4 h-4" /></button>
                 </div>
-                <form onSubmit={e => {
-                    e.preventDefault();
-                    form.post(`/settings/client-portal/${form.data.client_id}/invite`, { onSuccess: onClose });
-                }} className="space-y-3">
+                <form onSubmit={submit} className="p-6 space-y-4">
+                    <p className="text-sm text-gray-500">Sending portal access to a contact at <strong>{client.company || client.name}</strong>.</p>
                     <div>
-                        <label className="text-xs text-gray-500 font-medium">Client *</label>
-                        <select value={form.data.client_id} onChange={e => form.setData('client_id', e.target.value)}
-                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500">
-                            <option value="">Select client…</option>
-                            {clients.map(c => <option key={c.id} value={c.id}>{c.company || c.name}</option>)}
-                        </select>
+                        <label className="text-xs font-medium text-gray-500 mb-1 block">Contact Name</label>
+                        <input className="w-full text-sm border rounded-lg p-2" placeholder="John Smith" value={data.name} onChange={e => setData('name', e.target.value)} required />
                     </div>
                     <div>
-                        <label className="text-xs text-gray-500 font-medium">Contact Name *</label>
-                        <input type="text" value={form.data.name} onChange={e => form.setData('name', e.target.value)}
-                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
+                        <label className="text-xs font-medium text-gray-500 mb-1 block">Email Address</label>
+                        <input type="email" className="w-full text-sm border rounded-lg p-2" placeholder="john@client.com" value={data.email} onChange={e => setData('email', e.target.value)} required />
                     </div>
-                    <div>
-                        <label className="text-xs text-gray-500 font-medium">Email *</label>
-                        <input type="email" value={form.data.email} onChange={e => form.setData('email', e.target.value)}
-                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.client_id || !form.data.name || !form.data.email}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                            {form.processing ? 'Sending…' : 'Send Invite'}
+                    <p className="text-xs text-gray-400">A magic link will be emailed. Valid for 24 hours. Client can see their projects and submit requests.</p>
+                    <div className="flex gap-2 pt-1">
+                        <button type="submit" disabled={processing} className="flex-1 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                            Send Portal Invite
                         </button>
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-500 border rounded-lg hover:bg-gray-50">Cancel</button>
                     </div>
                 </form>
             </div>
@@ -73,112 +80,177 @@ function InviteModal({ clients, onClose }: { clients: Client[]; onClose: () => v
     );
 }
 
-export default function ClientPortalSettings({ portalUsers, requests, clients }: Props) {
+function ClientPortalCard({ client }: { client: ClientRow }) {
     const [inviteOpen, setInviteOpen] = useState(false);
 
-    return (
-        <AppLayout title="Client Portal">
-            <Head title="Client Portal" />
+    const toggle = (userId: string) => {
+        router.post(`/settings/client-portal/users/${userId}/toggle`, {}, { preserveScroll: true });
+    };
 
-            <div className="max-w-5xl space-y-6">
-                <div className="flex items-center justify-between">
+    const resend = (userId: string) => {
+        router.post(`/settings/client-portal/users/${userId}/resend`, {}, { preserveScroll: true });
+    };
+
+    return (
+        <>
+            {inviteOpen && <InviteModal client={client} onClose={() => setInviteOpen(false)} />}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+                <div className="flex items-center justify-between mb-3">
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900">Client Portal</h1>
-                        <p className="text-sm text-gray-500 mt-0.5">Give clients a secure view into their projects and reports</p>
+                        <p className="font-semibold text-gray-900 text-sm">{client.company || client.name}</p>
+                        {client.pending_requests > 0 && (
+                            <span className="text-xs font-medium text-amber-600 flex items-center gap-1 mt-0.5">
+                                <AlertTriangle className="w-3 h-3" />
+                                {client.pending_requests} pending request{client.pending_requests > 1 ? 's' : ''}
+                            </span>
+                        )}
                     </div>
-                    <button onClick={() => setInviteOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> Invite Contact
+                    <button
+                        onClick={() => setInviteOpen(true)}
+                        className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100"
+                    >
+                        <Plus className="w-3 h-3" /> Invite
                     </button>
                 </div>
 
-                {/* Open requests */}
-                {requests.length > 0 && (
-                    <div>
-                        <h2 className="text-sm font-semibold text-gray-700 mb-2">Open Client Requests ({requests.length})</h2>
-                        <div className="space-y-2">
-                            {requests.map(r => (
-                                <div key={r.id} className="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-start justify-between gap-3">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <p className="text-sm font-medium text-gray-900">{r.title}</p>
-                                            <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize', STATUS_STYLES[r.status] ?? STATUS_STYLES.open)}>
-                                                {r.status.replace('_', ' ')}
-                                            </span>
-                                        </div>
-                                        {r.description && <p className="text-xs text-gray-500 mt-0.5 truncate">{r.description}</p>}
-                                        <p className="text-[11px] text-gray-400 mt-1">
-                                            From {r.portal_user?.name ?? 'Unknown'} ({r.client?.name}) · {timeAgo(r.created_at)}
+                {client.portal_users.length === 0 ? (
+                    <p className="text-xs text-gray-400 italic">No portal users yet.</p>
+                ) : (
+                    <div className="space-y-2">
+                        {client.portal_users.map(u => (
+                            <div key={u.id} className="flex items-center justify-between py-2 border-t border-gray-100">
+                                <div>
+                                    <p className="text-xs font-medium text-gray-800">{u.name}</p>
+                                    <p className="text-xs text-gray-400">{u.email}</p>
+                                    {u.last_login_at && (
+                                        <p className="text-xs text-gray-300">
+                                            Last login: {new Date(u.last_login_at).toLocaleDateString()}
                                         </p>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 shrink-0">
-                                        <button onClick={() => router.post(`/settings/client-portal/requests/${r.id}/to-task`, {})}
-                                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-indigo-200 text-indigo-600 rounded-lg hover:bg-indigo-50">
-                                            <ArrowRight size={11} /> To Task
-                                        </button>
-                                        <button onClick={() => router.post(`/settings/client-portal/requests/${r.id}/close`, {})}
-                                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-gray-200 text-gray-500 rounded-lg hover:bg-gray-50">
-                                            <CheckCircle2 size={11} /> Close
-                                        </button>
-                                    </div>
+                                    )}
                                 </div>
-                            ))}
-                        </div>
+                                <div className="flex items-center gap-1">
+                                    <button onClick={() => resend(u.id)} title="Resend magic link" className="p-1.5 text-gray-400 hover:text-indigo-600 rounded">
+                                        <Mail className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button onClick={() => toggle(u.id)} title={u.is_active ? 'Disable access' : 'Enable access'} className={cn('p-1.5 rounded', u.is_active ? 'text-emerald-500 hover:text-red-500' : 'text-gray-400 hover:text-emerald-500')}>
+                                        {u.is_active ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
+            </div>
+        </>
+    );
+}
 
-                {/* Portal users */}
-                <div>
-                    <h2 className="text-sm font-semibold text-gray-700 mb-2">Portal Users ({portalUsers.length})</h2>
-                    {portalUsers.length === 0 ? (
-                        <div className="bg-white rounded-xl border border-dashed border-gray-200 px-5 py-10 text-center">
-                            <p className="text-sm text-gray-400">No client contacts invited yet.</p>
-                            <button onClick={() => setInviteOpen(true)} className="mt-2 text-sm text-indigo-600 font-medium">
-                                Invite the first contact →
-                            </button>
-                        </div>
-                    ) : (
+export default function ClientPortalSettings({ clients, pendingRequests }: Props) {
+    const convertToTask = (requestId: string) => {
+        router.post(`/settings/client-portal/requests/${requestId}/to-task`, {}, { preserveScroll: true });
+    };
+
+    const closeRequest = (requestId: string) => {
+        router.post(`/settings/client-portal/requests/${requestId}/close`, {}, { preserveScroll: true });
+    };
+
+    const TYPE_STYLES: Record<string, string> = {
+        new_request: 'bg-blue-100 text-blue-700',
+        feedback:    'bg-purple-100 text-purple-700',
+        bug:         'bg-red-100 text-red-700',
+        question:    'bg-gray-100 text-gray-600',
+    };
+
+    return (
+        <AppLayout title="Client Portal">
+            <Head title="Client Portal Management" />
+
+            <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+                {/* Header */}
+                <div className="flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-indigo-500" />
+                    <div>
+                        <h1 className="text-xl font-bold text-gray-900">Client Portal</h1>
+                        <p className="text-sm text-gray-500">Manage client access and incoming requests. Nothing is visible to clients without your explicit sharing.</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+                    {/* Client Cards */}
+                    <div className="lg:col-span-3 space-y-3">
+                        <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <Users className="w-4 h-4 text-gray-400" /> Client Portal Access
+                        </h2>
+                        {clients.length === 0 ? (
+                            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                                <p className="text-sm text-gray-400">No active clients yet. Add clients first.</p>
+                            </div>
+                        ) : (
+                            clients.map(c => <ClientPortalCard key={c.id} client={c} />)
+                        )}
+                    </div>
+
+                    {/* Pending Requests */}
+                    <div className="lg:col-span-2 space-y-3">
+                        <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4 text-gray-400" /> Pending Requests
+                            {pendingRequests.length > 0 && (
+                                <span className="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                                    {pendingRequests.length}
+                                </span>
+                            )}
+                        </h2>
+
                         <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-                            {portalUsers.map(u => (
-                                <div key={u.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-sm font-medium text-gray-900">{u.name}</p>
-                                            {!u.is_active && <span className="px-1.5 py-0.5 rounded text-[10px] bg-gray-100 text-gray-500 font-medium">Disabled</span>}
-                                        </div>
-                                        <p className="text-xs text-gray-400">{u.email} · {u.client?.name}</p>
-                                        <p className="text-[11px] text-gray-400 mt-0.5">
-                                            {u.last_login_at ? `Last login ${timeAgo(u.last_login_at)}` : u.invite_sent_at ? `Invited ${timeAgo(u.invite_sent_at)}` : 'Not yet invited'}
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 shrink-0">
-                                        <button onClick={() => router.post(`/settings/client-portal/users/${u.id}/resend`, {})}
-                                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50">
-                                            <RotateCcw size={11} /> Resend
-                                        </button>
-                                        <button onClick={() => router.post(`/settings/client-portal/users/${u.id}/toggle`, {})}
-                                            className={cn('flex items-center gap-1 px-2.5 py-1.5 text-xs border rounded-lg transition-colors',
-                                                u.is_active
-                                                    ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
-                                                    : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
-                                            )}>
-                                            {u.is_active ? <><UserX size={11} /> Disable</> : <><UserCheck size={11} /> Enable</>}
-                                        </button>
-                                        {u.client && (
-                                            <Link href={`/settings/client-portal/${u.client.id}`}
-                                                className="p-1.5 text-gray-400 hover:text-indigo-600 rounded hover:bg-indigo-50 transition-colors">
-                                                <ExternalLink size={13} />
-                                            </Link>
-                                        )}
-                                    </div>
+                            {pendingRequests.length === 0 ? (
+                                <div className="p-6 text-center">
+                                    <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+                                    <p className="text-xs text-gray-400">No pending client requests.</p>
                                 </div>
-                            ))}
+                            ) : (
+                                pendingRequests.map(r => (
+                                    <div key={r.id} className="p-3 space-y-2">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-semibold text-gray-900 truncate">{r.title}</p>
+                                                <div className="flex items-center gap-1.5 mt-0.5">
+                                                    <span className={cn('text-xs px-1.5 py-0.5 rounded font-medium', TYPE_STYLES[r.type])}>
+                                                        {r.type.replace('_', ' ')}
+                                                    </span>
+                                                    {r.client && <span className="text-xs text-gray-400">{r.client.name}</span>}
+                                                </div>
+                                                {r.portal_user && (
+                                                    <p className="text-xs text-gray-400 mt-0.5">by {r.portal_user.name}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {r.description && (
+                                            <p className="text-xs text-gray-500 line-clamp-2">{r.description}</p>
+                                        )}
+                                        <div className="flex gap-1.5">
+                                            <button
+                                                onClick={() => convertToTask(r.id)}
+                                                className="flex items-center gap-1 text-xs px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100"
+                                            >
+                                                <ArrowRight className="w-3 h-3" /> Create Task
+                                            </button>
+                                            <button
+                                                onClick={() => closeRequest(r.id)}
+                                                className="flex items-center gap-1 text-xs px-2 py-1 text-gray-400 hover:text-red-500"
+                                            >
+                                                <X className="w-3 h-3" /> Close
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
-                    )}
+                    </div>
+
                 </div>
             </div>
-
-            {inviteOpen && <InviteModal clients={clients} onClose={() => setInviteOpen(false)} />}
         </AppLayout>
     );
 }

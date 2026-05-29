@@ -64,6 +64,15 @@ use App\Http\Controllers\Web\CreditNoteController;
 | that share the same resource names.
 */
 
+// ─── Client Portal (separate auth — magic link based) ───────────────────────
+Route::prefix('portal')->name('portal.')->group(function () {
+    Route::get('/login',           [PortalController::class, 'showLogin'])->name('login');
+    Route::get('/auth/{token}',    [PortalController::class, 'handleMagicLink'])->name('magic');
+    Route::post('/logout',         [PortalController::class, 'logout'])->name('logout');
+    Route::get('/dashboard',       [PortalController::class, 'dashboard'])->name('dashboard');
+    Route::post('/requests',       [PortalController::class, 'submitRequest'])->name('requests.store');
+});
+
 // Auth (guest only)
 Route::middleware('guest')->group(function () {
     Route::get('/login',    [AuthController::class, 'showLogin'])->name('login');

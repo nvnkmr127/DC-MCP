@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Modules\ClientPortal\Models\ClientPortalUser;
-use App\Modules\ClientPortal\Models\ClientPortalRequest;
-use App\Modules\ClientPortal\Models\ClientPortalShare;
+use App\Modules\ClientPortal\Models\PortalRequest;
+use App\Modules\ClientPortal\Models\PortalShare;
+use App\Modules\ClientPortal\Models\PortalUser;
+use App\Modules\ClientPortal\Services\PortalService;
 use App\Modules\ProjectManagement\Models\Client;
 use App\Modules\ProjectManagement\Models\Task;
-use App\Modules\ProjectManagement\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -17,197 +17,261 @@ use Inertia\Response;
 
 class ClientPortalController extends Controller
 {
+    public function __construct(private PortalService $portalService) {}
+
+    // ─── CEO Management Views ────────────────────────────────────────────────
+
+    /**
+     * CEO's portal management dashboard — list all clients with portal access.
+     */
     public function manage(Request $request): Response
     {
         $orgId = $request->user()->organization_id;
 
-        $portalUsers = ClientPortalUser::where('organization_id', $orgId)
-            ->with('client:id,name,company')
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(fn($u) => [
-                'id'             => $u->id,
-                'name'           => $u->name,
-                'email'          => $u->email,
-                'is_active'      => $u->is_active,
-                'last_login_at'  => $u->last_login_at?->toISOString(),
-                'invite_sent_at' => $u->invite_sent_at?->toISOString(),
-                'client'         => $u->client ? ['id' => $u->client->id, 'name' => $u->client->company ?? $u->client->name] : null,
-            ]);
-
-        $requests = ClientPortalRequest::where('organization_id', $orgId)
-            ->with(['client:id,name,company', 'portalUser:id,name,email'])
-            ->whereIn('status', ['open', 'in_progress'])
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(fn($r) => [
-                'id'          => $r->id,
-                'title'       => $r->title,
-                'description' => $r->description,
-                'status'      => $r->status,
-                'created_at'  => $r->created_at->toISOString(),
-                'client'      => $r->client ? ['id' => $r->client->id, 'name' => $r->client->company ?? $r->client->name] : null,
-                'portal_user' => $r->portalUser ? ['name' => $r->portalUser->name, 'email' => $r->portalUser->email] : null,
-            ]);
-
         $clients = Client::where('organization_id', $orgId)
             ->where('status', 'active')
-            ->select('id', 'name', 'company')
+            ->with([
+                'portalUsers' => fn($q) => $q->where('is_active', true),
+            ])
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(fn($c) => [
+                'id'           => $c->id,
+                'name'         => $c->name,
+                'company'      => $c->company,
+                'portal_users' => $c->portalUsers->map(fn($u) => [
+                    'id'            => $u->id,
+                    'name'          => $u->name,
+                    'email'         => $u->email,
+                    'is_active'     => $u->is_active,
+                    'last_login_at' => $u->last_login_at?->toISOString(),
+                ]),
+                'pending_requests' => PortalRequest::where('organization_id', $orgId)
+                    ->where('client_id', $c->id)
+                    ->where('status', 'open')
+                    ->count(),
+            ]);
+
+        $pendingRequests = PortalRequest::where('organization_id', $orgId)
+            ->where('status', 'open')
+            ->with(['client:id,name,company', 'portalUser:id,name,email'])
+            ->orderByDesc('created_at')
+            ->limit(20)
+            ->get()
+            ->map(fn($r) => $this->formatRequest($r));
 
         return Inertia::render('Settings/ClientPortal', [
-            'portalUsers' => $portalUsers,
-            'requests'    => $requests,
-            'clients'     => $clients,
+            'clients'         => $clients,
+            'pendingRequests' => $pendingRequests,
         ]);
     }
 
+    /**
+     * Show a client's portal configuration (shares, users, requests).
+     */
     public function showClient(Request $request, Client $client): Response
     {
-        abort_if($client->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeClient($client, $request);
+        $orgId = $request->user()->organization_id;
 
-        $users = ClientPortalUser::where('client_id', $client->id)
-            ->orderByDesc('created_at')->get()
+        $portalUsers = PortalUser::where('organization_id', $orgId)
+            ->where('client_id', $client->id)
+            ->get()
             ->map(fn($u) => [
-                'id'             => $u->id,
-                'name'           => $u->name,
-                'email'          => $u->email,
-                'is_active'      => $u->is_active,
-                'last_login_at'  => $u->last_login_at?->toISOString(),
-                'invite_sent_at' => $u->invite_sent_at?->toISOString(),
+                'id'            => $u->id,
+                'name'          => $u->name,
+                'email'         => $u->email,
+                'is_active'     => $u->is_active,
+                'last_login_at' => $u->last_login_at?->toISOString(),
+                'permissions'   => $u->permissions,
             ]);
 
-        $shares = ClientPortalShare::where('client_id', $client->id)
-            ->orderByDesc('created_at')->get()
+        $shares = $this->portalService->getClientShares($orgId, $client->id)
             ->map(fn($s) => [
                 'id'             => $s->id,
                 'shareable_type' => $s->shareable_type,
                 'shareable_id'   => $s->shareable_id,
-                'permissions'    => $s->permissions,
+                'note'           => $s->note,
+                'shared_at'      => $s->shared_at->toISOString(),
                 'expires_at'     => $s->expires_at?->toISOString(),
+                'shared_by'      => $s->sharedBy ? ['name' => $s->sharedBy->name] : null,
             ]);
 
-        $projects = Project::where('client_id', $client->id)->select('id', 'name')->get();
+        $requests = PortalRequest::where('organization_id', $orgId)
+            ->where('client_id', $client->id)
+            ->with(['portalUser:id,name,email'])
+            ->orderByDesc('created_at')
+            ->paginate(20)
+            ->through(fn($r) => $this->formatRequest($r));
 
-        return Inertia::render('Settings/ClientPortalClient', [
-            'client'   => ['id' => $client->id, 'name' => $client->company ?? $client->name],
-            'users'    => $users,
-            'shares'   => $shares,
-            'projects' => $projects,
+        return Inertia::render('Settings/ClientPortalDetail', [
+            'client'      => ['id' => $client->id, 'name' => $client->name, 'company' => $client->company],
+            'portalUsers' => $portalUsers,
+            'shares'      => $shares,
+            'requests'    => $requests,
         ]);
     }
 
+    /**
+     * Invite a client contact to the portal.
+     */
     public function inviteUser(Request $request, Client $client): RedirectResponse
     {
-        abort_if($client->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeClient($client, $request);
 
-        $data = $request->validate([
-            'name'  => 'required|string|max:120',
-            'email' => 'required|email|max:255',
+        $validated = $request->validate([
+            'name'        => 'required|string|max:100',
+            'email'       => 'required|email|max:150',
+            'permissions' => 'nullable|array',
         ]);
 
-        $token = Str::random(64);
+        $portalUser = $this->portalService->invitePortalUser($client, $validated, $request->user());
 
-        ClientPortalUser::create([
-            'organization_id'  => $request->user()->organization_id,
-            'client_id'        => $client->id,
-            'name'             => $data['name'],
-            'email'            => $data['email'],
-            'invite_token'     => $token,
-            'invite_expires_at'=> now()->addDays(7),
-            'invite_sent_at'   => now(),
-        ]);
-
-        return back()->with('success', "Invite sent to {$data['email']}.");
+        return back()->with('success', "Portal invite sent to {$portalUser->email}.");
     }
 
-    public function resendInvite(Request $request, ClientPortalUser $portalUser): RedirectResponse
+    /**
+     * Resend magic link to a portal user.
+     */
+    public function resendInvite(Request $request, PortalUser $portalUser): RedirectResponse
     {
-        abort_if($portalUser->organization_id !== $request->user()->organization_id, 403);
+        if ($portalUser->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
 
-        $portalUser->update([
-            'invite_token'     => Str::random(64),
-            'invite_expires_at'=> now()->addDays(7),
-            'invite_sent_at'   => now(),
-        ]);
-
-        return back()->with('success', 'Invite resent.');
+        $this->portalService->sendMagicLink($portalUser);
+        return back()->with('success', "Magic link resent to {$portalUser->email}.");
     }
 
-    public function toggleUser(Request $request, ClientPortalUser $portalUser): RedirectResponse
+    /**
+     * Toggle portal user active status.
+     */
+    public function toggleUser(Request $request, PortalUser $portalUser): RedirectResponse
     {
-        abort_if($portalUser->organization_id !== $request->user()->organization_id, 403);
+        if ($portalUser->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
+
         $portalUser->update(['is_active' => !$portalUser->is_active]);
-        return back()->with('success', 'Access updated.');
+        $status = $portalUser->is_active ? 'enabled' : 'disabled';
+        return back()->with('success', "Portal access {$status} for {$portalUser->name}.");
     }
 
+    /**
+     * Share a report / project / other item with a client (CEO-gated).
+     */
     public function share(Request $request): RedirectResponse
     {
-        $data = $request->validate([
+        $validated = $request->validate([
             'client_id'      => 'required|uuid',
-            'shareable_type' => 'required|in:project,task,invoice',
+            'shareable_type' => 'required|string|in:report,project,content_item',
             'shareable_id'   => 'required|uuid',
-            'permissions'    => 'nullable|array',
+            'note'           => 'nullable|string|max:500',
             'expires_at'     => 'nullable|date',
         ]);
 
-        ClientPortalShare::create([
-            'organization_id' => $request->user()->organization_id,
-            'shared_by'       => $request->user()->id,
-            'client_id'       => $data['client_id'],
-            'shareable_type'  => $data['shareable_type'],
-            'shareable_id'    => $data['shareable_id'],
-            'permissions'     => $data['permissions'] ?? ['view'],
-            'expires_at'      => $data['expires_at'] ?? null,
-        ]);
+        $orgId = $request->user()->organization_id;
+        $client = Client::where('organization_id', $orgId)->findOrFail($validated['client_id']);
+
+        $this->portalService->shareWithClient(
+            $orgId,
+            $client->id,
+            $validated['shareable_type'],
+            $validated['shareable_id'],
+            $request->user(),
+            $validated['note'] ?? null,
+            isset($validated['expires_at']) ? new \DateTime($validated['expires_at']) : null,
+        );
 
         return back()->with('success', 'Item shared with client portal.');
     }
 
-    public function revokeShare(Request $request, ClientPortalShare $portalShare): RedirectResponse
+    /**
+     * Revoke a portal share.
+     */
+    public function revokeShare(Request $request, PortalShare $portalShare): RedirectResponse
     {
-        abort_if($portalShare->organization_id !== $request->user()->organization_id, 403);
-        $portalShare->delete();
+        if ($portalShare->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
+
+        $this->portalService->revokeShare($portalShare);
         return back()->with('success', 'Share revoked.');
     }
 
-    public function convertRequestToTask(Request $request, ClientPortalRequest $portalRequest): RedirectResponse
+    /**
+     * Convert a client portal request into a task.
+     */
+    public function convertRequestToTask(Request $request, PortalRequest $portalRequest): RedirectResponse
     {
-        abort_if($portalRequest->organization_id !== $request->user()->organization_id, 403);
+        if ($portalRequest->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
 
-        $data = $request->validate([
-            'project_id'  => 'nullable|uuid',
-            'assigned_to' => 'nullable|uuid',
-        ]);
+        if ($portalRequest->task_id) {
+            return back()->with('error', 'Request already linked to a task.');
+        }
 
         $task = Task::create([
-            'organization_id' => $request->user()->organization_id,
+            'organization_id' => $portalRequest->organization_id,
             'title'           => $portalRequest->title,
             'description'     => $portalRequest->description,
+            'type'            => 'task',
             'status'          => 'todo',
-            'priority'        => 'medium',
-            'project_id'      => $data['project_id'] ?? null,
-            'assigned_to'     => $data['assigned_to'] ?? null,
+            'priority'        => $portalRequest->priority,
+            'created_by'      => $request->user()->id,
+            'tags'            => ['client-request'],
+            'meta'            => ['portal_request_id' => $portalRequest->id, 'client_id' => $portalRequest->client_id],
         ]);
 
         $portalRequest->update([
-            'task_id' => $task->id,
-            'status'  => 'converted',
+            'task_id'     => $task->id,
+            'status'      => 'actioned',
+            'actioned_by' => $request->user()->id,
+            'actioned_at' => now(),
         ]);
 
-        return back()->with('success', 'Request converted to task.');
+        return back()->with('success', "Task created from client request: \"{$task->title}\".");
     }
 
-    public function closeRequest(Request $request, ClientPortalRequest $portalRequest): RedirectResponse
+    /**
+     * Close a portal request without creating a task.
+     */
+    public function closeRequest(Request $request, PortalRequest $portalRequest): RedirectResponse
     {
-        abort_if($portalRequest->organization_id !== $request->user()->organization_id, 403);
+        if ($portalRequest->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
 
         $portalRequest->update([
-            'status'    => 'closed',
-            'closed_at' => now(),
+            'status'      => 'closed',
+            'actioned_by' => $request->user()->id,
+            'actioned_at' => now(),
         ]);
 
         return back()->with('success', 'Request closed.');
+    }
+
+    private function formatRequest(PortalRequest $r): array
+    {
+        return [
+            'id'          => $r->id,
+            'title'       => $r->title,
+            'description' => $r->description,
+            'type'        => $r->type,
+            'status'      => $r->status,
+            'priority'    => $r->priority,
+            'created_at'  => $r->created_at->toISOString(),
+            'task_id'     => $r->task_id,
+            'client'      => $r->client ? ['id' => $r->client->id, 'name' => $r->client->company ?? $r->client->name] : null,
+            'portal_user' => $r->portalUser ? ['name' => $r->portalUser->name, 'email' => $r->portalUser->email] : null,
+        ];
+    }
+
+    private function authorizeClient(Client $client, Request $request): void
+    {
+        if ($client->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
     }
 }

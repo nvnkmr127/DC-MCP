@@ -1,26 +1,27 @@
 import React from 'react';
 import { Head } from '@inertiajs/react';
-import { Building2 } from 'lucide-react';
 
 export default function PortalLogin() {
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-[#0e1017] to-[#1a1f2e] flex items-center justify-center p-4">
             <Head title="Client Portal" />
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 flex items-center justify-center mx-auto">
-                    <Building2 size={24} className="text-indigo-500" />
+            <div className="w-full max-w-sm">
+                <div className="text-center mb-8">
+                    <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <span className="text-white font-bold text-xl">D</span>
+                    </div>
+                    <h1 className="text-xl font-bold text-white">Client Portal</h1>
+                    <p className="text-gray-400 text-sm mt-1">Digicloudify</p>
                 </div>
-                <h1 className="text-xl font-bold text-gray-900">Client Portal</h1>
-                <p className="text-sm text-gray-500">
-                    Access your project reports, deliverables, and updates.
-                    Use the magic link sent to your email to sign in.
-                </p>
-                <div className="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3 text-sm text-indigo-700">
-                    Check your email for a login link from your account manager.
+
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center">
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                        Access your portal using the magic link sent to your email.
+                    </p>
+                    <p className="text-gray-500 text-xs mt-3">
+                        Contact your account manager if you haven't received your link.
+                    </p>
                 </div>
-                <p className="text-xs text-gray-400">
-                    Links expire after 7 days. Contact your account manager to request a new one.
-                </p>
             </div>
         </div>
     );
