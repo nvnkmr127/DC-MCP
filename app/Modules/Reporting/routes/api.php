@@ -2,21 +2,21 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('reports/tasks', 'ReportingController@taskSummary');
-Route::get('reports/projects', 'ReportingController@projectSummary');
-Route::get('reports/team-productivity', 'ReportingController@teamProductivity');
-Route::get('reports/time', 'ReportingController@timeReport');
+Route::get('reports/tasks', 'ReportingApiController@taskSummary');
+Route::get('reports/projects', 'ReportingApiController@projectSummary');
+Route::get('reports/team-productivity', 'ReportingApiController@teamProductivity');
+Route::get('reports/time', 'ReportingApiController@timeReport');
 
 // Core Report routes
-Route::get('reports', 'ReportController@index');
-Route::post('reports', 'ReportController@store');
-Route::get('reports/{report}', 'ReportController@show');
-Route::post('reports/{report}/generate', 'ReportController@generate');
-Route::get('reports/{report}/download', 'ReportController@download');
-Route::post('reports/{report}/send', 'ReportController@send');
+Route::get('reports', 'ReportApiController@index');
+Route::post('reports', 'ReportApiController@store');
+Route::get('reports/{report}', 'ReportApiController@show');
+Route::post('reports/{report}/generate', 'ReportApiController@generate');
+Route::get('reports/{report}/download', 'ReportApiController@download');
+Route::post('reports/{report}/send', 'ReportApiController@send');
 
 // Scheduled Report routes
-Route::get('report-schedules', 'ReportScheduleController@index');
-Route::post('report-schedules', 'ReportScheduleController@store');
-Route::put('report-schedules/{schedule}', 'ReportScheduleController@update');
-Route::delete('report-schedules/{schedule}', 'ReportScheduleController@destroy');
+Route::get('report-schedules', 'ReportScheduleApiController@index');
+Route::post('report-schedules', 'ReportScheduleApiController@store');
+Route::put('report-schedules/{schedule}', 'ReportScheduleApiController@update');
+Route::delete('report-schedules/{schedule}', 'ReportScheduleApiController@destroy');

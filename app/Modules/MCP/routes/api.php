@@ -2,8 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('mcp/providers', 'McpConnectionController@providers');
-Route::post('mcp/connections/{mcpConnection}/sync', 'McpConnectionController@sync');
-Route::post('mcp/connections/{mcpConnection}/test', 'McpConnectionController@test');
-Route::apiResource('mcp/connections', 'McpConnectionController')
+Route::get('mcp/providers', 'McpConnectionApiController@providers');
+Route::post('mcp/connections/{mcpConnection}/sync', 'McpConnectionApiController@sync');
+Route::post('mcp/connections/{mcpConnection}/test', 'McpConnectionApiController@test');
+Route::apiResource('mcp/connections', 'McpConnectionApiController')
     ->parameters(['connections' => 'mcpConnection']);

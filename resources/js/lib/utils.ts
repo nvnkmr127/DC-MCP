@@ -55,22 +55,7 @@ export function getInitials(name: string): string {
         .toUpperCase();
 }
 
-export const TASK_STATUS_COLORS: Record<string, string> = {
-    backlog:     'bg-gray-100 text-gray-700',
-    todo:        'bg-blue-100 text-blue-700',
-    in_progress: 'bg-indigo-100 text-indigo-700',
-    in_review:   'bg-yellow-100 text-yellow-700',
-    blocked:     'bg-red-100 text-red-700',
-    done:        'bg-green-100 text-green-700',
-    cancelled:   'bg-gray-200 text-gray-500',
-};
-
-export const PRIORITY_COLORS: Record<string, string> = {
-    low:    'bg-gray-100 text-gray-600',
-    medium: 'bg-blue-100 text-blue-600',
-    high:   'bg-orange-100 text-orange-600',
-    urgent: 'bg-red-100 text-red-700',
-};
+export { TASK_STATUS_COLORS, PRIORITY_COLORS } from './constants';
 
 export const TASK_COLUMNS = ['backlog', 'todo', 'in_progress', 'in_review', 'blocked', 'done'] as const;
 export const TASK_COLUMN_LABELS: Record<string, string> = {
@@ -81,3 +66,4 @@ export const TASK_COLUMN_LABELS: Record<string, string> = {
     blocked:     'Blocked',
     done:        'Done',
 };
+

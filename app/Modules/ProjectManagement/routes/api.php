@@ -2,24 +2,24 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('organizations/team-workload', 'ProjectController@teamWorkload');
-Route::get('projects/{project}/kanban', 'KanbanController@board');
-Route::get('projects/{project}/stats', 'ProjectController@stats');
+Route::get('organizations/team-workload', 'ProjectApiController@teamWorkload');
+Route::get('projects/{project}/kanban', 'KanbanApiController@board');
+Route::get('projects/{project}/stats', 'ProjectApiController@stats');
 
-Route::apiResource('projects', 'ProjectController');
+Route::apiResource('projects', 'ProjectApiController');
 
-Route::post('sprints/{sprint}/start', 'SprintController@start');
-Route::post('sprints/{sprint}/complete', 'SprintController@complete');
-Route::apiResource('sprints', 'SprintController');
+Route::post('sprints/{sprint}/start', 'SprintApiController@start');
+Route::post('sprints/{sprint}/complete', 'SprintApiController@complete');
+Route::apiResource('sprints', 'SprintApiController');
 
-Route::apiResource('milestones', 'MilestoneController');
+Route::apiResource('milestones', 'MilestoneApiController');
 
-Route::post('tasks/{task}/assign', 'TaskController@assign');
-Route::post('tasks/{task}/log-time', 'TaskController@logTime');
-Route::post('tasks/{task}/move', 'TaskController@move');
-Route::apiResource('tasks', 'TaskController');
+Route::post('tasks/{task}/assign', 'TaskApiController@assign');
+Route::post('tasks/{task}/log-time', 'TaskApiController@logTime');
+Route::post('tasks/{task}/move', 'TaskApiController@move');
+Route::apiResource('tasks', 'TaskApiController');
 
-Route::get('time-entries/summary', 'TimeEntryController@summary');
-Route::apiResource('time-entries', 'TimeEntryController');
+Route::get('time-entries/summary', 'TimeEntryApiController@summary');
+Route::apiResource('time-entries', 'TimeEntryApiController');
 
-Route::apiResource('clients', 'ClientController');
+Route::apiResource('clients', 'ClientApiController');

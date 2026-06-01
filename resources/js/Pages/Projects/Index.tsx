@@ -3,15 +3,10 @@ import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { formatDate, formatCurrency, cn } from '@/lib/utils';
 import type { Project, PaginatedResponse } from '@/types';
-import { Plus, Search, Kanban, BarChart2, MoreHorizontal, ChevronRight, FolderOpen } from 'lucide-react';
-
-const STATUS_CONFIG: Record<string, { label: string; dot: string; badge: string }> = {
-    planning:  { label: 'Planning',  dot: 'bg-gray-400',    badge: 'bg-gray-100 text-gray-700' },
-    active:    { label: 'Active',    dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700' },
-    on_hold:   { label: 'On Hold',   dot: 'bg-yellow-400',  badge: 'bg-yellow-50 text-yellow-700' },
-    completed: { label: 'Completed', dot: 'bg-blue-500',    badge: 'bg-blue-50 text-blue-700' },
-    cancelled: { label: 'Cancelled', dot: 'bg-red-400',     badge: 'bg-red-50 text-red-600' },
-};
+import { Plus, Search, Kanban, ChevronRight, FolderOpen } from 'lucide-react';
+import { PROJECT_STATUS_CONFIG } from '@/lib/constants';
+import { StatusBadge } from '@/Components/Shared/StatusBadge';
+import { Pagination } from '@/Components/ui/Pagination';
 
 interface Props {
     projects: PaginatedResponse<Project & { total_tasks: number; completed_tasks: number; completion_pct: number }>;
@@ -52,7 +47,7 @@ export default function ProjectsIndex({ projects, filters }: Props) {
                         All
                     </button>
                     {statuses.map((s) => {
-                        const cfg = STATUS_CONFIG[s];
+                        const cfg = PROJECT_STATUS_CONFIG[s];
                         const active = filters.status === s;
                         return (
                             <button
@@ -135,10 +130,7 @@ export default function ProjectsIndex({ projects, filters }: Props) {
                                             <p className="text-[11px] text-gray-400 mt-0.5 truncate">{project.client.name}</p>
                                         )}
                                     </div>
-                                    <span className={cn('flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0', cfg.badge)}>
-                                        <span className={cn('w-1.5 h-1.5 rounded-full', cfg.dot)} />
-                                        {cfg.label}
-                                    </span>
+                                    <StatusBadge type="project-status" value={project.status} className="shrink-0" />
                                 </div>
 
                                 {/* Progress */}
@@ -195,29 +187,13 @@ export default function ProjectsIndex({ projects, filters }: Props) {
             )}
 
             {/* Pagination */}
-            {projects.meta && projects.meta.last_page > 1 && (
-                <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
-                    <p className="text-[12px] text-gray-400">
-                        {(projects.meta.current_page - 1) * projects.meta.per_page + 1}–{Math.min(projects.meta.current_page * projects.meta.per_page, projects.meta.total)} of {projects.meta.total} projects
-                    </p>
-                    <div className="flex items-center gap-1">
-                        {Array.from({ length: projects.meta.last_page }, (_, i) => i + 1).map((p) => (
-                            <button
-                                key={p}
-                                onClick={() => router.get('/projects', { ...filters, page: p }, { preserveState: true })}
-                                className={cn(
-                                    'w-8 h-8 rounded-lg text-[12px] font-medium transition-colors',
-                                    p === projects.meta.current_page
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'text-gray-500 hover:bg-gray-100',
-                                )}
-                            >
-                                {p}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
+            <Pagination
+                meta={projects.meta}
+                onPageChange={(p) => router.get('/projects', { ...filters, page: p }, { preserveState: true })}
+                labelSingular="project"
+                labelPlural="projects"
+                className="mt-6 pt-4"
+            />
         </AppLayout>
     );
 }

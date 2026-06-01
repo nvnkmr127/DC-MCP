@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import {
-    PenTool, Plus, Filter, Instagram, Youtube, Globe, FileText,
+    PenTool, Plus, Filter, Globe, FileText,
     Megaphone, Calendar, Clock, CheckCircle2, Eye, Edit3,
     Trash2, ArrowRight, Tag, X, ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { InstagramIcon, YoutubeIcon } from '@/lib/constants';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/Components/ui/Dialog';
+import { Button } from '@/Components/ui/Button';
+import { Input, Label, TextArea } from '@/Components/ui/Input';
 
 type ContentType = 'social_post' | 'blog' | 'ad_campaign';
 type Platform = 'instagram' | 'facebook' | 'twitter' | 'linkedin' | 'youtube' | 'website' | 'google_ads' | 'meta_ads' | 'email';
@@ -51,7 +55,7 @@ const STATUS_STYLES: Record<Status, string> = {
 const STATUS_FLOW: Status[] = ['idea', 'in_progress', 'in_review', 'approved', 'scheduled', 'published'];
 
 const TYPE_ICONS: Record<ContentType, React.ElementType> = {
-    social_post:  Instagram,
+    social_post:  InstagramIcon,
     blog:         FileText,
     ad_campaign:  Megaphone,
 };
@@ -95,24 +99,23 @@ function CreateModal({ clients, projects, onClose }: {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-                <div className="flex items-center justify-between px-6 py-4 border-b">
-                    <h2 className="font-semibold text-gray-900">New Content Item</h2>
-                    <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X className="w-4 h-4" /></button>
-                </div>
-                <form onSubmit={submit} className="p-6 space-y-4">
+        <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+            <DialogContent className="max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>New Content Item</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={submit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs font-medium text-gray-500 mb-1 block">Client *</label>
-                            <select className="w-full text-sm border rounded-lg p-2" value={data.client_id} onChange={e => setData('client_id', e.target.value)} required>
+                            <Label>Client *</Label>
+                            <select className="w-full text-sm border rounded-xl p-2 border-gray-200 bg-white" value={data.client_id} onChange={e => setData('client_id', e.target.value)} required>
                                 <option value="">Select client</option>
                                 {clients.map(c => <option key={c.id} value={c.id}>{c.company || c.name}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-gray-500 mb-1 block">Project</label>
-                            <select className="w-full text-sm border rounded-lg p-2" value={data.project_id} onChange={e => setData('project_id', e.target.value)}>
+                            <Label>Project</Label>
+                            <select className="w-full text-sm border rounded-xl p-2 border-gray-200 bg-white" value={data.project_id} onChange={e => setData('project_id', e.target.value)}>
                                 <option value="">No project</option>
                                 {filteredProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
@@ -120,22 +123,22 @@ function CreateModal({ clients, projects, onClose }: {
                     </div>
 
                     <div>
-                        <label className="text-xs font-medium text-gray-500 mb-1 block">Title *</label>
-                        <input className="w-full text-sm border rounded-lg p-2" placeholder="Content title or campaign name" value={data.title} onChange={e => setData('title', e.target.value)} required />
+                        <Label>Title *</Label>
+                        <Input placeholder="Content title or campaign name" value={data.title} onChange={e => setData('title', e.target.value)} required />
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs font-medium text-gray-500 mb-1 block">Type</label>
-                            <select className="w-full text-sm border rounded-lg p-2" value={data.type} onChange={e => setData('type', e.target.value as ContentType)}>
+                            <Label>Type</Label>
+                            <select className="w-full text-sm border rounded-xl p-2 border-gray-200 bg-white" value={data.type} onChange={e => setData('type', e.target.value as ContentType)}>
                                 <option value="social_post">Social Post</option>
                                 <option value="blog">Blog / Article</option>
                                 <option value="ad_campaign">Ad Campaign</option>
                             </select>
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-gray-500 mb-1 block">Platform</label>
-                            <select className="w-full text-sm border rounded-lg p-2" value={data.platform} onChange={e => setData('platform', e.target.value as Platform)}>
+                            <Label>Platform</Label>
+                            <select className="w-full text-sm border rounded-xl p-2 border-gray-200 bg-white" value={data.platform} onChange={e => setData('platform', e.target.value as Platform)}>
                                 <option value="">Any</option>
                                 {['instagram','facebook','twitter','linkedin','youtube','website','google_ads','meta_ads','email'].map(p => (
                                     <option key={p} value={p}>{p.replace('_', ' ')}</option>
@@ -146,35 +149,36 @@ function CreateModal({ clients, projects, onClose }: {
 
                     <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="text-xs font-medium text-gray-500 mb-1 block">Due Date</label>
-                            <input type="date" className="w-full text-sm border rounded-lg p-2" value={data.due_date} onChange={e => setData('due_date', e.target.value)} />
+                            <Label>Due Date</Label>
+                            <Input type="date" value={data.due_date} onChange={e => setData('due_date', e.target.value)} />
                         </div>
                         <div>
-                            <label className="text-xs font-medium text-gray-500 mb-1 block">Status</label>
-                            <select className="w-full text-sm border rounded-lg p-2" value={data.status} onChange={e => setData('status', e.target.value as Status)}>
+                            <Label>Status</Label>
+                            <select className="w-full text-sm border rounded-xl p-2 border-gray-200 bg-white" value={data.status} onChange={e => setData('status', e.target.value as Status)}>
                                 {STATUS_FLOW.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label className="text-xs font-medium text-gray-500 mb-1 block">Brief / Notes</label>
-                        <textarea className="w-full text-sm border rounded-lg p-2 resize-none" rows={3} placeholder="Content brief, copy, or notes..." value={data.body} onChange={e => setData('body', e.target.value)} />
+                        <Label>Brief / Notes</Label>
+                        <TextArea rows={3} placeholder="Content brief, copy, or notes..." value={data.body ?? ''} onChange={e => setData('body', e.target.value)} />
                     </div>
 
                     <div className="flex gap-2 pt-2">
-                        <button type="submit" disabled={processing} className="flex-1 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="submit" loading={processing} className="flex-1">
                             Create Item
-                        </button>
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 border rounded-lg">
+                        </Button>
+                        <Button type="button" variant="ghost" onClick={onClose}>
                             Cancel
-                        </button>
+                        </Button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 }
+
 
 function ContentCard({ item }: { item: ContentItem }) {
     const [open, setOpen] = useState(false);
@@ -305,12 +309,12 @@ export default function ContentCalendarIndex({ calendarItems, listItems, stats, 
                         <PenTool className="w-5 h-5 text-indigo-500" />
                         <h1 className="text-xl font-bold text-gray-900">Content Calendar</h1>
                     </div>
-                    <button
+                    <Button
                         onClick={() => setCreateOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
+                        size="sm"
                     >
-                        <Plus className="w-4 h-4" /> New Content
-                    </button>
+                        <Plus className="w-4 h-4 mr-1.5" /> New Content
+                    </Button>
                 </div>
 
                 {/* Stats */}

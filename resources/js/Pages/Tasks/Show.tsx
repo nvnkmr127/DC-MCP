@@ -1,22 +1,21 @@
 import React, { useState, useRef } from 'react';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { cn, TASK_STATUS_COLORS, PRIORITY_COLORS, formatDate, formatDateTime, timeAgo, formatHours } from '@/lib/utils';
-import type { Task, Comment, Attachment, TimeEntry } from '@/types';
+import { cn, formatDate, timeAgo, formatHours } from '@/lib/utils';
+import type { Task, Attachment, TimeEntry } from '@/types';
 import {
-    MessageSquare, Paperclip, Clock, Send,
-    Upload, Play, Square, Trash2, Edit, ArrowLeft,
-    GitFork, AlertCircle, X, Search,
+    MessageSquare, Paperclip, Clock,
+    Upload, Trash2, Edit,
+    GitFork, AlertCircle,
 } from 'lucide-react';
-
-interface TaskDep {
-    id: string; title: string; status: string; project_id: string;
-    project?: { name: string } | null;
-}
+import { CommentsSection } from './Partials/CommentsSection';
+import { TimeTracker } from './Partials/TimeTracker';
+import { DependenciesSection, TaskDep } from './Partials/DependenciesSection';
+import { StatusBadge } from '@/Components/Shared/StatusBadge';
 
 interface Props {
     task: Task & {
-        comments: Comment[];
+        comments: any[];
         attachments: Attachment[];
         time_entries: TimeEntry[];
         dependencies?: TaskDep[];
@@ -26,56 +25,9 @@ interface Props {
 
 export default function TaskShow({ task, projectTasks = [] }: Props) {
     const [activeTab, setActiveTab] = useState<'comments' | 'attachments' | 'time' | 'dependencies'>('comments');
-    const [depSearch, setDepSearch] = useState('');
-    const [timerRunning, setTimerRunning] = useState(false);
-    const [timerSeconds, setTimerSeconds] = useState(0);
-    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-    // Comment form
-    const commentForm = useForm({ body: '' });
-
-    // Time log form
-    const timeForm = useForm({ hours: '', description: '', logged_date: new Date().toISOString().slice(0, 10) });
 
     // File upload
     const fileRef = useRef<HTMLInputElement>(null);
-
-    function submitComment(e: React.FormEvent) {
-        e.preventDefault();
-        commentForm.post(`/tasks/${task.id}/comments`, {
-            preserveScroll: true,
-            onSuccess: () => commentForm.reset(),
-        });
-    }
-
-    function submitTime(e: React.FormEvent) {
-        e.preventDefault();
-        timeForm.post(`/tasks/${task.id}/log-time`, {
-            preserveScroll: true,
-            onSuccess: () => timeForm.reset(),
-        });
-    }
-
-    function toggleTimer() {
-        if (timerRunning) {
-            clearInterval(timerRef.current!);
-            setTimerRunning(false);
-            const hours = +(timerSeconds / 3600).toFixed(2);
-            timeForm.setData('hours', String(hours));
-            timeForm.setData('description', 'Time tracked via timer');
-            setTimerSeconds(0);
-        } else {
-            setTimerRunning(true);
-            timerRef.current = setInterval(() => setTimerSeconds((s) => s + 1), 1000);
-        }
-    }
-
-    function formatTimer(s: number) {
-        const h = Math.floor(s / 3600).toString().padStart(2, '0');
-        const m = Math.floor((s % 3600) / 60).toString().padStart(2, '0');
-        const sec = (s % 60).toString().padStart(2, '0');
-        return `${h}:${m}:${sec}`;
-    }
 
     function uploadFile(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -95,12 +47,6 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
     const dependencies = task.dependencies ?? [];
     const blockers = dependencies.filter(d => d.status !== 'done' && d.status !== 'cancelled');
     const isBlocked = blockers.length > 0;
-
-    const availableDeps = projectTasks.filter(t =>
-        t.id !== task.id &&
-        !dependencies.some(d => d.id === t.id) &&
-        t.title.toLowerCase().includes(depSearch.toLowerCase())
-    );
 
     return (
         <AppLayout>
@@ -140,6 +86,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                             <Edit size={13} /> Edit
                         </Link>
                         <button
+                            type="button"
                             onClick={() => {
                                 if (confirm('Delete this task? This cannot be undone.')) {
                                     router.delete(`/tasks/${task.id}`);
@@ -156,17 +103,13 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                     {/* Main content */}
                     <div className="lg:col-span-2 space-y-4">
                         <div className="bg-white rounded-xl border border-gray-200 p-6">
-                            <h1 className="text-xl font-bold text-gray-900 mb-2">{task.title}</h1>
+                            <h1 className="text-xl font-bold text-gray-900 mb-3">{task.title}</h1>
                             {task.description && (
                                 <p className="text-sm text-gray-600 leading-relaxed mb-4">{task.description}</p>
                             )}
                             <div className="flex items-center gap-2 flex-wrap">
-                                <span className={cn('px-2.5 py-1 rounded-full text-xs font-medium capitalize', TASK_STATUS_COLORS[task.status])}>
-                                    {task.status.replace('_', ' ')}
-                                </span>
-                                <span className={cn('px-2.5 py-1 rounded-full text-xs font-medium capitalize', PRIORITY_COLORS[task.priority])}>
-                                    {task.priority} priority
-                                </span>
+                                <StatusBadge type="task-status" value={task.status} />
+                                <StatusBadge type="task-priority" value={task.priority} />
                                 {task.tags?.map((tag) => (
                                     <span key={tag} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">#{tag}</span>
                                 ))}
@@ -184,6 +127,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                 ].map(({ key, label, icon: Icon, count }) => (
                                     <button
                                         key={key}
+                                        type="button"
                                         onClick={() => setActiveTab(key as any)}
                                         className={cn(
                                             'flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors',
@@ -202,59 +146,14 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
 
                             <div className="p-5">
                                 {activeTab === 'comments' && (
-                                    <div className="space-y-4">
-                                        {task.comments.length === 0 && (
-                                            <p className="text-sm text-gray-500 text-center py-4">No comments yet.</p>
-                                        )}
-                                        {task.comments.map((comment) => (
-                                            <div key={comment.id} className="flex gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 text-xs flex items-center justify-center font-semibold shrink-0">
-                                                    {comment.user?.name?.[0] ?? '?'}
-                                                </div>
-                                                <div className="flex-1 bg-gray-50 rounded-lg p-3">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-sm font-medium text-gray-900">{comment.user?.name}</span>
-                                                        <span className="text-xs text-gray-400">{timeAgo(comment.created_at)}</span>
-                                                        <button
-                                                            onClick={() => {
-                                                                if (confirm('Delete this comment?')) {
-                                                                    router.delete(`/tasks/${task.id}/comments/${comment.id}`, { preserveScroll: true });
-                                                                }
-                                                            }}
-                                                            className="ml-auto p-1 text-gray-300 hover:text-red-500 transition-colors rounded"
-                                                        >
-                                                            <Trash2 size={12} />
-                                                        </button>
-                                                    </div>
-                                                    <p className="text-sm text-gray-700">{comment.body}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        <form onSubmit={submitComment} className="flex gap-3">
-                                            <div className="flex-1">
-                                                <textarea
-                                                    value={commentForm.data.body}
-                                                    onChange={(e) => commentForm.setData('body', e.target.value)}
-                                                    rows={2}
-                                                    placeholder="Add a comment…"
-                                                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                                                />
-                                            </div>
-                                            <button
-                                                type="submit"
-                                                disabled={!commentForm.data.body || commentForm.processing}
-                                                className="self-end p-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-                                            >
-                                                <Send size={16} />
-                                            </button>
-                                        </form>
-                                    </div>
+                                    <CommentsSection taskId={task.id} comments={task.comments} />
                                 )}
 
                                 {activeTab === 'attachments' && (
                                     <div className="space-y-3">
                                         <input ref={fileRef} type="file" className="hidden" onChange={uploadFile} />
                                         <button
+                                            type="button"
                                             onClick={() => fileRef.current?.click()}
                                             className="flex items-center gap-2 w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
                                         >
@@ -273,6 +172,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                                     <p className="text-xs text-gray-400">{(att.size / 1024).toFixed(1)} KB · {timeAgo(att.created_at)}</p>
                                                 </div>
                                                 <button
+                                                    type="button"
                                                     onClick={() => {
                                                         if (confirm('Delete this attachment?')) {
                                                             router.delete(`/attachments/${att.id}`, { preserveScroll: true });
@@ -288,144 +188,11 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                 )}
 
                                 {activeTab === 'time' && (
-                                    <div className="space-y-4">
-                                        {/* Timer */}
-                                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                                            <button
-                                                onClick={toggleTimer}
-                                                className={cn('flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium', timerRunning ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-indigo-600 text-white hover:bg-indigo-700')}
-                                            >
-                                                {timerRunning ? <><Square size={14} /> Stop</> : <><Play size={14} /> Start Timer</>}
-                                            </button>
-                                            <span className="font-mono text-lg font-bold text-gray-900">{formatTimer(timerSeconds)}</span>
-                                            {!timerRunning && <p className="text-xs text-gray-500">Stop to auto-fill the form below</p>}
-                                        </div>
-
-                                        {/* Manual log form */}
-                                        <form onSubmit={submitTime} className="grid grid-cols-3 gap-3">
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Hours</label>
-                                                <input
-                                                    type="number"
-                                                    step="0.25"
-                                                    min="0.25"
-                                                    value={timeForm.data.hours}
-                                                    onChange={(e) => timeForm.setData('hours', e.target.value)}
-                                                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    placeholder="1.5"
-                                                    required
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
-                                                <input
-                                                    type="date"
-                                                    value={timeForm.data.logged_date}
-                                                    onChange={(e) => timeForm.setData('logged_date', e.target.value)}
-                                                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">&nbsp;</label>
-                                                <button type="submit" disabled={timeForm.processing} className="w-full py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                                                    Log Time
-                                                </button>
-                                            </div>
-                                            <div className="col-span-3">
-                                                <input
-                                                    value={timeForm.data.description}
-                                                    onChange={(e) => timeForm.setData('description', e.target.value)}
-                                                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    placeholder="What did you work on?"
-                                                />
-                                            </div>
-                                        </form>
-
-                                        <div className="border-t border-gray-100 pt-3">
-                                            <p className="text-xs font-medium text-gray-500 mb-2">LOGGED ({formatHours(totalLogged)} total)</p>
-                                            {task.time_entries.map((entry) => (
-                                                <div key={entry.id} className="flex justify-between items-center py-2 border-b border-gray-50 group">
-                                                    <div>
-                                                        <p className="text-sm text-gray-700">{entry.description || '—'}</p>
-                                                        <p className="text-xs text-gray-400">{entry.user?.name} · {formatDate(entry.logged_date)}</p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-medium text-gray-900">{formatHours(entry.hours)}</span>
-                                                        <button
-                                                            onClick={() => {
-                                                                if (confirm('Delete this time entry?')) {
-                                                                    router.delete(`/tasks/${task.id}/time-entries/${entry.id}`, { preserveScroll: true });
-                                                                }
-                                                            }}
-                                                            className="p-1 text-gray-300 hover:text-red-500 transition-colors rounded opacity-0 group-hover:opacity-100"
-                                                        >
-                                                            <Trash2 size={12} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
+                                    <TimeTracker taskId={task.id} timeEntries={task.time_entries} />
                                 )}
 
                                 {activeTab === 'dependencies' && (
-                                    <div className="space-y-4">
-                                        {/* Current dependencies */}
-                                        {dependencies.length === 0 ? (
-                                            <p className="text-sm text-gray-400 text-center py-4">No dependencies. This task can start immediately.</p>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Blocked by</p>
-                                                {dependencies.map(dep => (
-                                                    <div key={dep.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg group">
-                                                        <span className={cn('w-2 h-2 rounded-full shrink-0',
-                                                            dep.status === 'done' ? 'bg-emerald-400' : dep.status === 'in_progress' ? 'bg-blue-400' : 'bg-rose-400'
-                                                        )} />
-                                                        <div className="flex-1 min-w-0">
-                                                            <Link href={`/tasks/${dep.id}`} className="text-sm font-medium text-gray-800 hover:text-indigo-600 truncate block">
-                                                                {dep.title}
-                                                            </Link>
-                                                            <p className="text-xs text-gray-400 capitalize">{dep.status.replace('_', ' ')}{dep.project ? ` · ${dep.project.name}` : ''}</p>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => { if (confirm('Remove this dependency?')) router.delete(`/tasks/${task.id}/dependencies/${dep.id}`, { preserveScroll: true }); }}
-                                                            className="p-1.5 text-gray-300 hover:text-rose-500 transition-colors rounded opacity-0 group-hover:opacity-100 shrink-0"
-                                                        >
-                                                            <X size={13} />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        {/* Add dependency */}
-                                        {projectTasks.length > 0 && (
-                                            <div>
-                                                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Add dependency</p>
-                                                <div className="relative mb-2">
-                                                    <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                                                    <input
-                                                        value={depSearch}
-                                                        onChange={e => setDepSearch(e.target.value)}
-                                                        placeholder="Search tasks in project…"
-                                                        className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                    />
-                                                </div>
-                                                <div className="space-y-1 max-h-48 overflow-y-auto">
-                                                    {availableDeps.slice(0, 10).map(t => (
-                                                        <button key={t.id} onClick={() => router.post(`/tasks/${task.id}/dependencies`, { depends_on_task_id: t.id }, { preserveScroll: true })}
-                                                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50 text-left group transition-colors">
-                                                            <span className="text-sm text-gray-700 flex-1 truncate">{t.title}</span>
-                                                            <span className="text-xs text-gray-400 capitalize shrink-0">{t.status.replace('_', ' ')}</span>
-                                                        </button>
-                                                    ))}
-                                                    {availableDeps.length === 0 && (
-                                                        <p className="text-xs text-gray-400 text-center py-3">No matching tasks</p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <DependenciesSection taskId={task.id} dependencies={dependencies} projectTasks={projectTasks} />
                                 )}
                             </div>
                         </div>
@@ -441,7 +208,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                     <select
                                         value={task.status}
                                         onChange={(e) => updateStatus(e.target.value)}
-                                        className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
                                     >
                                         {['backlog','todo','in_progress','in_review','blocked','done','cancelled'].map((s) => (
                                             <option key={s} value={s}>{s.replace('_', ' ')}</option>

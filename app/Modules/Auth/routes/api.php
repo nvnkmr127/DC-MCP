@@ -2,21 +2,21 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::post('auth/logout', 'LoginController@logout');
-Route::get('auth/me', 'LoginController@me');
-Route::put('auth/password', 'UserController@updatePassword');
+Route::post('auth/logout', 'LoginApiController@logout');
+Route::get('auth/me', 'LoginApiController@me');
+Route::put('auth/password', 'UserApiController@updatePassword');
 
 // Organization
-Route::get('organization', 'OrganizationController@show');
-Route::put('organization', 'OrganizationController@update');
-Route::get('organization/roles', 'OrganizationController@roles');
-Route::post('organization/roles', 'OrganizationController@createRole');
-Route::put('organization/roles/{role}', 'OrganizationController@updateRole');
+Route::get('organization', 'OrganizationApiController@show');
+Route::put('organization', 'OrganizationApiController@update');
+Route::get('organization/roles', 'OrganizationApiController@roles');
+Route::post('organization/roles', 'OrganizationApiController@createRole');
+Route::put('organization/roles/{role}', 'OrganizationApiController@updateRole');
 
 // Team / user management
-Route::get('team', 'UserController@index');
-Route::post('team/invite', 'UserController@invite');
-Route::get('team/{user}', 'UserController@show');
-Route::put('team/{user}', 'UserController@update');
-Route::post('team/{user}/assign-role', 'UserController@assignRole');
-Route::post('team/{user}/deactivate', 'UserController@deactivate');
+Route::get('team', 'UserApiController@index');
+Route::post('team/invite', 'UserApiController@invite');
+Route::get('team/{user}', 'UserApiController@show');
+Route::put('team/{user}', 'UserApiController@update');
+Route::post('team/{user}/assign-role', 'UserApiController@assignRole');
+Route::post('team/{user}/deactivate', 'UserApiController@deactivate');

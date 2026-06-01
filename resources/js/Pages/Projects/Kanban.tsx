@@ -11,6 +11,7 @@ import { cn, formatDate, dueDateLabel } from '@/lib/utils';
 import type { Task, Project } from '@/types';
 import { Plus, GripVertical, Clock, ChevronLeft } from 'lucide-react';
 import { Link } from '@inertiajs/react';
+import { StatusBadge } from '@/Components/Shared/StatusBadge';
 
 const COLUMNS = ['backlog', 'todo', 'in_progress', 'in_review', 'blocked', 'done'] as const;
 type ColKey = typeof COLUMNS[number];
@@ -33,12 +34,7 @@ const COLUMN_TOP: Record<ColKey, string> = {
     done:        'bg-emerald-500',
 };
 
-const PRIORITY_CHIP: Record<string, string> = {
-    low:    'bg-gray-100 text-gray-500',
-    medium: 'bg-blue-50 text-blue-700',
-    high:   'bg-orange-50 text-orange-700',
-    urgent: 'bg-red-50 text-red-700',
-};
+
 
 interface Props {
     project: Project;
@@ -60,9 +56,7 @@ function TaskCard({ task, isDragging = false }: { task: Task; isDragging?: boole
 
             {/* Chips */}
             <div className="flex items-center flex-wrap gap-1.5">
-                <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize', PRIORITY_CHIP[task.priority] ?? 'bg-gray-100 text-gray-500')}>
-                    {task.priority}
-                </span>
+                <StatusBadge type="task-priority" value={task.priority} className="text-[10px]" />
                 {task.due_date && (
                     <span className={cn(
                         'flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium',

@@ -1,46 +1,17 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { cn, TASK_STATUS_COLORS, PRIORITY_COLORS, formatDate, dueDateLabel } from '@/lib/utils';
+import { cn, formatDate, dueDateLabel } from '@/lib/utils';
 import type { Task, PaginatedResponse } from '@/types';
-import { Plus, Filter, SlidersHorizontal, CheckSquare, AlertCircle } from 'lucide-react';
+import { Plus, SlidersHorizontal, CheckSquare, AlertCircle } from 'lucide-react';
+import { TASK_STATUS_DOT, TASK_PRIORITY_DOT } from '@/lib/constants';
+import { StatusBadge } from '@/Components/Shared/StatusBadge';
+import { Pagination } from '@/Components/ui/Pagination';
 
 interface Props {
     tasks: PaginatedResponse<Task>;
     filters: { status?: string; priority?: string; assigned?: string; overdue?: string };
 }
-
-const STATUS_DOT: Record<string, string> = {
-    backlog:     'bg-gray-300',
-    todo:        'bg-blue-400',
-    in_progress: 'bg-indigo-500',
-    in_review:   'bg-yellow-400',
-    blocked:     'bg-red-500',
-    done:        'bg-emerald-500',
-};
-
-const PRIORITY_DOT: Record<string, string> = {
-    low:    'bg-gray-300',
-    medium: 'bg-blue-400',
-    high:   'bg-orange-400',
-    urgent: 'bg-red-500',
-};
-
-const CHIP: Record<string, string> = {
-    backlog:     'bg-gray-100 text-gray-600',
-    todo:        'bg-blue-50 text-blue-700',
-    in_progress: 'bg-indigo-50 text-indigo-700',
-    in_review:   'bg-yellow-50 text-yellow-700',
-    blocked:     'bg-red-50 text-red-700',
-    done:        'bg-emerald-50 text-emerald-700',
-};
-
-const PCHIP: Record<string, string> = {
-    low:    'bg-gray-100 text-gray-500',
-    medium: 'bg-blue-50 text-blue-700',
-    high:   'bg-orange-50 text-orange-700',
-    urgent: 'bg-red-50 text-red-700',
-};
 
 export default function TasksIndex({ tasks, filters }: Props) {
     const [showFilters, setShowFilters] = useState(false);
@@ -145,7 +116,7 @@ export default function TasksIndex({ tasks, filters }: Props) {
                                                 : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-200 hover:text-indigo-600',
                                         )}
                                     >
-                                        <span className={cn('w-1.5 h-1.5 rounded-full', STATUS_DOT[s])} />
+                                        <span className={cn('w-1.5 h-1.5 rounded-full', TASK_STATUS_DOT[s])} />
                                         {s.replace(/_/g, ' ')}
                                     </button>
                                 ))}
@@ -165,7 +136,7 @@ export default function TasksIndex({ tasks, filters }: Props) {
                                                 : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-200 hover:text-indigo-600',
                                         )}
                                     >
-                                        <span className={cn('w-1.5 h-1.5 rounded-full', PRIORITY_DOT[p])} />
+                                        <span className={cn('w-1.5 h-1.5 rounded-full', TASK_PRIORITY_DOT[p])} />
                                         {p}
                                     </button>
                                 ))}
@@ -263,22 +234,10 @@ export default function TasksIndex({ tasks, filters }: Props) {
                                             {task.project?.name ?? '—'}
                                         </td>
                                         <td className="px-3 py-3">
-                                            <span className={cn(
-                                                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium capitalize',
-                                                CHIP[task.status] ?? 'bg-gray-100 text-gray-600',
-                                            )}>
-                                                <span className={cn('w-1.5 h-1.5 rounded-full', STATUS_DOT[task.status] ?? 'bg-gray-300')} />
-                                                {task.status.replace(/_/g, ' ')}
-                                            </span>
+                                            <StatusBadge type="task-status" value={task.status} />
                                         </td>
                                         <td className="px-3 py-3">
-                                            <span className={cn(
-                                                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium capitalize',
-                                                PCHIP[task.priority] ?? 'bg-gray-100 text-gray-600',
-                                            )}>
-                                                <span className={cn('w-1.5 h-1.5 rounded-full', PRIORITY_DOT[task.priority] ?? 'bg-gray-300')} />
-                                                {task.priority}
-                                            </span>
+                                            <StatusBadge type="task-priority" value={task.priority} />
                                         </td>
                                         <td className="px-3 py-3 text-[12px] text-gray-500 whitespace-nowrap">
                                             {task.assignee?.name ?? <span className="text-gray-300">Unassigned</span>}
@@ -305,29 +264,12 @@ export default function TasksIndex({ tasks, filters }: Props) {
                 )}
 
                 {/* Pagination */}
-                {tasks.meta && tasks.meta.last_page > 1 && (
-                    <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
-                        <p className="text-[12px] text-gray-400">
-                            {(tasks.meta.current_page - 1) * tasks.meta.per_page + 1}–{Math.min(tasks.meta.current_page * tasks.meta.per_page, tasks.meta.total)} of {tasks.meta.total} tasks
-                        </p>
-                        <div className="flex gap-1">
-                            {Array.from({ length: tasks.meta.last_page }, (_, i) => i + 1).map((page) => (
-                                <button
-                                    key={page}
-                                    onClick={() => router.get('/tasks', { ...filters, page }, { preserveState: true })}
-                                    className={cn(
-                                        'w-8 h-8 rounded-lg text-[12px] font-medium transition-colors',
-                                        page === tasks.meta.current_page
-                                            ? 'bg-indigo-600 text-white'
-                                            : 'text-gray-500 hover:bg-gray-100',
-                                    )}
-                                >
-                                    {page}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                <Pagination
+                    meta={tasks.meta}
+                    onPageChange={(page) => router.get('/tasks', { ...filters, page }, { preserveState: true })}
+                    labelSingular="task"
+                    labelPlural="tasks"
+                />
             </div>
         </AppLayout>
     );

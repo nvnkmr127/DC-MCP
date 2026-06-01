@@ -10,7 +10,15 @@ import {
     AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import axios from 'axios';
+import {
+    useDashboardsQuery,
+    useDashboardDataQuery,
+    useSaveDashboardMutation,
+    useQueryWidgetDataMutation,
+    DashboardConfig,
+    Widget
+} from '@/hooks/queries/useDashboards';
+import { Button } from '@/Components/ui/Button';
 
 interface DashboardStats {
     my_active_tasks: number;
@@ -29,19 +37,6 @@ interface DashboardStats {
     }>;
 }
 
-interface Widget {
-    id: string;
-    title: string;
-    type: 'metric_card' | 'line_chart' | 'bar_chart' | 'pie_chart';
-    spec: {
-        metric_key: string;
-        aggregation: string;
-        group_by?: string;
-        filters?: Record<string, any>;
-    };
-    position: { x: number; y: number; w: number; h: number };
-}
-
 interface Props {
     stats: DashboardStats;
     briefing?: { id: string; date: string; digest_text: string | null; status: string } | null;
@@ -50,63 +45,56 @@ interface Props {
 const PIE_COLORS = ['#6366f1', '#a855f7', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
 
 export default function DashboardIndex({ stats, briefing }: Props) {
+    const { data: dashboards, isLoading: isLoadingConfigs } = useDashboardsQuery();
     const [editMode, setEditMode] = useState(false);
-    const [dashboardConfig, setDashboardConfig] = useState<any>(null);
-    const [widgetsData, setWidgetsData] = useState<Record<string, any>>({});
-    const [loading, setLoading] = useState(true);
+    const [localLayout, setLocalLayout] = useState<Widget[]>([]);
+    const [activeDb, setActiveDb] = useState<DashboardConfig | null>(null);
+
+    // Sync activeDb and localLayout when dashboards query completes
+    useEffect(() => {
+        if (dashboards && dashboards.length > 0 && !activeDb) {
+            const firstDb = dashboards[0];
+            setActiveDb(firstDb);
+            setLocalLayout(firstDb.layout);
+        }
+    }, [dashboards]);
+
+    const { data: widgetsData, isLoading: isLoadingData, refetch: refetchData } = useDashboardDataQuery(
+        activeDb?.id,
+        !editMode
+    );
+
+    const saveMutation = useSaveDashboardMutation();
+    const queryWidgetMutation = useQueryWidgetDataMutation();
+
+    const [localWidgetsData, setLocalWidgetsData] = useState<Record<string, any>>({});
+
+    // Sync local widgets data when query succeeds
+    useEffect(() => {
+        if (widgetsData) {
+            setLocalWidgetsData(widgetsData);
+        }
+    }, [widgetsData]);
 
     const greeting = () => {
         const hr = new Date().getHours();
         return hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
     };
 
-    // Fetch customizable dashboard configurations
-    useEffect(() => {
-        axios.get('/api/v1/dashboards')
-            .then(res => {
-                const activeDb = res.data.data?.[0];
-                if (activeDb) {
-                    setDashboardConfig(activeDb);
-                    fetchDashboardData(activeDb.id);
-                } else {
-                    setLoading(false);
-                }
-            })
-            .catch(() => {
-                setLoading(false);
-            });
-    }, []);
-
-    const fetchDashboardData = (id: string) => {
-        setLoading(true);
-        axios.get(`/api/v1/dashboards/${id}/data`)
-            .then(res => {
-                setWidgetsData(res.data.data?.widgets ?? {});
-                setLoading(false);
-            })
-            .catch(() => {
-                setLoading(false);
-            });
-    };
-
     const handleSaveLayout = () => {
-        if (!dashboardConfig) return;
-        axios.put(`/api/v1/dashboards/${dashboardConfig.id}`, {
-            layout: dashboardConfig.layout
-        })
-        .then(() => {
-            setEditMode(false);
+        if (!activeDb) return;
+        saveMutation.mutate({ id: activeDb.id, layout: localLayout }, {
+            onSuccess: () => {
+                setEditMode(false);
+            }
         });
     };
 
     const handleRemoveWidget = (widgetId: string) => {
-        if (!dashboardConfig) return;
-        const newLayout = dashboardConfig.layout.filter((w: any) => w.id !== widgetId);
-        setDashboardConfig({ ...dashboardConfig, layout: newLayout });
+        setLocalLayout(prev => prev.filter(w => w.id !== widgetId));
     };
 
     const handleAddWidget = () => {
-        if (!dashboardConfig) return;
         const newId = `custom-w-${Date.now()}`;
         const newWidget: Widget = {
             id: newId,
@@ -120,15 +108,20 @@ export default function DashboardIndex({ stats, briefing }: Props) {
             },
             position: { x: 0, y: 0, w: 6, h: 4 }
         };
-        const newLayout = [...dashboardConfig.layout, newWidget];
-        setDashboardConfig({ ...dashboardConfig, layout: newLayout });
+        setLocalLayout(prev => [...prev, newWidget]);
         
-        // Fetch data for the new widget
-        axios.post('/api/v1/viz/query', newWidget.spec)
-            .then(res => {
-                setWidgetsData(prev => ({ ...prev, [newId]: res.data.data }));
-            });
+        queryWidgetMutation.mutate(newWidget.spec, {
+            onSuccess: (data) => {
+                setLocalWidgetsData(prev => ({ ...prev, [newId]: data }));
+            }
+        });
     };
+
+    const loading = isLoadingConfigs || isLoadingData || saveMutation.isPending;
+
+    // Build visual representation of current config/layout
+    const dashboardConfig = activeDb ? { ...activeDb, layout: localLayout } : null;
+    const resolvedWidgetsData = localWidgetsData;
 
     return (
         <AppLayout title={`${greeting()}, Team 👋`}>
@@ -145,38 +138,45 @@ export default function DashboardIndex({ stats, briefing }: Props) {
                         <>
                             {editMode ? (
                                 <>
-                                    <button
+                                    <Button
                                         onClick={handleAddWidget}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors border border-indigo-100"
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-indigo-600 border-indigo-150 bg-indigo-50/50 hover:bg-indigo-100/60"
                                     >
-                                        <Plus size={13} /> Add Widget
-                                    </button>
-                                    <button
+                                        <Plus size={13} className="mr-1.5" /> Add Widget
+                                    </Button>
+                                    <Button
                                         onClick={handleSaveLayout}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-md"
+                                        size="sm"
+                                        loading={saveMutation.isPending}
                                     >
-                                        <Save size={13} /> Save Dashboard
-                                    </button>
+                                        <Save size={13} className="mr-1.5" /> Save Dashboard
+                                    </Button>
                                 </>
                             ) : (
-                                <button
+                                <Button
                                     onClick={() => setEditMode(true)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-gray-600 border border-gray-200 text-xs font-semibold rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                                    variant="outline"
+                                    size="sm"
                                 >
-                                    <Edit3 size={13} /> Edit Layout
-                                </button>
+                                    <Edit3 size={13} className="mr-1.5" /> Edit Layout
+                                </Button>
                             )}
-                            <button
-                                onClick={() => fetchDashboardData(dashboardConfig.id)}
-                                className="p-1.5 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-700 transition-colors"
+                            <Button
+                                onClick={() => refetchData()}
+                                variant="outline"
+                                size="sm"
+                                className="p-2 aspect-square rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700"
                                 title="Refresh data"
                             >
-                                <RefreshCw size={13} />
-                            </button>
+                                <RefreshCw size={13} className={cn(loading && "animate-spin")} />
+                            </Button>
                         </>
                     )}
                 </div>
             </div>
+
 
             {/* Loading / Custom layout view */}
             {loading ? (
@@ -192,7 +192,7 @@ export default function DashboardIndex({ stats, briefing }: Props) {
             ) : dashboardConfig && dashboardConfig.layout && dashboardConfig.layout.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-6">
                     {dashboardConfig.layout.map((widget: any) => {
-                        const data = widgetsData[widget.id];
+                        const data = localWidgetsData[widget.id];
                         const spanCls = widget.position.w >= 6 ? 'md:col-span-6' : 'md:col-span-3';
 
                         return (

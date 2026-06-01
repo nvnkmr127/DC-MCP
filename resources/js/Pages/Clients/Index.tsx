@@ -3,7 +3,12 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import type { Client, PaginatedResponse } from '@/types';
-import { Plus, Search, Building2, Globe, Mail, Phone, DollarSign, X } from 'lucide-react';
+import { Plus, Search, Building2, Globe, Mail, Phone, DollarSign } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/Components/ui/Dialog';
+import { Button } from '@/Components/ui/Button';
+import { Input, Label, TextArea } from '@/Components/ui/Input';
+import { Badge } from '@/Components/ui/Badge';
+import { CLIENT_STATUS_CONFIG, CLIENT_TIER_CONFIG } from '@/lib/constants';
 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
 
@@ -13,52 +18,52 @@ function UpsellModal({ client, onClose }: { client: Client & { projects_count: n
         upsell_potential: client.upsell_potential ? String(client.upsell_potential) : '',
     });
     return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-[15px] font-bold text-gray-900">Flag for Upsell — {client.name}</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
-                </div>
+        <Dialog open={true} onOpenChange={(open) => { if (!open) onClose(); }}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Flag for Upsell — {client.name}</DialogTitle>
+                </DialogHeader>
                 <form onSubmit={e => {
                     e.preventDefault();
                     form.patch(`/clients/${client.id}/upsell`, { onSuccess: onClose });
-                }} className="space-y-3">
+                }} className="space-y-4">
                     <div>
-                        <label className="text-xs text-gray-500 font-medium">Upsell Opportunity Notes</label>
-                        <textarea value={form.data.upsell_notes} onChange={e => form.setData('upsell_notes', e.target.value)} rows={3}
+                        <Label>Upsell Opportunity Notes</Label>
+                        <TextArea
+                            value={form.data.upsell_notes}
+                            onChange={e => form.setData('upsell_notes', e.target.value)}
+                            rows={3}
                             placeholder="Why is this client ready for an upsell? What services?"
-                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400 resize-none" />
+                            className="mt-1"
+                        />
                     </div>
                     <div>
-                        <label className="text-xs text-gray-500 font-medium">Potential Value (₹/month)</label>
-                        <input type="number" value={form.data.upsell_potential}
+                        <Label>Potential Value (₹/month)</Label>
+                        <Input
+                            type="number"
+                            value={form.data.upsell_potential}
                             onChange={e => form.setData('upsell_potential', e.target.value)}
-                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400" />
+                            placeholder="e.g. 50000"
+                            className="mt-1"
+                        />
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing}
-                            className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 disabled:opacity-50">
-                            {form.processing ? 'Saving…' : 'Flag for Upsell'}
-                        </button>
+                        <Button type="button" variant="ghost" onClick={onClose}>
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            loading={form.processing}
+                            className="bg-amber-500 hover:bg-amber-600 focus:ring-amber-500"
+                        >
+                            Flag for Upsell
+                        </Button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 }
-
-const TIER_CONFIG: Record<string, { label: string; badge: string; dot: string }> = {
-    standard:   { label: 'Standard',   badge: 'bg-gray-100 text-gray-600',    dot: 'bg-gray-400' },
-    premium:    { label: 'Premium',    badge: 'bg-indigo-50 text-indigo-700', dot: 'bg-indigo-500' },
-    enterprise: { label: 'Enterprise', badge: 'bg-violet-50 text-violet-700', dot: 'bg-violet-500' },
-};
-
-const STATUS_CONFIG: Record<string, { label: string; badge: string; dot: string }> = {
-    active:   { label: 'Active',   badge: 'bg-emerald-50 text-emerald-700', dot: 'bg-emerald-500' },
-    inactive: { label: 'Inactive', badge: 'bg-gray-100 text-gray-500',      dot: 'bg-gray-300' },
-    prospect: { label: 'Prospect', badge: 'bg-yellow-50 text-yellow-700',   dot: 'bg-yellow-400' },
-};
 
 interface Props {
     clients: PaginatedResponse<Client & { projects_count: number; upsell_flagged?: boolean; upsell_potential?: number | null; upsell_notes?: string | null }>;
@@ -93,17 +98,18 @@ export default function ClientsIndex({ clients, filters }: Props) {
                 <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 flex items-center gap-3">
                     <DollarSign size={16} className="text-amber-600 shrink-0" />
                     <p className="text-sm text-amber-800 font-medium">
-                        <strong>{upsellClients.length}</strong> client{upsellClients.length > 1 ? 's' : ''} flagged for upsell
+                         <strong>{upsellClients.length}</strong> client{upsellClients.length > 1 ? 's' : ''} flagged for upsell
                         {upsellPotential > 0 && <> — <strong>{fmt(upsellPotential)}</strong>/mo potential</>}
                     </p>
                 </div>
             )}
 
+
             {/* ── Toolbar ── */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
                 <div className="flex items-center gap-1.5 flex-wrap">
                     {statusOptions.map((s) => {
-                        const cfg = STATUS_CONFIG[s];
+                        const cfg = CLIENT_STATUS_CONFIG[s];
                         return (
                             <button
                                 key={s}
@@ -122,7 +128,7 @@ export default function ClientsIndex({ clients, filters }: Props) {
                     })}
                     <div className="w-px h-5 bg-gray-200 mx-0.5" />
                     {tierOptions.map((t) => {
-                        const cfg = TIER_CONFIG[t];
+                        const cfg = CLIENT_TIER_CONFIG[t];
                         return (
                             <button
                                 key={t}
@@ -151,12 +157,12 @@ export default function ClientsIndex({ clients, filters }: Props) {
                             placeholder="Search clients…"
                         />
                     </form>
-                    <Link
-                        href="/clients/create"
-                        className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-[13px] font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm whitespace-nowrap"
+                    <Button
+                        onClick={() => router.visit('/clients/create')}
+                        size="sm"
                     >
-                        <Plus size={14} /> New Client
-                    </Link>
+                        <Plus size={14} className="mr-1" /> New Client
+                    </Button>
                 </div>
             </div>
 
@@ -170,12 +176,12 @@ export default function ClientsIndex({ clients, filters }: Props) {
                     <p className="text-[13px] text-gray-400 mb-5">
                         {filters.status || filters.tier || filters.search ? 'Try adjusting your filters.' : 'Add your first client to get started.'}
                     </p>
-                    <Link
-                        href="/clients/create"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-[13px] font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+                    <Button
+                        onClick={() => router.visit('/clients/create')}
+                        size="md"
                     >
-                        <Plus size={14} /> Add Client
-                    </Link>
+                        <Plus size={14} className="mr-1" /> Add Client
+                    </Button>
                 </div>
             )}
 
@@ -185,8 +191,8 @@ export default function ClientsIndex({ clients, filters }: Props) {
             {clients.data.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {clients.data.map((client) => {
-                        const tierCfg   = TIER_CONFIG[client.tier ?? 'standard']   ?? TIER_CONFIG.standard;
-                        const statusCfg = STATUS_CONFIG[client.status ?? 'active'] ?? STATUS_CONFIG.active;
+                        const tierCfg   = CLIENT_TIER_CONFIG[client.tier ?? 'standard']   ?? CLIENT_TIER_CONFIG.standard;
+                        const statusCfg = CLIENT_STATUS_CONFIG[client.status ?? 'active'] ?? CLIENT_STATUS_CONFIG.active;
                         return (
                             <div
                                 key={client.id}
@@ -214,13 +220,18 @@ export default function ClientsIndex({ clients, filters }: Props) {
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end gap-1 shrink-0">
-                                        <span className={cn('flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold', statusCfg.badge)}>
-                                            <span className={cn('w-1.5 h-1.5 rounded-full', statusCfg.dot)} />
+                                        <Badge
+                                            variant={client.status === 'active' ? 'emerald' : client.status === 'prospect' ? 'amber' : 'gray'}
+                                            showDot
+                                            dotClassName={statusCfg.dot}
+                                        >
                                             {statusCfg.label}
-                                        </span>
-                                        <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold', tierCfg.badge)}>
+                                        </Badge>
+                                        <Badge
+                                            variant={client.tier === 'enterprise' ? 'violet' : client.tier === 'premium' ? 'indigo' : 'gray'}
+                                        >
                                             {tierCfg.label}
-                                        </span>
+                                        </Badge>
                                     </div>
                                 </div>
 
@@ -262,18 +273,20 @@ export default function ClientsIndex({ clients, filters }: Props) {
                                             {client.upsell_potential ? fmt(client.upsell_potential) + '/mo' : 'Upsell flagged'}
                                         </span>
                                     ) : <span />}
-                                    <button
+                                    <Button
                                         onClick={() => setUpsellClient(client)}
+                                        variant="ghost"
+                                        size="sm"
                                         className={cn(
-                                            'flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-lg transition-colors',
+                                            'flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg transition-colors h-7',
                                             client.upsell_flagged
-                                                ? 'text-amber-600 bg-amber-50 hover:bg-amber-100'
+                                                ? 'text-amber-600 bg-amber-50 hover:bg-amber-100 hover:text-amber-700'
                                                 : 'text-gray-400 hover:text-amber-600 hover:bg-amber-50 opacity-0 group-hover:opacity-100',
                                         )}
                                     >
                                         <DollarSign size={11} />
                                         {client.upsell_flagged ? 'Edit Upsell' : 'Flag Upsell'}
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         );
