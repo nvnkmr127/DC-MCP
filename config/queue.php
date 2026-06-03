@@ -40,7 +40,9 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            // Must exceed the longest job timeout (180s briefing) + safety margin.
+            // Default 210s. Set DB_QUEUE_RETRY_AFTER in env if jobs change.
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 210),
             'after_commit' => false,
         ],
 

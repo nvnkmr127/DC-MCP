@@ -95,7 +95,7 @@ class ProspectWebController extends Controller
 
     public function update(Request $request, Prospect $prospect): RedirectResponse
     {
-        abort_if($prospect->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($prospect);
 
         $validated = $request->validate([
             'company_name'        => 'sometimes|string|max:255',
@@ -117,14 +117,14 @@ class ProspectWebController extends Controller
 
     public function destroy(Request $request, Prospect $prospect): RedirectResponse
     {
-        abort_if($prospect->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($prospect);
         $prospect->delete();
         return back()->with('success', 'Prospect deleted.');
     }
 
     public function addActivity(Request $request, Prospect $prospect): RedirectResponse
     {
-        abort_if($prospect->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($prospect);
 
         $validated = $request->validate([
             'type'         => 'required|in:call,email,meeting,proposal,follow_up,note',

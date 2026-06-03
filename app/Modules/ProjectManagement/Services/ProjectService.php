@@ -81,7 +81,7 @@ class ProjectService
         $totalTasks = $project->tasks()->count();
         $completedTasks = $project->tasks()->where('status', 'done')->count();
 
-        $progressPercentage = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100, 2) : 0;
+        $progressPercentage = $project->completionPct($totalTasks, $completedTasks);
 
         $tasksByStatus = $project->tasks()
             ->select('status', DB::raw('count(*) as count'))

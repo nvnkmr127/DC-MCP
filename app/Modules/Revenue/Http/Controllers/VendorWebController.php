@@ -37,7 +37,7 @@ class VendorWebController extends Controller
 
     public function update(Request $request, VendorContract $vendorContract): RedirectResponse
     {
-        abort_if($vendorContract->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($vendorContract);
 
         $validated = $request->validate([
             'name'         => 'sometimes|string|max:255',
@@ -53,7 +53,7 @@ class VendorWebController extends Controller
 
     public function destroy(Request $request, VendorContract $vendorContract): RedirectResponse
     {
-        abort_if($vendorContract->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($vendorContract);
         $vendorContract->delete();
         return back()->with('success', 'Vendor contract removed.');
     }

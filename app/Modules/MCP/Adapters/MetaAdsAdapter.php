@@ -236,7 +236,10 @@ class MetaAdsAdapter extends BaseAdapter
     {
         // Meta webhooks verification flow
         if ($request->query('hub_mode') === 'subscribe') {
-            $verifyToken = config('services.meta.webhook_verify_token', env('META_WEBHOOK_VERIFY_TOKEN', 'dummy-verify-token'));
+            $verifyToken = config('services.meta.webhook_verify_token');
+            if (!$verifyToken) {
+                return WebhookResult::failed('META_WEBHOOK_VERIFY_TOKEN is not configured.');
+            }
             if ($request->query('hub_verify_token') === $verifyToken) {
                 // User would need to output $request->query('hub_challenge') directly
                 return WebhookResult::processed(['challenge' => $request->query('hub_challenge')]);

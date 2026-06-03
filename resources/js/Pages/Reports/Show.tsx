@@ -151,7 +151,7 @@ export default function ReportsShow({ report }: Props) {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Created By</span>
-                                <span className="font-semibold text-gray-900">{report.generated_by_user?.name ?? 'System'}</span>
+                                <span className="font-semibold text-gray-900">{report.generated_by?.name ?? 'System'}</span>
                             </div>
                         </div>
                     </div>

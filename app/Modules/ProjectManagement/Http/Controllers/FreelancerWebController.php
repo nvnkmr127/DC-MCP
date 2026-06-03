@@ -75,7 +75,7 @@ class FreelancerWebController extends Controller
 
     public function update(Request $request, Freelancer $freelancer): RedirectResponse
     {
-        abort_if($freelancer->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($freelancer);
 
         $validated = $request->validate([
             'name'           => 'sometimes|string|max:255',
@@ -94,14 +94,14 @@ class FreelancerWebController extends Controller
 
     public function destroy(Request $request, Freelancer $freelancer): RedirectResponse
     {
-        abort_if($freelancer->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($freelancer);
         $freelancer->delete();
         return back()->with('success', 'Freelancer deleted.');
     }
 
     public function storeAssignment(Request $request, Freelancer $freelancer): RedirectResponse
     {
-        abort_if($freelancer->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($freelancer);
 
         $validated = $request->validate([
             'project_id'  => 'nullable|uuid|exists:projects,id',
@@ -122,7 +122,7 @@ class FreelancerWebController extends Controller
 
     public function updateAssignment(Request $request, FreelancerAssignment $assignment): RedirectResponse
     {
-        abort_if($assignment->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($assignment);
 
         $validated = $request->validate([
             'hours_worked' => 'sometimes|numeric|min:0',
@@ -137,7 +137,7 @@ class FreelancerWebController extends Controller
 
     public function destroyAssignment(Request $request, FreelancerAssignment $assignment): RedirectResponse
     {
-        abort_if($assignment->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($assignment);
         $assignment->delete();
         return back()->with('success', 'Assignment deleted.');
     }

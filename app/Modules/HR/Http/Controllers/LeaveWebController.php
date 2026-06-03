@@ -7,6 +7,8 @@ use App\Modules\HR\Models\LeaveBalance;
 use App\Modules\HR\Models\LeaveRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use Carbon\Carbon;
@@ -53,10 +55,7 @@ class LeaveWebController extends Controller
                 ]);
         }
 
-        $balance = LeaveBalance::firstOrCreate(
-            ['organization_id' => $orgId, 'user_id' => $user->id, 'year' => $year],
-            ['earned_total' => 15, 'earned_used' => 0, 'sick_total' => 12, 'sick_used' => 0, 'casual_total' => 6, 'casual_used' => 0]
-        );
+        $balance = $this->findOrCreateBalance($orgId, $user->id, $year);
 
         return Inertia::render('HR/Leave/Index', [
             'myRequests'   => $myRequests,
@@ -101,11 +100,21 @@ class LeaveWebController extends Controller
             return back()->withErrors(['from_date' => 'You already have a leave request for overlapping dates.']);
         }
 
-        LeaveRequest::create([
+        $leave = LeaveRequest::create([
             'organization_id' => $orgId,
             'user_id'         => $user->id,
             'days'            => $days,
             ...$validated,
+        ]);
+
+        Log::info('Leave request submitted', [
+            'leave_id'       => $leave->id,
+            'user_id'        => $user->id,
+            'organization_id'=> $orgId,
+            'type'           => $validated['type'],
+            'from_date'      => $validated['from_date'],
+            'to_date'        => $validated['to_date'],
+            'days'           => $days,
         ]);
 
         return back()->with('success', 'Leave request submitted.');
@@ -113,35 +122,60 @@ class LeaveWebController extends Controller
 
     public function approve(Request $request, LeaveRequest $leave): RedirectResponse
     {
-        abort_if($leave->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($leave);
+        abort_unless(in_array($request->user()->role, ['ceo', 'project_manager']), 403);
+        abort_if($leave->status !== 'pending', 422, 'Only pending leave requests can be approved.');
 
-        $leave->update([
-            'status'      => 'approved',
-            'reviewed_by' => $request->user()->id,
-            'reviewed_at' => now(),
+        DB::transaction(function () use ($leave, $request) {
+            $leave->update([
+                'status'      => 'approved',
+                'reviewed_by' => $request->user()->id,
+                'reviewed_at' => now(),
+            ]);
+
+            $col = match ($leave->type) {
+                'earned' => 'earned_used',
+                'sick'   => 'sick_used',
+                'casual' => 'casual_used',
+                default  => null,
+            };
+
+            if ($col) {
+                $balance = $this->findOrCreateBalance(
+                    $leave->organization_id,
+                    $leave->user_id,
+                    now()->year
+                );
+                $balance->increment($col, $leave->days);
+
+                Log::info('Leave balance incremented', [
+                    'leave_id'       => $leave->id,
+                    'user_id'        => $leave->user_id,
+                    'organization_id'=> $leave->organization_id,
+                    'column'         => $col,
+                    'days'           => $leave->days,
+                    'approved_by'    => $request->user()->id,
+                ]);
+            }
+        });
+
+        Log::info('Leave approved', [
+            'leave_id'       => $leave->id,
+            'user_id'        => $leave->user_id,
+            'organization_id'=> $leave->organization_id,
+            'type'           => $leave->type,
+            'days'           => $leave->days,
+            'approved_by'    => $request->user()->id,
         ]);
-
-        $balance = LeaveBalance::firstOrCreate(
-            ['organization_id' => $leave->organization_id, 'user_id' => $leave->user_id, 'year' => now()->year],
-            ['earned_total' => 15, 'earned_used' => 0, 'sick_total' => 12, 'sick_used' => 0, 'casual_total' => 6, 'casual_used' => 0]
-        );
-
-        $col = match($leave->type) {
-            'earned' => 'earned_used',
-            'sick'   => 'sick_used',
-            'casual' => 'casual_used',
-            default  => null,
-        };
-        if ($col) {
-            $balance->increment($col, $leave->days);
-        }
 
         return back()->with('success', 'Leave approved.');
     }
 
     public function reject(Request $request, LeaveRequest $leave): RedirectResponse
     {
-        abort_if($leave->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($leave);
+        abort_unless(in_array($request->user()->role, ['ceo', 'project_manager']), 403);
+        abort_if($leave->status !== 'pending', 422, 'Only pending leave requests can be rejected.');
 
         $leave->update([
             'status'      => 'rejected',
@@ -149,16 +183,34 @@ class LeaveWebController extends Controller
             'reviewed_at' => now(),
         ]);
 
+        Log::info('Leave rejected', [
+            'leave_id'       => $leave->id,
+            'user_id'        => $leave->user_id,
+            'organization_id'=> $leave->organization_id,
+            'type'           => $leave->type,
+            'days'           => $leave->days,
+            'rejected_by'    => $request->user()->id,
+        ]);
+
         return back()->with('success', 'Leave rejected.');
     }
 
     public function destroy(Request $request, LeaveRequest $leave): RedirectResponse
     {
-        abort_if($leave->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($leave);
         abort_if($leave->status !== 'pending', 403);
 
         $leave->delete();
 
         return back()->with('success', 'Leave request deleted.');
+    }
+
+    private function findOrCreateBalance(string $orgId, string $userId, int $year): LeaveBalance
+    {
+        // Use updateOrCreate with a unique key to avoid race-condition duplicates
+        return LeaveBalance::firstOrCreate(
+            ['organization_id' => $orgId, 'user_id' => $userId, 'year' => $year],
+            ['earned_total' => 15, 'earned_used' => 0, 'sick_total' => 12, 'sick_used' => 0, 'casual_total' => 6, 'casual_used' => 0]
+        );
     }
 }

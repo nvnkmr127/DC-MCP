@@ -93,7 +93,7 @@ class RetainerWebController extends Controller
 
     public function update(Request $request, ClientRetainer $retainer): RedirectResponse
     {
-        abort_if($retainer->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($retainer);
 
         $validated = $request->validate([
             'name'                => 'sometimes|string|max:255',
@@ -116,7 +116,7 @@ class RetainerWebController extends Controller
 
     public function destroy(Request $request, ClientRetainer $retainer): RedirectResponse
     {
-        abort_if($retainer->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($retainer);
         $retainer->delete();
         return back()->with('success', 'Retainer deleted.');
     }

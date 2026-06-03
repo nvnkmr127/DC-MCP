@@ -83,14 +83,14 @@ class OnboardingWebController extends Controller
 
     public function advance(Request $request, ClientOnboarding $onboarding): RedirectResponse
     {
-        abort_if($onboarding->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($onboarding);
         $this->onboardingService->advanceStage($onboarding);
         return back()->with('success', 'Onboarding stage advanced.');
     }
 
     public function toggleChecklist(Request $request, ClientOnboarding $onboarding): RedirectResponse
     {
-        abort_if($onboarding->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($onboarding);
         $validated = $request->validate(['index' => 'required|integer|min:0']);
         $this->onboardingService->toggleChecklistItem($onboarding, $validated['index']);
         return back();
@@ -98,7 +98,7 @@ class OnboardingWebController extends Controller
 
     public function submitNps(Request $request, ClientOnboarding $onboarding): RedirectResponse
     {
-        abort_if($onboarding->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($onboarding);
         $validated = $request->validate([
             'nps_score'   => 'required|integer|min:0|max:10',
             'nps_comment' => 'nullable|string|max:1000',

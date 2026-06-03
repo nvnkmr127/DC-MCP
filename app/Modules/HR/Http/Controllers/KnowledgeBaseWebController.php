@@ -78,7 +78,7 @@ class KnowledgeBaseWebController extends Controller
 
     public function update(Request $request, KnowledgeArticle $article): RedirectResponse
     {
-        abort_if($article->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($article);
 
         $validated = $request->validate([
             'title'        => 'sometimes|string|max:255',
@@ -94,7 +94,7 @@ class KnowledgeBaseWebController extends Controller
 
     public function destroy(Request $request, KnowledgeArticle $article): RedirectResponse
     {
-        abort_if($article->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($article);
         $article->delete();
         return back()->with('success', 'Article deleted.');
     }

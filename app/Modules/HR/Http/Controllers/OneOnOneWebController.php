@@ -85,7 +85,7 @@ class OneOnOneWebController extends Controller
 
     public function update(Request $request, OneOnOneNote $oneOnOneNote): RedirectResponse
     {
-        abort_if($oneOnOneNote->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($oneOnOneNote);
 
         $validated = $request->validate([
             'wins'             => 'sometimes|nullable|string',
@@ -101,7 +101,7 @@ class OneOnOneWebController extends Controller
 
     public function toggleActionItem(Request $request, OneOnOneNote $oneOnOneNote): RedirectResponse
     {
-        abort_if($oneOnOneNote->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($oneOnOneNote);
 
         $validated = $request->validate(['id' => 'required|string']);
 

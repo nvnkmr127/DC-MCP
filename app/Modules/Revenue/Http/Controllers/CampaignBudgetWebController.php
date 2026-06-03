@@ -82,7 +82,7 @@ class CampaignBudgetWebController extends Controller
 
     public function updateSpend(Request $request, CampaignBudget $campaignBudget): RedirectResponse
     {
-        abort_if($campaignBudget->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($campaignBudget);
         $validated = $request->validate(['spent_amount' => 'required|numeric|min:0']);
         $campaignBudget->update($validated);
         return back()->with('success', 'Spend updated.');

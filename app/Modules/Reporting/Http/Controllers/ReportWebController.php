@@ -19,12 +19,14 @@ class ReportWebController extends Controller
 {
     public function index(Request $request)
     {
-        $from = $request->filled('from') ? Carbon::parse($request->from) : now()->subDays(30);
-        $to   = $request->filled('to')   ? Carbon::parse($request->to)   : now();
+        $orgId = $request->user()->organization_id;
+        $from  = $request->filled('from') ? Carbon::parse($request->from) : now()->subDays(30);
+        $to    = $request->filled('to')   ? Carbon::parse($request->to)   : now();
 
-        // Task completion over time (daily for 30 days)
+        // Task completion over time (scoped to org)
         $taskCompletion = DB::table('tasks')
             ->selectRaw('DATE(completed_at) as date, count(*) as count')
+            ->where('organization_id', $orgId)
             ->whereNotNull('completed_at')
             ->whereBetween('completed_at', [$from, $to])
             ->groupByRaw('DATE(completed_at)')
@@ -32,18 +34,21 @@ class ReportWebController extends Controller
             ->get()
             ->map(fn($r) => ['date' => $r->date, 'completed' => (int) $r->count]);
 
-        // Tasks by status
-        $tasksByStatus = Task::selectRaw('status, count(*) as count')
+        // Tasks by status (scoped to org)
+        $tasksByStatus = Task::where('organization_id', $orgId)
+            ->selectRaw('status, count(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status');
 
-        // Tasks by priority
-        $tasksByPriority = Task::selectRaw('priority, count(*) as count')
+        // Tasks by priority (scoped to org)
+        $tasksByPriority = Task::where('organization_id', $orgId)
+            ->selectRaw('priority, count(*) as count')
             ->groupBy('priority')
             ->pluck('count', 'priority');
 
-        // Time logged per user (this period)
-        $timeByUser = TimeEntry::selectRaw('user_id, sum(hours) as total_hours')
+        // Time logged per user (scoped to org)
+        $timeByUser = TimeEntry::where('organization_id', $orgId)
+            ->selectRaw('user_id, sum(hours) as total_hours')
             ->whereBetween('logged_date', [$from->toDateString(), $to->toDateString()])
             ->groupBy('user_id')
             ->with('user:id,name')
@@ -53,8 +58,9 @@ class ReportWebController extends Controller
                 'hours' => (float) $e->total_hours,
             ]);
 
-        // Time logged per project
-        $timeByProject = TimeEntry::selectRaw('project_id, sum(hours) as total_hours')
+        // Time logged per project (scoped to org)
+        $timeByProject = TimeEntry::where('organization_id', $orgId)
+            ->selectRaw('project_id, sum(hours) as total_hours')
             ->whereBetween('logged_date', [$from->toDateString(), $to->toDateString()])
             ->groupBy('project_id')
             ->with('project:id,name')
@@ -64,26 +70,32 @@ class ReportWebController extends Controller
                 'hours'   => (float) $e->total_hours,
             ]);
 
-        // Project health
-        $projects = Project::withCount([
-            'tasks',
-            'tasks as completed_tasks' => fn($q) => $q->where('status', 'done'),
-            'tasks as overdue_tasks'   => fn($q) => $q->whereDate('due_date', '<', now())->whereNotIn('status', ['done', 'cancelled']),
-        ])->where('status', 'active')->get()->map(fn($p) => [
-            'name'            => $p->name,
-            'total'           => $p->tasks_count,
-            'completed'       => $p->completed_tasks,
-            'overdue'         => $p->overdue_tasks,
-            'completion_pct'  => $p->tasks_count > 0 ? round(($p->completed_tasks / $p->tasks_count) * 100) : 0,
-        ]);
+        // Project health — paginated to prevent memory exhaustion on large datasets
+        $projects = Project::where('organization_id', $orgId)
+            ->where('status', 'active')
+            ->withCount([
+                'tasks',
+                'tasks as completed_tasks' => fn($q) => $q->where('status', 'done'),
+                'tasks as overdue_tasks'   => fn($q) => $q->whereDate('due_date', '<', now())->whereNotIn('status', ['done', 'cancelled']),
+            ])
+            ->paginate(50)
+            ->through(fn($p) => [
+                'name'           => $p->name,
+                'total'          => $p->tasks_count,
+                'completed'      => $p->completed_tasks,
+                'overdue'        => $p->overdue_tasks,
+                'completion_pct' => $p->completionPct($p->tasks_count, $p->completed_tasks),
+            ]);
 
-        // Load generated reports
-        $generatedReports = Report::with(['project', 'client', 'generatedBy'])
+        // Generated reports scoped to org, paginated
+        $generatedReports = Report::where('organization_id', $orgId)
+            ->with(['project', 'client', 'generatedBy'])
             ->orderByDesc('created_at')
-            ->get();
+            ->paginate(20);
 
-        // Load schedules
-        $reportSchedules = ReportSchedule::with(['project', 'client', 'creator'])
+        // Schedules scoped to org
+        $reportSchedules = ReportSchedule::where('organization_id', $orgId)
+            ->with(['project', 'client', 'creator'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -100,15 +112,16 @@ class ReportWebController extends Controller
                 'from' => $from->toDateString(),
                 'to'   => $to->toDateString(),
             ],
-            'reports' => $generatedReports,
+            'reports'   => $generatedReports,
             'schedules' => $reportSchedules,
         ]);
     }
 
     public function create(Request $request)
     {
-        $projects = Project::where('status', 'active')->get(['id', 'name', 'client_id']);
-        $clients = Client::where('status', 'active')->get(['id', 'name']);
+        $orgId    = $request->user()->organization_id;
+        $projects = Project::where('organization_id', $orgId)->where('status', 'active')->get(['id', 'name', 'client_id']);
+        $clients  = Client::where('organization_id', $orgId)->where('status', 'active')->get(['id', 'name']);
 
         return Inertia::render('Reports/Create', [
             'projects' => $projects,
@@ -116,8 +129,9 @@ class ReportWebController extends Controller
         ]);
     }
 
-    public function show(Report $report)
+    public function show(Request $request, Report $report)
     {
+        $this->authorizeOrg($report);
         $report->load(['project', 'client', 'generatedBy']);
 
         return Inertia::render('Reports/Show', [

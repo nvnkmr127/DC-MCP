@@ -56,8 +56,15 @@ class GmailAdapter extends BaseAdapter
     protected function getGoogleClient(array $credentials, ?McpConnection $connection = null): Google_Client
     {
         $client = new Google_Client();
-        $client->setClientId(config('services.google.client_id', env('GOOGLE_CLIENT_ID', 'dummy-client-id')));
-        $client->setClientSecret(config('services.google.client_secret', env('GOOGLE_CLIENT_SECRET', 'dummy-client-secret')));
+        $clientId     = config('services.google.client_id');
+        $clientSecret = config('services.google.client_secret');
+
+        if (!$clientId || !$clientSecret) {
+            throw new \RuntimeException('Google OAuth credentials are not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.');
+        }
+
+        $client->setClientId($clientId);
+        $client->setClientSecret($clientSecret);
 
         $token = [
             'access_token' => $credentials['access_token'] ?? null,

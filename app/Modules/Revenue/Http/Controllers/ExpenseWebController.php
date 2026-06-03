@@ -33,7 +33,7 @@ class ExpenseWebController extends Controller
 
     public function update(Request $request, Expense $expense): RedirectResponse
     {
-        abort_if($expense->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($expense);
 
         $validated = $request->validate([
             'title'        => 'sometimes|string|max:255',
@@ -50,7 +50,7 @@ class ExpenseWebController extends Controller
 
     public function destroy(Request $request, Expense $expense): RedirectResponse
     {
-        abort_if($expense->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($expense);
         $expense->delete();
         return back()->with('success', 'Expense deleted.');
     }

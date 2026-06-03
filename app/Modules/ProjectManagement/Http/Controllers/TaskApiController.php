@@ -12,7 +12,20 @@ use App\Modules\ProjectManagement\Http\Resources\TimeEntryResource;
 use App\Shared\Helpers\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+
+// Allowed status transitions: from → [allowed targets]
+// Prevents re-opening cancelled tasks or skipping review steps arbitrarily.
+const TASK_STATUS_TRANSITIONS = [
+    'backlog'     => ['todo', 'in_progress', 'cancelled'],
+    'todo'        => ['in_progress', 'backlog', 'cancelled'],
+    'in_progress' => ['in_review', 'done', 'blocked', 'todo', 'cancelled'],
+    'in_review'   => ['in_progress', 'done', 'blocked', 'cancelled'],
+    'blocked'     => ['in_progress', 'todo', 'cancelled'],
+    'done'        => ['in_progress', 'cancelled'],
+    'cancelled'   => ['todo', 'backlog'],
+];
 
 class TaskApiController extends Controller
 {
@@ -25,7 +38,8 @@ class TaskApiController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $query = Task::query();
+        $orgId = $request->user()->organization_id;
+        $query = Task::where('organization_id', $orgId);
 
         if ($request->has('project_id')) {
             $query->where('project_id', $request->project_id);
@@ -54,21 +68,24 @@ class TaskApiController extends Controller
         return ApiResponse::success(new TaskResource($task), 'Task created successfully.', [], 201);
     }
 
-    public function show(Task $task): JsonResponse
+    public function show(Request $request, Task $task): JsonResponse
     {
+        $this->authorizeOrg($task);
         $task->load(['project', 'sprint', 'milestone', 'assignee', 'creator']);
         return ApiResponse::success(new TaskResource($task));
     }
 
     public function update(Request $request, Task $task): JsonResponse
     {
+        $this->authorizeOrg($task);
+
         $data = $request->validate([
             'sprint_id' => 'nullable|uuid|exists:sprints,id',
             'milestone_id' => 'nullable|uuid|exists:milestones,id',
             'parent_task_id' => 'nullable|uuid|exists:tasks,id',
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'nullable|in:feature,bug,content,design,research,review,meeting,report,campaign_setup,ad_creative,seo_audit,email_sequence,other',
+            'type' => 'nullable|in:task,feature,bug,content,design,research,review,meeting,report,campaign_setup,ad_creative,seo_audit,email_sequence,other',
             'status' => 'nullable|in:backlog,todo,in_progress,in_review,blocked,done,cancelled',
             'priority' => 'nullable|in:low,medium,high,critical',
             'assigned_to' => 'nullable|uuid|exists:users,id',
@@ -81,8 +98,12 @@ class TaskApiController extends Controller
             'sort_order' => 'nullable|integer',
         ]);
 
-        // If status is changed, update via TaskService
+        // If status is changed, validate transition then update via TaskService
         if (isset($data['status']) && $data['status'] !== $task->status) {
+            $allowed = TASK_STATUS_TRANSITIONS[$task->status] ?? [];
+            if (!in_array($data['status'], $allowed, true)) {
+                return ApiResponse::error("Invalid status transition from '{$task->status}' to '{$data['status']}'.", [], 422);
+            }
             $status = $data['status'];
             unset($data['status']);
             
@@ -100,19 +121,39 @@ class TaskApiController extends Controller
         return ApiResponse::success(new TaskResource($task), 'Task updated successfully.');
     }
 
-    public function destroy(Task $task): JsonResponse
+    public function destroy(Request $request, Task $task): JsonResponse
     {
+        $this->authorizeOrg($task);
+
+        if ($task->subtasks()->exists()) {
+            return ApiResponse::error('Cannot delete a task that has subtasks. Delete or reassign subtasks first.', 422);
+        }
+
+        Log::warning('Task deleted', [
+            'task_id'        => $task->id,
+            'title'          => $task->title,
+            'status'         => $task->status,
+            'project_id'     => $task->project_id,
+            'organization_id'=> $task->organization_id,
+            'deleted_by'     => $request->user()->id,
+        ]);
+
         $task->delete();
         return ApiResponse::success(null, 'Task deleted successfully.');
     }
 
     public function assign(Request $request, Task $task): JsonResponse
     {
+        $this->authorizeOrg($task);
+
         $request->validate([
             'user_id' => 'required|uuid|exists:users,id',
         ]);
 
-        $user = User::findOrFail($request->user_id);
+        $user = User::where('id', $request->user_id)
+            ->where('organization_id', $request->user()->organization_id)
+            ->firstOrFail();
+
         $task = $this->taskService->assignTask($task, $user, $request->user());
 
         return ApiResponse::success(new TaskResource($task), "Task successfully assigned to {$user->name}.");
@@ -139,6 +180,8 @@ class TaskApiController extends Controller
 
     public function move(Request $request, Task $task): JsonResponse
     {
+        $this->authorizeOrg($task);
+
         $data = $request->validate([
             'sprint_id' => 'nullable|uuid|exists:sprints,id',
             'milestone_id' => 'nullable|uuid|exists:milestones,id',

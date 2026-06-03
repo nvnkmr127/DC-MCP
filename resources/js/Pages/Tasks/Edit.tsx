@@ -32,7 +32,8 @@ export default function TaskEdit({ task, projects, members }: Props) {
         form.transform(data => ({
             ...data,
             tags: data.tags ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-        })).patch(`/tasks/${task.id}`);
+        }));
+        form.patch(`/tasks/${task.id}`);
     }
 
     return (
@@ -104,7 +105,7 @@ export default function TaskEdit({ task, projects, members }: Props) {
                                 <label className={labelCls}>Status</label>
                                 <select
                                     value={form.data.status}
-                                    onChange={e => form.setData('status', e.target.value)}
+                                    onChange={e => form.setData('status', e.target.value as any)}
                                     className={inputCls}
                                 >
                                     {['backlog','todo','in_progress','in_review','blocked','done','cancelled'].map(s => (
@@ -120,7 +121,7 @@ export default function TaskEdit({ task, projects, members }: Props) {
                                 <label className={labelCls}>Priority</label>
                                 <select
                                     value={form.data.priority}
-                                    onChange={e => form.setData('priority', e.target.value)}
+                                    onChange={e => form.setData('priority', e.target.value as any)}
                                     className={inputCls}
                                 >
                                     {['urgent','high','medium','low'].map(p => (

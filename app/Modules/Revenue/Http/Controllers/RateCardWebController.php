@@ -58,7 +58,7 @@ class RateCardWebController extends Controller
 
     public function update(Request $request, RateCard $rateCard): RedirectResponse
     {
-        abort_if($rateCard->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($rateCard);
 
         $validated = $request->validate([
             'service_name' => 'sometimes|string|max:255',
@@ -76,7 +76,7 @@ class RateCardWebController extends Controller
 
     public function destroy(Request $request, RateCard $rateCard): RedirectResponse
     {
-        abort_if($rateCard->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($rateCard);
         $rateCard->delete();
         return back()->with('success', 'Rate card deleted.');
     }

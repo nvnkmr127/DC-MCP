@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 
@@ -95,13 +96,23 @@ class RegisterApiController extends Controller
                     }
                 }
 
+                Log::info('New organization registered via API', [
+                    'organization_id' => $organization->id,
+                    'user_id'         => $user->id,
+                ]);
+
                 return ApiResponse::success([
-                    'user' => $user,
+                    'user'        => $user,
                     'permissions' => $permissions,
                 ], 'Organization registered and user logged in successfully.', [], 201);
             });
         } catch (\Exception $e) {
-            return ApiResponse::error('Registration failed: ' . $e->getMessage(), [], 500);
+            Log::error('Organization registration failed', [
+                'email'             => $request->email,
+                'organization_name' => $request->organization_name,
+                'exception'         => $e,
+            ]);
+            return ApiResponse::error('Registration failed. Please try again.', [], 500);
         }
     }
 }

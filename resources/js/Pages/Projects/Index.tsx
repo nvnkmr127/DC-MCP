@@ -110,7 +110,7 @@ export default function ProjectsIndex({ projects, filters }: Props) {
             {projects.data.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {projects.data.map((project) => {
-                        const cfg = STATUS_CONFIG[project.status] ?? STATUS_CONFIG.planning;
+                        const cfg = PROJECT_STATUS_CONFIG[project.status] ?? PROJECT_STATUS_CONFIG.planning;
                         const pct = project.completion_pct ?? 0;
                         return (
                             <div

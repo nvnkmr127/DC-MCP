@@ -17,6 +17,12 @@ export default defineConfig({
             '@': '/resources/js',
         },
     },
+    build: {
+        // Never ship source maps to production — they expose the full component tree and business logic.
+        // Enable locally with VITE_SOURCEMAP=true if needed for debugging.
+        sourcemap: process.env.VITE_SOURCEMAP === 'true',
+        chunkSizeWarningLimit: 1000,
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],

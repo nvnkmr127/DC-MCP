@@ -7,6 +7,7 @@ use App\Modules\ProjectManagement\Models\Task;
 use App\Modules\TaskEngine\Models\TaskTemplate;
 use App\Modules\Auth\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class TaskSpawnerService
@@ -153,7 +154,10 @@ class TaskSpawnerService
                     ['task_id' => $task->id]
                 );
             } catch (\Exception $e) {
-                // Ignore notification failures during automated pipeline
+                Log::error('Auto-assign notification failed during task spawn', [
+                    'task_id'   => $task->id ?? null,
+                    'exception' => $e->getMessage(),
+                ]);
             }
         }
     }

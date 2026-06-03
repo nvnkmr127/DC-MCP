@@ -28,7 +28,8 @@ export default function ProjectCreate({ clients, members }: Props) {
         form.transform(data => ({
             ...data,
             tags: data.tags ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-        })).post('/projects');
+        }));
+        form.post('/projects');
     }
 
     return (

@@ -68,7 +68,7 @@ class CreditNoteWebController extends Controller
 
     public function update(Request $request, CreditNote $note): RedirectResponse
     {
-        abort_if($note->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($note);
 
         $validated = $request->validate([
             'reason' => 'sometimes|string',
@@ -82,14 +82,14 @@ class CreditNoteWebController extends Controller
 
     public function destroy(Request $request, CreditNote $note): RedirectResponse
     {
-        abort_if($note->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($note);
         $note->delete();
         return back()->with('success', 'Credit note deleted.');
     }
 
     public function apply(Request $request, CreditNote $note): RedirectResponse
     {
-        abort_if($note->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($note);
         $note->update(['status' => 'applied', 'applied_at' => now()]);
         return back()->with('success', 'Credit note applied.');
     }

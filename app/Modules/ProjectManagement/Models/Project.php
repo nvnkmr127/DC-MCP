@@ -119,4 +119,15 @@ class Project extends BaseModel
     {
         return $this->hasMany(Task::class);
     }
+
+    /**
+     * Compute task completion percentage.
+     * Accepts pre-counted values when already loaded via withCount() to avoid extra queries.
+     */
+    public function completionPct(?int $total = null, ?int $completed = null): int
+    {
+        $total     ??= $this->tasks()->count();
+        $completed ??= $this->tasks()->where('status', 'done')->count();
+        return $total > 0 ? (int) round(($completed / $total) * 100) : 0;
+    }
 }

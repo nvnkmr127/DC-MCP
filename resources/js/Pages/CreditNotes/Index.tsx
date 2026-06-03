@@ -122,31 +122,31 @@ export default function CreditNotesIndex({ creditNotes, clients, invoices }: Pro
                             <p className="text-sm text-gray-400">No credit notes yet.</p>
                         </div>
                     )}
-                    {creditNotes.map(cn => (
-                        <div key={cn.id} className="px-5 py-4 flex items-start gap-4">
+                    {creditNotes.map(creditNote => (
+                        <div key={creditNote.id} className="px-5 py-4 flex items-start gap-4">
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <p className="text-sm font-semibold text-gray-900">{cn.credit_note_number}</p>
-                                    <span className={cn('px-2 py-0.5 rounded text-[10px] font-semibold capitalize', STATUS_STYLES[cn.status] ?? STATUS_STYLES.draft)}>
-                                        {cn.status}
+                                    <p className="text-sm font-semibold text-gray-900">{creditNote.credit_note_number}</p>
+                                    <span className={cn('px-2 py-0.5 rounded text-[10px] font-semibold capitalize', STATUS_STYLES[creditNote.status] ?? STATUS_STYLES.draft)}>
+                                        {creditNote.status}
                                     </span>
                                 </div>
                                 <p className="text-xs text-gray-500">
-                                    {cn.client?.name ?? '—'}{cn.invoice ? ` · ${cn.invoice.number}` : ''}
-                                    {' · '}{cn.issue_date}
+                                    {creditNote.client?.name ?? '—'}{creditNote.invoice ? ` · ${creditNote.invoice.number}` : ''}
+                                    {' · '}{creditNote.issue_date}
                                 </p>
-                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{cn.reason}</p>
-                                {cn.applied_at && <p className="text-xs text-emerald-600 mt-0.5">Applied {cn.applied_at}</p>}
+                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{creditNote.reason}</p>
+                                {creditNote.applied_at && <p className="text-xs text-emerald-600 mt-0.5">Applied {creditNote.applied_at}</p>}
                             </div>
-                            <p className="text-sm font-semibold text-gray-900 shrink-0">{fmt(cn.amount)}</p>
+                            <p className="text-sm font-semibold text-gray-900 shrink-0">{fmt(creditNote.amount)}</p>
                             <div className="flex items-center gap-1.5 shrink-0">
-                                {cn.status !== 'applied' && (
-                                    <button onClick={() => { if (confirm('Mark this credit note as applied?')) router.post(`/credit-notes/${cn.id}/apply`); }}
+                                {creditNote.status !== 'applied' && (
+                                    <button onClick={() => { if (confirm('Mark this credit note as applied?')) router.post(`/credit-notes/${creditNote.id}/apply`); }}
                                         className="p-1 text-gray-400 hover:text-emerald-600 rounded hover:bg-emerald-50 transition-colors" title="Apply">
                                         <CheckCircle size={14} />
                                     </button>
                                 )}
-                                <button onClick={() => { if (confirm('Delete credit note?')) router.delete(`/credit-notes/${cn.id}`); }}
+                                <button onClick={() => { if (confirm('Delete credit note?')) router.delete(`/credit-notes/${creditNote.id}`); }}
                                     className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                     <Trash2 size={14} />
                                 </button>

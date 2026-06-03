@@ -118,7 +118,7 @@ class SowWebController extends Controller
 
     public function update(Request $request, ClientSow $sow): RedirectResponse
     {
-        abort_if($sow->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($sow);
 
         $validated = $request->validate([
             'title'       => 'sometimes|string|max:255',
@@ -134,7 +134,7 @@ class SowWebController extends Controller
 
     public function destroy(Request $request, ClientSow $sow): RedirectResponse
     {
-        abort_if($sow->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($sow);
         $sow->delete();
         return back()->with('success', 'SOW deleted.');
     }

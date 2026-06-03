@@ -4,6 +4,7 @@ namespace App\Modules\Auth\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class PermissionMiddleware
@@ -19,6 +20,14 @@ class PermissionMiddleware
 
         $user = auth()->user();
         if (!$user || !$user->hasPermission($resource, $action)) {
+            Log::warning('Permission denied', [
+                'user_id'  => $user?->id,
+                'route'    => $request->path(),
+                'method'   => $request->method(),
+                'resource' => $resource,
+                'action'   => $action,
+                'ip'       => $request->ip(),
+            ]);
             return response()->json(['message' => "Unauthorized. Missing permission: {$action} on {$resource}"], 403);
         }
 

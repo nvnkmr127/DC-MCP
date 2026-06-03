@@ -7,7 +7,7 @@ const FEATURES = [
     { icon: Shield,    label: 'Enterprise security', desc: 'SSO, audit logs, and access control' },
 ];
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default function AuthLayout({ children, title }: { children: React.ReactNode; title?: string }) {
     return (
         <div className="min-h-screen flex bg-white">
 
@@ -72,6 +72,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                     </div>
 
                     <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+                        {title && (
+                            <div className="mb-6">
+                                <h2 className="text-[20px] font-bold text-gray-900 leading-tight">{title}</h2>
+                            </div>
+                        )}
                         {children}
                     </div>
                 </div>

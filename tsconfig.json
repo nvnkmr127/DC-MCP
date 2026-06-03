@@ -10,7 +10,9 @@
         "paths": {
             "@/*": ["./resources/js/*"]
         },
-        "baseUrl": "."
+        "baseUrl": ".",
+        "ignoreDeprecations": "6.0",
+        "types": ["vite/client"]
     },
     "include": ["resources/js/**/*"],
     "exclude": ["node_modules", "vendor"]

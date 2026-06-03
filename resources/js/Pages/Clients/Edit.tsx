@@ -118,7 +118,7 @@ export default function ClientEdit({ client }: Props) {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className={labelCls}>Tier</label>
-                                <select value={form.data.tier} onChange={e => form.setData('tier', e.target.value)} className={inputCls}>
+                                <select value={form.data.tier} onChange={e => form.setData('tier', e.target.value as any)} className={inputCls}>
                                     <option value="standard">Standard</option>
                                     <option value="premium">Premium</option>
                                     <option value="enterprise">Enterprise</option>
@@ -126,7 +126,7 @@ export default function ClientEdit({ client }: Props) {
                             </div>
                             <div>
                                 <label className={labelCls}>Status</label>
-                                <select value={form.data.status} onChange={e => form.setData('status', e.target.value)} className={inputCls}>
+                                <select value={form.data.status} onChange={e => form.setData('status', e.target.value as any)} className={inputCls}>
                                     <option value="active">Active</option>
                                     <option value="prospect">Prospect</option>
                                     <option value="inactive">Inactive</option>

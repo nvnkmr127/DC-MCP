@@ -58,7 +58,7 @@ class WorkflowWebController extends Controller
 
     public function update(Request $request, WorkflowTrigger $workflow): RedirectResponse
     {
-        abort_if($workflow->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($workflow);
 
         $validated = $request->validate([
             'name'          => 'sometimes|string|max:255',
@@ -76,14 +76,14 @@ class WorkflowWebController extends Controller
 
     public function destroy(Request $request, WorkflowTrigger $workflow): RedirectResponse
     {
-        abort_if($workflow->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($workflow);
         $workflow->delete();
         return back()->with('success', 'Workflow deleted.');
     }
 
     public function toggleActive(Request $request, WorkflowTrigger $workflow): RedirectResponse
     {
-        abort_if($workflow->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($workflow);
         $workflow->update(['is_active' => !$workflow->is_active]);
         return back()->with('success', $workflow->is_active ? 'Workflow activated.' : 'Workflow deactivated.');
     }

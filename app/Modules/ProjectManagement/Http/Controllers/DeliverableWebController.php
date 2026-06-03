@@ -12,7 +12,7 @@ class DeliverableWebController extends Controller
 {
     public function submit(Request $request, SowDeliverable $sowDeliverable): RedirectResponse
     {
-        abort_if($sowDeliverable->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($sowDeliverable);
 
         $validated = $request->validate([
             'file_url'      => 'nullable|string|max:1000',
@@ -37,7 +37,7 @@ class DeliverableWebController extends Controller
 
     public function approve(Request $request, DeliverableSubmission $deliverableSubmission): RedirectResponse
     {
-        abort_if($deliverableSubmission->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($deliverableSubmission);
 
         $validated = $request->validate([
             'reviewer_notes' => 'nullable|string|max:2000',
@@ -55,7 +55,7 @@ class DeliverableWebController extends Controller
 
     public function requestRevision(Request $request, DeliverableSubmission $deliverableSubmission): RedirectResponse
     {
-        abort_if($deliverableSubmission->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($deliverableSubmission);
 
         $validated = $request->validate([
             'reviewer_notes' => 'required|string|max:2000',

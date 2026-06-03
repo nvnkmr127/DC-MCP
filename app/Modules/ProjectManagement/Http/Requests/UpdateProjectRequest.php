@@ -18,7 +18,7 @@ class UpdateProjectRequest extends FormRequest
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'type' => 'nullable|in:seo,social_media,performance_ads,web_dev,app_dev,content,brand,whatsapp,email_marketing,ecommerce',
-            'status' => 'nullable|in:draft,active,on_hold,completed,cancelled',
+            'status' => 'nullable|in:planning,draft,active,on_hold,completed,cancelled',
             'priority' => 'nullable|in:low,medium,high,critical',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date',

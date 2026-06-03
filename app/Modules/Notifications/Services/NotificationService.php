@@ -8,6 +8,7 @@ use App\Modules\Notifications\Events\NotificationBroadcast;
 use App\Modules\MCP\Adapters\ZohoCliqAdapter;
 use App\Modules\MCP\Models\McpConnection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -74,13 +75,17 @@ class NotificationService
                 try {
                     Mail::to($user->email)->send(new NotificationMail($title, $body));
                 } catch (\Exception $e) {
-                    // Suppress mail config/connection issues
+                    Log::error('Notification email delivery failed', [
+                        'user_id'   => $user->id,
+                        'exception' => $e->getMessage(),
+                    ]);
+                    $this->markLatestFailed($user->id, $channel);
                 }
                 break;
 
             case 'zoho_cliq':
                 try {
-                    $adapter = app(ZohoCliqAdapter::class);
+                    $adapter    = app(ZohoCliqAdapter::class);
                     $connection = McpConnection::where('organization_id', $user->organization_id)
                         ->where('provider', 'zoho_cliq')
                         ->where('status', 'active')
@@ -89,23 +94,32 @@ class NotificationService
                     if ($connection) {
                         $adapter->push($connection->id, [
                             'entity_type' => 'channel_message',
-                            'channel' => 'users/' . $user->email,
-                            'message' => "{$title}\n\n{$body}"
+                            'channel'     => 'users/' . $user->email,
+                            'message'     => "{$title}\n\n{$body}",
                         ]);
                     }
                 } catch (\Exception $e) {
-                    // Suppress Zoho Cliq adapter issues
+                    Log::error('Notification Zoho Cliq delivery failed', [
+                        'user_id'         => $user->id,
+                        'organization_id' => $user->organization_id,
+                        'exception'       => $e->getMessage(),
+                    ]);
+                    $this->markLatestFailed($user->id, $channel);
                 }
                 break;
 
             case 'whatsapp':
                 try {
                     Http::post(config('services.whatsapp.webhook_url', 'https://api.whatsapp.mock/send'), [
-                        'phone' => $user->phone,
+                        'phone'   => $user->phone,
                         'message' => "{$title}\n\n{$body}",
                     ]);
                 } catch (\Exception $e) {
-                    // Suppress connection issues
+                    Log::error('Notification WhatsApp delivery failed', [
+                        'user_id'   => $user->id,
+                        'exception' => $e->getMessage(),
+                    ]);
+                    $this->markLatestFailed($user->id, $channel);
                 }
                 break;
 
@@ -113,14 +127,29 @@ class NotificationService
                 try {
                     event(new NotificationBroadcast($user->id, $title, $body, $data));
                 } catch (\Exception $e) {
-                    // Suppress broadcasting driver issues
+                    Log::error('Notification push broadcast failed', [
+                        'user_id'   => $user->id,
+                        'exception' => $e->getMessage(),
+                    ]);
+                    $this->markLatestFailed($user->id, $channel);
                 }
                 break;
 
             case 'in_app':
             default:
-                // Already written to notifications_log table
+                // Already written to notifications_log table above
                 break;
         }
+    }
+
+    private function markLatestFailed(string $userId, string $channel): void
+    {
+        DB::table('notifications_log')
+            ->where('user_id', $userId)
+            ->where('channel', $channel)
+            ->where('status', 'sent')
+            ->orderByDesc('created_at')
+            ->limit(1)
+            ->update(['status' => 'failed', 'updated_at' => now()]);
     }
 }

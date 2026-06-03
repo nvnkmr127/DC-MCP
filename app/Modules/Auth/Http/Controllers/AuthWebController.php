@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
@@ -45,12 +46,23 @@ class AuthWebController extends Controller
         ]);
 
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+            Log::warning('Failed web login attempt', [
+                'email' => $request->email,
+                'ip'    => $request->ip(),
+            ]);
             throw ValidationException::withMessages([
                 'email' => 'These credentials do not match our records.',
             ]);
         }
 
         $request->session()->regenerate();
+
+        $user = Auth::user();
+        Log::info('User web login', [
+            'user_id'         => $user->id,
+            'organization_id' => $user->organization_id,
+            'ip'              => $request->ip(),
+        ]);
 
         return redirect()->intended('/dashboard');
     }
@@ -108,11 +120,25 @@ class AuthWebController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
+        Log::info('New organization registered', [
+            'user_id'         => $user->id,
+            'organization_id' => $org->id,
+            'ip'              => $request->ip(),
+        ]);
+
         return redirect('/dashboard');
     }
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        if ($user) {
+            Log::info('User web logout', [
+                'user_id'         => $user->id,
+                'organization_id' => $user->organization_id,
+                'ip'              => $request->ip(),
+            ]);
+        }
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

@@ -16,13 +16,13 @@ class DashboardWebController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-        $orgId = $user->organization_id;
+        $user      = $request->user();
+        $orgId     = $user->organization_id;
         $weekStart = Carbon::now()->startOfWeek();
         $weekEnd   = Carbon::now()->endOfWeek();
         $today     = Carbon::today();
 
-        // My active tasks
+        // My active tasks (org-scoped via HasOrganization global scope + user filter)
         $myActiveTasks = Task::where('assigned_to', $user->id)
             ->whereNotIn('status', ['done', 'cancelled'])
             ->count();
@@ -36,32 +36,38 @@ class DashboardWebController extends Controller
 
         // My hours this week
         $myHoursThisWeek = DB::table('time_entries')
+            ->where('organization_id', $orgId)
             ->where('user_id', $user->id)
             ->whereBetween('logged_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
             ->sum('hours') ?? 0;
 
-        // Active projects
-        $activeProjects = Project::where('status', 'active')->count();
+        // Active projects — scoped to org
+        $activeProjects = Project::where('organization_id', $orgId)
+            ->where('status', 'active')
+            ->count();
 
-        // Team overdue (org-wide)
-        $teamOverdue = Task::whereNotIn('status', ['done', 'cancelled'])
+        // Team overdue — scoped to org
+        $teamOverdue = Task::where('organization_id', $orgId)
+            ->whereNotIn('status', ['done', 'cancelled'])
             ->whereNotNull('due_date')
             ->whereDate('due_date', '<', $today)
             ->count();
 
-        // Tasks by status
-        $tasksByStatus = Task::selectRaw('status, count(*) as count')
+        // Tasks by status — scoped to org
+        $tasksByStatus = Task::where('organization_id', $orgId)
+            ->selectRaw('status, count(*) as count')
             ->whereNotIn('status', ['cancelled'])
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
 
-        // Recent activity (last 20 task logs)
-        $recentActivity = TaskLog::with(['actor', 'task'])
+        // Recent activity — scoped to org via task relationship
+        $recentActivity = TaskLog::whereHas('task', fn ($q) => $q->where('organization_id', $orgId))
+            ->with(['actor', 'task'])
             ->orderByDesc('logged_at')
             ->limit(20)
             ->get()
-            ->map(fn($log) => [
+            ->map(fn ($log) => [
                 'id'         => $log->id,
                 'action'     => $log->action,
                 'comment'    => $log->comment ?? '',
@@ -70,7 +76,7 @@ class DashboardWebController extends Controller
                 'task_title' => $log->task?->title ?? '',
             ]);
 
-        // Today's briefing
+        // Today's briefing for this user
         $briefing = DailyBriefing::where('user_id', $user->id)
             ->whereDate('date', $today)
             ->first();

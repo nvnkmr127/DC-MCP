@@ -86,7 +86,7 @@ class PerformanceReviewWebController extends Controller
 
     public function update(Request $request, PerformanceReview $review): RedirectResponse
     {
-        abort_if($review->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($review);
 
         $validated = $request->validate([
             'overall_rating'       => 'nullable|integer|min:1|max:5',
@@ -104,14 +104,14 @@ class PerformanceReviewWebController extends Controller
 
     public function submit(Request $request, PerformanceReview $review): RedirectResponse
     {
-        abort_if($review->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($review);
         $review->update(['status' => 'submitted']);
         return back()->with('success', 'Review submitted.');
     }
 
     public function acknowledge(Request $request, PerformanceReview $review): RedirectResponse
     {
-        abort_if($review->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($review);
         $review->update(['status' => 'acknowledged', 'acknowledged_at' => now()]);
         return back()->with('success', 'Review acknowledged.');
     }

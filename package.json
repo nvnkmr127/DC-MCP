@@ -4,7 +4,9 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "typecheck": "tsc --noEmit",
+        "typecheck:watch": "tsc --noEmit --watch"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

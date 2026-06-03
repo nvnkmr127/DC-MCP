@@ -21,7 +21,13 @@ class GenerateDailyBriefingJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 2;
-    public int $timeout = 60;
+    public int $timeout = 180; // LLM generation can be slow on large orgs
+
+    /** Backoff: retry after 60s on second attempt */
+    public function backoff(): array
+    {
+        return [60];
+    }
 
     public function __construct(
         public readonly User $user,
@@ -37,6 +43,11 @@ class GenerateDailyBriefingJob implements ShouldQueue
     ): void {
         $date = Carbon::parse($this->date ?? now()->toDateString());
 
+        Log::info('Daily briefing job started', [
+            'user_id' => $this->user->id,
+            'date'    => $date->toDateString(),
+        ]);
+
         try {
             $data   = $collector->collect($this->user, $date);
             $result = $generator->generate($this->user, $data);
@@ -44,16 +55,18 @@ class GenerateDailyBriefingJob implements ShouldQueue
             $briefing    = $result['briefing'];
             $suggestions = $result['suggestions'];
 
-            // Persist AI task suggestions for founder approval
             if (!empty($suggestions)) {
                 try {
                     $suggestionService->parseAndStoreFromBriefing($briefing, $suggestions);
                 } catch (\Exception $e) {
-                    Log::warning("Could not store task suggestions for briefing {$briefing->id}: " . $e->getMessage());
+                    Log::error('Could not store task suggestions for briefing', [
+                        'briefing_id' => $briefing->id,
+                        'user_id'     => $this->user->id,
+                        'exception'   => $e->getMessage(),
+                    ]);
                 }
             }
 
-            // Deliver via configured channels
             $deliveredVia = [];
 
             if ($gmailAdapter->sendBriefingEmail($this->user, $briefing)) {
@@ -69,9 +82,28 @@ class GenerateDailyBriefingJob implements ShouldQueue
                 'delivered_at'  => now(),
                 'status'        => 'delivered',
             ]);
+
+            Log::info('Daily briefing delivered', [
+                'user_id'       => $this->user->id,
+                'briefing_id'   => $briefing->id,
+                'delivered_via' => $deliveredVia,
+            ]);
         } catch (\Exception $e) {
-            Log::error("Daily briefing generation failed for user {$this->user->id}: " . $e->getMessage());
+            Log::error('Daily briefing generation failed', [
+                'user_id'   => $this->user->id,
+                'date'      => $date->toDateString(),
+                'exception' => $e->getMessage(),
+            ]);
             throw $e;
         }
+    }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('Daily briefing job permanently failed', [
+            'user_id'   => $this->user->id,
+            'date'      => $this->date,
+            'exception' => $exception->getMessage(),
+        ]);
     }
 }

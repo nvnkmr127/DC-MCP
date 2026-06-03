@@ -71,7 +71,7 @@ class HiringWebController extends Controller
 
     public function updateOpening(Request $request, JobOpening $opening): RedirectResponse
     {
-        abort_if($opening->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($opening);
 
         $validated = $request->validate([
             'title'       => 'sometimes|string|max:255',
@@ -88,14 +88,14 @@ class HiringWebController extends Controller
 
     public function destroyOpening(Request $request, JobOpening $opening): RedirectResponse
     {
-        abort_if($opening->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($opening);
         $opening->delete();
         return back()->with('success', 'Opening deleted.');
     }
 
     public function storeCandidate(Request $request, JobOpening $opening): RedirectResponse
     {
-        abort_if($opening->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($opening);
 
         $validated = $request->validate([
             'name'       => 'required|string|max:255',
@@ -117,7 +117,7 @@ class HiringWebController extends Controller
 
     public function updateCandidate(Request $request, Candidate $candidate): RedirectResponse
     {
-        abort_if($candidate->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($candidate);
 
         $validated = $request->validate([
             'stage'           => 'sometimes|in:applied,screening,interview_1,interview_2,offer,hired,rejected',
@@ -132,7 +132,7 @@ class HiringWebController extends Controller
 
     public function destroyCandidate(Request $request, Candidate $candidate): RedirectResponse
     {
-        abort_if($candidate->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($candidate);
         $candidate->delete();
         return back()->with('success', 'Candidate removed.');
     }

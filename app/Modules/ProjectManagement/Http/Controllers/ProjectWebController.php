@@ -37,7 +37,7 @@ class ProjectWebController extends Controller
             'budget_used'      => (float) $p->budget_used,
             'total_tasks'      => $p->tasks_count,
             'completed_tasks'  => $p->completed_tasks_count,
-            'completion_pct'   => $p->tasks_count > 0 ? round(($p->completed_tasks_count / $p->tasks_count) * 100) : 0,
+            'completion_pct'   => $p->completionPct($p->tasks_count, $p->completed_tasks_count),
             'client'           => $p->client ? ['id' => $p->client->id, 'name' => $p->client->name] : null,
             'tags'             => $p->tags ?? [],
         ]);
@@ -95,9 +95,7 @@ class ProjectWebController extends Controller
 
         return Inertia::render('Projects/Show', [
             'project' => array_merge($project->toArray(), [
-                'completion_pct' => $project->tasks_count > 0
-                    ? round(($project->completed_tasks_count / $project->tasks_count) * 100)
-                    : 0,
+                'completion_pct' => $project->completionPct($project->tasks_count, $project->completed_tasks_count),
             ]),
         ]);
     }

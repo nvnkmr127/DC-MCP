@@ -12,7 +12,7 @@ class PaymentReceiptWebController extends Controller
 {
     public function store(Request $request, Invoice $invoice): RedirectResponse
     {
-        abort_if($invoice->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($invoice);
 
         $validated = $request->validate([
             'amount'         => 'required|numeric|min:0.01',
@@ -35,7 +35,7 @@ class PaymentReceiptWebController extends Controller
 
     public function destroy(Request $request, PaymentReceipt $receipt): RedirectResponse
     {
-        abort_if($receipt->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($receipt);
         $receipt->delete();
         return back()->with('success', 'Payment receipt deleted.');
     }

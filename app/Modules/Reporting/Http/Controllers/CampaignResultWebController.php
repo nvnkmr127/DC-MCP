@@ -46,7 +46,7 @@ class CampaignResultWebController extends Controller
 
     public function update(Request $request, CampaignResult $result): RedirectResponse
     {
-        abort_if($result->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($result);
 
         $validated = $request->validate([
             'impressions' => 'nullable|numeric|min:0',
@@ -75,7 +75,7 @@ class CampaignResultWebController extends Controller
 
     public function destroy(Request $request, CampaignResult $result): RedirectResponse
     {
-        abort_if($result->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($result);
         $result->delete();
         return back()->with('success', 'Result deleted.');
     }

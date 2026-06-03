@@ -4,6 +4,7 @@ namespace App\Modules\Auth\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class RoleMiddleware
@@ -19,6 +20,14 @@ class RoleMiddleware
 
         $user = auth()->user();
         if (!$user || !$user->hasRoles($roles)) {
+            Log::warning('Role check denied', [
+                'user_id'        => $user?->id,
+                'user_role'      => $user?->role,
+                'route'          => $request->path(),
+                'method'         => $request->method(),
+                'required_roles' => $roles,
+                'ip'             => $request->ip(),
+            ]);
             return response()->json(['message' => 'Unauthorized. Required roles: ' . implode(', ', $roles)], 403);
         }
 

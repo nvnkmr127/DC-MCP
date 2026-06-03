@@ -6,6 +6,7 @@ use App\Modules\ProjectManagement\Models\Task;
 use App\Modules\Auth\Models\User;
 use App\Modules\Notifications\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class SlaEngine
@@ -133,7 +134,12 @@ class SlaEngine
                     ['task_id' => $task->id]
                 );
             } catch (\Exception $e) {
-                // Suppress in pipeline
+                Log::error('SLA notification delivery failed', [
+                    'task_id'    => $task->id,
+                    'type'       => $type,
+                    'user_id'    => $recipient->id,
+                    'exception'  => $e->getMessage(),
+                ]);
             }
         }
     }

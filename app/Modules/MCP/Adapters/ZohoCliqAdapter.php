@@ -75,8 +75,12 @@ class ZohoCliqAdapter extends BaseAdapter
         }
 
         try {
-            $clientId = config('services.zoho.client_id', env('ZOHO_CLIENT_ID', 'dummy-client-id'));
-            $clientSecret = config('services.zoho.client_secret', env('ZOHO_CLIENT_SECRET', 'dummy-client-secret'));
+            $clientId     = config('services.zoho.client_id');
+            $clientSecret = config('services.zoho.client_secret');
+
+            if (!$clientId || !$clientSecret) {
+                throw new \RuntimeException('Zoho OAuth credentials are not configured. Set ZOHO_CLIENT_ID and ZOHO_CLIENT_SECRET.');
+            }
 
             $client = new \GuzzleHttp\Client();
             $response = $client->post('https://accounts.zoho.com/oauth/v2/token', [

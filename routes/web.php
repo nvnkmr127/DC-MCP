@@ -1,6 +1,12 @@
 <?php
 
+use App\Http\Controllers\HealthController;
 use Illuminate\Support\Facades\Route;
+
+// Detailed health check — restricted to localhost and trusted monitoring IPs.
+// Set HEALTH_ALLOWED_IPS=127.0.0.1,10.0.0.0/8 in production.
+Route::get('/health/detailed', HealthController::class)
+    ->middleware(\App\Http\Middleware\AllowedHealthIps::class);
 
 /*
 |--------------------------------------------------------------------------

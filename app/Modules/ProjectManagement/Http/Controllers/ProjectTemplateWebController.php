@@ -63,7 +63,7 @@ class ProjectTemplateWebController extends Controller
 
     public function update(Request $request, ProjectTemplate $template): RedirectResponse
     {
-        abort_if($template->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($template);
 
         $validated = $request->validate([
             'name'                    => 'sometimes|string|max:255',
@@ -82,14 +82,14 @@ class ProjectTemplateWebController extends Controller
 
     public function destroy(Request $request, ProjectTemplate $template): RedirectResponse
     {
-        abort_if($template->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($template);
         $template->delete();
         return back()->with('success', 'Template deleted.');
     }
 
     public function createProject(Request $request, ProjectTemplate $template): RedirectResponse
     {
-        abort_if($template->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($template);
 
         $validated = $request->validate([
             'client_id'  => 'required|uuid|exists:clients,id',

@@ -189,11 +189,11 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                             <h2 className="text-lg font-bold text-gray-900">Log Time — {addDay}</h2>
                             <form onSubmit={e => {
                                 e.preventDefault();
-                                router.post(`/tasks/${form.data.task_id}/time`, {
+                                router.post(`/tasks/${form.data.task_id}/log-time`, {
                                     hours: form.data.hours,
                                     description: form.data.description,
                                     logged_date: form.data.logged_date,
-                                    billable: form.data.billable === 'true',
+                                    is_billable: form.data.billable === 'true',
                                 }, { onSuccess: () => setAddOpen(false) });
                             }} className="space-y-3">
                                 <div>

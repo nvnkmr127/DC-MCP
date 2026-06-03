@@ -81,13 +81,16 @@ class AuditChecklistWebController extends Controller
 
     public function update(Request $request, AuditChecklist $checklist): RedirectResponse
     {
-        abort_if($checklist->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($checklist);
 
         $validated = $request->validate([
-            'title'    => 'sometimes|string|max:255',
-            'status'   => 'sometimes|in:in_progress,completed',
-            'due_date' => 'nullable|date',
-            'items'    => 'nullable|array',
+            'title'          => 'sometimes|string|max:255',
+            'status'         => 'sometimes|in:in_progress,completed',
+            'due_date'       => 'nullable|date',
+            'items'          => 'nullable|array',
+            'items.*.label'  => 'sometimes|string|max:255',
+            'items.*.checked'=> 'sometimes|boolean',
+            'items.*.notes'  => 'nullable|string|max:500',
         ]);
 
         $checklist->update($validated);
@@ -96,7 +99,7 @@ class AuditChecklistWebController extends Controller
 
     public function destroy(Request $request, AuditChecklist $checklist): RedirectResponse
     {
-        abort_if($checklist->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($checklist);
         $checklist->delete();
         return back()->with('success', 'Checklist deleted.');
     }

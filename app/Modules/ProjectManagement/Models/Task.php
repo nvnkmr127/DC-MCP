@@ -168,9 +168,4 @@ class Task extends BaseModel
         return $this->hasMany(TaskLog::class)->with('actor')->orderByDesc('logged_at');
     }
 
-    // Allow access via assignee_id as alias for assigned_to
-    public function getAssigneeIdAttribute(): ?string
-    {
-        return $this->assigned_to;
-    }
 }

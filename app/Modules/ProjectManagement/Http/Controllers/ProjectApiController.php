@@ -23,7 +23,9 @@ class ProjectApiController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $projects = Project::with(['client', 'manager'])->get();
+        $projects = Project::with(['client', 'manager'])
+            ->where('organization_id', $request->user()->organization_id)
+            ->get();
         return ApiResponse::success(ProjectResource::collection($projects));
     }
 
@@ -31,31 +33,35 @@ class ProjectApiController extends Controller
     {
         $data = $request->validated();
         $data['organization_id'] = $request->user()->organization_id;
-        
+
         $project = $this->projectService->createProject($data);
         return ApiResponse::success(new ProjectResource($project), 'Project created successfully.', [], 201);
     }
 
-    public function show(Project $project): JsonResponse
+    public function show(Request $request, Project $project): JsonResponse
     {
+        $this->authorizeOrg($project);
         $project->load(['client', 'manager']);
         return ApiResponse::success(new ProjectResource($project));
     }
 
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse
     {
+        $this->authorizeOrg($project);
         $updated = $this->projectService->updateProject($project, $request->validated());
         return ApiResponse::success(new ProjectResource($updated), 'Project updated successfully.');
     }
 
-    public function destroy(Project $project): JsonResponse
+    public function destroy(Request $request, Project $project): JsonResponse
     {
+        $this->authorizeOrg($project);
         $this->projectService->archiveProject($project);
         return ApiResponse::success(null, 'Project archived successfully.');
     }
 
-    public function stats(Project $project): JsonResponse
+    public function stats(Request $request, Project $project): JsonResponse
     {
+        $this->authorizeOrg($project);
         $stats = $this->projectService->getProjectStats($project);
         return ApiResponse::success($stats);
     }

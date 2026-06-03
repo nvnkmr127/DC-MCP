@@ -61,7 +61,7 @@ class ClientReportWebController extends Controller
 
     public function update(Request $request, ClientReport $report): RedirectResponse
     {
-        abort_if($report->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($report);
 
         $validated = $request->validate([
             'highlights' => 'nullable|string',
@@ -75,21 +75,21 @@ class ClientReportWebController extends Controller
 
     public function destroy(Request $request, ClientReport $report): RedirectResponse
     {
-        abort_if($report->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($report);
         $report->delete();
         return back()->with('success', 'Report deleted.');
     }
 
     public function markSent(Request $request, ClientReport $report): RedirectResponse
     {
-        abort_if($report->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($report);
         $report->update(['status' => 'sent']);
         return back()->with('success', 'Report marked as sent.');
     }
 
     public function generateDraft(Request $request, ClientReport $report): RedirectResponse
     {
-        abort_if($report->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($report);
 
         [$year, $month] = explode('-', $report->month_year);
 

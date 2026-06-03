@@ -11,6 +11,7 @@ use App\Modules\ProjectManagement\Events\TaskStatusChanged;
 use App\Modules\ProjectManagement\Events\TaskAssigned;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class TaskService
@@ -104,6 +105,31 @@ class TaskService
             // Unlock downstream dependent tasks if this task is completed
             if ($newStatus === 'done') {
                 $this->dependencyService->unlockDependencies($task);
+
+                // Log SLA breach if task was completed after its SLA deadline
+                if ($task->sla_hours && $task->created_at) {
+                    $slaDeadline = $task->created_at->addHours($task->sla_hours);
+                    if (now()->isAfter($slaDeadline)) {
+                        $breachedByMinutes = (int) $slaDeadline->diffInMinutes(now());
+                        Log::warning('Task completed after SLA deadline', [
+                            'task_id'             => $task->id,
+                            'organization_id'     => $task->organization_id,
+                            'sla_hours'           => $task->sla_hours,
+                            'breached_by_minutes' => $breachedByMinutes,
+                            'completed_by'        => $actor->id,
+                        ]);
+                        DB::table('task_logs')->insert([
+                            'id'        => (string) \Illuminate\Support\Str::uuid(),
+                            'task_id'   => $task->id,
+                            'user_id'   => $actor->id,
+                            'action'    => 'sla_breached',
+                            'old_value' => null,
+                            'new_value' => json_encode(['breached_by_minutes' => $breachedByMinutes]),
+                            'comment'   => "Completed {$breachedByMinutes} minutes after SLA deadline.",
+                            'logged_at' => now(),
+                        ]);
+                    }
+                }
             }
 
             return $task;

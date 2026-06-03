@@ -13,6 +13,7 @@ class ClientApiController extends Controller
     public function index(Request $request): JsonResponse
     {
         $clients = Client::with('manager')
+            ->where('organization_id', $request->user()->organization_id)
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('tier'), fn ($q) => $q->where('tier', $request->tier))
             ->orderBy('name')
@@ -45,15 +46,18 @@ class ClientApiController extends Controller
         return ApiResponse::success($client->load('manager'), 'Client created.', [], 201);
     }
 
-    public function show(Client $client): JsonResponse
+    public function show(Request $request, Client $client): JsonResponse
     {
-        $client->load(['manager', 'projects']);
+        $this->authorizeOrg($client);
+        $client->load(['manager', 'projects' => fn ($q) => $q->paginate(50)]);
 
         return ApiResponse::success($client);
     }
 
     public function update(Request $request, Client $client): JsonResponse
     {
+        $this->authorizeOrg($client);
+
         $data = $request->validate([
             'name'        => ['sometimes', 'string', 'max:255'],
             'email'       => ['sometimes', 'nullable', 'email'],
@@ -73,8 +77,9 @@ class ClientApiController extends Controller
         return ApiResponse::success($client->fresh(['manager']), 'Client updated.');
     }
 
-    public function destroy(Client $client): JsonResponse
+    public function destroy(Request $request, Client $client): JsonResponse
     {
+        $this->authorizeOrg($client);
         $client->delete();
         return ApiResponse::success(null, 'Client archived.');
     }

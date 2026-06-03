@@ -90,7 +90,7 @@ class ReportingApiController extends Controller
                     'budget_used'      => (float) $p->budget_used,
                     'total_tasks'      => $totalTasks,
                     'completed_tasks'  => $completedTasks,
-                    'completion_pct'   => $totalTasks > 0 ? round($completedTasks / $totalTasks * 100, 1) : 0,
+                    'completion_pct'   => $p->completionPct($totalTasks, $completedTasks),
                     'time_logged_hrs'  => $timeLogged,
                 ];
             });

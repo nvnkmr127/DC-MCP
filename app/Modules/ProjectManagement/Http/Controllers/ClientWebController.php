@@ -54,8 +54,8 @@ class ClientWebController extends Controller
             'email'   => 'nullable|email',
             'phone'   => 'nullable|string',
             'website' => 'nullable|url',
-            'tier'    => 'required|in:standard,premium,enterprise',
-            'status'  => 'required|in:active,inactive,prospect',
+            'tier'    => 'required|in:basic,standard,premium,enterprise',
+            'status'  => 'required|in:active,inactive,prospect,churned',
             'notes'   => 'nullable|string',
         ]);
 
@@ -108,8 +108,8 @@ class ClientWebController extends Controller
             'email'   => 'nullable|email',
             'phone'   => 'nullable|string',
             'website' => 'nullable|url',
-            'tier'    => 'sometimes|in:standard,premium,enterprise',
-            'status'  => 'sometimes|in:active,inactive,prospect',
+            'tier'    => 'sometimes|in:basic,standard,premium,enterprise',
+            'status'  => 'sometimes|in:active,inactive,prospect,churned',
             'notes'   => 'nullable|string',
         ]);
 
@@ -125,7 +125,7 @@ class ClientWebController extends Controller
 
     public function flagUpsell(Request $request, Client $client): \Illuminate\Http\RedirectResponse
     {
-        abort_if($client->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($client);
 
         if ($request->boolean('clear')) {
             $client->update(['upsell_flagged' => false, 'upsell_notes' => null, 'upsell_potential' => null, 'upsell_flagged_at' => null]);
@@ -149,7 +149,7 @@ class ClientWebController extends Controller
 
     public function updateSuccessScore(Request $request, Client $client): \Illuminate\Http\RedirectResponse
     {
-        abort_if($client->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($client);
 
         $validated = $request->validate([
             'overall_score' => 'required|integer|min:0|max:100',

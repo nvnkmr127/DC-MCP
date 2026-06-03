@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -14,6 +16,23 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureRateLimiting();
+        $this->configureSlowQueryLogging();
+    }
+
+    private function configureSlowQueryLogging(): void
+    {
+        // Log queries that take longer than 1 second in non-testing environments
+        if (!app()->runningUnitTests()) {
+            DB::listen(function ($query) {
+                if ($query->time > 1000) {
+                    Log::warning('Slow database query detected', [
+                        'duration_ms' => $query->time,
+                        'sql'         => $query->sql,
+                        'bindings'    => $query->bindings,
+                    ]);
+                }
+            });
+        }
     }
 
     private function configureRateLimiting(): void

@@ -19,7 +19,11 @@ class BriefingGenerator
     {
         $apiKey = config('ai.anthropic.api_key');
         $apiUrl = config('ai.anthropic.api_url', 'https://api.anthropic.com/v1/messages');
-        $model  = config('ai.anthropic.model', 'claude-sonnet-4-6');
+        $model  = config('ai.anthropic.model');
+
+        if (!$model) {
+            throw new \RuntimeException('ANTHROPIC_MODEL is not configured. Set it in config/ai.php or via the ANTHROPIC_MODEL env var.');
+        }
 
         $htmlContent  = null;
         $suggestions  = [];

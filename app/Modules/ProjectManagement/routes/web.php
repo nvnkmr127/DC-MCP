@@ -11,6 +11,7 @@ use App\Modules\ProjectManagement\Http\Controllers\IssueWebController;
 use App\Modules\ProjectManagement\Http\Controllers\ProjectTemplateWebController;
 use App\Modules\ProjectManagement\Http\Controllers\ClientCommunicationWebController;
 use App\Modules\ProjectManagement\Http\Controllers\DeliverableWebController;
+use App\Modules\ProjectManagement\Http\Controllers\GoalWebController;
 
 Route::middleware(['auth'])->group(function () {
     // Projects
@@ -97,4 +98,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/sow/deliverables/{sowDeliverable}/submit',        [DeliverableWebController::class, 'submit'])->name('web.deliverables.submit');
     Route::post('/deliverables/{deliverableSubmission}/approve',    [DeliverableWebController::class, 'approve'])->name('web.deliverables.approve');
     Route::post('/deliverables/{deliverableSubmission}/revision',   [DeliverableWebController::class, 'requestRevision'])->name('web.deliverables.revision');
+
+    // Goals & OKRs
+    Route::get('/goals',                                    [GoalWebController::class, 'index'])->name('web.goals.index');
+    Route::post('/goals',                                   [GoalWebController::class, 'store'])->name('web.goals.store');
+    Route::patch('/goals/{goal}',                           [GoalWebController::class, 'update'])->name('web.goals.update');
+    Route::delete('/goals/{goal}',                          [GoalWebController::class, 'destroy'])->name('web.goals.destroy');
+    Route::patch('/goals/{goal}/kr',                        [GoalWebController::class, 'updateKeyResult'])->name('web.goals.kr');
 });

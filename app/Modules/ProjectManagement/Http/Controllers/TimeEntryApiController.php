@@ -16,7 +16,9 @@ class TimeEntryApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = TimeEntry::query();
+        $orgId = $request->user()->organization_id;
+        $query = TimeEntry::where('organization_id', $orgId);
+
         if ($request->has('project_id')) {
             $query->where('project_id', $request->project_id);
         }
@@ -33,48 +35,72 @@ class TimeEntryApiController extends Controller
 
     public function store(StoreTimeEntryRequest $request): JsonResponse
     {
-        $task = Task::findOrFail($request->task_id);
-        
-        $entry = TimeEntry::create([
-            'organization_id' => $request->user()->organization_id,
-            'task_id' => $task->id,
-            'user_id' => $request->user()->id,
-            'project_id' => $task->project_id,
-            'description' => $request->description,
-            'hours' => $request->hours,
-            'logged_date' => $request->logged_date,
-            'is_billable' => $request->input('is_billable', true),
-        ]);
+        $orgId = $request->user()->organization_id;
+        $task  = Task::where('id', $request->task_id)
+            ->where('organization_id', $orgId)
+            ->firstOrFail();
 
-        $task->increment('actual_hours', $request->hours);
+        $entry = DB::transaction(function () use ($task, $request, $orgId) {
+            $entry = TimeEntry::create([
+                'organization_id' => $orgId,
+                'task_id'         => $task->id,
+                'user_id'         => $request->user()->id,
+                'project_id'      => $task->project_id,
+                'description'     => $request->description,
+                'hours'           => $request->hours,
+                'logged_date'     => $request->logged_date,
+                'is_billable'     => $request->input('is_billable', true),
+            ]);
+
+            $task->increment('actual_hours', $request->hours);
+
+            return $entry;
+        });
 
         return ApiResponse::success(new TimeEntryResource($entry), 'Time entry created successfully.', [], 201);
     }
 
     public function update(Request $request, TimeEntry $timeEntry): JsonResponse
     {
+        $this->authorizeOrg($timeEntry);
+
         $data = $request->validate([
             'description' => 'nullable|string|max:1000',
-            'hours' => 'nullable|numeric|min:0.01',
+            'hours'       => 'nullable|numeric|min:0.01',
             'logged_date' => 'nullable|date',
             'is_billable' => 'nullable|boolean',
         ]);
 
-        $oldHours = $timeEntry->hours;
-        $timeEntry->update($data);
+        $updated = DB::transaction(function () use ($timeEntry, $data) {
+            // Lock the row so concurrent requests see consistent old hours
+            $fresh    = TimeEntry::lockForUpdate()->findOrFail($timeEntry->id);
+            $oldHours = (float) $fresh->hours;
 
-        if (isset($data['hours']) && $oldHours !== $timeEntry->hours) {
-            $diff = $timeEntry->hours - $oldHours;
-            $timeEntry->task()->increment('actual_hours', $diff);
-        }
+            $fresh->update($data);
 
-        return ApiResponse::success(new TimeEntryResource($timeEntry), 'Time entry updated successfully.');
+            if (isset($data['hours'])) {
+                $diff = (float) $data['hours'] - $oldHours;
+                if ($diff !== 0.0) {
+                    $fresh->task()->lockForUpdate()->first();
+                    $fresh->task()->increment('actual_hours', $diff);
+                }
+            }
+
+            return $fresh;
+        });
+
+        return ApiResponse::success(new TimeEntryResource($updated), 'Time entry updated successfully.');
     }
 
-    public function destroy(TimeEntry $timeEntry): JsonResponse
+    public function destroy(Request $request, TimeEntry $timeEntry): JsonResponse
     {
-        $timeEntry->task()->decrement('actual_hours', $timeEntry->hours);
-        $timeEntry->delete();
+        $this->authorizeOrg($timeEntry);
+
+        DB::transaction(function () use ($timeEntry) {
+            $timeEntry->task()->decrement('actual_hours', $timeEntry->hours);
+            $timeEntry->delete();
+        });
+
         return ApiResponse::success(null, 'Time entry deleted successfully.');
     }
 

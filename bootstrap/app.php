@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Log;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -24,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhooks/mcp/*',
         ]);
 
+        // Attach a correlation ID to every request for log tracing
+        $middleware->append(\App\Http\Middleware\RequestId::class);
+
         // Register Inertia HandleInertiaRequests for web routes
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
@@ -31,12 +35,23 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            Log::warning('Unauthenticated request', [
+                'path'   => $request->path(),
+                'method' => $request->method(),
+                'ip'     => $request->ip(),
+            ]);
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['message' => 'Unauthenticated.'], 401);
             }
         });
 
         $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, $request) {
+            Log::warning('Authorization exception', [
+                'user_id' => $request->user()?->id,
+                'path'    => $request->path(),
+                'method'  => $request->method(),
+                'ip'      => $request->ip(),
+            ]);
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['message' => 'Forbidden.'], 403);
             }

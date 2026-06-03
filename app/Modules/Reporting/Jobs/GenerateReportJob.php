@@ -16,7 +16,13 @@ class GenerateReportJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 2;
-    public int $timeout = 120; // PDF generation is slow
+    public int $timeout = 120;
+
+    /** Backoff: retry after 30s on second attempt */
+    public function backoff(): array
+    {
+        return [30];
+    }
 
     public function __construct(
         public readonly Report $report
@@ -24,11 +30,34 @@ class GenerateReportJob implements ShouldQueue
 
     public function handle(ReportService $reportService): void
     {
+        Log::info('Report generation job started', [
+            'report_id'      => $this->report->id,
+            'organization_id'=> $this->report->organization_id,
+        ]);
+
         try {
             $reportService->generateReport($this->report);
+
+            Log::info('Report generation completed', [
+                'report_id' => $this->report->id,
+            ]);
         } catch (\Exception $e) {
-            Log::error("Failed to generate PDF for Report {$this->report->id}: " . $e->getMessage());
+            Log::error('Report generation failed', [
+                'report_id' => $this->report->id,
+                'exception' => $e->getMessage(),
+            ]);
             throw $e;
         }
+    }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('Report generation job permanently failed', [
+            'report_id' => $this->report->id,
+            'exception' => $exception->getMessage(),
+        ]);
+
+        // Mark report as failed so the UI can surface it
+        $this->report->update(['status' => 'failed']);
     }
 }

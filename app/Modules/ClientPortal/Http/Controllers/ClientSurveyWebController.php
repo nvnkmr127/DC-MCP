@@ -94,7 +94,7 @@ class ClientSurveyWebController extends Controller
 
     public function destroy(Request $request, ClientSurvey $survey): RedirectResponse
     {
-        abort_if($survey->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($survey);
         $survey->delete();
         return back()->with('success', 'Survey deleted.');
     }

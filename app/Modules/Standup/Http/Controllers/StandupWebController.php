@@ -96,7 +96,7 @@ class StandupWebController extends Controller
 
     public function markReviewed(Request $request, EodStandup $standup): RedirectResponse
     {
-        abort_if($standup->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($standup);
         $standup->update(['status' => 'reviewed']);
         return back()->with('success', 'Standup marked as reviewed.');
     }

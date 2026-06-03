@@ -93,7 +93,7 @@ class PayrollWebController extends Controller
 
     public function markPaid(Request $request, PayrollRecord $payrollRecord): RedirectResponse
     {
-        abort_if($payrollRecord->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($payrollRecord);
         $payrollRecord->update([
             'status'       => 'paid',
             'paid_at'      => now(),

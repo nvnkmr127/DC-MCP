@@ -13,14 +13,25 @@ class StoreTaskRequest extends FormRequest
 
     public function rules(): array
     {
+        $orgId = $this->user()->organization_id;
+
         return [
-            'project_id' => 'required|uuid|exists:projects,id',
-            'sprint_id' => 'nullable|uuid|exists:sprints,id',
-            'milestone_id' => 'nullable|uuid|exists:milestones,id',
-            'parent_task_id' => 'nullable|uuid|exists:tasks,id',
+            'project_id'     => [
+                'required', 'uuid',
+                \Illuminate\Validation\Rule::exists('projects', 'id')->where('organization_id', $orgId),
+            ],
+            'sprint_id'      => [
+                'nullable', 'uuid',
+                \Illuminate\Validation\Rule::exists('sprints', 'id'),
+            ],
+            'milestone_id'   => 'nullable|uuid|exists:milestones,id',
+            'parent_task_id' => [
+                'nullable', 'uuid',
+                \Illuminate\Validation\Rule::exists('tasks', 'id')->where('organization_id', $orgId),
+            ],
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'required|in:feature,bug,content,design,research,review,meeting,report,campaign_setup,ad_creative,seo_audit,email_sequence,other',
+            'type' => 'required|in:task,feature,bug,content,design,research,review,meeting,report,campaign_setup,ad_creative,seo_audit,email_sequence,other',
             'status' => 'nullable|in:backlog,todo,in_progress,in_review,blocked,done,cancelled',
             'priority' => 'required|in:low,medium,high,critical',
             'assigned_to' => 'nullable|uuid|exists:users,id',

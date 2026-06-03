@@ -4,6 +4,7 @@ namespace App\Modules\TaskEngine\Services;
 
 use App\Modules\ProjectManagement\Models\Task;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TaskDependencyService
 {
@@ -119,7 +120,10 @@ class TaskDependencyService
                     ['task_id' => $task->id]
                 );
             } catch (\Exception $e) {
-                // Ignore notification failures during automated pipeline
+                Log::error('Dependency unlock notification failed', [
+                    'task_id'   => $task->id ?? null,
+                    'exception' => $e->getMessage(),
+                ]);
             }
         }
     }

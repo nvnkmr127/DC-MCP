@@ -32,8 +32,10 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    // 480 minutes (8 hours) suits a full agency workday. Set to 120 locally if preferred.
+    'lifetime' => (int) env('SESSION_LIFETIME', 480),
 
+    // Expire when browser closes rather than on a fixed timer
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
     /*
@@ -47,7 +49,8 @@ return [
     |
     */
 
-    'encrypt' => env('SESSION_ENCRYPT', false),
+    // Always encrypt in production. Only disable locally when debugging raw session values.
+    'encrypt' => env('SESSION_ENCRYPT', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +172,8 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // Defaults to true (HTTPS-only). Override with SESSION_SECURE_COOKIE=false only for local HTTP dev.
+    'secure' => env('SESSION_SECURE_COOKIE', true),
 
     /*
     |--------------------------------------------------------------------------

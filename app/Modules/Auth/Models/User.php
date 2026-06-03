@@ -158,4 +158,14 @@ class User extends Authenticatable
 
         return false;
     }
+
+    /**
+     * Virtual accessor so controllers can use $user->role as a scalar slug.
+     * Returns the slug of the first attached role, or null if no roles are assigned.
+     * Multiple controllers rely on this — e.g. in_array($user->role, ['ceo', 'project_manager']).
+     */
+    public function getRoleAttribute(): ?string
+    {
+        return $this->roles->first()?->slug;
+    }
 }

@@ -20,12 +20,17 @@ class SendPendingNotificationsJob implements ShouldQueue
 
     public function handle(NotificationService $notificationService): void
     {
-        // Find notifications that are pending (were queued during quiet hours)
         $pending = DB::table('notifications_log')
             ->where('status', 'pending')
             ->whereNotNull('user_id')
             ->limit(100)
             ->get();
+
+        if ($pending->isEmpty()) {
+            return;
+        }
+
+        Log::info('Sending pending notifications', ['count' => $pending->count()]);
 
         foreach ($pending as $notification) {
             try {
@@ -54,11 +59,23 @@ class SendPendingNotificationsJob implements ShouldQueue
                     ->where('id', $notification->id)
                     ->update(['status' => 'sent', 'sent_at' => now()]);
             } catch (\Exception $e) {
-                Log::warning("Failed to send pending notification {$notification->id}: " . $e->getMessage());
+                Log::error('Failed to send pending notification', [
+                    'notification_id' => $notification->id,
+                    'user_id'         => $notification->user_id,
+                    'channel'         => $notification->channel,
+                    'exception'       => $e->getMessage(),
+                ]);
                 DB::table('notifications_log')
                     ->where('id', $notification->id)
-                    ->update(['status' => 'failed']);
+                    ->update(['status' => 'failed', 'updated_at' => now()]);
             }
         }
+    }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('SendPendingNotificationsJob permanently failed', [
+            'exception' => $exception->getMessage(),
+        ]);
     }
 }

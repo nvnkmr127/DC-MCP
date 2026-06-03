@@ -79,7 +79,7 @@ class RecurringTaskWebController extends Controller
 
     public function update(Request $request, RecurringTaskRule $recurringTaskRule): RedirectResponse
     {
-        abort_if($recurringTaskRule->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($recurringTaskRule);
 
         $validated = $request->validate([
             'title'         => 'sometimes|string|max:255',
@@ -94,7 +94,7 @@ class RecurringTaskWebController extends Controller
 
     public function destroy(Request $request, RecurringTaskRule $recurringTaskRule): RedirectResponse
     {
-        abort_if($recurringTaskRule->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($recurringTaskRule);
         $recurringTaskRule->delete();
         return back()->with('success', 'Rule deleted.');
     }

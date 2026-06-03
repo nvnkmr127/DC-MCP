@@ -3,6 +3,7 @@
 namespace App\Modules\ProjectManagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\ProjectManagement\Services\TaskService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -12,12 +13,12 @@ use App\Modules\ProjectManagement\Models\Project;
 use App\Modules\ProjectManagement\Models\Comment;
 use App\Modules\ProjectManagement\Models\Attachment;
 use App\Modules\ProjectManagement\Models\TimeEntry;
-use App\Modules\ProjectManagement\Models\TaskLog;
 use App\Modules\ProjectManagement\Models\TaskDependency;
 use App\Modules\Auth\Models\User;
 
 class TaskWebController extends Controller
 {
+    public function __construct(private TaskService $taskService) {}
     public function index(Request $request)
     {
         $query = Task::with(['project:id,name', 'assignee:id,name'])
@@ -196,19 +197,18 @@ class TaskWebController extends Controller
             'tags'            => 'nullable|array',
         ]);
 
-        $oldStatus = $task->status;
-        $task->update($data);
-
-        // Log status change
-        if (isset($data['status']) && $oldStatus !== $data['status']) {
-            TaskLog::create([
-                'task_id'   => $task->id,
-                'user_id'   => $request->user()->id,
-                'action'    => 'status_changed',
-                'old_value' => ['status' => $oldStatus],
-                'new_value' => ['status' => $data['status']],
-                'logged_at' => now(),
-            ]);
+        // Route status changes through the service so events are dispatched,
+        // dependencies are unlocked, and SLA breach logging happens consistently
+        // with the API path. Non-status fields update directly.
+        if (isset($data['status']) && $data['status'] !== $task->status) {
+            $newStatus = $data['status'];
+            unset($data['status']);
+            if (!empty($data)) {
+                $task->update($data);
+            }
+            $this->taskService->updateTaskStatus($task, $newStatus, $request->user());
+        } else {
+            $task->update($data);
         }
 
         return back()->with('success', 'Task updated.');
@@ -223,7 +223,7 @@ class TaskWebController extends Controller
     public function move(Request $request, Task $task)
     {
         $data = $request->validate(['status' => 'required|in:backlog,todo,in_progress,in_review,blocked,done,cancelled']);
-        $task->update($data);
+        $this->taskService->updateTaskStatus($task, $data['status'], $request->user());
         return back();
     }
 
@@ -247,6 +247,7 @@ class TaskWebController extends Controller
             'hours'       => 'required|numeric|min:0.25|max:24',
             'description' => 'nullable|string|max:500',
             'logged_date' => 'required|date',
+            'is_billable' => 'nullable|boolean',
         ]);
 
         TimeEntry::create([
@@ -257,6 +258,7 @@ class TaskWebController extends Controller
             'hours'           => $data['hours'],
             'description'     => $data['description'] ?? null,
             'logged_date'     => $data['logged_date'],
+            'is_billable'     => $data['is_billable'] ?? true,
         ]);
 
         // Update actual_hours on task
@@ -320,7 +322,7 @@ class TaskWebController extends Controller
 
     public function bulkStore(Request $request, Project $project): \Illuminate\Http\RedirectResponse
     {
-        abort_if($project->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($project);
 
         $data = $request->validate([
             'tasks'                  => 'required|array|min:1',
@@ -348,7 +350,7 @@ class TaskWebController extends Controller
 
     public function addDependency(Request $request, Task $task): \Illuminate\Http\RedirectResponse
     {
-        abort_if($task->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($task);
 
         $validated = $request->validate([
             'depends_on_task_id' => 'required|uuid|different:task.id',
@@ -367,7 +369,7 @@ class TaskWebController extends Controller
 
     public function removeDependency(Request $request, Task $task, Task $dependency): \Illuminate\Http\RedirectResponse
     {
-        abort_if($task->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($task);
 
         TaskDependency::where('task_id', $task->id)
             ->where('depends_on_task_id', $dependency->id)

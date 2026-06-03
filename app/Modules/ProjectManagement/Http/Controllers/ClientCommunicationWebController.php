@@ -12,7 +12,7 @@ class ClientCommunicationWebController extends Controller
 {
     public function store(Request $request, Client $client): RedirectResponse
     {
-        abort_if($client->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($client);
 
         $validated = $request->validate([
             'type'             => 'required|in:call,email,whatsapp,meeting,linkedin,other',
@@ -37,7 +37,7 @@ class ClientCommunicationWebController extends Controller
 
     public function update(Request $request, ClientCommunication $communication): RedirectResponse
     {
-        abort_if($communication->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($communication);
 
         $validated = $request->validate([
             'subject'          => 'sometimes|string|max:255',
@@ -53,7 +53,7 @@ class ClientCommunicationWebController extends Controller
 
     public function destroy(Request $request, ClientCommunication $communication): RedirectResponse
     {
-        abort_if($communication->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($communication);
         $communication->delete();
         return back()->with('success', 'Communication deleted.');
     }

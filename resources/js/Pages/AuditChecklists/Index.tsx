@@ -112,7 +112,7 @@ export default function AuditChecklistsIndex({ checklists, clients, users, filte
 
     const toggleItem = (checklist: Checklist, itemIdx: number) => {
         const newItems = checklist.items.map((it, i) => i === itemIdx ? { ...it, checked: !it.checked } : it);
-        router.patch(`/audit-checklists/${checklist.id}`, { items: newItems }, { preserveScroll: true });
+        router.patch(`/audit-checklists/${checklist.id}`, { items: newItems as any }, { preserveScroll: true });
     };
 
     return (

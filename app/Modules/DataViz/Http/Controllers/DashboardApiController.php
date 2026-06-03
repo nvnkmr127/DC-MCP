@@ -9,6 +9,7 @@ use App\Shared\Helpers\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class DashboardApiController extends Controller
@@ -113,10 +114,14 @@ class DashboardApiController extends Controller
                 try {
                     $widgetData[$id] = $this->queryEngine->query($request->user(), $spec);
                 } catch (\Exception $e) {
-                    $widgetData[$id] = [
-                        'error' => $e->getMessage(),
-                        'data' => [],
-                    ];
+                    Log::error('Dashboard widget query failed', [
+                        'widget_id'      => $id,
+                        'metric_key'     => $spec['metric_key'] ?? null,
+                        'user_id'        => $request->user()->id,
+                        'organization_id'=> $request->user()->organization_id,
+                        'exception'      => $e->getMessage(),
+                    ]);
+                    $widgetData[$id] = ['error' => 'Widget data unavailable.', 'data' => []];
                 }
             }
         }

@@ -52,6 +52,12 @@ class PortalController extends Controller
             return redirect('/portal/login');
         }
 
+        // Guard: client may have been deactivated/deleted after session was created
+        if (!$portalUser->client) {
+            session()->forget(['portal_user_id', 'portal_org_id']);
+            return redirect('/portal/login')->withErrors(['token' => 'Your account has been deactivated. Please contact your agency.']);
+        }
+
         $orgId    = $portalUser->organization_id;
         $clientId = $portalUser->client_id;
 
@@ -146,6 +152,9 @@ class PortalController extends Controller
             return null;
         }
 
-        return PortalUser::where('id', $id)->where('is_active', true)->with('client')->first();
+        return PortalUser::where('id', $id)
+            ->where('is_active', true)
+            ->with(['client' => fn ($q) => $q->whereNull('deleted_at')])
+            ->first();
     }
 }

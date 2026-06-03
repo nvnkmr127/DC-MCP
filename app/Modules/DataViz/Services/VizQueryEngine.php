@@ -23,7 +23,8 @@ class VizQueryEngine
         // Create cache key based on org, specs, and date filters
         $cacheKey = "viz:{$orgId}:" . md5(json_encode($spec));
         
-        return Cache::remember($cacheKey, 300, function () use ($orgId, $metricKey, $spec, $filters, $dateFrom, $dateTo) {
+        $ttl = (int) config('viz.cache_ttl', 300);
+        return Cache::remember($cacheKey, $ttl, function () use ($orgId, $metricKey, $spec, $filters, $dateFrom, $dateTo) {
             $isComputed = in_array($metricKey, [
                 'tasks_completed_count',
                 'tasks_overdue_count',

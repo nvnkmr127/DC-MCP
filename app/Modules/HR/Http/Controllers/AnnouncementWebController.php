@@ -59,7 +59,7 @@ class AnnouncementWebController extends Controller
 
     public function update(Request $request, Announcement $announcement): RedirectResponse
     {
-        abort_if($announcement->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($announcement);
 
         $validated = $request->validate([
             'title'      => 'sometimes|string|max:255',
@@ -74,7 +74,7 @@ class AnnouncementWebController extends Controller
 
     public function destroy(Request $request, Announcement $announcement): RedirectResponse
     {
-        abort_if($announcement->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($announcement);
         $announcement->delete();
         return back()->with('success', 'Announcement deleted.');
     }

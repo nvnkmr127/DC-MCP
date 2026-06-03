@@ -96,7 +96,9 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // 'prefer' allows plaintext fallback. Use 'require' in production.
+            // Set DB_SSLMODE=disable only for local dev without SSL.
+            'sslmode' => env('DB_SSLMODE', 'require'),
         ],
 
         'sqlsrv' => [

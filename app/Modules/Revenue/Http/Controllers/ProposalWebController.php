@@ -112,7 +112,7 @@ class ProposalWebController extends Controller
 
     public function update(Request $request, Proposal $proposal): RedirectResponse
     {
-        abort_if($proposal->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($proposal);
 
         $validated = $request->validate([
             'title'                    => 'sometimes|string|max:255',
@@ -154,14 +154,14 @@ class ProposalWebController extends Controller
 
     public function destroy(Request $request, Proposal $proposal): RedirectResponse
     {
-        abort_if($proposal->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($proposal);
         $proposal->delete();
         return back()->with('success', 'Proposal deleted.');
     }
 
     public function markSent(Request $request, Proposal $proposal): RedirectResponse
     {
-        abort_if($proposal->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($proposal);
         $proposal->update([
             'status'       => 'sent',
             'sent_at'      => now(),
@@ -172,14 +172,14 @@ class ProposalWebController extends Controller
 
     public function accept(Request $request, Proposal $proposal): RedirectResponse
     {
-        abort_if($proposal->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($proposal);
         $proposal->update(['status' => 'accepted', 'accepted_at' => now()]);
         return back()->with('success', 'Proposal accepted.');
     }
 
     public function reject(Request $request, Proposal $proposal): RedirectResponse
     {
-        abort_if($proposal->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($proposal);
         $proposal->update(['status' => 'rejected']);
         return back()->with('success', 'Proposal rejected.');
     }

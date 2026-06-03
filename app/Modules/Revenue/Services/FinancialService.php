@@ -14,59 +14,72 @@ use Illuminate\Support\Collection;
 
 class FinancialService
 {
+    /**
+     * Compute (numerator / denominator) * 100, rounded to 1 decimal.
+     * Returns 0.0 when denominator is zero to avoid division errors.
+     * Uses bcmath throughout to maintain decimal precision.
+     */
+    private function safeMarginPercent(string $numerator, string $denominator): float
+    {
+        if (bccomp($denominator, '0', 2) <= 0) {
+            return 0.0;
+        }
+        return round((float) bcdiv($numerator, $denominator, 6) * 100, 1);
+    }
+
     public function getPnl(string $orgId, string $monthYear): array
     {
         [$year, $month] = explode('-', $monthYear);
         $startOfMonth = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $endOfMonth   = $startOfMonth->copy()->endOfMonth();
 
-        // Revenue
-        $mrr = (float) ClientRetainer::where('organization_id', $orgId)
+        // Revenue — keep as string-based decimals to avoid float precision loss
+        $mrr = ClientRetainer::where('organization_id', $orgId)
             ->where('status', 'active')
-            ->sum('monthly_value');
+            ->sum('monthly_value') ?? '0';
 
-        $invoiceRevenue = (float) Invoice::where('organization_id', $orgId)
+        $invoiceRevenue = Invoice::where('organization_id', $orgId)
             ->where('status', 'paid')
             ->whereBetween('paid_at', [$startOfMonth, $endOfMonth])
-            ->sum('amount');
+            ->sum('amount') ?? '0';
 
-        $totalRevenue = $mrr + $invoiceRevenue;
+        $totalRevenue = bcadd((string) $mrr, (string) $invoiceRevenue, 2);
 
         // COGS — Payroll
-        $payrollCost = (float) PayrollRecord::where('organization_id', $orgId)
+        $payrollCost = PayrollRecord::where('organization_id', $orgId)
             ->where('month_year', $monthYear)
-            ->sum('net_pay');
+            ->sum('net_pay') ?? '0';
 
         // Operating Expenses
-        $opExpenses = (float) Expense::where('organization_id', $orgId)
+        $opExpenses = Expense::where('organization_id', $orgId)
             ->whereBetween('expense_date', [$startOfMonth, $endOfMonth])
-            ->sum('amount');
+            ->sum('amount') ?? '0';
 
-        // Vendor/Tool costs (monthly prorated for annual)
-        $vendorCost = (float) VendorContract::where('organization_id', $orgId)
+        // Vendor/Tool costs
+        $vendorCost = VendorContract::where('organization_id', $orgId)
             ->where('status', 'active')
-            ->sum('monthly_cost');
+            ->sum('monthly_cost') ?? '0';
 
-        $totalCosts    = $payrollCost + $opExpenses + $vendorCost;
-        $grossProfit   = $totalRevenue - $payrollCost;
-        $netProfit     = $totalRevenue - $totalCosts;
-        $profitMargin  = $totalRevenue > 0 ? round(($netProfit / $totalRevenue) * 100, 1) : 0;
+        $totalCosts   = bcadd(bcadd((string) $payrollCost, (string) $opExpenses, 2), (string) $vendorCost, 2);
+        $grossProfit  = bcsub($totalRevenue, (string) $payrollCost, 2);
+        $netProfit    = bcsub($totalRevenue, $totalCosts, 2);
+        $profitMargin = $this->safeMarginPercent($netProfit, $totalRevenue);
 
         return [
-            'month_year'      => $monthYear,
-            'revenue'         => [
-                'mrr'     => $mrr,
-                'invoices'=> $invoiceRevenue,
-                'total'   => $totalRevenue,
+            'month_year' => $monthYear,
+            'revenue'    => [
+                'mrr'     => (float) $mrr,
+                'invoices'=> (float) $invoiceRevenue,
+                'total'   => (float) $totalRevenue,
             ],
             'costs' => [
-                'payroll' => $payrollCost,
-                'expenses'=> $opExpenses,
-                'vendors' => $vendorCost,
-                'total'   => $totalCosts,
+                'payroll' => (float) $payrollCost,
+                'expenses'=> (float) $opExpenses,
+                'vendors' => (float) $vendorCost,
+                'total'   => (float) $totalCosts,
             ],
-            'gross_profit'  => $grossProfit,
-            'net_profit'    => $netProfit,
+            'gross_profit'  => (float) $grossProfit,
+            'net_profit'    => (float) $netProfit,
             'profit_margin' => $profitMargin,
         ];
     }
@@ -83,40 +96,37 @@ class FinancialService
             $startOfMonth = Carbon::createFromDate($year, $month, 1)->startOfMonth();
             $endOfMonth   = $startOfMonth->copy()->endOfMonth();
 
-            $retainerRevenue = (float) $client->retainers()
-                ->where('status', 'active')
-                ->sum('monthly_value');
+            $retainerRevenue = $client->retainers()->where('status', 'active')->sum('monthly_value') ?? '0';
 
-            $invoiceRevenue = (float) Invoice::where('client_id', $client->id)
+            $invoiceRevenue = Invoice::where('client_id', $client->id)
                 ->where('status', 'paid')
                 ->whereBetween('paid_at', [$startOfMonth, $endOfMonth])
-                ->sum('amount');
+                ->sum('amount') ?? '0';
 
-            $totalRevenue = $retainerRevenue + $invoiceRevenue;
+            $totalRevenue = bcadd((string) $retainerRevenue, (string) $invoiceRevenue, 2);
 
-            // Estimate cost: hours logged × team billable rate
-            $hoursLogged = Task::where('client_id', $client->id)
+            $hoursLogged = (float) (Task::where('client_id', $client->id)
                 ->whereBetween('updated_at', [$startOfMonth, $endOfMonth])
-                ->sum('time_logged');
+                ->sum('time_logged') ?? 0);
 
-            $avgBillableRate = User::where('organization_id', $orgId)
+            $avgBillableRate = (float) (User::where('organization_id', $orgId)
                 ->where('is_active', true)
                 ->whereNotNull('billable_rate')
-                ->avg('billable_rate') ?? 0;
+                ->avg('billable_rate') ?? 0);
 
-            $estimatedCost = $hoursLogged * $avgBillableRate;
-            $profit        = $totalRevenue - $estimatedCost;
-            $margin        = $totalRevenue > 0 ? round(($profit / $totalRevenue) * 100, 1) : 0;
+            $estimatedCost = bcmul((string) $hoursLogged, (string) $avgBillableRate, 2);
+            $profit        = bcsub($totalRevenue, $estimatedCost, 2);
+            $margin = $this->safeMarginPercent($profit, $totalRevenue);
 
             return [
-                'id'               => $client->id,
-                'name'             => $client->company ?? $client->name,
-                'revenue'          => $totalRevenue,
-                'estimated_cost'   => $estimatedCost,
-                'profit'           => $profit,
-                'margin'           => $margin,
-                'hours_logged'     => (float) $hoursLogged,
-                'health_status'    => $client->health_status,
+                'id'             => $client->id,
+                'name'           => $client->company ?? $client->name,
+                'revenue'        => (float) $totalRevenue,
+                'estimated_cost' => (float) $estimatedCost,
+                'profit'         => (float) $profit,
+                'margin'         => $margin,
+                'hours_logged'   => $hoursLogged,
+                'health_status'  => $client->health_status,
             ];
         })->sortByDesc('profit')->values();
     }
@@ -124,33 +134,34 @@ class FinancialService
     public function getCashFlowForecast(string $orgId, int $months = 3): array
     {
         $forecast = [];
-        $mrr = (float) ClientRetainer::where('organization_id', $orgId)
+        $mrr = (string) (ClientRetainer::where('organization_id', $orgId)
             ->where('status', 'active')
-            ->sum('monthly_value');
+            ->sum('monthly_value') ?? '0');
 
-        $monthlyPayroll = (float) User::where('organization_id', $orgId)
+        $monthlyPayroll = (string) (User::where('organization_id', $orgId)
             ->where('is_active', true)
             ->whereNotNull('monthly_salary')
-            ->sum('monthly_salary');
+            ->sum('monthly_salary') ?? '0');
 
-        $monthlyVendors = (float) VendorContract::where('organization_id', $orgId)
+        $monthlyVendors = (string) (VendorContract::where('organization_id', $orgId)
             ->where('status', 'active')
-            ->sum('monthly_cost');
+            ->sum('monthly_cost') ?? '0');
 
-        $avgMonthlyExpenses = (float) Expense::where('organization_id', $orgId)
+        $threeMonthExpenses = (string) (Expense::where('organization_id', $orgId)
             ->where('expense_date', '>=', now()->subMonths(3))
-            ->sum('amount') / 3;
+            ->sum('amount') ?? '0');
+        $avgMonthlyExpenses = bcdiv($threeMonthExpenses, '3', 2);
 
-        $monthlyCosts = $monthlyPayroll + $monthlyVendors + $avgMonthlyExpenses;
+        $monthlyCosts = bcadd(bcadd($monthlyPayroll, $monthlyVendors, 2), $avgMonthlyExpenses, 2);
 
         for ($i = 1; $i <= $months; $i++) {
             $date     = now()->addMonths($i);
             $forecast[] = [
                 'month'         => $date->format('Y-m'),
                 'label'         => $date->format('M Y'),
-                'projected_in'  => $mrr,
-                'projected_out' => $monthlyCosts,
-                'net'           => $mrr - $monthlyCosts,
+                'projected_in'  => (float) $mrr,
+                'projected_out' => (float) $monthlyCosts,
+                'net'           => (float) bcsub($mrr, $monthlyCosts, 2),
             ];
         }
 

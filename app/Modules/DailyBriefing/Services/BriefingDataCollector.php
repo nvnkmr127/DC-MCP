@@ -18,6 +18,7 @@ use App\Modules\Revenue\Models\ClientOnboarding;
 use App\Modules\Revenue\Services\FinancialService;
 use App\Modules\Standup\Models\EodStandup;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class BriefingDataCollector
@@ -82,7 +83,11 @@ class BriefingDataCollector
                 $calendarAdapter = app(GoogleCalendarAdapter::class);
                 $calendarEvents = $calendarAdapter->getTodayEvents($calendarConnection);
             } catch (\Exception $e) {
-                // Ignore calendar API errors
+                Log::warning('Google Calendar data collection failed', [
+                    'user_id'       => $user->id,
+                    'connection_id' => $calendarConnection->id,
+                    'exception'     => $e->getMessage(),
+                ]);
             }
         }
 
@@ -173,7 +178,11 @@ class BriefingDataCollector
                     $notionAdapter = app(NotionAdapter::class);
                     $notionUpdates = $notionAdapter->getRecentUpdates(24);
                 } catch (\Exception $e) {
-                    // Ignore
+                    Log::warning('Notion data collection failed', [
+                        'user_id'       => $user->id,
+                        'connection_id' => $notionConnection->id,
+                        'exception'     => $e->getMessage(),
+                    ]);
                 }
             }
         }
@@ -198,7 +207,11 @@ class BriefingDataCollector
                     auth()->logout();
                 }
             } catch (\Exception $e) {
-                // Ignore email sync issues
+                Log::warning('Gmail data collection failed', [
+                    'user_id'       => $user->id,
+                    'connection_id' => $gmailConnection->id,
+                    'exception'     => $e->getMessage(),
+                ]);
             }
         }
 
@@ -260,7 +273,10 @@ class BriefingDataCollector
                     }
                 }
             } catch (\Exception $e) {
-                // Table might not exist yet if running tests before migrations
+                Log::warning('Report schedules query failed during briefing collection', [
+                    'organization_id' => $orgId,
+                    'exception'       => $e->getMessage(),
+                ]);
             }
         }
 
@@ -413,6 +429,10 @@ class BriefingDataCollector
                 'stalled_onboarding'=> $stalledOnboarding,
             ];
         } catch (\Exception $e) {
+            Log::warning('Financial data collection failed for briefing', [
+                'organization_id' => $orgId,
+                'exception'       => $e->getMessage(),
+            ]);
             return [];
         }
     }

@@ -7,6 +7,7 @@ use App\Shared\Helpers\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class LoginApiController extends Controller
@@ -23,6 +24,10 @@ class LoginApiController extends Controller
         ]);
 
         if (!Auth::attempt($request->only('email', 'password'))) {
+            Log::warning('Failed login attempt', [
+                'email' => $request->email,
+                'ip'    => $request->ip(),
+            ]);
             throw ValidationException::withMessages([
                 'email' => [__('auth.failed')],
             ]);
@@ -32,6 +37,11 @@ class LoginApiController extends Controller
 
         if (!$user->is_active) {
             Auth::logout();
+            Log::warning('Login rejected — deactivated account', [
+                'user_id' => $user->id,
+                'email'   => $user->email,
+                'ip'      => $request->ip(),
+            ]);
             return ApiResponse::error('Your account is deactivated. Please contact your administrator.', [], 403);
         }
 
@@ -54,10 +64,21 @@ class LoginApiController extends Controller
         }
 
         $token = null;
-        // If device_name is provided, we return a Sanctum token
         if ($request->filled('device_name')) {
             $token = $user->createToken($request->device_name)->plainTextToken;
+            Log::info('API token issued', [
+                'user_id'     => $user->id,
+                'device_name' => $request->device_name,
+                'ip'          => $request->ip(),
+            ]);
         }
+
+        Log::info('User login', [
+            'user_id'         => $user->id,
+            'organization_id' => $user->organization_id,
+            'ip'              => $request->ip(),
+            'api_token'       => $token !== null,
+        ]);
 
         return ApiResponse::success([
             'user' => $user,
@@ -73,12 +94,16 @@ class LoginApiController extends Controller
     {
         $user = Auth::user();
         if ($user) {
-            // Revoke current token if token authenticated
+            Log::info('User logout', [
+                'user_id'         => $user->id,
+                'organization_id' => $user->organization_id,
+                'ip'              => $request->ip(),
+            ]);
+
             if ($request->user() && $request->user()->currentAccessToken()) {
                 $request->user()->currentAccessToken()->delete();
             }
 
-            // Log out session
             Auth::guard('web')->logout();
         }
 

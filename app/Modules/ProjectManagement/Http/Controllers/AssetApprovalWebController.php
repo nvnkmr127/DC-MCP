@@ -52,12 +52,17 @@ class AssetApprovalWebController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $orgId = $request->user()->organization_id;
+
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
             'type'        => 'required|in:social_post,ad_creative,blog,video,email,other',
-            'client_id'   => 'required|uuid|exists:clients,id',
-            'asset_url'   => 'nullable|string',
+            'client_id'   => [
+                'required', 'uuid',
+                \Illuminate\Validation\Rule::exists('clients', 'id')->where('organization_id', $orgId),
+            ],
+            'asset_url'   => 'nullable|url|max:2048',
         ]);
 
         AssetApproval::create([
@@ -71,12 +76,21 @@ class AssetApprovalWebController extends Controller
 
     public function update(Request $request, AssetApproval $approval): RedirectResponse
     {
-        abort_if($approval->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($approval);
 
         $validated = $request->validate([
             'status'   => 'sometimes|in:pending,approved,revision_requested,rejected',
             'feedback' => 'nullable|string',
         ]);
+
+        // Only managers/CEO can change approval status (not the original submitter)
+        if (isset($validated['status']) && $validated['status'] !== 'pending') {
+            abort_unless(
+                in_array($request->user()->role, ['ceo', 'project_manager']),
+                403,
+                'Only project managers and above can approve or reject assets.'
+            );
+        }
 
         $updates = $validated;
 
@@ -94,7 +108,7 @@ class AssetApprovalWebController extends Controller
 
     public function destroy(Request $request, AssetApproval $approval): RedirectResponse
     {
-        abort_if($approval->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeOrg($approval);
         $approval->delete();
         return back()->with('success', 'Asset deleted.');
     }

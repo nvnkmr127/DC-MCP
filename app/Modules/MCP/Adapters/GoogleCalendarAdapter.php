@@ -52,8 +52,15 @@ class GoogleCalendarAdapter extends BaseAdapter
     protected function getGoogleClient(array $credentials, ?McpConnection $connection = null): Google_Client
     {
         $client = new Google_Client();
-        $client->setClientId(config('services.google.client_id', env('GOOGLE_CLIENT_ID', 'dummy-client-id')));
-        $client->setClientSecret(config('services.google.client_secret', env('GOOGLE_CLIENT_SECRET', 'dummy-client-secret')));
+        $clientId     = config('services.google.client_id');
+        $clientSecret = config('services.google.client_secret');
+
+        if (!$clientId || !$clientSecret) {
+            throw new \RuntimeException('Google OAuth credentials are not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.');
+        }
+
+        $client->setClientId($clientId);
+        $client->setClientSecret($clientSecret);
 
         $token = [
             'access_token' => $credentials['access_token'] ?? null,
@@ -332,12 +339,8 @@ class GoogleCalendarAdapter extends BaseAdapter
                 $description = "Milestone: " . $milestone->description . "\n" .
                                "Project: " . ($milestone->project->name ?? '');
 
-                // Milestones don't have a meta column directly in migration, let's double check.
-                // Wait! Does milestone migration have meta or settings?
-                // Let's check: Migration 8 only had name, description, due_date, completed_at, status, timestamps. No meta column!
-                // So for milestones, we won't persist google_event_id directly on milestone, OR we can query by name.
-                // Or let's see: we can push to calendar as a new event, or look up by name. Let's just insert a new one if no mapping exists,
-                // or we can skip storing id. Let's check:
+                // Milestones have no meta column, so google_event_id cannot be persisted.
+                // Each push creates a new calendar event; deduplication is not supported for milestones.
                 $eventDate = $milestone->due_date->format('Y-m-d');
                 $eventData = [
                     'summary' => $summary,
