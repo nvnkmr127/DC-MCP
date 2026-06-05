@@ -31,7 +31,9 @@ class PurchaseOrderWebController extends Controller
                 'vendor_id'         => $p->vendor_id,
             ]);
 
-        $vendors = VendorContract::where('organization_id', $orgId)->select('id', 'vendor_name')->distinct('vendor_name')->get();
+        $vendors = VendorContract::where('organization_id', $orgId)
+            ->select('id', 'name as vendor_name')
+            ->get();
 
         return Inertia::render('PurchaseOrders/Index', [
             'purchaseOrders' => $pos,

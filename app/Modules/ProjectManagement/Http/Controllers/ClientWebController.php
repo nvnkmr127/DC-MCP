@@ -51,6 +51,7 @@ class ClientWebController extends Controller
     {
         $data = $request->validate([
             'name'    => 'required|string|max:200',
+            'company' => 'required|string|max:200',
             'email'   => 'nullable|email',
             'phone'   => 'nullable|string',
             'website' => 'nullable|url',
@@ -105,6 +106,7 @@ class ClientWebController extends Controller
     {
         $data = $request->validate([
             'name'    => 'sometimes|string|max:200',
+            'company' => 'sometimes|string|max:200',
             'email'   => 'nullable|email',
             'phone'   => 'nullable|string',
             'website' => 'nullable|url',

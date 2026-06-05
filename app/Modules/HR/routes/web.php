@@ -4,9 +4,10 @@ use App\Modules\HR\Http\Controllers\LeaveWebController;
 use App\Modules\HR\Http\Controllers\HiringWebController;
 use App\Modules\HR\Http\Controllers\PerformanceReviewWebController;
 use App\Modules\HR\Http\Controllers\AnnouncementWebController;
-use App\Modules\HR\Http\Controllers\FreelancerWebController;
+use App\Modules\ProjectManagement\Http\Controllers\FreelancerWebController;
 use App\Modules\HR\Http\Controllers\KnowledgeBaseWebController;
 use App\Modules\HR\Http\Controllers\OneOnOneWebController;
+use App\Modules\HR\Http\Controllers\PayrollWebController;
 
 Route::middleware(['auth'])->group(function () {
     // Leave Management
@@ -59,4 +60,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/one-on-one',                               [OneOnOneWebController::class, 'store'])->name('web.one-on-one.store');
     Route::patch('/one-on-one/{oneOnOneNote}',               [OneOnOneWebController::class, 'update'])->name('web.one-on-one.update');
     Route::post('/one-on-one/{oneOnOneNote}/action-item',    [OneOnOneWebController::class, 'toggleActionItem'])->name('web.one-on-one.action-item');
+
+    // Payroll Management
+    Route::get('/payroll',                                   [PayrollWebController::class, 'index'])->name('web.payroll.index');
+    Route::post('/payroll',                                  [PayrollWebController::class, 'store'])->name('web.payroll.store');
+    Route::post('/payroll/bulk-generate',                    [PayrollWebController::class, 'bulkGenerate'])->name('web.payroll.bulk-generate');
+    Route::post('/payroll/{payrollRecord}/paid',             [PayrollWebController::class, 'markPaid'])->name('web.payroll.paid');
 });

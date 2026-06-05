@@ -16,4 +16,6 @@ return [
     App\Modules\ClientPortal\Providers\ClientPortalServiceProvider::class,
     App\Modules\Revenue\Providers\RevenueServiceProvider::class,
     App\Modules\Standup\Providers\StandupServiceProvider::class,
+    App\Modules\Automation\Providers\AutomationServiceProvider::class,
+    App\Modules\HR\Providers\HRServiceProvider::class,
 ];

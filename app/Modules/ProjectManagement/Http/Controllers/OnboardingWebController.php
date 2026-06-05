@@ -19,32 +19,48 @@ class OnboardingWebController extends Controller
     {
         $orgId = $request->user()->organization_id;
 
-        $onboardings = ClientOnboarding::where('organization_id', $orgId)
+        $onboardingsRaw = ClientOnboarding::where('organization_id', $orgId)
             ->with(['client:id,name,company', 'assignee:id,name'])
             ->orderBy('created_at')
-            ->get()
-            ->map(fn($o) => [
-                'id'              => $o->id,
-                'stage'           => $o->stage,
-                'checklist'       => $o->checklist,
-                'progress'        => $o->checklistProgress(),
-                'notes'           => $o->notes,
-                'target_go_live'  => $o->target_go_live?->toDateString(),
-                'actual_go_live'  => $o->actual_go_live?->toDateString(),
-                'nps_score'       => $o->nps_score,
-                'nps_comment'     => $o->nps_comment,
-                'client'          => $o->client ? ['id' => $o->client->id, 'name' => $o->client->company ?? $o->client->name] : null,
-                'assignee'        => $o->assignee ? ['id' => $o->assignee->id, 'name' => $o->assignee->name] : null,
-            ]);
+            ->get();
+
+        $totalActive = $onboardingsRaw->count();
+        $stalled = $onboardingsRaw->filter(function ($o) {
+            return $o->updated_at && now()->diffInDays($o->updated_at) > 5;
+        })->count();
+
+        $onboardings = $onboardingsRaw->map(fn($o) => [
+            'id'              => $o->id,
+            'stage'           => $o->stage,
+            'checklist'       => $o->checklist ?? [],
+            'progress'        => $o->checklistProgress(),
+            'notes'           => $o->notes,
+            'target_go_live'  => $o->target_go_live?->toDateString(),
+            'actual_go_live'  => $o->actual_go_live?->toDateString(),
+            'days_in_stage'   => $o->updated_at ? now()->diffInDays($o->updated_at) : 0,
+            'nps_score'       => $o->nps_score,
+            'nps_comment'     => $o->nps_comment,
+            'client'          => $o->client ? [
+                'id'           => $o->client->id, 
+                'name'         => $o->client->name,
+                'company_name' => $o->client->company,
+            ] : null,
+            'assignee'        => $o->assignee ? ['id' => $o->assignee->id, 'name' => $o->assignee->name] : null,
+        ]);
 
         // Clients without onboarding
-        $onboardedClientIds = $onboardings->pluck('client.id')->filter()->toArray();
+        $onboardedClientIds = $onboardingsRaw->pluck('client.id')->filter()->toArray();
         $availableClients = Client::where('organization_id', $orgId)
             ->where('status', 'active')
             ->whereNotIn('id', $onboardedClientIds)
             ->select('id', 'name', 'company')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(fn($c) => [
+                'id'           => $c->id,
+                'name'         => $c->name,
+                'company_name' => $c->company,
+            ]);
 
         $team = User::where('organization_id', $orgId)
             ->where('is_active', true)
@@ -57,11 +73,12 @@ class OnboardingWebController extends Controller
         ]);
 
         return Inertia::render('Onboarding/Index', [
-            'onboardings'      => $onboardings,
-            'byStage'          => $byStage,
-            'stages'           => OnboardingService::STAGES,
-            'availableClients' => $availableClients,
-            'team'             => $team,
+            'onboardings' => $onboardings,
+            'byStage'     => $byStage,
+            'clients'     => $availableClients,
+            'totalActive' => $totalActive,
+            'stalled'     => $stalled,
+            'team'        => $team,
         ]);
     }
 
@@ -77,7 +94,7 @@ class OnboardingWebController extends Controller
         $client     = Client::where('organization_id', $request->user()->organization_id)->findOrFail($validated['client_id']);
         $onboarding = $this->onboardingService->createForClient($client, $validated);
 
-        $displayName = $client->company_name ?? $client->name;
+        $displayName = $client->company ?? $client->name;
         return back()->with('success', "Onboarding started for {$displayName}.");
     }
 

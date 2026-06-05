@@ -12,6 +12,9 @@ use App\Modules\ProjectManagement\Http\Controllers\ProjectTemplateWebController;
 use App\Modules\ProjectManagement\Http\Controllers\ClientCommunicationWebController;
 use App\Modules\ProjectManagement\Http\Controllers\DeliverableWebController;
 use App\Modules\ProjectManagement\Http\Controllers\GoalWebController;
+use App\Modules\ProjectManagement\Http\Controllers\CapacityWebController;
+use App\Modules\ProjectManagement\Http\Controllers\OnboardingWebController;
+use App\Modules\ProjectManagement\Http\Controllers\AuditChecklistWebController;
 
 Route::middleware(['auth'])->group(function () {
     // Projects
@@ -105,4 +108,20 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/goals/{goal}',                           [GoalWebController::class, 'update'])->name('web.goals.update');
     Route::delete('/goals/{goal}',                          [GoalWebController::class, 'destroy'])->name('web.goals.destroy');
     Route::patch('/goals/{goal}/kr',                        [GoalWebController::class, 'updateKeyResult'])->name('web.goals.kr');
+
+    // Capacity Management
+    Route::get('/capacity',                                 [CapacityWebController::class, 'index'])->name('web.capacity.index');
+
+    // Onboarding Management
+    Route::get('/onboarding',                                [OnboardingWebController::class, 'index'])->name('web.onboarding.index');
+    Route::post('/onboarding',                               [OnboardingWebController::class, 'store'])->name('web.onboarding.store');
+    Route::post('/onboarding/{onboarding}/advance',          [OnboardingWebController::class, 'advance'])->name('web.onboarding.advance');
+    Route::post('/onboarding/{onboarding}/checklist',        [OnboardingWebController::class, 'toggleChecklist'])->name('web.onboarding.checklist');
+    Route::post('/onboarding/{onboarding}/nps',              [OnboardingWebController::class, 'submitNps'])->name('web.onboarding.nps');
+
+    // Audit Checklists
+    Route::get('/audit-checklists',                          [AuditChecklistWebController::class, 'index'])->name('web.audit-checklists.index');
+    Route::post('/audit-checklists',                         [AuditChecklistWebController::class, 'store'])->name('web.audit-checklists.store');
+    Route::patch('/audit-checklists/{checklist}',            [AuditChecklistWebController::class, 'update'])->name('web.audit-checklists.update');
+    Route::delete('/audit-checklists/{checklist}',           [AuditChecklistWebController::class, 'destroy'])->name('web.audit-checklists.destroy');
 });

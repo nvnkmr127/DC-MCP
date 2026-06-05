@@ -9,13 +9,17 @@ return new class extends Migration
     {
         // DB enum is: draft | generating | ready | sent | archived
         // GenerateReportJob::failed() sets status = 'failed' which the DB rejects.
-        if (DB::getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TYPE reports_status_enum ADD VALUE IF NOT EXISTS 'failed'");
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE reports DROP CONSTRAINT IF EXISTS reports_status_check");
+            DB::statement("ALTER TABLE reports ADD CONSTRAINT reports_status_check CHECK (status::text = ANY (ARRAY['draft'::text, 'generating'::text, 'ready'::text, 'sent'::text, 'archived'::text, 'failed'::text]))");
         }
     }
 
     public function down(): void
     {
-        // PostgreSQL does not support removing enum values without recreating the type.
+        if (DB::getDriverName() === 'pgsql') {
+            DB::statement("ALTER TABLE reports DROP CONSTRAINT IF EXISTS reports_status_check");
+            DB::statement("ALTER TABLE reports ADD CONSTRAINT reports_status_check CHECK (status::text = ANY (ARRAY['draft'::text, 'generating'::text, 'ready'::text, 'sent'::text, 'archived'::text]))");
+        }
     }
 };

@@ -30,7 +30,8 @@ class CapacityWebController extends Controller
                     $q->whereIn('status', ['todo', 'in_progress', 'in_review'])
                       ->whereDate('due_date', today()),
             ])
-            ->select('id', 'name', 'email', 'role')
+            ->with('roles')
+            ->select('id', 'name', 'email')
             ->orderBy('name')
             ->get()
             ->map(fn($u) => [

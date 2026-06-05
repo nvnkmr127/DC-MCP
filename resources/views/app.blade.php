@@ -8,7 +8,7 @@
         <title inertia>{{ config('app.name', 'Digicloudify') }}</title>
 
         <!-- Favicon -->
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+        <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

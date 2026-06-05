@@ -18,13 +18,16 @@ class PayrollWebController extends Controller
 
         $team = User::where('organization_id', $orgId)
             ->where('is_active', true)
-            ->select('id', 'name', 'email', 'role', 'monthly_salary', 'billable_rate')
+            ->with('roles')
+            ->select('id', 'name', 'email', 'monthly_salary', 'billable_rate')
             ->orderBy('name')
             ->get();
 
         $records = PayrollRecord::where('organization_id', $orgId)
             ->where('month_year', $monthYear)
-            ->with('user:id,name,email,role')
+            ->with(['user' => function ($query) {
+                $query->select('id', 'name', 'email')->with('roles');
+            }])
             ->get()
             ->keyBy('user_id')
             ->map(fn($r) => [
