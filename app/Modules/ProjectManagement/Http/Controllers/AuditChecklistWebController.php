@@ -8,6 +8,7 @@ use App\Modules\ProjectManagement\Models\AuditChecklist;
 use App\Modules\ProjectManagement\Models\Client;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -49,11 +50,22 @@ class AuditChecklistWebController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $orgId = $request->user()->organization_id;
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'type'        => 'required|in:seo,social,ads,content,website,general',
-            'client_id'   => 'nullable|uuid|exists:clients,id',
-            'assigned_to' => 'nullable|uuid|exists:users,id',
+            'client_id'   => [
+                'nullable',
+                'uuid',
+                Rule::exists('clients', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
+            'assigned_to' => [
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')->where('organization_id', $orgId)->whereNull('deleted_at'),
+            ],
             'due_date'    => 'nullable|date',
             'items'       => 'nullable|array',
             'items.*.label' => 'required|string|max:255',

@@ -15,6 +15,7 @@ use App\Modules\ProjectManagement\Models\Attachment;
 use App\Modules\ProjectManagement\Models\TimeEntry;
 use App\Modules\ProjectManagement\Models\TaskDependency;
 use App\Modules\Auth\Models\User;
+use Illuminate\Validation\Rule;
 
 class TaskWebController extends Controller
 {
@@ -63,7 +64,10 @@ class TaskWebController extends Controller
     public function create(Request $request)
     {
         $projects = Project::select('id', 'name')->orderBy('name')->get();
-        $members  = User::select('id', 'name')->orderBy('name')->get();
+        $members  = User::where('organization_id', $request->user()->organization_id)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Tasks/Create', [
             'projects' => $projects,
@@ -80,15 +84,31 @@ class TaskWebController extends Controller
         $data = $request->validate([
             'title'           => 'required|string|max:300',
             'description'     => 'nullable|string',
-            'project_id'      => 'required|uuid|exists:projects,id',
+            'project_id'      => [
+                'required',
+                'uuid',
+                Rule::exists('projects', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
             'status'          => 'required|in:backlog,todo,in_progress,in_review,blocked,done,cancelled',
-            'priority'        => 'required|in:urgent,high,medium,low',
-            'assigned_to'     => 'nullable|uuid|exists:users,id',
+            'priority'        => 'required|in:low,medium,high,critical',
+            'assigned_to'     => [
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
             'due_date'        => 'nullable|date',
             'estimated_hours' => 'nullable|numeric|min:0',
             'tags'            => 'nullable|array',
-            'type'            => 'nullable|string',
-            'sprint_id'       => 'nullable|uuid',
+            'type'            => 'required|in:feature,bug,content,design,research,review,meeting,report,campaign_setup,ad_creative,seo_audit,email_sequence,other',
+            'sprint_id'       => [
+                'nullable',
+                'uuid',
+                Rule::exists('sprints', 'id')->where('project_id', $request->project_id),
+            ],
         ]);
 
         $task = Task::create([
@@ -133,15 +153,25 @@ class TaskWebController extends Controller
             ->with('uploader:id,name')
             ->orderByDesc('created_at')
             ->get()
-            ->map(fn($a) => [
-                'id'                => $a->id,
-                'original_filename' => $a->original_name,
-                'url'               => $a->storage_disk === 's3'
-                    ? Storage::disk('s3')->temporaryUrl($a->storage_path, now()->addHours(2))
-                    : Storage::disk($a->storage_disk)->url($a->storage_path),
-                'size'              => (int) $a->size_bytes,
-                'created_at'        => $a->created_at->toISOString(),
-            ]);
+            ->map(function ($a) {
+                if ($a->storage_disk === 's3') {
+                    $disk = Storage::disk('s3');
+                    assert($disk instanceof \Illuminate\Filesystem\FilesystemAdapter);
+                    $url = $disk->temporaryUrl($a->storage_path, now()->addHours(2));
+                } else {
+                    $disk = Storage::disk($a->storage_disk);
+                    assert($disk instanceof \Illuminate\Filesystem\FilesystemAdapter);
+                    $url = $disk->url($a->storage_path);
+                }
+
+                return [
+                    'id'                => $a->id,
+                    'original_filename' => $a->original_name,
+                    'url'               => $url,
+                    'size'              => (int) $a->size_bytes,
+                    'created_at'        => $a->created_at->toISOString(),
+                ];
+            });
 
         return Inertia::render('Tasks/Show', [
             'task' => array_merge(
@@ -175,7 +205,10 @@ class TaskWebController extends Controller
     public function edit(Task $task)
     {
         $projects = Project::select('id', 'name')->orderBy('name')->get();
-        $members  = User::select('id', 'name')->orderBy('name')->get();
+        $members  = User::where('organization_id', request()->user()->organization_id)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Tasks/Edit', [
             'task'     => $task->load('project:id,name', 'assignee:id,name'),
@@ -189,13 +222,31 @@ class TaskWebController extends Controller
         $data = $request->validate([
             'title'           => 'sometimes|string|max:300',
             'description'     => 'nullable|string',
+            'project_id'      => [
+                'sometimes',
+                'uuid',
+                Rule::exists('projects', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
             'status'          => 'sometimes|in:backlog,todo,in_progress,in_review,blocked,done,cancelled',
-            'priority'        => 'sometimes|in:urgent,high,medium,low',
-            'assigned_to'     => 'nullable|uuid|exists:users,id',
+            'priority'        => 'sometimes|in:low,medium,high,critical',
+            'assigned_to'     => [
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
             'due_date'        => 'nullable|date',
             'estimated_hours' => 'nullable|numeric|min:0',
             'tags'            => 'nullable|array',
         ]);
+
+        if (isset($data['project_id']) && $data['project_id'] !== $task->project_id) {
+            $task->sprint_id = null;
+            $task->milestone_id = null;
+        }
 
         // Route status changes through the service so events are dispatched,
         // dependencies are unlocked, and SLA breach logging happens consistently
@@ -272,8 +323,19 @@ class TaskWebController extends Controller
         $request->validate([
             'file'             => 'required|file|max:51200', // 50MB
             'attachable_type'  => 'required|in:task,project',
-            'attachable_id'    => 'required|string',
+            'attachable_id'    => 'required|uuid',
         ]);
+
+        if ($request->attachable_type === 'task') {
+            Task::where('id', $request->attachable_id)
+                ->where('organization_id', $request->user()->organization_id)
+                ->firstOrFail();
+        }
+        if ($request->attachable_type === 'project') {
+            Project::where('id', $request->attachable_id)
+                ->where('organization_id', $request->user()->organization_id)
+                ->firstOrFail();
+        }
 
         $file = $request->file('file');
         $disk = config('filesystems.default', 'local');
@@ -315,6 +377,8 @@ class TaskWebController extends Controller
 
     public function destroyAttachment(Request $request, Attachment $attachment)
     {
+        $this->authorizeOrg($attachment);
+
         Storage::disk($attachment->storage_disk)->delete($attachment->storage_path);
         $attachment->delete();
         return back()->with('success', 'Attachment deleted.');
@@ -327,9 +391,15 @@ class TaskWebController extends Controller
         $data = $request->validate([
             'tasks'                  => 'required|array|min:1',
             'tasks.*.title'          => 'required|string|max:300',
-            'tasks.*.priority'       => 'nullable|in:urgent,high,medium,low',
+            'tasks.*.priority'       => 'nullable|in:low,medium,high,critical',
             'tasks.*.due_date'       => 'nullable|date',
-            'tasks.*.assigned_to'    => 'nullable|uuid|exists:users,id',
+            'tasks.*.assigned_to'    => [
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
         ]);
 
         foreach ($data['tasks'] as $taskData) {
@@ -353,10 +423,13 @@ class TaskWebController extends Controller
         $this->authorizeOrg($task);
 
         $validated = $request->validate([
-            'depends_on_task_id' => 'required|uuid|different:task.id',
+            'depends_on_task_id' => 'required|uuid',
         ]);
 
+        abort_if($validated['depends_on_task_id'] === $task->id, 422, 'Task cannot depend on itself.');
+
         $depTask = Task::where('organization_id', $request->user()->organization_id)
+            ->where('project_id', $task->project_id)
             ->findOrFail($validated['depends_on_task_id']);
 
         TaskDependency::firstOrCreate([

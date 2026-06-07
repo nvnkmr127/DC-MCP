@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { cn } from '@/lib/utils';
 import { Plus, X, Trash2, CheckCircle, FileX } from 'lucide-react';
 
@@ -82,6 +83,7 @@ function CreditNoteModal({ clients, invoices, onClose }: { clients: Client[]; in
 
 export default function CreditNotesIndex({ creditNotes, clients, invoices }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
+    const confirm = useConfirm();
 
     const totalDraft   = creditNotes.filter(cn => cn.status === 'draft').reduce((s, cn) => s + cn.amount, 0);
     const totalIssued  = creditNotes.filter(cn => cn.status === 'issued').reduce((s, cn) => s + cn.amount, 0);
@@ -141,12 +143,25 @@ export default function CreditNotesIndex({ creditNotes, clients, invoices }: Pro
                             <p className="text-sm font-semibold text-gray-900 shrink-0">{fmt(creditNote.amount)}</p>
                             <div className="flex items-center gap-1.5 shrink-0">
                                 {creditNote.status !== 'applied' && (
-                                    <button onClick={() => { if (confirm('Mark this credit note as applied?')) router.post(`/credit-notes/${creditNote.id}/apply`); }}
+                                    <button onClick={async () => {
+                                        const ok = await confirm({ title: 'Mark this credit note as applied?', confirmText: 'Mark applied' });
+                                        if (!ok) return;
+                                        router.post(`/credit-notes/${creditNote.id}/apply`);
+                                    }}
                                         className="p-1 text-gray-400 hover:text-emerald-600 rounded hover:bg-emerald-50 transition-colors" title="Apply">
                                         <CheckCircle size={14} />
                                     </button>
                                 )}
-                                <button onClick={() => { if (confirm('Delete credit note?')) router.delete(`/credit-notes/${creditNote.id}`); }}
+                                <button onClick={async () => {
+                                    const ok = await confirm({
+                                        title: 'Delete credit note?',
+                                        description: 'This cannot be undone.',
+                                        confirmText: 'Delete',
+                                        variant: 'destructive',
+                                    });
+                                    if (!ok) return;
+                                    router.delete(`/credit-notes/${creditNote.id}`);
+                                }}
                                     className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                     <Trash2 size={14} />
                                 </button>

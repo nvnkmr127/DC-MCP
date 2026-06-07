@@ -31,10 +31,12 @@ export const PRIORITY_COLORS: Record<string, string> = {
     low:    'bg-gray-100 text-gray-600',
     medium: 'bg-blue-100 text-blue-600',
     high:   'bg-orange-100 text-orange-600',
+    critical: 'bg-red-100 text-red-700',
     urgent: 'bg-red-100 text-red-700',
 };
 
 export const PROJECT_STATUS_CONFIG: Record<string, { label: string; dot: string; badge: string }> = {
+    draft:     { label: 'Draft',     dot: 'bg-gray-300',    badge: 'bg-gray-50 text-gray-600' },
     planning:  { label: 'Planning',  dot: 'bg-gray-400',    badge: 'bg-gray-100 text-gray-700' },
     active:    { label: 'Active',    dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700' },
     on_hold:   { label: 'On Hold',   dot: 'bg-yellow-400',  badge: 'bg-yellow-50 text-yellow-700' },
@@ -66,6 +68,7 @@ export const TASK_PRIORITY_DOT: Record<string, string> = {
     low:    'bg-gray-300',
     medium: 'bg-blue-400',
     high:   'bg-orange-400',
+    critical: 'bg-red-500',
     urgent: 'bg-red-500',
 };
 
@@ -73,10 +76,12 @@ export const TASK_PRIORITY_CHIP: Record<string, string> = {
     low:    'bg-gray-100 text-gray-500',
     medium: 'bg-blue-50 text-blue-700',
     high:   'bg-orange-50 text-orange-700',
+    critical: 'bg-red-50 text-red-700',
     urgent: 'bg-red-50 text-red-700',
 };
 
 export const CLIENT_TIER_CONFIG: Record<string, { label: string; badge: string; dot: string }> = {
+    basic:      { label: 'Basic',      badge: 'bg-gray-50 text-gray-600',     dot: 'bg-gray-300' },
     standard:   { label: 'Standard',   badge: 'bg-gray-100 text-gray-600',    dot: 'bg-gray-400' },
     premium:    { label: 'Premium',    badge: 'bg-indigo-50 text-indigo-700', dot: 'bg-indigo-500' },
     enterprise: { label: 'Enterprise', badge: 'bg-violet-50 text-violet-700', dot: 'bg-violet-500' },

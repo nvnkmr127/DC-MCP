@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { cn } from '@/lib/utils';
 import { Plus, X, ToggleLeft, ToggleRight, Trash2, Workflow } from 'lucide-react';
 
@@ -77,6 +78,7 @@ function WorkflowModal({ onClose }: { onClose: () => void }) {
 
 export default function WorkflowsIndex({ workflows }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
+    const confirm = useConfirm();
 
     return (
         <AppLayout title="Workflows">
@@ -123,7 +125,16 @@ export default function WorkflowsIndex({ workflows }: Props) {
                                     className="text-gray-400 hover:text-indigo-600 transition-colors">
                                     {w.is_active ? <ToggleRight size={20} className="text-indigo-600" /> : <ToggleLeft size={20} />}
                                 </button>
-                                <button onClick={() => { if (confirm('Delete workflow?')) router.delete(`/workflows/${w.id}`); }}
+                                <button onClick={async () => {
+                                    const ok = await confirm({
+                                        title: 'Delete workflow?',
+                                        description: 'This cannot be undone.',
+                                        confirmText: 'Delete',
+                                        variant: 'destructive',
+                                    });
+                                    if (!ok) return;
+                                    router.delete(`/workflows/${w.id}`);
+                                }}
                                     className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                     <Trash2 size={14} />
                                 </button>

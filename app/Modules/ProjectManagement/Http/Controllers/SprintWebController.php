@@ -9,6 +9,7 @@ use App\Modules\ProjectManagement\Models\SprintTask;
 use App\Modules\ProjectManagement\Models\Task;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,7 +20,7 @@ class SprintWebController extends Controller
         $orgId = $request->user()->organization_id;
 
         $sprints = Sprint::whereHas('project', fn($q) => $q->where('organization_id', $orgId))
-            ->with(['project:id,name'])
+            ->with(['project:id,name', 'sprintTasks.task:id,title,status'])
             ->orderByDesc('start_date')
             ->get()
             ->map(fn($s) => [
@@ -30,7 +31,7 @@ class SprintWebController extends Controller
                 'start_date'   => $s->start_date?->toDateString(),
                 'end_date'     => $s->end_date?->toDateString(),
                 'project'      => $s->project ? ['id' => $s->project->id, 'name' => $s->project->name] : null,
-                'sprint_tasks' => SprintTask::where('sprint_id', $s->id)->with('task:id,title,status')->get()->map(fn($st) => [
+                'sprint_tasks' => $s->sprintTasks->map(fn($st) => [
                     'id'           => $st->id,
                     'story_points' => $st->story_points,
                     'task'         => $st->task ? ['id' => $st->task->id, 'title' => $st->task->title, 'status' => $st->task->status] : null,
@@ -47,8 +48,15 @@ class SprintWebController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $orgId = $request->user()->organization_id;
         $validated = $request->validate([
-            'project_id' => 'required|uuid|exists:projects,id',
+            'project_id' => [
+                'required',
+                'uuid',
+                Rule::exists('projects', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
             'name'       => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after:start_date',
@@ -58,7 +66,7 @@ class SprintWebController extends Controller
 
         Sprint::create([
             ...$validated,
-            'organization_id' => $request->user()->organization_id,
+            'organization_id' => $orgId,
         ]);
 
         return back()->with('success', 'Sprint created.');
@@ -66,6 +74,8 @@ class SprintWebController extends Controller
 
     public function update(Request $request, Sprint $sprint): RedirectResponse
     {
+        $this->authorizeProjectId($sprint->project_id);
+
         $validated = $request->validate([
             'name'       => 'sometimes|string|max:255',
             'start_date' => 'sometimes|date',
@@ -80,6 +90,8 @@ class SprintWebController extends Controller
 
     public function destroy(Request $request, Sprint $sprint): RedirectResponse
     {
+        $this->authorizeProjectId($sprint->project_id);
+
         SprintTask::where('sprint_id', $sprint->id)->delete();
         $sprint->delete();
         return back()->with('success', 'Sprint deleted.');
@@ -87,14 +99,24 @@ class SprintWebController extends Controller
 
     public function addTask(Request $request, Sprint $sprint): RedirectResponse
     {
+        $this->authorizeProjectId($sprint->project_id);
+        $orgId = $request->user()->organization_id;
+
         $validated = $request->validate([
-            'task_id'      => 'required|uuid|exists:tasks,id',
+            'task_id'      => [
+                'required',
+                'uuid',
+                Rule::exists('tasks', 'id')
+                    ->where('organization_id', $orgId)
+                    ->where('project_id', $sprint->project_id)
+                    ->whereNull('deleted_at'),
+            ],
             'story_points' => 'nullable|integer|min:0',
         ]);
 
         SprintTask::firstOrCreate(
             ['sprint_id' => $sprint->id, 'task_id' => $validated['task_id']],
-            ['organization_id' => $request->user()->organization_id, 'story_points' => $validated['story_points'] ?? 0]
+            ['organization_id' => $orgId, 'story_points' => $validated['story_points'] ?? 0]
         );
 
         return back()->with('success', 'Task added to sprint.');
@@ -102,6 +124,10 @@ class SprintWebController extends Controller
 
     public function removeTask(Request $request, Sprint $sprint, Task $task): RedirectResponse
     {
+        $this->authorizeProjectId($sprint->project_id);
+        $this->authorizeOrg($task);
+        abort_if($task->project_id !== $sprint->project_id, 422, 'Task does not belong to this sprint project.');
+
         SprintTask::where('sprint_id', $sprint->id)->where('task_id', $task->id)->delete();
         return back()->with('success', 'Task removed from sprint.');
     }

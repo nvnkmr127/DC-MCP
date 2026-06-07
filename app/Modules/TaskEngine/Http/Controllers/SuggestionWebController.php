@@ -77,9 +77,9 @@ class SuggestionWebController extends Controller
         $validated = $request->validate([
             'title'       => 'sometimes|string|max:255',
             'description' => 'sometimes|nullable|string',
-            'priority'    => 'sometimes|in:low,medium,high,urgent',
+            'priority'    => 'sometimes|in:low,medium,high,critical',
             'due_date'    => 'sometimes|nullable|date',
-            'project_id'  => 'sometimes|nullable|uuid',
+            'project_id'  => 'sometimes|uuid',
         ]);
 
         $task = $this->suggestionService->approve($suggestion, $request->user(), $validated);

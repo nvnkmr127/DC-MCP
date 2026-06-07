@@ -5,6 +5,7 @@ import { getInitials, cn } from '@/lib/utils';
 import type { PageProps } from '@/types';
 import { toast } from 'sonner';
 import { SearchOverlay } from '@/Components/Shared/SearchOverlay';
+import { ConfirmProvider } from '@/hooks/useConfirm';
 import {
     LayoutDashboard, FolderKanban, CheckSquare, Users, BarChart3,
     Settings, Bell, Search, ChevronLeft, ChevronRight,
@@ -136,7 +137,8 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
     }
 
     return (
-        <div className="flex h-screen bg-[#f4f5f7] overflow-hidden">
+        <ConfirmProvider>
+            <div className="flex h-screen bg-[#f4f5f7] overflow-hidden">
 
             {/* ──────────── SIDEBAR ──────────── */}
             <aside className={cn(
@@ -373,6 +375,7 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
 
             {/* ──────────── SEARCH OVERLAY ──────────── */}
             <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
-        </div>
+            </div>
+        </ConfirmProvider>
     );
 }

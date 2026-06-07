@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { cn } from '@/lib/utils';
 import { Plus, X, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 
@@ -67,6 +68,7 @@ export default function RateCardsIndex({ rateCards }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editData, setEditData] = useState<Partial<RateCard>>({});
+    const confirm = useConfirm();
 
     const categories = [...new Set(rateCards.map(r => r.category ?? 'Uncategorized'))];
 
@@ -124,7 +126,16 @@ export default function RateCardsIndex({ rateCards }: Props) {
                                                         className="p-1 text-gray-400 hover:text-indigo-600 rounded hover:bg-indigo-50 transition-colors">
                                                         <Edit2 size={13} />
                                                     </button>
-                                                    <button onClick={() => { if (confirm('Delete rate?')) router.delete(`/rate-cards/${r.id}`); }}
+                                                    <button onClick={async () => {
+                                                        const ok = await confirm({
+                                                            title: 'Delete rate?',
+                                                            description: 'This cannot be undone.',
+                                                            confirmText: 'Delete',
+                                                            variant: 'destructive',
+                                                        });
+                                                        if (!ok) return;
+                                                        router.delete(`/rate-cards/${r.id}`);
+                                                    }}
                                                         className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                                         <Trash2 size={13} />
                                                     </button>

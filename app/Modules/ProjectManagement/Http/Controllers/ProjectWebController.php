@@ -5,6 +5,7 @@ namespace App\Modules\ProjectManagement\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Modules\ProjectManagement\Models\Project;
 use App\Modules\ProjectManagement\Models\Task;
@@ -51,7 +52,10 @@ class ProjectWebController extends Controller
     public function create(Request $request)
     {
         $clients = Client::select('id', 'name')->orderBy('name')->get();
-        $members = User::select('id', 'name')->orderBy('name')->get();
+        $members = User::where('organization_id', $request->user()->organization_id)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Projects/Create', [
             'clients' => $clients,
@@ -68,15 +72,27 @@ class ProjectWebController extends Controller
         $data = $request->validate([
             'name'               => 'required|string|max:200',
             'description'        => 'nullable|string',
-            'client_id'          => 'nullable|uuid|exists:clients,id',
-            'status'             => 'required|in:planning,active,on_hold,completed,cancelled',
-            'priority'           => 'required|in:urgent,high,medium,low',
+            'client_id'          => [
+                'nullable',
+                'uuid',
+                Rule::exists('clients', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
+            'status'             => 'required|in:draft,planning,active,on_hold,completed,cancelled',
+            'priority'           => 'required|in:low,medium,high,critical',
             'start_date'         => 'nullable|date',
             'end_date'           => 'nullable|date',
             'budget'             => 'nullable|numeric|min:0',
-            'project_manager_id' => 'nullable|uuid|exists:users,id',
+            'project_manager_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
             'tags'               => 'nullable|array',
-            'type'               => 'nullable|string',
+            'type'               => 'required|in:seo,social_media,performance_ads,web_dev,app_dev,content,brand,whatsapp,email_marketing,ecommerce',
         ]);
 
         $project = Project::create([
@@ -103,7 +119,10 @@ class ProjectWebController extends Controller
     public function edit(Project $project)
     {
         $clients = Client::select('id', 'name')->orderBy('name')->get();
-        $members = User::select('id', 'name')->orderBy('name')->get();
+        $members = User::where('organization_id', request()->user()->organization_id)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Projects/Edit', [
             'project' => $project->load('client'),
@@ -117,14 +136,27 @@ class ProjectWebController extends Controller
         $data = $request->validate([
             'name'               => 'sometimes|string|max:200',
             'description'        => 'nullable|string',
-            'client_id'          => 'nullable|uuid|exists:clients,id',
-            'status'             => 'sometimes|in:planning,active,on_hold,completed,cancelled',
-            'priority'           => 'sometimes|in:urgent,high,medium,low',
+            'client_id'          => [
+                'nullable',
+                'uuid',
+                Rule::exists('clients', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
+            'status'             => 'sometimes|in:draft,planning,active,on_hold,completed,cancelled',
+            'priority'           => 'sometimes|in:low,medium,high,critical',
             'start_date'         => 'nullable|date',
             'end_date'           => 'nullable|date',
             'budget'             => 'nullable|numeric|min:0',
-            'project_manager_id' => 'nullable|uuid|exists:users,id',
+            'project_manager_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
             'tags'               => 'nullable|array',
+            'type'               => 'sometimes|in:seo,social_media,performance_ads,web_dev,app_dev,content,brand,whatsapp,email_marketing,ecommerce',
         ]);
 
         $project->update($data);

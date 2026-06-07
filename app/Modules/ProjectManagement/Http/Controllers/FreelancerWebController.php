@@ -8,6 +8,7 @@ use App\Modules\HR\Models\FreelancerAssignment;
 use App\Modules\ProjectManagement\Models\Project;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -103,8 +104,15 @@ class FreelancerWebController extends Controller
     {
         $this->authorizeOrg($freelancer);
 
+        $orgId = $request->user()->organization_id;
         $validated = $request->validate([
-            'project_id'  => 'nullable|uuid|exists:projects,id',
+            'project_id'  => [
+                'nullable',
+                'uuid',
+                Rule::exists('projects', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
             'agreed_rate' => 'nullable|numeric|min:0',
             'start_date'  => 'nullable|date',
             'end_date'    => 'nullable|date',

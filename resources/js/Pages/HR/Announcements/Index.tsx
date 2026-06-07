@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Pin, Trash2, Plus, X, Megaphone } from 'lucide-react';
 
 interface Announcement {
@@ -119,6 +120,8 @@ export default function AnnouncementsIndex({ announcements, canPost }: Props) {
 }
 
 function AnnouncementCard({ announcement: a, canPost, pinned }: { announcement: Announcement; canPost: boolean; pinned: boolean }) {
+    const confirm = useConfirm();
+
     return (
         <div className={cn('bg-white rounded-xl border p-5', pinned ? 'border-amber-200 bg-amber-50/30' : 'border-gray-200')}>
             <div className="flex items-start justify-between gap-3">
@@ -134,7 +137,16 @@ function AnnouncementCard({ announcement: a, canPost, pinned }: { announcement: 
                     )}
                 </div>
                 {canPost && (
-                    <button onClick={() => { if (confirm('Delete this announcement?')) router.delete(`/announcements/${a.id}`); }}
+                    <button onClick={async () => {
+                        const ok = await confirm({
+                            title: 'Delete this announcement?',
+                            description: 'This action cannot be undone.',
+                            confirmText: 'Delete',
+                            variant: 'destructive',
+                        });
+                        if (!ok) return;
+                        router.delete(`/announcements/${a.id}`);
+                    }}
                         className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors shrink-0">
                         <Trash2 size={13} />
                     </button>

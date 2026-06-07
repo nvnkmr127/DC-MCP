@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { ArrowLeft, Eye, Trash2 } from 'lucide-react';
 
 interface Article {
@@ -10,6 +11,8 @@ interface Article {
 interface Props { article: Article; }
 
 export default function KnowledgeBaseShow({ article }: Props) {
+    const confirm = useConfirm();
+
     return (
         <AppLayout title={article.title}>
             <Head title={article.title} />
@@ -18,7 +21,16 @@ export default function KnowledgeBaseShow({ article }: Props) {
                     <Link href="/knowledge-base" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 w-fit">
                         <ArrowLeft size={14} /> Knowledge Base
                     </Link>
-                    <button onClick={() => { if (confirm('Delete article?')) router.delete(`/knowledge-base/${article.id}`); }}
+                    <button onClick={async () => {
+                        const ok = await confirm({
+                            title: 'Delete article?',
+                            description: 'This action cannot be undone.',
+                            confirmText: 'Delete',
+                            variant: 'destructive',
+                        });
+                        if (!ok) return;
+                        router.delete(`/knowledge-base/${article.id}`);
+                    }}
                         className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                         <Trash2 size={14} />
                     </button>

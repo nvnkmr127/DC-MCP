@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { cn, formatDate, timeAgo, formatHours } from '@/lib/utils';
 import type { Task, Attachment, TimeEntry } from '@/types';
 import {
@@ -25,9 +26,9 @@ interface Props {
 
 export default function TaskShow({ task, projectTasks = [] }: Props) {
     const [activeTab, setActiveTab] = useState<'comments' | 'attachments' | 'time' | 'dependencies'>('comments');
-
-    // File upload
     const fileRef = useRef<HTMLInputElement>(null);
+
+    const confirm = useConfirm();
 
     function uploadFile(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -87,10 +88,15 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                         </Link>
                         <button
                             type="button"
-                            onClick={() => {
-                                if (confirm('Delete this task? This cannot be undone.')) {
-                                    router.delete(`/tasks/${task.id}`);
-                                }
+                            onClick={async () => {
+                                const ok = await confirm({
+                                    title: 'Delete this task?',
+                                    description: 'This cannot be undone.',
+                                    confirmText: 'Delete',
+                                    variant: 'destructive',
+                                });
+                                if (!ok) return;
+                                router.delete(`/tasks/${task.id}`);
                             }}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-red-200 rounded-lg text-red-600 hover:bg-red-50"
                         >
@@ -173,10 +179,15 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                                 </div>
                                                 <button
                                                     type="button"
-                                                    onClick={() => {
-                                                        if (confirm('Delete this attachment?')) {
-                                                            router.delete(`/attachments/${att.id}`, { preserveScroll: true });
-                                                        }
+                                                    onClick={async () => {
+                                                        const ok = await confirm({
+                                                            title: 'Delete this attachment?',
+                                                            description: 'This cannot be undone.',
+                                                            confirmText: 'Delete',
+                                                            variant: 'destructive',
+                                                        });
+                                                        if (!ok) return;
+                                                        router.delete(`/attachments/${att.id}`, { preserveScroll: true });
                                                     }}
                                                     className="p-1.5 text-gray-300 hover:text-red-500 transition-colors rounded opacity-0 group-hover:opacity-100 shrink-0"
                                                 >

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { cn, timeAgo } from '@/lib/utils';
 import { ArrowLeft, RefreshCw, Trash2, CheckCircle, XCircle, Save, Zap } from 'lucide-react';
 
@@ -34,6 +35,7 @@ const PROVIDER_ICONS: Record<string, string> = {
 
 export default function MCPDetail({ connection }: Props) {
     const [editing, setEditing] = useState(false);
+    const confirm = useConfirm();
     const form = useForm({
         label:        connection.label ?? '',
         is_active:    connection.is_active,
@@ -92,7 +94,16 @@ export default function MCPDetail({ connection }: Props) {
                             )}>
                             {editing ? 'Cancel Edit' : 'Edit'}
                         </button>
-                        <button onClick={() => { if (confirm('Remove this connection?')) router.delete(`/settings/mcp/${connection.id}`); }}
+                        <button onClick={async () => {
+                            const ok = await confirm({
+                                title: 'Remove this connection?',
+                                description: 'This will disconnect the integration.',
+                                confirmText: 'Remove',
+                                variant: 'destructive',
+                            });
+                            if (!ok) return;
+                            router.delete(`/settings/mcp/${connection.id}`);
+                        }}
                             className="ml-auto p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-red-50 transition-colors">
                             <Trash2 size={14} />
                         </button>

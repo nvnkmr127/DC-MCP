@@ -3,10 +3,23 @@
 namespace App\Shared\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 abstract class BaseModel extends Model
 {
+    private static array $columnCache = [];
+
+    private static function hasColumnCached(string $table, string $column): bool
+    {
+        $key = $table . ':' . $column;
+        if (!array_key_exists($key, self::$columnCache)) {
+            self::$columnCache[$key] = Schema::hasColumn($table, $column);
+        }
+        return self::$columnCache[$key];
+    }
+
     /**
      * Indicates if the IDs are auto-incrementing.
      *
@@ -46,18 +59,17 @@ abstract class BaseModel extends Model
             }
 
             // Set created_by if column exists and user is authenticated
-            if (config('database.default') !== 'sqlite' && \Schema::hasColumn($model->getTable(), 'created_by') && auth()->check()) {
-                $model->created_by = auth()->id();
+            if (config('database.default') !== 'sqlite' && self::hasColumnCached($model->getTable(), 'created_by') && Auth::check()) {
+                $model->created_by = Auth::id();
             }
         });
 
         // Automatically set updated_by on update
         static::updating(function (Model $model) {
             // Set updated_by if column exists and user is authenticated
-            if (config('database.default') !== 'sqlite' && \Schema::hasColumn($model->getTable(), 'updated_by') && auth()->check()) {
-                $model->updated_by = auth()->id();
+            if (config('database.default') !== 'sqlite' && self::hasColumnCached($model->getTable(), 'updated_by') && Auth::check()) {
+                $model->updated_by = Auth::id();
             }
         });
     }
 }
-

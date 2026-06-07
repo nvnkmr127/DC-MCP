@@ -21,6 +21,7 @@ interface Props {
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
+    critical: 'bg-rose-100 text-rose-700',
     urgent: 'bg-rose-100 text-rose-700',
     high:   'bg-orange-100 text-orange-700',
     medium: 'bg-blue-100 text-blue-700',

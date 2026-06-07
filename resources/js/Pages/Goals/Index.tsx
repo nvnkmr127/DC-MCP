@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Plus, X, Trash2, Flag } from 'lucide-react';
 
 const PERIODS = ['q1', 'q2', 'q3', 'q4', 'annual'] as const;
@@ -41,6 +42,7 @@ function progressTextColor(p: number) {
 function GoalCard({ goal }: { goal: Goal }) {
     const [editingKr, setEditingKr] = useState<string | null>(null);
     const [krValue, setKrValue] = useState('');
+    const confirm = useConfirm();
 
     function saveKr(krId: string) {
         router.patch(`/goals/${goal.id}/kr`, { kr_id: krId, current: krValue });
@@ -110,7 +112,16 @@ function GoalCard({ goal }: { goal: Goal }) {
                     <button onClick={() => router.patch(`/goals/${goal.id}`, { status: 'completed' })}
                         className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">Mark Complete</button>
                 )}
-                <button onClick={() => { if (confirm('Delete this goal?')) router.delete(`/goals/${goal.id}`); }}
+                <button onClick={async () => {
+                    const ok = await confirm({
+                        title: 'Delete this goal?',
+                        description: 'This action cannot be undone.',
+                        confirmText: 'Delete',
+                        variant: 'destructive',
+                    });
+                    if (!ok) return;
+                    router.delete(`/goals/${goal.id}`);
+                }}
                     className="text-xs text-gray-400 hover:text-rose-500 ml-auto">
                     <Trash2 className="w-3.5 h-3.5" />
                 </button>

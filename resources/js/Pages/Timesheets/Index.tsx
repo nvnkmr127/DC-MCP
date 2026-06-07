@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Play, Square, Clock } from 'lucide-react';
 interface TimeEntry {
     id: string; task_id: string | null; task_title: string | null; project_name: string | null;
     hours: number; description: string | null; logged_date: string;
-    billable: boolean; billing_status: string; timer_started_at: string | null;
+    is_billable: boolean; timer_started_at: string | null;
 }
 interface Props {
     entries: TimeEntry[]; weekStart: string; weekEnd: string;
@@ -52,7 +52,7 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
     const days = weekDays(weekStart);
     const [addOpen, setAddOpen] = useState(false);
     const [addDay, setAddDay] = useState<string | null>(null);
-    const form = useForm({ task_id: '', hours: '', description: '', logged_date: '', billable: 'true' });
+    const form = useForm({ task_id: '', hours: '', description: '', logged_date: '', is_billable: 'true' });
 
     const activeTimer = entries.find(e => e.timer_started_at);
 
@@ -69,7 +69,7 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
     function openAddFor(day: string) {
         setAddDay(day);
         form.setData('logged_date', day);
-        form.setData('billable', 'true');
+        form.setData('is_billable', 'true');
         setAddOpen(true);
     }
 
@@ -94,7 +94,7 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                             <button onClick={() => {
                                 if (tasks.length === 0) return;
                                 const taskId = tasks[0].id;
-                                router.post('/timesheets/timer/start', { task_id: taskId, billable: true });
+                                router.post('/timesheets/timer/start', { task_id: taskId, is_billable: true });
                             }} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700">
                                 <Play className="w-4 h-4" /> Start Timer
                             </button>
@@ -165,10 +165,10 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                                     <div className="px-2 py-1.5 space-y-1">
                                         {dayEntries.map(e => (
                                             <div key={e.id} className={cn('rounded text-[10px] px-1.5 py-1 border',
-                                                e.billable ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-gray-50 border-gray-100 text-gray-600'
+                                                e.is_billable ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-gray-50 border-gray-100 text-gray-600'
                                             )}>
                                                 <p className="font-medium truncate">{e.task_title ?? 'No task'}</p>
-                                                <p className="text-gray-400">{formatHours(e.hours)}{!e.billable && ' · NB'}</p>
+                                                <p className="text-gray-400">{formatHours(e.hours)}{!e.is_billable && ' · NB'}</p>
                                             </div>
                                         ))}
                                         <button onClick={() => openAddFor(day)}
@@ -193,7 +193,7 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                                     hours: form.data.hours,
                                     description: form.data.description,
                                     logged_date: form.data.logged_date,
-                                    is_billable: form.data.billable === 'true',
+                                    is_billable: form.data.is_billable === 'true',
                                 }, { onSuccess: () => setAddOpen(false) });
                             }} className="space-y-3">
                                 <div>
@@ -213,7 +213,7 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                                     </div>
                                     <div>
                                         <label className="text-xs text-gray-500 font-medium">Billable</label>
-                                        <select value={form.data.billable} onChange={e => form.setData('billable', e.target.value)}
+                                        <select value={form.data.is_billable} onChange={e => form.setData('is_billable', e.target.value)}
                                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500">
                                             <option value="true">Billable</option>
                                             <option value="false">Non-billable</option>

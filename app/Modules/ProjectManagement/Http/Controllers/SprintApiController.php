@@ -45,14 +45,14 @@ class SprintApiController extends Controller
 
     public function show(Request $request, Sprint $sprint): JsonResponse
     {
-        abort_if($sprint->project->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeProjectId($sprint->project_id);
         $sprint->load('project');
         return ApiResponse::success(new SprintResource($sprint));
     }
 
     public function update(Request $request, Sprint $sprint): JsonResponse
     {
-        abort_if($sprint->project->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeProjectId($sprint->project_id);
 
         $data = $request->validate([
             'name' => 'nullable|string|max:255',
@@ -70,7 +70,7 @@ class SprintApiController extends Controller
 
     public function destroy(Request $request, Sprint $sprint): JsonResponse
     {
-        abort_if($sprint->project->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeProjectId($sprint->project_id);
         abort_if($sprint->status === 'active', 422, 'Cannot delete an active sprint. Complete it first.');
         $sprint->delete();
         return ApiResponse::success(null, 'Sprint deleted successfully.');
@@ -78,7 +78,7 @@ class SprintApiController extends Controller
 
     public function start(Request $request, Sprint $sprint): JsonResponse
     {
-        abort_if($sprint->project->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeProjectId($sprint->project_id);
         abort_if($sprint->status !== 'planning', 422, 'Only a sprint in planning can be started.');
         $sprint = $this->sprintService->startSprint($sprint);
         return ApiResponse::success(new SprintResource($sprint), 'Sprint started successfully.');
@@ -86,7 +86,7 @@ class SprintApiController extends Controller
 
     public function complete(Request $request, Sprint $sprint): JsonResponse
     {
-        abort_if($sprint->project->organization_id !== $request->user()->organization_id, 403);
+        $this->authorizeProjectId($sprint->project_id);
         abort_if($sprint->status !== 'active', 422, 'Only an active sprint can be completed.');
 
         $action       = $request->input('unfinished_task_action', 'backlog');

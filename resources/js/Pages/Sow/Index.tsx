@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Plus, X, FileText, Trash2, ChevronDown, ChevronUp, Upload, CheckCircle2, RotateCcw, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -105,6 +106,7 @@ type DeliverableForm = { title: string; service_type: string; frequency: string;
 
 function SowCard({ sow, canReview }: { sow: Sow; canReview?: boolean }) {
     const [expanded, setExpanded] = useState(false);
+    const confirm = useConfirm();
     const [submitting, setSubmitting] = useState<Deliverable | null>(null);
     const [revNotes, setRevNotes] = useState<Record<string, string>>({});
 
@@ -134,7 +136,16 @@ function SowCard({ sow, canReview }: { sow: Sow; canReview?: boolean }) {
                         {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </button>
                     <button
-                        onClick={() => { if (confirm('Delete this SOW?')) router.delete(`/sow/${sow.id}`); }}
+                        onClick={async () => {
+                            const ok = await confirm({
+                                title: 'Delete this SOW?',
+                                description: 'This cannot be undone.',
+                                confirmText: 'Delete',
+                                variant: 'destructive',
+                            });
+                            if (!ok) return;
+                            router.delete(`/sow/${sow.id}`);
+                        }}
                         className="p-1 rounded hover:bg-rose-50 text-gray-400 hover:text-rose-500"
                     >
                         <Trash2 className="w-4 h-4" />

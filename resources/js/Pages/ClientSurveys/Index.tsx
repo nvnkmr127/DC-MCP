@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Plus, X, Smile, Trash2 } from 'lucide-react';
 
 interface Survey {
@@ -51,6 +52,7 @@ function SendModal({ clients, onClose }: { clients: Client[]; onClose: () => voi
 
 export default function ClientSurveysIndex({ surveys, clients, npsStats }: Props) {
     const [sendOpen, setSendOpen] = useState(false);
+    const confirm = useConfirm();
 
     const responded = surveys.filter(s => s.nps_score !== null);
 
@@ -111,7 +113,16 @@ export default function ClientSurveysIndex({ surveys, clients, npsStats }: Props
                                 <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize', STATUS_STYLES[s.status] ?? STATUS_STYLES.sent)}>
                                     {s.status}
                                 </span>
-                                <button onClick={() => { if (confirm('Delete survey?')) router.delete(`/client-surveys/${s.id}`); }}
+                                <button onClick={async () => {
+                                    const ok = await confirm({
+                                        title: 'Delete survey?',
+                                        description: 'This action cannot be undone.',
+                                        confirmText: 'Delete',
+                                        variant: 'destructive',
+                                    });
+                                    if (!ok) return;
+                                    router.delete(`/client-surveys/${s.id}`);
+                                }}
                                     className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                     <Trash2 size={13} />
                                 </button>

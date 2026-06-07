@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { cn, formatDate, formatCurrency, TASK_STATUS_COLORS, PRIORITY_COLORS } from '@/lib/utils';
 import type { Project, Task } from '@/types';
 import { Kanban, Plus, BarChart, Edit, ArrowLeft, Trash2 } from 'lucide-react';
@@ -26,6 +27,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function ProjectShow({ project }: Props) {
+    const confirm = useConfirm();
     return (
         <AppLayout>
             <Head title={project.name} />
@@ -68,10 +70,15 @@ export default function ProjectShow({ project }: Props) {
                                 <Edit size={14} /> Edit
                             </Link>
                             <button
-                                onClick={() => {
-                                    if (confirm('Delete this project? All tasks will also be deleted. This cannot be undone.')) {
-                                        router.delete(`/projects/${project.id}`);
-                                    }
+                                onClick={async () => {
+                                    const ok = await confirm({
+                                        title: 'Delete this project?',
+                                        description: 'All tasks will also be deleted. This cannot be undone.',
+                                        confirmText: 'Delete',
+                                        variant: 'destructive',
+                                    });
+                                    if (!ok) return;
+                                    router.delete(`/projects/${project.id}`);
                                 }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-red-200 rounded-lg text-red-600 hover:bg-red-50"
                             >

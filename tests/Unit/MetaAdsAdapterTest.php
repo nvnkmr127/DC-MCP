@@ -194,6 +194,8 @@ class MetaAdsAdapterTest extends TestCase
 
     public function test_handle_webhook_verification()
     {
+        config()->set('services.meta.webhook_verify_token', 'dummy-verify-token');
+
         $request = Request::create('/webhook/meta', 'GET', [
             'hub_mode' => 'subscribe',
             'hub_verify_token' => 'dummy-verify-token',

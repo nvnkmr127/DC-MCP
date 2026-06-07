@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import {
     Sparkles, CheckCircle2, XCircle, ChevronDown, ChevronUp,
     Clock, User, Tag, Calendar, AlertTriangle, Zap, History,
@@ -13,7 +14,7 @@ interface Suggestion {
     title: string;
     description: string | null;
     role_required: string | null;
-    priority: 'low' | 'medium' | 'high' | 'urgent';
+    priority: 'low' | 'medium' | 'high' | 'critical' | 'urgent';
     due_date: string | null;
     estimated_hours: number | null;
     status: 'pending' | 'approved' | 'rejected' | 'modified';
@@ -37,6 +38,7 @@ interface Props {
 }
 
 const PRIORITY_STYLES: Record<string, string> = {
+    critical: 'bg-red-100 text-red-700 border border-red-200',
     urgent: 'bg-red-100 text-red-700 border border-red-200',
     high:   'bg-orange-100 text-orange-700 border border-orange-200',
     medium: 'bg-blue-100 text-blue-700 border border-blue-200',
@@ -65,6 +67,7 @@ function SuggestionCard({
     const [rejectOpen, setRejectOpen]   = useState(false);
     const [rejectReason, setRejectReason] = useState('');
     const [processing, setProcessing]   = useState(false);
+    const needsProject = !suggestion.project?.id;
 
     const [form, setForm] = useState({
         title:       suggestion.title,
@@ -96,7 +99,7 @@ function SuggestionCard({
     return (
         <div className={cn(
             'bg-white rounded-xl border shadow-sm transition-all duration-200',
-            suggestion.priority === 'urgent' ? 'border-red-200' : 'border-gray-200',
+            suggestion.priority === 'critical' || suggestion.priority === 'urgent' ? 'border-red-200' : 'border-gray-200',
         )}>
             {/* Card Header */}
             <div className="p-4">
@@ -195,7 +198,7 @@ function SuggestionCard({
                                     value={form.priority}
                                     onChange={e => setForm(f => ({ ...f, priority: e.target.value as any }))}
                                 >
-                                    {['low', 'medium', 'high', 'urgent'].map(p => (
+                                    {['low', 'medium', 'high', 'critical'].map(p => (
                                         <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
                                     ))}
                                 </select>
@@ -216,7 +219,7 @@ function SuggestionCard({
                                     value={form.project_id}
                                     onChange={e => setForm(f => ({ ...f, project_id: e.target.value }))}
                                 >
-                                    <option value="">No project</option>
+                                    <option value="">Select project…</option>
                                     {projects.map(p => (
                                         <option key={p.id} value={p.id}>{p.name}</option>
                                     ))}
@@ -246,7 +249,7 @@ function SuggestionCard({
                     <>
                         <button
                             onClick={() => approve(form)}
-                            disabled={processing}
+                            disabled={processing || !form.project_id}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
                         >
                             <CheckCircle2 className="w-3.5 h-3.5" />
@@ -280,7 +283,7 @@ function SuggestionCard({
                     <>
                         <button
                             onClick={() => approve()}
-                            disabled={processing}
+                            disabled={processing || needsProject}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
                         >
                             <CheckCircle2 className="w-3.5 h-3.5" />
@@ -351,9 +354,16 @@ function HistoryCard({ suggestion }: { suggestion: Suggestion }) {
 
 export default function SuggestionsIndex({ pending, recent, stats, projects, clients }: Props) {
     const [bulkProcessing, setBulkProcessing] = useState(false);
+    const confirm = useConfirm();
 
-    const approveAll = () => {
-        if (!confirm(`Approve all ${stats.pending_count} pending suggestions?`)) return;
+    const approveAll = async () => {
+        const ok = await confirm({
+            title: `Approve all ${stats.pending_count} pending suggestions?`,
+            description: 'This will create tasks for every pending suggestion.',
+            confirmText: 'Approve all',
+            cancelText: 'Cancel',
+        });
+        if (!ok) return;
         setBulkProcessing(true);
         router.post('/suggestions/bulk-approve', {}, {
             preserveScroll: true,

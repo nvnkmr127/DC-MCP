@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Plus, X, Send, CheckCircle, XCircle, Eye, Trash2 } from 'lucide-react';
 
 interface LineItem { service: string; description: string; unit_price: number; quantity: number; frequency: string; }
@@ -135,6 +136,7 @@ function ProposalModal({ clients, onClose }: { clients: Client[]; onClose: () =>
 
 export default function ProposalsIndex({ proposals, stats, clients }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
+    const confirm = useConfirm();
 
     return (
         <AppLayout title="Proposals">
@@ -203,7 +205,16 @@ export default function ProposalsIndex({ proposals, stats, clients }: Props) {
                                         </button>
                                     </>
                                 )}
-                                <button onClick={() => { if (confirm('Delete proposal?')) router.delete(`/proposals/${p.id}`); }}
+                                <button onClick={async () => {
+                                    const ok = await confirm({
+                                        title: 'Delete proposal?',
+                                        description: 'This action cannot be undone.',
+                                        confirmText: 'Delete',
+                                        variant: 'destructive',
+                                    });
+                                    if (!ok) return;
+                                    router.delete(`/proposals/${p.id}`);
+                                }}
                                     className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                     <Trash2 size={14} />
                                 </button>

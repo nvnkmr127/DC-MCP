@@ -7,6 +7,7 @@ use App\Modules\ProjectManagement\Models\Client;
 use App\Shared\Helpers\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ClientApiController extends Controller
 {
@@ -26,15 +27,21 @@ class ClientApiController extends Controller
     {
         $data = $request->validate([
             'name'        => ['required', 'string', 'max:255'],
-            'email'       => ['nullable', 'email', 'max:255'],
+            'company'     => ['required', 'string', 'max:255'],
+            'email'       => ['required', 'email', 'max:255'],
             'phone'       => ['nullable', 'string', 'max:20'],
-            'company'     => ['nullable', 'string', 'max:255'],
             'website'     => ['nullable', 'url'],
             'industry'    => ['nullable', 'string', 'max:100'],
-            'tier'        => ['nullable', 'string', 'in:standard,premium,enterprise'],
+            'tier'        => ['nullable', 'string', 'in:basic,standard,premium,enterprise'],
             'status'      => ['nullable', 'string', 'in:active,inactive,prospect,churned'],
             'notes'       => ['nullable', 'string'],
-            'assigned_to' => ['nullable', 'uuid', 'exists:users,id'],
+            'assigned_to' => [
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
             'metadata'    => ['nullable', 'array'],
         ]);
 
@@ -49,9 +56,20 @@ class ClientApiController extends Controller
     public function show(Request $request, Client $client): JsonResponse
     {
         $this->authorizeOrg($client);
-        $client->load(['manager', 'projects' => fn ($q) => $q->paginate(50)]);
+        $client->load(['manager']);
+        $projects = $client->projects()->orderByDesc('updated_at')->paginate(50);
 
-        return ApiResponse::success($client);
+        $data = $client->toArray();
+        $data['projects'] = $projects->items();
+
+        return ApiResponse::success($data, 'Success', [
+            'projects_pagination' => [
+                'current_page' => $projects->currentPage(),
+                'last_page' => $projects->lastPage(),
+                'per_page' => $projects->perPage(),
+                'total' => $projects->total(),
+            ],
+        ]);
     }
 
     public function update(Request $request, Client $client): JsonResponse
@@ -60,15 +78,22 @@ class ClientApiController extends Controller
 
         $data = $request->validate([
             'name'        => ['sometimes', 'string', 'max:255'],
-            'email'       => ['sometimes', 'nullable', 'email'],
+            'company'     => ['sometimes', 'string', 'max:255'],
+            'email'       => ['sometimes', 'email', 'max:255'],
             'phone'       => ['sometimes', 'nullable', 'string', 'max:20'],
-            'company'     => ['sometimes', 'nullable', 'string', 'max:255'],
             'website'     => ['sometimes', 'nullable', 'url'],
             'industry'    => ['sometimes', 'nullable', 'string', 'max:100'],
-            'tier'        => ['sometimes', 'string', 'in:standard,premium,enterprise'],
+            'tier'        => ['sometimes', 'string', 'in:basic,standard,premium,enterprise'],
             'status'      => ['sometimes', 'string', 'in:active,inactive,prospect,churned'],
             'notes'       => ['sometimes', 'nullable', 'string'],
-            'assigned_to' => ['sometimes', 'nullable', 'uuid', 'exists:users,id'],
+            'assigned_to' => [
+                'sometimes',
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
             'metadata'    => ['sometimes', 'array'],
         ]);
 

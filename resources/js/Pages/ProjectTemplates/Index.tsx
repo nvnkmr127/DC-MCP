@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Plus, X, Play, Trash2, Layers } from 'lucide-react';
 
 interface TemplateTask { title: string; priority: string; offset_days: number; estimated_hours: number; }
@@ -133,6 +134,7 @@ function UseTemplateModal({ template, clients, onClose }: { template: Template; 
 export default function ProjectTemplatesIndex({ templates, clients }: Props) {
     const [newOpen, setNewOpen] = useState(false);
     const [useTemplate, setUseTemplate] = useState<Template | null>(null);
+    const confirm = useConfirm();
 
     return (
         <AppLayout title="Project Templates">
@@ -165,7 +167,16 @@ export default function ProjectTemplatesIndex({ templates, clients }: Props) {
                                     )}
                                     {t.description && <p className="text-xs text-gray-500 mt-1">{t.description}</p>}
                                 </div>
-                                <button onClick={() => { if (confirm('Delete template?')) router.delete(`/project-templates/${t.id}`); }}
+                                <button onClick={async () => {
+                                    const ok = await confirm({
+                                        title: 'Delete template?',
+                                        description: 'This action cannot be undone.',
+                                        confirmText: 'Delete',
+                                        variant: 'destructive',
+                                    });
+                                    if (!ok) return;
+                                    router.delete(`/project-templates/${t.id}`);
+                                }}
                                     className="p-1 text-gray-400 hover:text-rose-500 shrink-0">
                                     <Trash2 size={13} />
                                 </button>

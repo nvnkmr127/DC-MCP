@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Plus, X, Sparkles, Send, Trash2, ChevronDown } from 'lucide-react';
 
 interface Metric { key: string; value: string; }
@@ -96,6 +97,7 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [clientFilter, setClientFilter] = useState('');
+    const confirm = useConfirm();
 
     const filtered = clientFilter ? reports.filter(r => r.client?.id === clientFilter) : reports;
     const fmtMonth = (m: string) => new Date(m + '-01').toLocaleString('en-IN', { month: 'long', year: 'numeric' });
@@ -159,7 +161,16 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                                         className="p-1.5 text-gray-400 hover:text-gray-600">
                                         <ChevronDown size={14} className={cn('transition-transform', expandedId === r.id && 'rotate-180')} />
                                     </button>
-                                    <button onClick={() => { if (confirm('Delete report?')) router.delete(`/client-reports/${r.id}`); }}
+                                    <button onClick={async () => {
+                                        const ok = await confirm({
+                                            title: 'Delete report?',
+                                            description: 'This action cannot be undone.',
+                                            confirmText: 'Delete',
+                                            variant: 'destructive',
+                                        });
+                                        if (!ok) return;
+                                        router.delete(`/client-reports/${r.id}`);
+                                    }}
                                         className="p-1.5 text-gray-400 hover:text-rose-500">
                                         <Trash2 size={13} />
                                     </button>

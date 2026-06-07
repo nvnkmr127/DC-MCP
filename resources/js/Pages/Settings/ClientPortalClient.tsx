@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { cn } from '@/lib/utils';
 import { ArrowLeft, Plus, X, UserCheck, UserX, RotateCcw, Trash2, Share2 } from 'lucide-react';
 
@@ -111,6 +112,7 @@ function ShareModal({ clientId, projects, onClose }: { clientId: string; project
 export default function ClientPortalClientPage({ client, users, shares, projects }: Props) {
     const [inviteOpen, setInviteOpen] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
+    const confirm = useConfirm();
 
     return (
         <AppLayout title={`Portal — ${client.name}`}>
@@ -187,7 +189,16 @@ export default function ClientPortalClientPage({ client, users, shares, projects
                                         <p className="text-sm font-medium text-gray-900 capitalize">{s.shareable_type}</p>
                                         <p className="text-xs text-gray-400">{s.permissions.join(', ')} access{s.expires_at ? ` · expires ${new Date(s.expires_at).toLocaleDateString('en-IN')}` : ''}</p>
                                     </div>
-                                    <button onClick={() => { if (confirm('Revoke this share?')) router.delete(`/settings/client-portal/shares/${s.id}`); }}
+                                    <button onClick={async () => {
+                                        const ok = await confirm({
+                                            title: 'Revoke this share?',
+                                            description: 'The client will lose access immediately.',
+                                            confirmText: 'Revoke',
+                                            variant: 'destructive',
+                                        });
+                                        if (!ok) return;
+                                        router.delete(`/settings/client-portal/shares/${s.id}`);
+                                    }}
                                         className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                         <Trash2 size={13} />
                                     </button>

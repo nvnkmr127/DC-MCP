@@ -10,6 +10,7 @@ use App\Modules\ProjectManagement\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,19 +42,20 @@ class ProjectTemplateWebController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $orgId = $request->user()->organization_id;
         $validated = $request->validate([
             'name'                          => 'required|string|max:255',
             'service_type'                  => 'nullable|string|max:255',
             'description'                   => 'nullable|string',
             'tasks'                         => 'nullable|array',
             'tasks.*.title'                 => 'required|string|max:255',
-            'tasks.*.priority'              => 'nullable|in:urgent,high,medium,low',
+            'tasks.*.priority'              => 'nullable|in:critical,high,medium,low',
             'tasks.*.offset_days'           => 'nullable|integer|min:0',
             'tasks.*.estimated_hours'       => 'nullable|numeric|min:0',
         ]);
 
         ProjectTemplate::create([
-            'organization_id' => $request->user()->organization_id,
+            'organization_id' => $orgId,
             ...$validated,
             'tasks' => $validated['tasks'] ?? [],
         ]);
@@ -71,7 +73,7 @@ class ProjectTemplateWebController extends Controller
             'description'             => 'nullable|string',
             'tasks'                   => 'nullable|array',
             'tasks.*.title'           => 'required|string|max:255',
-            'tasks.*.priority'        => 'nullable|in:urgent,high,medium,low',
+            'tasks.*.priority'        => 'nullable|in:critical,high,medium,low',
             'tasks.*.offset_days'     => 'nullable|integer|min:0',
             'tasks.*.estimated_hours' => 'nullable|numeric|min:0',
         ]);
@@ -91,15 +93,21 @@ class ProjectTemplateWebController extends Controller
     {
         $this->authorizeOrg($template);
 
+        $orgId = $request->user()->organization_id;
         $validated = $request->validate([
-            'client_id'  => 'required|uuid|exists:clients,id',
+            'client_id'  => [
+                'required',
+                'uuid',
+                Rule::exists('clients', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
             'name'       => 'required|string|max:255',
             'start_date' => 'required|date',
         ]);
 
         $project = Project::create([
-            'organization_id' => $request->user()->organization_id,
-            'created_by'      => $request->user()->id,
+            'organization_id' => $orgId,
             'client_id'       => $validated['client_id'],
             'name'            => $validated['name'],
             'start_date'      => $validated['start_date'],
@@ -110,12 +118,13 @@ class ProjectTemplateWebController extends Controller
         $startDate = Carbon::parse($validated['start_date']);
         foreach ($template->tasks ?? [] as $taskDef) {
             $dueDate = $startDate->copy()->addDays($taskDef['offset_days'] ?? 0);
+            $priority = ($taskDef['priority'] ?? 'medium') === 'urgent' ? 'critical' : ($taskDef['priority'] ?? 'medium');
             Task::create([
-                'organization_id' => $request->user()->organization_id,
+                'organization_id' => $orgId,
                 'project_id'      => $project->id,
                 'created_by'      => $request->user()->id,
                 'title'           => $taskDef['title'],
-                'priority'        => $taskDef['priority'] ?? 'medium',
+                'priority'        => $priority,
                 'due_date'        => $dueDate,
                 'estimated_hours' => $taskDef['estimated_hours'] ?? null,
                 'status'          => 'todo',

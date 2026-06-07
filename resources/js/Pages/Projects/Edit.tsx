@@ -25,7 +25,7 @@ export default function ProjectEdit({ project, clients, members }: Props) {
         end_date:           project.end_date ?? '',
         budget:             project.budget > 0 ? String(project.budget) : '',
         project_manager_id: project.project_manager_id ?? '',
-        type:               project.type ?? 'general',
+        type:               project.type ?? 'seo',
         tags:               (project.tags ?? []).join(', '),
     });
 
@@ -108,8 +108,19 @@ export default function ProjectEdit({ project, clients, members }: Props) {
                                     onChange={e => form.setData('type', e.target.value)}
                                     className={inputCls}
                                 >
-                                    {['general','seo','ads','social','design','development','content','analytics'].map(t => (
-                                        <option key={t} value={t} className="capitalize">{t}</option>
+                                    {[
+                                        { v: 'seo', l: 'SEO' },
+                                        { v: 'social_media', l: 'Social Media' },
+                                        { v: 'performance_ads', l: 'Performance Ads' },
+                                        { v: 'web_dev', l: 'Web Dev' },
+                                        { v: 'app_dev', l: 'App Dev' },
+                                        { v: 'content', l: 'Content' },
+                                        { v: 'brand', l: 'Brand' },
+                                        { v: 'whatsapp', l: 'WhatsApp' },
+                                        { v: 'email_marketing', l: 'Email Marketing' },
+                                        { v: 'ecommerce', l: 'E-commerce' },
+                                    ].map(t => (
+                                        <option key={t.v} value={t.v}>{t.l}</option>
                                     ))}
                                 </select>
                             </div>
@@ -124,7 +135,7 @@ export default function ProjectEdit({ project, clients, members }: Props) {
                                     onChange={e => form.setData('status', e.target.value as any)}
                                     className={inputCls}
                                 >
-                                    {['planning','active','on_hold','completed','cancelled'].map(s => (
+                                    {['draft','planning','active','on_hold','completed','cancelled'].map(s => (
                                         <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
                                     ))}
                                 </select>
@@ -136,7 +147,7 @@ export default function ProjectEdit({ project, clients, members }: Props) {
                                     onChange={e => form.setData('priority', e.target.value as any)}
                                     className={inputCls}
                                 >
-                                    {['urgent','high','medium','low'].map(p => (
+                                    {['critical','high','medium','low'].map(p => (
                                         <option key={p} value={p} className="capitalize">{p}</option>
                                     ))}
                                 </select>

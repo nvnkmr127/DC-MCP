@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { cn, formatDate } from '@/lib/utils';
 import type { Client, Project } from '@/types';
 import { ArrowLeft, Edit, Trash2, Globe, Mail, Phone, Building2, ExternalLink, Plus, X, MessageSquare, Phone as PhoneIcon, AtSign, Star } from 'lucide-react';
@@ -162,6 +163,7 @@ export default function ClientShow({ client, communications }: Props) {
     const [activeTab, setActiveTab] = useState<'projects' | 'comms'>('projects');
     const [commOpen, setCommOpen] = useState(false);
     const [scoreOpen, setScoreOpen] = useState(false);
+    const confirm = useConfirm();
     const tier   = TIER_CONFIG[client.tier]   ?? TIER_CONFIG.standard;
     const status = STATUS_CONFIG[client.status] ?? STATUS_CONFIG.inactive;
 
@@ -239,10 +241,15 @@ export default function ClientShow({ client, communications }: Props) {
                                 <Edit size={13} /> Edit
                             </Link>
                             <button
-                                onClick={() => {
-                                    if (confirm('Delete this client? Their projects will not be deleted. This cannot be undone.')) {
-                                        router.delete(`/clients/${client.id}`);
-                                    }
+                                onClick={async () => {
+                                    const ok = await confirm({
+                                        title: 'Delete this client?',
+                                        description: 'Their projects will not be deleted. This cannot be undone.',
+                                        confirmText: 'Delete',
+                                        variant: 'destructive',
+                                    });
+                                    if (!ok) return;
+                                    router.delete(`/clients/${client.id}`);
                                 }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] border border-red-200 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
                             >
@@ -376,7 +383,16 @@ export default function ClientShow({ client, communications }: Props) {
                                             <div className="text-right shrink-0">
                                                 <p className="text-[11px] text-gray-400">{c.communicated_at}</p>
                                                 {c.logged_by && <p className="text-[10px] text-gray-300">{c.logged_by}</p>}
-                                                <button onClick={() => { if (confirm('Delete this entry?')) router.delete(`/client-communications/${c.id}`); }}
+                                                <button onClick={async () => {
+                                                    const ok = await confirm({
+                                                        title: 'Delete this entry?',
+                                                        description: 'This cannot be undone.',
+                                                        confirmText: 'Delete',
+                                                        variant: 'destructive',
+                                                    });
+                                                    if (!ok) return;
+                                                    router.delete(`/client-communications/${c.id}`);
+                                                }}
                                                     className="text-[10px] text-gray-300 hover:text-rose-400 mt-1">delete</button>
                                             </div>
                                         </div>

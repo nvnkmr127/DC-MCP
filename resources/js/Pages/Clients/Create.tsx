@@ -15,7 +15,7 @@ export default function ClientCreate() {
         website:  '',
         company:  '',
         industry: '',
-        tier:     'standard',
+        tier:     'basic',
         status:   'active',
         notes:    '',
     });
@@ -42,7 +42,7 @@ export default function ClientCreate() {
 
                         {/* Name */}
                         <div>
-                            <label className={labelCls}>Client / Company Name <span className="text-red-400">*</span></label>
+                            <label className={labelCls}>Client Name <span className="text-red-400">*</span></label>
                             <input
                                 type="text"
                                 value={form.data.name}
@@ -54,16 +54,30 @@ export default function ClientCreate() {
                             {form.errors.name && <p className="mt-1.5 text-[11px] text-red-500 font-medium">{form.errors.name}</p>}
                         </div>
 
+                        <div>
+                            <label className={labelCls}>Company <span className="text-red-400">*</span></label>
+                            <input
+                                type="text"
+                                value={form.data.company}
+                                onChange={e => form.setData('company', e.target.value)}
+                                className={cn(inputCls, form.errors.company && 'border-red-300 bg-red-50')}
+                                placeholder="Acme, Inc."
+                                required
+                            />
+                            {form.errors.company && <p className="mt-1.5 text-[11px] text-red-500 font-medium">{form.errors.company}</p>}
+                        </div>
+
                         {/* Email + Phone */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className={labelCls}>Email</label>
+                                <label className={labelCls}>Email <span className="text-red-400">*</span></label>
                                 <input
                                     type="email"
                                     value={form.data.email}
                                     onChange={e => form.setData('email', e.target.value)}
                                     className={cn(inputCls, form.errors.email && 'border-red-300 bg-red-50')}
                                     placeholder="contact@acme.com"
+                                    required
                                 />
                                 {form.errors.email && <p className="mt-1.5 text-[11px] text-red-500 font-medium">{form.errors.email}</p>}
                             </div>
@@ -108,6 +122,7 @@ export default function ClientCreate() {
                             <div>
                                 <label className={labelCls}>Tier</label>
                                 <select value={form.data.tier} onChange={e => form.setData('tier', e.target.value)} className={inputCls}>
+                                    <option value="basic">Basic</option>
                                     <option value="standard">Standard</option>
                                     <option value="premium">Premium</option>
                                     <option value="enterprise">Enterprise</option>

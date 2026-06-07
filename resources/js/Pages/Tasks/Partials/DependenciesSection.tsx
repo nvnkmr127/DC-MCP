@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, router } from '@inertiajs/react';
 import { X, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useConfirm } from '@/hooks/useConfirm';
 
 export interface TaskDep {
     id: string;
@@ -23,6 +24,7 @@ export const DependenciesSection: React.FC<DependenciesSectionProps> = ({
     projectTasks = [],
 }) => {
     const [depSearch, setDepSearch] = useState('');
+    const confirm = useConfirm();
 
     const availableDeps = projectTasks.filter(t =>
         t.id !== taskId &&
@@ -53,10 +55,15 @@ export const DependenciesSection: React.FC<DependenciesSectionProps> = ({
                             </div>
                             <button
                                 type="button"
-                                onClick={() => { 
-                                    if (confirm('Remove this dependency?')) {
-                                        router.delete(`/tasks/${taskId}/dependencies/${dep.id}`, { preserveScroll: true }); 
-                                    }
+                                onClick={async () => {
+                                    const ok = await confirm({
+                                        title: 'Remove this dependency?',
+                                        description: 'This will unblock the task if no other dependencies remain.',
+                                        confirmText: 'Remove',
+                                        variant: 'destructive',
+                                    });
+                                    if (!ok) return;
+                                    router.delete(`/tasks/${taskId}/dependencies/${dep.id}`, { preserveScroll: true });
                                 }}
                                 className="p-1.5 text-gray-300 hover:text-rose-500 transition-colors rounded opacity-0 group-hover:opacity-100 shrink-0"
                             >

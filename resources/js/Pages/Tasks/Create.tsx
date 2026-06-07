@@ -20,7 +20,7 @@ export default function TaskCreate({ projects, members, defaults }: Props) {
         due_date:        '',
         estimated_hours: '',
         tags:            '',
-        type:            'task',
+        type:            'other',
     });
 
     function submit(e: React.FormEvent) {
@@ -95,12 +95,23 @@ export default function TaskCreate({ projects, members, defaults }: Props) {
                                     onChange={e => form.setData('type', e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
-                                    <option value="task">Task</option>
-                                    <option value="bug">Bug</option>
-                                    <option value="feature">Feature</option>
-                                    <option value="improvement">Improvement</option>
-                                    <option value="content">Content</option>
-                                    <option value="research">Research</option>
+                                    {[
+                                        { v: 'feature', l: 'Feature' },
+                                        { v: 'bug', l: 'Bug' },
+                                        { v: 'content', l: 'Content' },
+                                        { v: 'design', l: 'Design' },
+                                        { v: 'research', l: 'Research' },
+                                        { v: 'review', l: 'Review' },
+                                        { v: 'meeting', l: 'Meeting' },
+                                        { v: 'report', l: 'Report' },
+                                        { v: 'campaign_setup', l: 'Campaign Setup' },
+                                        { v: 'ad_creative', l: 'Ad Creative' },
+                                        { v: 'seo_audit', l: 'SEO Audit' },
+                                        { v: 'email_sequence', l: 'Email Sequence' },
+                                        { v: 'other', l: 'Other' },
+                                    ].map(t => (
+                                        <option key={t.v} value={t.v}>{t.l}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -126,7 +137,7 @@ export default function TaskCreate({ projects, members, defaults }: Props) {
                                     onChange={e => form.setData('priority', e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
-                                    {['urgent','high','medium','low'].map(p => (
+                                    {['critical','high','medium','low'].map(p => (
                                         <option key={p} value={p} className="capitalize">{p}</option>
                                     ))}
                                 </select>

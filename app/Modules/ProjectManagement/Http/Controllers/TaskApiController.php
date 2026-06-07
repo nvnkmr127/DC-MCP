@@ -13,6 +13,7 @@ use App\Shared\Helpers\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 
 // Allowed status transitions: from → [allowed targets]
@@ -24,7 +25,7 @@ const TASK_STATUS_TRANSITIONS = [
     'in_review'   => ['in_progress', 'done', 'blocked', 'cancelled'],
     'blocked'     => ['in_progress', 'todo', 'cancelled'],
     'done'        => ['in_progress', 'cancelled'],
-    'cancelled'   => ['todo', 'backlog'],
+    'cancelled'   => [],
 ];
 
 class TaskApiController extends Controller
@@ -78,17 +79,39 @@ class TaskApiController extends Controller
     public function update(Request $request, Task $task): JsonResponse
     {
         $this->authorizeOrg($task);
+        $orgId = $request->user()->organization_id;
+        $projectId = $task->project_id;
 
         $data = $request->validate([
-            'sprint_id' => 'nullable|uuid|exists:sprints,id',
-            'milestone_id' => 'nullable|uuid|exists:milestones,id',
-            'parent_task_id' => 'nullable|uuid|exists:tasks,id',
+            'sprint_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('sprints', 'id')->where('project_id', $projectId),
+            ],
+            'milestone_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('milestones', 'id')->where('project_id', $projectId),
+            ],
+            'parent_task_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('tasks', 'id')
+                    ->where('organization_id', $orgId)
+                    ->where('project_id', $projectId),
+            ],
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'type' => 'nullable|in:task,feature,bug,content,design,research,review,meeting,report,campaign_setup,ad_creative,seo_audit,email_sequence,other',
+            'type' => 'nullable|in:feature,bug,content,design,research,review,meeting,report,campaign_setup,ad_creative,seo_audit,email_sequence,other',
             'status' => 'nullable|in:backlog,todo,in_progress,in_review,blocked,done,cancelled',
             'priority' => 'nullable|in:low,medium,high,critical',
-            'assigned_to' => 'nullable|uuid|exists:users,id',
+            'assigned_to' => [
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
             'role_required' => 'nullable|in:ceo,project_manager,analyst,marketer,developer,designer,copywriter',
             'due_date' => 'nullable|date',
             'estimated_hours' => 'nullable|numeric|min:0',
@@ -126,7 +149,7 @@ class TaskApiController extends Controller
         $this->authorizeOrg($task);
 
         if ($task->subtasks()->exists()) {
-            return ApiResponse::error('Cannot delete a task that has subtasks. Delete or reassign subtasks first.', 422);
+            return ApiResponse::error('Cannot delete a task that has subtasks. Delete or reassign subtasks first.', [], 422);
         }
 
         Log::warning('Task deleted', [
@@ -161,6 +184,8 @@ class TaskApiController extends Controller
 
     public function logTime(Request $request, Task $task): JsonResponse
     {
+        $this->authorizeOrg($task);
+
         $request->validate([
             'hours' => 'required|numeric|min:0.01',
             'description' => 'required|string|max:1000',
@@ -182,9 +207,18 @@ class TaskApiController extends Controller
     {
         $this->authorizeOrg($task);
 
+        $projectId = $task->project_id;
         $data = $request->validate([
-            'sprint_id' => 'nullable|uuid|exists:sprints,id',
-            'milestone_id' => 'nullable|uuid|exists:milestones,id',
+            'sprint_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('sprints', 'id')->where('project_id', $projectId),
+            ],
+            'milestone_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('milestones', 'id')->where('project_id', $projectId),
+            ],
         ]);
 
         if (array_key_exists('sprint_id', $data)) {

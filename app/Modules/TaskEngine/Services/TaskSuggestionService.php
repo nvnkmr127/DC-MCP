@@ -61,10 +61,23 @@ class TaskSuggestionService
         return DB::transaction(function () use ($suggestion, $approver, $overrides) {
             $title       = $overrides['title']       ?? $suggestion->title;
             $description = $overrides['description'] ?? $suggestion->description;
-            $priority    = $overrides['priority']    ?? $suggestion->priority;
+            $priority    = $this->normalizePriority($overrides['priority'] ?? $suggestion->priority);
             $dueDate     = $overrides['due_date']    ?? $suggestion->due_date?->toDateString();
             $projectId   = $overrides['project_id']  ?? $suggestion->project_id;
             $roleRequired = $suggestion->role_required;
+
+            if (!$projectId) {
+                throw new \InvalidArgumentException('project_id is required to create a task from a suggestion.');
+            }
+
+            $project = Project::where('organization_id', $suggestion->organization_id)
+                ->where('id', $projectId)
+                ->whereNull('deleted_at')
+                ->first();
+
+            if (!$project) {
+                throw new \InvalidArgumentException('project_id is invalid or not accessible.');
+            }
 
             // Find best assignee
             $assignee = null;
@@ -75,10 +88,10 @@ class TaskSuggestionService
             // Create the actual task
             $task = Task::create([
                 'organization_id' => $suggestion->organization_id,
-                'project_id'      => $projectId,
+                'project_id'      => $project->id,
                 'title'           => $title,
                 'description'     => $description,
-                'type'            => 'task',
+                'type'            => 'other',
                 'status'          => 'todo',
                 'priority'        => $priority,
                 'role_required'   => $roleRequired,
@@ -193,7 +206,10 @@ class TaskSuggestionService
 
     private function normalizePriority(string $priority): string
     {
-        return in_array($priority, ['low', 'medium', 'high', 'urgent']) ? $priority : 'medium';
+        if ($priority === 'urgent') {
+            return 'critical';
+        }
+        return in_array($priority, ['low', 'medium', 'high', 'critical'], true) ? $priority : 'medium';
     }
 
     private function parseDate(?string $date): ?string

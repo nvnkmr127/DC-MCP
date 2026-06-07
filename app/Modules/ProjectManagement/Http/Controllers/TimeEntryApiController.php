@@ -81,8 +81,8 @@ class TimeEntryApiController extends Controller
             if (isset($data['hours'])) {
                 $diff = (float) $data['hours'] - $oldHours;
                 if ($diff !== 0.0) {
-                    $fresh->task()->lockForUpdate()->first();
-                    $fresh->task()->increment('actual_hours', $diff);
+                    $task = $fresh->task()->lockForUpdate()->first();
+                    $task?->increment('actual_hours', $diff);
                 }
             }
 
@@ -97,7 +97,8 @@ class TimeEntryApiController extends Controller
         $this->authorizeOrg($timeEntry);
 
         DB::transaction(function () use ($timeEntry) {
-            $timeEntry->task()->decrement('actual_hours', $timeEntry->hours);
+            $task = $timeEntry->task()->lockForUpdate()->first();
+            $task?->decrement('actual_hours', $timeEntry->hours);
             $timeEntry->delete();
         });
 

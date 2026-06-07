@@ -8,6 +8,7 @@ use App\Modules\ProjectManagement\Models\Task;
 use App\Modules\ProjectManagement\Models\TimeEntry;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -42,14 +43,13 @@ class TimesheetWebController extends Controller
                 'project_name'    => $e->task?->project?->name,
                 'hours'           => (float) $e->hours,
                 'description'     => $e->description,
-                'logged_date'     => $e->logged_date,
-                'billable'        => $e->billable ?? true,
-                'billing_status'  => $e->billing_status ?? 'unbilled',
+                'logged_date'     => $e->logged_date?->toDateString(),
+                'is_billable'     => (bool) $e->is_billable,
                 'timer_started_at'=> $e->timer_started_at?->toISOString(),
             ]);
 
         $totalHours    = $entries->sum('hours');
-        $billableHours = $entries->where('billable', true)->sum('hours');
+        $billableHours = $entries->where('is_billable', true)->sum('hours');
         $utilization   = $totalHours > 0 ? round(($billableHours / $totalHours) * 100) : 0;
 
         $teamMembers = [];
@@ -84,22 +84,40 @@ class TimesheetWebController extends Controller
 
     public function startTimer(Request $request): RedirectResponse
     {
+        $orgId = $request->user()->organization_id;
+
         $validated = $request->validate([
-            'task_id'     => 'required|uuid',
+            'task_id'     => [
+                'required',
+                'uuid',
+                Rule::exists('tasks', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
             'description' => 'nullable|string|max:500',
-            'billable'    => 'boolean',
+            'is_billable' => 'boolean',
         ]);
 
+        $hasActive = TimeEntry::where('organization_id', $orgId)
+            ->where('user_id', $request->user()->id)
+            ->whereNotNull('timer_started_at')
+            ->exists();
+
+        abort_if($hasActive, 422, 'A timer is already running.');
+
+        $task = Task::where('id', $validated['task_id'])
+            ->where('organization_id', $orgId)
+            ->firstOrFail();
+
         TimeEntry::create([
-            'organization_id'  => $request->user()->organization_id,
+            'organization_id'  => $orgId,
             'user_id'          => $request->user()->id,
             'task_id'          => $validated['task_id'],
-            'project_id'       => Task::find($validated['task_id'])?->project_id,
+            'project_id'       => $task->project_id,
             'hours'            => 0,
             'description'      => $validated['description'] ?? null,
             'logged_date'      => now()->toDateString(),
-            'billable'         => $validated['billable'] ?? true,
-            'billing_status'   => 'unbilled',
+            'is_billable'      => $validated['is_billable'] ?? true,
             'timer_started_at' => now(),
         ]);
 
@@ -108,18 +126,24 @@ class TimesheetWebController extends Controller
 
     public function stopTimer(Request $request, TimeEntry $timeEntry): RedirectResponse
     {
+        $this->authorizeOrg($timeEntry);
         abort_if($timeEntry->user_id !== $request->user()->id, 403);
         abort_if(!$timeEntry->timer_started_at, 422);
 
         $minutes = now()->diffInMinutes($timeEntry->timer_started_at);
         $hours   = round($minutes / 60, 2);
 
+        $oldHours = (float) $timeEntry->hours;
+
         $timeEntry->update([
             'hours'            => max(0.25, $hours),
             'timer_started_at' => null,
         ]);
 
-        $timeEntry->task?->increment('actual_hours', $timeEntry->hours);
+        $diff = (float) $timeEntry->hours - $oldHours;
+        if ($diff > 0) {
+            $timeEntry->task?->increment('actual_hours', $diff);
+        }
 
         return back()->with('success', 'Timer stopped. ' . number_format($hours, 2) . 'h logged.');
     }

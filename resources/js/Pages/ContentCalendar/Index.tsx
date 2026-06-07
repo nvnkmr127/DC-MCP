@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import {
     PenTool, Plus, Filter, Globe, FileText,
     Megaphone, Calendar, Clock, CheckCircle2, Eye, Edit3,
@@ -182,6 +183,7 @@ function CreateModal({ clients, projects, onClose }: {
 
 function ContentCard({ item }: { item: ContentItem }) {
     const [open, setOpen] = useState(false);
+    const confirm = useConfirm();
     const TypeIcon = TYPE_ICONS[item.type];
     const today = new Date().toISOString().split('T')[0];
     const isOverdue = item.due_date && item.due_date < today && !['published', 'cancelled'].includes(item.status);
@@ -268,7 +270,16 @@ function ContentCard({ item }: { item: ContentItem }) {
                             </a>
                         )}
                         <button
-                            onClick={() => { if (confirm('Delete this content item?')) router.delete(`/content/${item.id}`, { preserveScroll: true }); }}
+                            onClick={async () => {
+                                const ok = await confirm({
+                                    title: 'Delete this content item?',
+                                    description: 'This cannot be undone.',
+                                    confirmText: 'Delete',
+                                    variant: 'destructive',
+                                });
+                                if (!ok) return;
+                                router.delete(`/content/${item.id}`, { preserveScroll: true });
+                            }}
                             className="flex items-center gap-1 text-xs px-2.5 py-1 text-red-400 hover:text-red-600 ml-auto"
                         >
                             <Trash2 className="w-3 h-3" /> Delete

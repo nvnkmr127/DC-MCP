@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { cn } from '@/lib/utils';
 import { Plus, X, RotateCcw, Pause, Play, Trash2 } from 'lucide-react';
 
@@ -123,6 +124,7 @@ function AddRuleModal({ onClose }: { onClose: () => void }) {
 
 export default function RecurringTasksIndex({ rules }: Props) {
     const [addOpen, setAddOpen] = useState(false);
+    const confirm = useConfirm();
 
     return (
         <AppLayout>
@@ -181,7 +183,16 @@ export default function RecurringTasksIndex({ rules }: Props) {
                                             )} title={rule.is_active ? 'Pause' : 'Resume'}>
                                             {rule.is_active ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                                         </button>
-                                        <button onClick={() => { if (confirm('Delete this rule?')) router.delete(`/recurring-tasks/${rule.id}`); }}
+                                        <button onClick={async () => {
+                                            const ok = await confirm({
+                                                title: 'Delete this rule?',
+                                                description: 'This cannot be undone.',
+                                                confirmText: 'Delete',
+                                                variant: 'destructive',
+                                            });
+                                            if (!ok) return;
+                                            router.delete(`/recurring-tasks/${rule.id}`);
+                                        }}
                                             className="p-1.5 rounded-lg border border-gray-200 text-gray-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-colors">
                                             <Trash2 className="w-3.5 h-3.5" />
                                         </button>

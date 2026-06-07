@@ -19,7 +19,7 @@ export default function ProjectCreate({ clients, members }: Props) {
         end_date:           '',
         budget:             '',
         project_manager_id: '',
-        type:               'general',
+        type:               'seo',
         tags:               '',
     });
 
@@ -93,14 +93,20 @@ export default function ProjectCreate({ clients, members }: Props) {
                                     onChange={e => form.setData('type', e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
-                                    <option value="general">General</option>
-                                    <option value="seo">SEO</option>
-                                    <option value="ads">Paid Ads</option>
-                                    <option value="social">Social Media</option>
-                                    <option value="design">Design</option>
-                                    <option value="development">Development</option>
-                                    <option value="content">Content</option>
-                                    <option value="analytics">Analytics</option>
+                                    {[
+                                        { v: 'seo', l: 'SEO' },
+                                        { v: 'social_media', l: 'Social Media' },
+                                        { v: 'performance_ads', l: 'Performance Ads' },
+                                        { v: 'web_dev', l: 'Web Dev' },
+                                        { v: 'app_dev', l: 'App Dev' },
+                                        { v: 'content', l: 'Content' },
+                                        { v: 'brand', l: 'Brand' },
+                                        { v: 'whatsapp', l: 'WhatsApp' },
+                                        { v: 'email_marketing', l: 'Email Marketing' },
+                                        { v: 'ecommerce', l: 'E-commerce' },
+                                    ].map(t => (
+                                        <option key={t.v} value={t.v}>{t.l}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -113,7 +119,7 @@ export default function ProjectCreate({ clients, members }: Props) {
                                     onChange={e => form.setData('status', e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
-                                    {['planning','active','on_hold','completed','cancelled'].map(s => (
+                                    {['draft','planning','active','on_hold','completed','cancelled'].map(s => (
                                         <option key={s} value={s}>{s.replace('_', ' ')}</option>
                                     ))}
                                 </select>
@@ -126,7 +132,7 @@ export default function ProjectCreate({ clients, members }: Props) {
                                     onChange={e => form.setData('priority', e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 >
-                                    {['urgent','high','medium','low'].map(p => (
+                                    {['critical','high','medium','low'].map(p => (
                                         <option key={p} value={p} className="capitalize">{p}</option>
                                     ))}
                                 </select>

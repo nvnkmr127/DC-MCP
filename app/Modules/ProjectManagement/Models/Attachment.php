@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use App\Modules\Auth\Models\User;
+use App\Shared\Traits\HasOrganization;
 
 class Attachment extends Model
 {
-    use HasUuids;
+    use HasUuids, HasOrganization;
 
     protected $table = 'attachments';
 
@@ -40,7 +41,14 @@ class Attachment extends Model
 
     public function getUrlAttribute(): string
     {
-        return Storage::disk($this->storage_disk)->temporaryUrl($this->storage_path, now()->addHours(2));
+        $disk = Storage::disk($this->storage_disk);
+        assert($disk instanceof \Illuminate\Filesystem\FilesystemAdapter);
+
+        if (method_exists($disk, 'temporaryUrl')) {
+            return $disk->temporaryUrl($this->storage_path, now()->addHours(2));
+        }
+
+        return $disk->url($this->storage_path);
     }
 
     public function getOriginalFilenameAttribute(): string

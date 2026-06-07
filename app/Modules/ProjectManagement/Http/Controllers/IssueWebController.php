@@ -9,6 +9,7 @@ use App\Modules\ProjectManagement\Models\Issue;
 use App\Modules\ProjectManagement\Models\Task;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -60,14 +61,31 @@ class IssueWebController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $orgId = $request->user()->organization_id;
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
             'type'        => 'required|in:bug,enhancement,question,feedback',
             'priority'    => 'required|in:low,medium,high,critical',
-            'client_id'   => 'nullable|uuid|exists:clients,id',
-            'project_id'  => 'nullable|uuid|exists:projects,id',
-            'assigned_to' => 'nullable|uuid|exists:users,id',
+            'client_id'   => [
+                'nullable',
+                'uuid',
+                Rule::exists('clients', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
+            'project_id'  => [
+                'nullable',
+                'uuid',
+                Rule::exists('projects', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
+            'assigned_to' => [
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')->where('organization_id', $orgId)->whereNull('deleted_at'),
+            ],
             'source'      => 'nullable|in:internal,client_portal,email,call',
         ]);
 
@@ -84,12 +102,17 @@ class IssueWebController extends Controller
     {
         $this->authorizeOrg($issue);
 
+        $orgId = $request->user()->organization_id;
         $validated = $request->validate([
             'title'       => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'status'      => 'sometimes|in:open,in_progress,resolved,closed',
             'priority'    => 'sometimes|in:low,medium,high,critical',
-            'assigned_to' => 'nullable|uuid|exists:users,id',
+            'assigned_to' => [
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')->where('organization_id', $orgId)->whereNull('deleted_at'),
+            ],
             'resolution'  => 'nullable|string',
         ]);
 
@@ -113,8 +136,20 @@ class IssueWebController extends Controller
         $this->authorizeOrg($issue);
 
         $validated = $request->validate([
-            'project_id' => 'required|uuid|exists:projects,id',
+            'project_id' => [
+                'required',
+                'uuid',
+                Rule::exists('projects', 'id')
+                    ->where('organization_id', $request->user()->organization_id)
+                    ->whereNull('deleted_at'),
+            ],
         ]);
+
+        $type = match ($issue->type) {
+            'bug' => 'bug',
+            'enhancement' => 'feature',
+            default => 'other',
+        };
 
         $task = Task::create([
             'organization_id' => $request->user()->organization_id,
@@ -122,7 +157,8 @@ class IssueWebController extends Controller
             'project_id'      => $validated['project_id'],
             'title'           => $issue->title,
             'description'     => $issue->description,
-            'priority'        => $issue->priority === 'critical' ? 'urgent' : $issue->priority,
+            'type'            => $type,
+            'priority'        => $issue->priority,
             'status'          => 'todo',
         ]);
 

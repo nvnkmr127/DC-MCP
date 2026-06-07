@@ -22,7 +22,7 @@ class CapacityWebController extends Controller
                     $q->whereIn('status', ['todo', 'in_progress', 'in_review']),
                 'assignedTasks as urgent_tasks' => fn($q) =>
                     $q->whereIn('status', ['todo', 'in_progress', 'in_review'])
-                      ->where('priority', 'urgent'),
+                      ->where('priority', 'critical'),
                 'assignedTasks as overdue_tasks' => fn($q) =>
                     $q->whereIn('status', ['todo', 'in_progress', 'in_review'])
                       ->whereDate('due_date', '<', now()),
@@ -49,7 +49,7 @@ class CapacityWebController extends Controller
         $activeTasks = Task::where('organization_id', $orgId)
             ->whereIn('status', ['todo', 'in_progress', 'in_review'])
             ->with('assignee:id,name')
-            ->select('id', 'title', 'status', 'priority', 'due_date', 'assigned_to', 'client_id', 'project_id')
+            ->select('id', 'title', 'status', 'priority', 'due_date', 'assigned_to', 'project_id')
             ->orderBy('due_date')
             ->limit(100)
             ->get()

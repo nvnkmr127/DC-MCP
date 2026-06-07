@@ -7,6 +7,7 @@ use App\Modules\Auth\Models\User;
 use App\Modules\HR\Models\PerformanceReview;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -62,8 +63,13 @@ class PerformanceReviewWebController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $orgId = $request->user()->organization_id;
         $validated = $request->validate([
-            'reviewee_id'           => 'required|uuid|exists:users,id',
+            'reviewee_id'           => [
+                'required',
+                'uuid',
+                Rule::exists('users', 'id')->where('organization_id', $orgId)->whereNull('deleted_at'),
+            ],
             'period'                => 'required|in:q1,q2,q3,q4,annual',
             'year'                  => 'required|integer|min:2020|max:2099',
             'overall_rating'        => 'nullable|integer|min:1|max:5',

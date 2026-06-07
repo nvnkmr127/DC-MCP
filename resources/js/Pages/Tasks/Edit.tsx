@@ -124,7 +124,7 @@ export default function TaskEdit({ task, projects, members }: Props) {
                                     onChange={e => form.setData('priority', e.target.value as any)}
                                     className={inputCls}
                                 >
-                                    {['urgent','high','medium','low'].map(p => (
+                                    {['critical','high','medium','low'].map(p => (
                                         <option key={p} value={p} className="capitalize">{p}</option>
                                     ))}
                                 </select>

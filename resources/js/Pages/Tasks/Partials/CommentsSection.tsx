@@ -1,6 +1,7 @@
 import React from 'react';
 import { useForm, router } from '@inertiajs/react';
 import type { Comment } from '@/types';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Send, Trash2 } from 'lucide-react';
 import { timeAgo } from '@/lib/utils';
 
@@ -10,6 +11,7 @@ interface CommentsSectionProps {
 }
 
 export const CommentsSection: React.FC<CommentsSectionProps> = ({ taskId, comments }) => {
+    const confirm = useConfirm();
     const commentForm = useForm({ body: '' });
 
     function submitComment(e: React.FormEvent) {
@@ -36,10 +38,15 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ taskId, commen
                             <span className="text-xs text-gray-400">{timeAgo(comment.created_at)}</span>
                             <button
                                 type="button"
-                                onClick={() => {
-                                    if (confirm('Delete this comment?')) {
-                                        router.delete(`/tasks/${taskId}/comments/${comment.id}`, { preserveScroll: true });
-                                    }
+                                onClick={async () => {
+                                    const ok = await confirm({
+                                        title: 'Delete this comment?',
+                                        description: 'This cannot be undone.',
+                                        confirmText: 'Delete',
+                                        variant: 'destructive',
+                                    });
+                                    if (!ok) return;
+                                    router.delete(`/tasks/${taskId}/comments/${comment.id}`, { preserveScroll: true });
                                 }}
                                 className="ml-auto p-1 text-gray-300 hover:text-red-500 transition-colors rounded"
                             >

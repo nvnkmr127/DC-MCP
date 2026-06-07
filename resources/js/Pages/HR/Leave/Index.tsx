@@ -96,12 +96,6 @@ function ApplyModal({ onClose }: { onClose: () => void }) {
 export default function LeaveIndex({ myRequests, teamRequests, balance, canReview }: Props) {
     const [showApply, setShowApply] = useState(false);
 
-    function approve(id: string) {
-        if (confirm('Approve this leave request?')) {
-            const form = useForm({});
-        }
-    }
-
     return (
         <AppLayout title="Leave Management">
             <Head title="Leave Management" />

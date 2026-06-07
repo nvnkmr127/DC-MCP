@@ -18,4 +18,14 @@ abstract class Controller
             403
         );
     }
+
+    protected function authorizeProjectId(string $projectId): void
+    {
+        $orgId = \App\Modules\ProjectManagement\Models\Project::withoutGlobalScope(\App\Modules\Auth\Scopes\OrganizationScope::class)
+            ->where('id', $projectId)
+            ->value('organization_id');
+
+        abort_unless($orgId, 404);
+        abort_if($orgId !== auth()->user()?->organization_id, 403);
+    }
 }

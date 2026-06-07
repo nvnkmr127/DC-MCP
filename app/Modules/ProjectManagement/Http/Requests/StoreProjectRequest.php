@@ -3,6 +3,7 @@
 namespace App\Modules\ProjectManagement\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProjectRequest extends FormRequest
 {
@@ -13,19 +14,36 @@ class StoreProjectRequest extends FormRequest
 
     public function rules(): array
     {
+        $orgId = $this->user()->organization_id;
+
         return [
-            'client_id' => 'required|uuid|exists:clients,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'type' => 'required|in:seo,social_media,performance_ads,web_dev,app_dev,content,brand,whatsapp,email_marketing,ecommerce',
-            'status' => 'nullable|in:draft,active,on_hold,completed,cancelled',
-            'priority' => 'nullable|in:low,medium,high,critical',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
-            'budget' => 'nullable|numeric|min:0',
-            'project_manager_id' => 'nullable|uuid|exists:users,id',
-            'settings' => 'nullable|array',
-            'tags' => 'nullable|array',
+            'client_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('clients', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'type' => ['required', Rule::in([
+                'seo', 'social_media', 'performance_ads', 'web_dev', 'app_dev',
+                'content', 'brand', 'whatsapp', 'email_marketing', 'ecommerce',
+            ])],
+            'status' => ['nullable', Rule::in(['draft', 'planning', 'active', 'on_hold', 'completed', 'cancelled'])],
+            'priority' => ['nullable', Rule::in(['low', 'medium', 'high', 'critical'])],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
+            'budget' => ['nullable', 'numeric', 'min:0'],
+            'project_manager_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('users', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
+            'settings' => ['nullable', 'array'],
+            'tags' => ['nullable', 'array'],
         ];
     }
 }

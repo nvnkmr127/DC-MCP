@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useConfirm } from '@/hooks/useConfirm';
 import { cn, timeAgo } from '@/lib/utils';
 import { Plus, Trash2, RefreshCw, CheckCircle, XCircle, Settings, Globe, Key } from 'lucide-react';
 
@@ -39,6 +40,7 @@ const STATUS_STYLES: Record<string, string> = {
 export default function MCPSettings({ connections, builtin_providers }: Props) {
     const [showForm, setShowForm] = useState(false);
     const [isCustom, setIsCustom] = useState(false);
+    const confirm = useConfirm();
 
     const form = useForm({
         provider:          '',
@@ -66,8 +68,14 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
         });
     }
 
-    function remove(id: string) {
-        if (!confirm('Remove this connection?')) return;
+    async function remove(id: string) {
+        const ok = await confirm({
+            title: 'Remove this connection?',
+            description: 'This will disconnect the integration.',
+            confirmText: 'Remove',
+            variant: 'destructive',
+        });
+        if (!ok) return;
         router.delete(`/settings/mcp/${id}`, { preserveScroll: true });
     }
 

@@ -31,16 +31,19 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, value, className
         if (val === 'low') variant = 'gray';
         else if (val === 'medium') variant = 'sky';
         else if (val === 'high') variant = 'amber';
+        else if (val === 'critical') variant = 'rose';
         else if (val === 'urgent') variant = 'rose';
     } else if (type === 'project-status') {
-        if (val === 'planning') { variant = 'gray'; label = 'Planning'; }
+        if (val === 'draft') { variant = 'gray'; label = 'Draft'; }
+        else if (val === 'planning') { variant = 'gray'; label = 'Planning'; }
         else if (val === 'active') { variant = 'emerald'; label = 'Active'; }
         else if (val === 'on_hold') { variant = 'amber'; label = 'On Hold'; }
         else if (val === 'completed') { variant = 'indigo'; label = 'Completed'; }
         else if (val === 'cancelled') { variant = 'rose'; label = 'Cancelled'; }
     } else if (type === 'client-tier') {
         showDot = false;
-        if (val === 'standard') { variant = 'gray'; label = 'Standard'; }
+        if (val === 'basic') { variant = 'gray'; label = 'Basic'; }
+        else if (val === 'standard') { variant = 'gray'; label = 'Standard'; }
         else if (val === 'premium') { variant = 'indigo'; label = 'Premium'; }
         else if (val === 'enterprise') { variant = 'violet'; label = 'Enterprise'; }
     } else if (type === 'client-status') {

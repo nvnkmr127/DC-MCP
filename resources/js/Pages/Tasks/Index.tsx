@@ -32,7 +32,7 @@ export default function TasksIndex({ tasks, filters }: Props) {
     }
 
     const statuses  = ['backlog', 'todo', 'in_progress', 'in_review', 'blocked', 'done'];
-    const priorities = ['urgent', 'high', 'medium', 'low'];
+    const priorities = ['critical', 'high', 'medium', 'low'];
     const activeFilterCount = [filters.status, filters.priority, filters.assigned, filters.overdue].filter(Boolean).length;
 
     return (
@@ -83,9 +83,6 @@ export default function TasksIndex({ tasks, filters }: Props) {
                     {selected.length > 0 && (
                         <div className="flex items-center gap-2 ml-1 pl-3 border-l border-gray-200">
                             <span className="text-[12px] text-gray-500">{selected.length} selected</span>
-                            <button className="px-2.5 py-1 text-[12px] font-medium bg-white border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors">
-                                Update status
-                            </button>
                         </div>
                     )}
                 </div>

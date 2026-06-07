@@ -21,12 +21,14 @@ class TimeEntry extends BaseModel
         'hours',
         'logged_date',
         'is_billable',
+        'timer_started_at',
     ];
 
     protected $casts = [
         'hours' => 'decimal:2',
         'logged_date' => 'date',
         'is_billable' => 'boolean',
+        'timer_started_at' => 'datetime',
     ];
 
     public function task(): BelongsTo

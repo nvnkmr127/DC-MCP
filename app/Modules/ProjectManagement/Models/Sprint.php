@@ -63,6 +63,11 @@ class Sprint extends BaseModel
         return $this->hasMany(Milestone::class);
     }
 
+    public function sprintTasks(): HasMany
+    {
+        return $this->hasMany(SprintTask::class);
+    }
+
     /**
      * Get the tasks associated with the sprint.
      *

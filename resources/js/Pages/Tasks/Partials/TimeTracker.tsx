@@ -2,6 +2,7 @@ import React from 'react';
 import { useForm, router } from '@inertiajs/react';
 import type { TimeEntry } from '@/types';
 import { useStopwatch } from '@/hooks/useStopwatch';
+import { useConfirm } from '@/hooks/useConfirm';
 import { Play, Square, Trash2 } from 'lucide-react';
 import { cn, formatDate, formatHours } from '@/lib/utils';
 
@@ -11,6 +12,7 @@ interface TimeTrackerProps {
 }
 
 export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries }) => {
+    const confirm = useConfirm();
     const timeForm = useForm({
         hours: '',
         description: '',
@@ -120,10 +122,15 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
                             <span className="text-sm font-medium text-gray-900">{formatHours(entry.hours)}</span>
                             <button
                                 type="button"
-                                onClick={() => {
-                                    if (confirm('Delete this time entry?')) {
-                                        router.delete(`/tasks/${taskId}/time-entries/${entry.id}`, { preserveScroll: true });
-                                    }
+                                onClick={async () => {
+                                    const ok = await confirm({
+                                        title: 'Delete this time entry?',
+                                        description: 'This cannot be undone.',
+                                        confirmText: 'Delete',
+                                        variant: 'destructive',
+                                    });
+                                    if (!ok) return;
+                                    router.delete(`/tasks/${taskId}/time-entries/${entry.id}`, { preserveScroll: true });
                                 }}
                                 className="p-1 text-gray-300 hover:text-red-500 transition-colors rounded opacity-0 group-hover:opacity-100"
                             >
