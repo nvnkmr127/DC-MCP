@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\Automation\Http\Controllers\WorkflowWebController;
+use App\Modules\Automation\Http\Controllers\Web\WorkflowWebController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/workflows',                                 [WorkflowWebController::class, 'index'])->name('web.workflows.index');

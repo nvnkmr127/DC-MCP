@@ -1,7 +1,9 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\Auth\Http\Controllers\AuthWebController;
-use App\Modules\Auth\Http\Controllers\SettingsWebController;
+use App\Modules\Auth\Http\Controllers\Web\AuthWebController;
+use App\Modules\Auth\Http\Controllers\Web\SettingsWebController;
+use App\Modules\Auth\Http\Controllers\Api\RegisterApiController;
+use App\Modules\Auth\Http\Controllers\Api\LoginApiController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login',    [AuthWebController::class, 'showLogin'])->name('login');
@@ -25,6 +27,6 @@ Route::middleware(['auth'])->group(function () {
 
 // Public API endpoints (registered in web.php to run through web middleware group but with api features)
 Route::prefix('api/v1')->middleware(['api', 'throttle:auth'])->group(function () {
-    Route::post('auth/register', 'RegisterApiController@register');
-    Route::post('auth/login', 'LoginApiController@login');
+    Route::post('auth/register', [RegisterApiController::class, 'register']);
+    Route::post('auth/login', [LoginApiController::class, 'login']);
 });

@@ -491,6 +491,7 @@ class NotionAdapter extends BaseAdapter
 
             return $recent;
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Notion Adapter getRecentUpdates failed: ' . $e->getMessage());
             return [];
         }
     }
@@ -550,6 +551,7 @@ class NotionAdapter extends BaseAdapter
 
             return $matches;
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Notion Adapter search failed: ' . $e->getMessage());
             return [];
         }
     }

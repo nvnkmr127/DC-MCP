@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\MCP\Http\Controllers\McpWebController;
+use App\Modules\MCP\Http\Controllers\Web\McpWebController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/settings/mcp',                            [McpWebController::class, 'index'])->name('web.settings.mcp');

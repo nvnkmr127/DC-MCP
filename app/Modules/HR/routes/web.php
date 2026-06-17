@@ -1,13 +1,13 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\HR\Http\Controllers\LeaveWebController;
-use App\Modules\HR\Http\Controllers\HiringWebController;
-use App\Modules\HR\Http\Controllers\PerformanceReviewWebController;
-use App\Modules\HR\Http\Controllers\AnnouncementWebController;
-use App\Modules\ProjectManagement\Http\Controllers\FreelancerWebController;
-use App\Modules\HR\Http\Controllers\KnowledgeBaseWebController;
-use App\Modules\HR\Http\Controllers\OneOnOneWebController;
-use App\Modules\HR\Http\Controllers\PayrollWebController;
+use App\Modules\HR\Http\Controllers\Web\LeaveWebController;
+use App\Modules\HR\Http\Controllers\Web\HiringWebController;
+use App\Modules\HR\Http\Controllers\Web\PerformanceReviewWebController;
+use App\Modules\HR\Http\Controllers\Web\AnnouncementWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\FreelancerWebController;
+use App\Modules\HR\Http\Controllers\Web\KnowledgeBaseWebController;
+use App\Modules\HR\Http\Controllers\Web\OneOnOneWebController;
+use App\Modules\HR\Http\Controllers\Web\PayrollWebController;
 
 Route::middleware(['auth'])->group(function () {
     // Leave Management

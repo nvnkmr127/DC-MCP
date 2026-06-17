@@ -1,7 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\TaskEngine\Http\Controllers\RecurringTaskWebController;
-use App\Modules\TaskEngine\Http\Controllers\SuggestionWebController;
+use App\Modules\TaskEngine\Http\Controllers\Web\RecurringTaskWebController;
+use App\Modules\TaskEngine\Http\Controllers\Web\SuggestionWebController;
 
 Route::middleware(['auth'])->group(function () {
     // Recurring Tasks

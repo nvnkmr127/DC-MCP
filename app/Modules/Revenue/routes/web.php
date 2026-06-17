@@ -1,19 +1,19 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\Revenue\Http\Controllers\RetainerWebController;
-use App\Modules\Revenue\Http\Controllers\InvoiceWebController;
-use App\Modules\Revenue\Http\Controllers\ProspectWebController;
-use App\Modules\Revenue\Http\Controllers\SowWebController;
-use App\Modules\Revenue\Http\Controllers\ExpenseWebController;
-use App\Modules\Revenue\Http\Controllers\GSTReportWebController;
-use App\Modules\Revenue\Http\Controllers\PaymentReceiptWebController;
-use App\Modules\Revenue\Http\Controllers\ProposalWebController;
-use App\Modules\Revenue\Http\Controllers\PurchaseOrderWebController;
-use App\Modules\Revenue\Http\Controllers\CreditNoteWebController;
-use App\Modules\Revenue\Http\Controllers\VendorWebController;
-use App\Modules\Revenue\Http\Controllers\CampaignBudgetWebController;
-use App\Modules\Revenue\Http\Controllers\RateCardWebController;
-use App\Modules\Revenue\Http\Controllers\FinancialWebController;
+use App\Modules\Revenue\Http\Controllers\Web\RetainerWebController;
+use App\Modules\Revenue\Http\Controllers\Web\InvoiceWebController;
+use App\Modules\Revenue\Http\Controllers\Web\ProspectWebController;
+use App\Modules\Revenue\Http\Controllers\Web\SowWebController;
+use App\Modules\Revenue\Http\Controllers\Web\ExpenseWebController;
+use App\Modules\Revenue\Http\Controllers\Web\GSTReportWebController;
+use App\Modules\Revenue\Http\Controllers\Web\PaymentReceiptWebController;
+use App\Modules\Revenue\Http\Controllers\Web\ProposalWebController;
+use App\Modules\Revenue\Http\Controllers\Web\PurchaseOrderWebController;
+use App\Modules\Revenue\Http\Controllers\Web\CreditNoteWebController;
+use App\Modules\Revenue\Http\Controllers\Web\VendorWebController;
+use App\Modules\Revenue\Http\Controllers\Web\CampaignBudgetWebController;
+use App\Modules\Revenue\Http\Controllers\Web\RateCardWebController;
+use App\Modules\Revenue\Http\Controllers\Web\FinancialWebController;
 
 Route::middleware(['auth'])->group(function () {
     // Retainers

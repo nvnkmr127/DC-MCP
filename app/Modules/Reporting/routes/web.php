@@ -1,8 +1,8 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\Reporting\Http\Controllers\ReportWebController;
-use App\Modules\Reporting\Http\Controllers\ClientReportWebController;
-use App\Modules\Reporting\Http\Controllers\CampaignResultWebController;
+use App\Modules\Reporting\Http\Controllers\Web\ReportWebController;
+use App\Modules\Reporting\Http\Controllers\Web\ClientReportWebController;
+use App\Modules\Reporting\Http\Controllers\Web\CampaignResultWebController;
 
 Route::middleware(['auth'])->group(function () {
     // Reports

@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\ContentCalendar\Http\Controllers\ContentCalendarWebController;
+use App\Modules\ContentCalendar\Http\Controllers\Web\ContentCalendarWebController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/content',                                    [ContentCalendarWebController::class, 'index'])->name('web.content.index');

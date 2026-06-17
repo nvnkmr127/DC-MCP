@@ -1,20 +1,20 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\ProjectManagement\Http\Controllers\ProjectWebController;
-use App\Modules\ProjectManagement\Http\Controllers\TaskWebController;
-use App\Modules\ProjectManagement\Http\Controllers\ClientWebController;
-use App\Modules\ProjectManagement\Http\Controllers\SprintWebController;
-use App\Modules\ProjectManagement\Http\Controllers\TimesheetWebController;
-use App\Modules\ProjectManagement\Http\Controllers\CalendarWebController;
-use App\Modules\ProjectManagement\Http\Controllers\AssetApprovalWebController;
-use App\Modules\ProjectManagement\Http\Controllers\IssueWebController;
-use App\Modules\ProjectManagement\Http\Controllers\ProjectTemplateWebController;
-use App\Modules\ProjectManagement\Http\Controllers\ClientCommunicationWebController;
-use App\Modules\ProjectManagement\Http\Controllers\DeliverableWebController;
-use App\Modules\ProjectManagement\Http\Controllers\GoalWebController;
-use App\Modules\ProjectManagement\Http\Controllers\CapacityWebController;
-use App\Modules\ProjectManagement\Http\Controllers\OnboardingWebController;
-use App\Modules\ProjectManagement\Http\Controllers\AuditChecklistWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\ProjectWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\TaskWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\ClientWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\SprintWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\TimesheetWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\CalendarWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\AssetApprovalWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\IssueWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\ProjectTemplateWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\ClientCommunicationWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\DeliverableWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\GoalWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\CapacityWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\OnboardingWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\AuditChecklistWebController;
 
 Route::middleware(['auth'])->group(function () {
     // Projects

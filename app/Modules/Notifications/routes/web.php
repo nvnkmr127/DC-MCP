@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\Notifications\Http\Controllers\NotificationWebController;
+use App\Modules\Notifications\Http\Controllers\Web\NotificationWebController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/notifications',                           [NotificationWebController::class, 'index'])->name('web.notifications.index');

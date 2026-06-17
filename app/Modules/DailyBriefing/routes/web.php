@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\DailyBriefing\Http\Controllers\BriefingWebController;
+use App\Modules\DailyBriefing\Http\Controllers\Web\BriefingWebController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/briefings',                   [BriefingWebController::class, 'index'])->name('web.briefings.index');

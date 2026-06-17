@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\DataViz\Http\Controllers\DashboardWebController;
+use App\Modules\DataViz\Http\Controllers\Web\DashboardWebController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardWebController::class, 'index'])->name('dashboard');

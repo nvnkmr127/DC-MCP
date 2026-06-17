@@ -1,8 +1,8 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\ClientPortal\Http\Controllers\PortalController;
-use App\Modules\ClientPortal\Http\Controllers\ClientPortalWebController;
-use App\Modules\ClientPortal\Http\Controllers\ClientSurveyWebController;
+use App\Modules\ClientPortal\Http\Controllers\Web\PortalController;
+use App\Modules\ClientPortal\Http\Controllers\Web\ClientPortalWebController;
+use App\Modules\ClientPortal\Http\Controllers\Web\ClientSurveyWebController;
 
 // Magic link auth & portal dashboard
 Route::prefix('portal')->name('portal.')->group(function () {

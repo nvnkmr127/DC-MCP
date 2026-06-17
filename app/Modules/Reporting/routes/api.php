@@ -1,22 +1,25 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Modules\Reporting\Http\Controllers\Api\ReportApiController;
+use App\Modules\Reporting\Http\Controllers\Api\ReportScheduleApiController;
+use App\Modules\Reporting\Http\Controllers\Api\ReportingApiController;
 
-Route::get('reports/tasks', 'ReportingApiController@taskSummary');
-Route::get('reports/projects', 'ReportingApiController@projectSummary');
-Route::get('reports/team-productivity', 'ReportingApiController@teamProductivity');
-Route::get('reports/time', 'ReportingApiController@timeReport');
+Route::get('reports/tasks', [ReportingApiController::class, 'taskSummary']);
+Route::get('reports/projects', [ReportingApiController::class, 'projectSummary']);
+Route::get('reports/team-productivity', [ReportingApiController::class, 'teamProductivity']);
+Route::get('reports/time', [ReportingApiController::class, 'timeReport']);
 
 // Core Report routes
-Route::get('reports', 'ReportApiController@index');
-Route::post('reports', 'ReportApiController@store');
-Route::get('reports/{report}', 'ReportApiController@show');
-Route::post('reports/{report}/generate', 'ReportApiController@generate');
-Route::get('reports/{report}/download', 'ReportApiController@download');
-Route::post('reports/{report}/send', 'ReportApiController@send');
+Route::get('reports', [ReportApiController::class, 'index']);
+Route::post('reports', [ReportApiController::class, 'store']);
+Route::get('reports/{report}', [ReportApiController::class, 'show']);
+Route::post('reports/{report}/generate', [ReportApiController::class, 'generate']);
+Route::get('reports/{report}/download', [ReportApiController::class, 'download']);
+Route::post('reports/{report}/send', [ReportApiController::class, 'send']);
 
 // Scheduled Report routes
-Route::get('report-schedules', 'ReportScheduleApiController@index');
-Route::post('report-schedules', 'ReportScheduleApiController@store');
-Route::put('report-schedules/{schedule}', 'ReportScheduleApiController@update');
-Route::delete('report-schedules/{schedule}', 'ReportScheduleApiController@destroy');
+Route::get('report-schedules', [ReportScheduleApiController::class, 'index']);
+Route::post('report-schedules', [ReportScheduleApiController::class, 'store']);
+Route::put('report-schedules/{schedule}', [ReportScheduleApiController::class, 'update']);
+Route::delete('report-schedules/{schedule}', [ReportScheduleApiController::class, 'destroy']);

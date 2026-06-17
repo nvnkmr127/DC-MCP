@@ -1,6 +1,6 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Modules\Standup\Http\Controllers\StandupWebController;
+use App\Modules\Standup\Http\Controllers\Web\StandupWebController;
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/standup',                                 [StandupWebController::class, 'index'])->name('web.standup.index');
