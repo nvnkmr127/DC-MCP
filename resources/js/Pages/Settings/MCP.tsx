@@ -142,6 +142,7 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
                                         <option key={p} value={p}>{PROVIDER_ICONS[p] ?? '🔌'} {p.replace('_', ' ')}</option>
                                     ))}
                                 </select>
+                                {form.errors.provider && <p className="text-red-500 text-xs mt-1">{form.errors.provider}</p>}
                             </div>
                         ) : (
                             <>
@@ -156,6 +157,7 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
                                             className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             required
                                         />
+                                        {form.errors.provider && <p className="text-red-500 text-xs mt-1">{form.errors.provider}</p>}
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-gray-600 mb-1">Display Label</label>
@@ -178,6 +180,7 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
                                         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                         required={isCustom}
                                     />
+                                    {form.errors['settings.base_url'] && <p className="text-red-500 text-xs mt-1">{form.errors['settings.base_url']}</p>}
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
@@ -242,6 +245,9 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
                                     placeholder="••••••••"
                                     className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 />
+                            )}
+                            {(form.errors.access_token || form.errors.api_key) && (
+                                <p className="text-red-500 text-xs mt-1">{form.errors.access_token || form.errors.api_key}</p>
                             )}
                         </div>
 

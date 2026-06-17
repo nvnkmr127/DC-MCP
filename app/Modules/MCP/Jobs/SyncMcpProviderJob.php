@@ -26,43 +26,43 @@ class SyncMcpProviderJob implements ShouldQueue
     }
 
     public function __construct(
-        public readonly McpConnection $connection
+        public readonly McpConnection $mcpConnection
     ) {}
 
     public function handle(): void
     {
         Log::info('MCP sync started', [
-            'connection_id'  => $this->connection->id,
-            'provider'       => $this->connection->provider,
-            'organization_id'=> $this->connection->organization_id,
+            'connection_id'  => $this->mcpConnection->id,
+            'provider'       => $this->mcpConnection->provider,
+            'organization_id'=> $this->mcpConnection->organization_id,
         ]);
 
-        $adapter = $this->resolveAdapter($this->connection->provider);
-        $result  = $adapter->sync($this->connection->id);
+        $adapter = $this->resolveAdapter($this->mcpConnection->provider);
+        $result  = $adapter->sync($this->mcpConnection->id);
 
         if ($result->isSuccess) {
             Log::info('MCP sync completed', [
-                'connection_id' => $this->connection->id,
-                'provider'      => $this->connection->provider,
+                'connection_id' => $this->mcpConnection->id,
+                'provider'      => $this->mcpConnection->provider,
             ]);
-            event(new McpSyncCompleted($this->connection, $result));
+            event(new McpSyncCompleted($this->mcpConnection, $result));
         } else {
             Log::error('MCP sync failed', [
-                'connection_id'  => $this->connection->id,
-                'provider'       => $this->connection->provider,
-                'organization_id'=> $this->connection->organization_id,
+                'connection_id'  => $this->mcpConnection->id,
+                'provider'       => $this->mcpConnection->provider,
+                'organization_id'=> $this->mcpConnection->organization_id,
                 'error'          => $result->errorMessage ?? 'Unknown error',
             ]);
-            event(new McpSyncFailed($this->connection, $result->errorMessage ?? 'Unknown error', $this->connection->provider));
+            event(new McpSyncFailed($this->mcpConnection, $result->errorMessage ?? 'Unknown error', $this->mcpConnection->provider));
         }
     }
 
     public function failed(\Throwable $exception): void
     {
         Log::error('MCP sync job permanently failed', [
-            'connection_id'  => $this->connection->id,
-            'provider'       => $this->connection->provider,
-            'organization_id'=> $this->connection->organization_id,
+            'connection_id'  => $this->mcpConnection->id,
+            'provider'       => $this->mcpConnection->provider,
+            'organization_id'=> $this->mcpConnection->organization_id,
             'exception'      => $exception->getMessage(),
         ]);
     }
