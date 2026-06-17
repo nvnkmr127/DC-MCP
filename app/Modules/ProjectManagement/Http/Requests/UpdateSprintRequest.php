@@ -2,28 +2,21 @@
 
 namespace App\Modules\ProjectManagement\Http\Requests;
 
-use App\Modules\ProjectManagement\Models\Project;
 use App\Shared\Enums\SprintStatus;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
-class StoreSprintRequest extends FormRequest
+class UpdateSprintRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->hasPermission('create', 'sprint');
+        return $this->user()->hasPermission('update', 'sprint');
     }
 
     public function rules(): array
     {
         return [
-            'project_id' => [
-                'required',
-                'uuid',
-                Rule::exists(Project::class, 'id')->whereNull('deleted_at'),
-            ],
-            'name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
             'goal' => 'nullable|string',
             'status' => ['nullable', new Enum(SprintStatus::class)],
             'start_date' => 'nullable|date',

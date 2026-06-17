@@ -16,12 +16,22 @@ use App\Modules\ProjectManagement\Models\TimeEntry;
 use App\Modules\ProjectManagement\Models\TaskDependency;
 use App\Modules\Auth\Models\User;
 use Illuminate\Validation\Rule;
+use App\Modules\ProjectManagement\Http\Requests\StoreTaskRequest;
+use App\Modules\ProjectManagement\Http\Requests\UpdateTaskRequest;
+use App\Shared\Enums\TaskStatus;
+use App\Shared\Enums\TaskType;
+use App\Shared\Enums\TaskPriority;
+use App\Shared\Enums\RoleType;
 
 class TaskWebController extends Controller
 {
     public function __construct(private TaskService $taskService) {}
     public function index(Request $request)
     {
+        if (!$request->user()->hasPermission('view', 'task')) {
+            abort(403);
+        }
+
         $query = Task::with(['project:id,name', 'assignee:id,name'])
             ->whereNull('parent_task_id')
             ->orderByDesc('updated_at');
@@ -45,8 +55,8 @@ class TaskWebController extends Controller
         $tasks = $query->paginate(25)->through(fn($t) => [
             'id'              => $t->id,
             'title'           => $t->title,
-            'status'          => $t->status,
-            'priority'        => $t->priority,
+            'status'          => is_object($t->status) ? $t->status->value : $t->status,
+            'priority'        => is_object($t->priority) ? $t->priority->value : $t->priority,
             'due_date'        => $t->due_date?->toDateString(),
             'estimated_hours' => (float) $t->estimated_hours,
             'project_id'      => $t->project_id,
@@ -63,6 +73,10 @@ class TaskWebController extends Controller
 
     public function create(Request $request)
     {
+        if (!$request->user()->hasPermission('create', 'task')) {
+            abort(403);
+        }
+
         $projects = Project::select('id', 'name')->orderBy('name')->get();
         $members  = User::where('organization_id', $request->user()->organization_id)
             ->select('id', 'name')
@@ -79,49 +93,21 @@ class TaskWebController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
-        $data = $request->validate([
-            'title'           => 'required|string|max:300',
-            'description'     => 'nullable|string',
-            'project_id'      => [
-                'required',
-                'uuid',
-                Rule::exists('projects', 'id')
-                    ->where('organization_id', $request->user()->organization_id)
-                    ->whereNull('deleted_at'),
-            ],
-            'status'          => 'required|in:backlog,todo,in_progress,in_review,blocked,done,cancelled',
-            'priority'        => 'required|in:low,medium,high,critical',
-            'assigned_to'     => [
-                'nullable',
-                'uuid',
-                Rule::exists('users', 'id')
-                    ->where('organization_id', $request->user()->organization_id)
-                    ->whereNull('deleted_at'),
-            ],
-            'due_date'        => 'nullable|date',
-            'estimated_hours' => 'nullable|numeric|min:0',
-            'tags'            => 'nullable|array',
-            'type'            => 'required|in:feature,bug,content,design,research,review,meeting,report,campaign_setup,ad_creative,seo_audit,email_sequence,other',
-            'sprint_id'       => [
-                'nullable',
-                'uuid',
-                Rule::exists('sprints', 'id')->where('project_id', $request->project_id),
-            ],
-        ]);
-
-        $task = Task::create([
-            ...$data,
-            'organization_id' => $request->user()->organization_id,
-            'created_by'      => $request->user()->id,
-        ]);
+        $data = $request->validated();
+        $data['created_by'] = $request->user()->id;
+        $task = Task::create($data);
 
         return redirect()->route('web.tasks.show', $task)->with('success', 'Task created.');
     }
 
-    public function show(Task $task)
+    public function show(Request $request, Task $task)
     {
+        if (!$request->user()->hasPermission('view', 'task')) {
+            abort(403);
+        }
+
         $task->load([
             'project:id,name',
             'assignee:id,name',
@@ -134,7 +120,7 @@ class TaskWebController extends Controller
         $depTasks = Task::whereIn('id', $depIds)->with('project:id,name')->get()->map(fn($t) => [
             'id'         => $t->id,
             'title'      => $t->title,
-            'status'     => $t->status,
+            'status'     => is_object($t->status) ? $t->status->value : $t->status,
             'project_id' => $t->project_id,
             'project'    => $t->project ? ['name' => $t->project->name] : null,
         ]);
@@ -145,7 +131,7 @@ class TaskWebController extends Controller
                 ->select('id', 'title', 'status', 'project_id')
                 ->orderBy('title')
                 ->get()
-                ->map(fn($t) => ['id' => $t->id, 'title' => $t->title, 'status' => $t->status, 'project_id' => $t->project_id])
+                ->map(fn($t) => ['id' => $t->id, 'title' => $t->title, 'status' => is_object($t->status) ? $t->status->value : $t->status, 'project_id' => $t->project_id])
             : [];
 
         $attachments = Attachment::where('attachable_type', 'task')
@@ -202,8 +188,12 @@ class TaskWebController extends Controller
         ]);
     }
 
-    public function edit(Task $task)
+    public function edit(Request $request, Task $task)
     {
+        if (!$request->user()->hasPermission('update', 'task')) {
+            abort(403);
+        }
+
         $projects = Project::select('id', 'name')->orderBy('name')->get();
         $members  = User::where('organization_id', request()->user()->organization_id)
             ->select('id', 'name')
@@ -217,31 +207,9 @@ class TaskWebController extends Controller
         ]);
     }
 
-    public function update(Request $request, Task $task)
+    public function update(UpdateTaskRequest $request, Task $task)
     {
-        $data = $request->validate([
-            'title'           => 'sometimes|string|max:300',
-            'description'     => 'nullable|string',
-            'project_id'      => [
-                'sometimes',
-                'uuid',
-                Rule::exists('projects', 'id')
-                    ->where('organization_id', $request->user()->organization_id)
-                    ->whereNull('deleted_at'),
-            ],
-            'status'          => 'sometimes|in:backlog,todo,in_progress,in_review,blocked,done,cancelled',
-            'priority'        => 'sometimes|in:low,medium,high,critical',
-            'assigned_to'     => [
-                'nullable',
-                'uuid',
-                Rule::exists('users', 'id')
-                    ->where('organization_id', $request->user()->organization_id)
-                    ->whereNull('deleted_at'),
-            ],
-            'due_date'        => 'nullable|date',
-            'estimated_hours' => 'nullable|numeric|min:0',
-            'tags'            => 'nullable|array',
-        ]);
+        $data = $request->validated();
 
         if (isset($data['project_id']) && $data['project_id'] !== $task->project_id) {
             $task->sprint_id = null;
@@ -265,8 +233,12 @@ class TaskWebController extends Controller
         return back()->with('success', 'Task updated.');
     }
 
-    public function destroy(Task $task)
+    public function destroy(Request $request, Task $task)
     {
+        if (!$request->user()->hasPermission('delete', 'task')) {
+            abort(403);
+        }
+
         $task->delete();
         return redirect()->route('web.tasks.index')->with('success', 'Task deleted.');
     }
@@ -280,6 +252,10 @@ class TaskWebController extends Controller
 
     public function storeComment(Request $request, Task $task)
     {
+        if (!$request->user()->hasPermission('update', 'task')) {
+            abort(403);
+        }
+
         $data = $request->validate(['body' => 'required|string|max:5000']);
 
         Comment::create([
@@ -360,15 +336,23 @@ class TaskWebController extends Controller
         return back()->with('success', 'File uploaded.');
     }
 
-    public function destroyComment(Task $task, Comment $comment)
+    public function destroyComment(Request $request, Task $task, Comment $comment)
     {
+        if (!$request->user()->hasPermission('update', 'task')) {
+            abort(403);
+        }
+
         abort_if($comment->commentable_type !== 'task' || $comment->commentable_id !== $task->id, 403);
         $comment->delete();
         return back()->with('success', 'Comment deleted.');
     }
 
-    public function destroyTimeEntry(Task $task, TimeEntry $timeEntry)
+    public function destroyTimeEntry(Request $request, Task $task, TimeEntry $timeEntry)
     {
+        if (!$request->user()->hasPermission('delete', 'time_entry')) {
+            abort(403);
+        }
+
         abort_if($timeEntry->task_id !== $task->id, 403);
         $task->decrement('actual_hours', $timeEntry->hours);
         $timeEntry->delete();
@@ -377,7 +361,9 @@ class TaskWebController extends Controller
 
     public function destroyAttachment(Request $request, Attachment $attachment)
     {
-        $this->authorizeOrg($attachment);
+        if (!$request->user()->hasPermission('update', 'task')) {
+            abort(403);
+        }
 
         Storage::disk($attachment->storage_disk)->delete($attachment->storage_path);
         $attachment->delete();
@@ -386,7 +372,9 @@ class TaskWebController extends Controller
 
     public function bulkStore(Request $request, Project $project): \Illuminate\Http\RedirectResponse
     {
-        $this->authorizeOrg($project);
+        if (!$request->user()->hasPermission('create', 'task')) {
+            abort(403);
+        }
 
         $data = $request->validate([
             'tasks'                  => 'required|array|min:1',
@@ -420,7 +408,9 @@ class TaskWebController extends Controller
 
     public function addDependency(Request $request, Task $task): \Illuminate\Http\RedirectResponse
     {
-        $this->authorizeOrg($task);
+        if (!$request->user()->hasPermission('update', 'task')) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'depends_on_task_id' => 'required|uuid',
@@ -442,7 +432,9 @@ class TaskWebController extends Controller
 
     public function removeDependency(Request $request, Task $task, Task $dependency): \Illuminate\Http\RedirectResponse
     {
-        $this->authorizeOrg($task);
+        if (!$request->user()->hasPermission('update', 'task')) {
+            abort(403);
+        }
 
         TaskDependency::where('task_id', $task->id)
             ->where('depends_on_task_id', $dependency->id)

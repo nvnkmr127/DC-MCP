@@ -115,20 +115,18 @@ abstract class BaseAdapter implements MCPAdapter
         ?string $errorMessage = null,
         int $durationMs = 0
     ): void {
-        DB::table('mcp_sync_logs')->insert([
-            'id' => (string) Str::uuid(),
-            'mcp_connection_id' => $connectionId,
-            'direction' => $direction,
-            'entity_type' => $entityType,
-            'entity_id' => $entityId,
-            'status' => $status,
-            'records_processed' => $processed,
-            'records_failed' => $failed,
-            'payload' => $payload ? json_encode($payload) : null,
-            'error_message' => $errorMessage,
-            'duration_ms' => $durationMs,
-            'synced_at' => now(),
-        ]);
+        \App\Jobs\LogMcpConnectionEvent::dispatch(
+            $connectionId,
+            $direction,
+            $entityType,
+            $entityId,
+            $status,
+            $processed,
+            $failed,
+            $payload,
+            $errorMessage,
+            $durationMs
+        );
     }
 
     /**

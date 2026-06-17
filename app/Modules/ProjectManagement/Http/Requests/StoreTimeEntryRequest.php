@@ -2,23 +2,22 @@
 
 namespace App\Modules\ProjectManagement\Http\Requests;
 
+use App\Modules\ProjectManagement\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTimeEntryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->hasPermission('create', 'time_entry');
     }
 
     public function rules(): array
     {
-        $orgId = $this->user()->organization_id;
-
         return [
             'task_id'     => [
                 'required', 'uuid',
-                \Illuminate\Validation\Rule::exists('tasks', 'id')->where('organization_id', $orgId),
+                \Illuminate\Validation\Rule::exists(Task::class, 'id'),
             ],
             'hours'       => 'required|numeric|min:0.01|max:24',
             'description' => 'required|string|max:1000',

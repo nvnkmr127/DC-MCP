@@ -14,60 +14,64 @@ use Illuminate\Http\Request;
 
 class ProjectApiController extends Controller
 {
-    protected ProjectService $projectService;
-
-    public function __construct(ProjectService $projectService)
-    {
-        $this->projectService = $projectService;
-    }
+    public function __construct(
+        protected ProjectService $projectService
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $projects = Project::with(['client', 'manager'])
-            ->where('organization_id', $request->user()->organization_id)
-            ->get();
+        $projects = Project::with(['client', 'manager'])->get();
         return ApiResponse::success(ProjectResource::collection($projects));
     }
 
     public function store(StoreProjectRequest $request): JsonResponse
     {
-        $data = $request->validated();
-        $data['organization_id'] = $request->user()->organization_id;
-
-        $project = $this->projectService->createProject($data);
+        $project = $this->projectService->createProject($request->validated());
         return ApiResponse::success(new ProjectResource($project), 'Project created successfully.', [], 201);
     }
 
     public function show(Request $request, Project $project): JsonResponse
     {
-        $this->authorizeOrg($project);
+        if (!$request->user()->hasPermission('view', 'project')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $project->load(['client', 'manager']);
         return ApiResponse::success(new ProjectResource($project));
     }
 
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse
     {
-        $this->authorizeOrg($project);
         $updated = $this->projectService->updateProject($project, $request->validated());
         return ApiResponse::success(new ProjectResource($updated), 'Project updated successfully.');
     }
 
     public function destroy(Request $request, Project $project): JsonResponse
     {
-        $this->authorizeOrg($project);
+        if (!$request->user()->hasPermission('delete', 'project')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $this->projectService->archiveProject($project);
         return ApiResponse::success(null, 'Project archived successfully.');
     }
 
     public function stats(Request $request, Project $project): JsonResponse
     {
-        $this->authorizeOrg($project);
+        if (!$request->user()->hasPermission('view', 'project')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $stats = $this->projectService->getProjectStats($project);
         return ApiResponse::success($stats);
     }
 
     public function teamWorkload(Request $request): JsonResponse
     {
+        if (!$request->user()->hasPermission('view', 'project')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $workload = $this->projectService->getTeamWorkload($request->user()->organization);
         return ApiResponse::success($workload);
     }

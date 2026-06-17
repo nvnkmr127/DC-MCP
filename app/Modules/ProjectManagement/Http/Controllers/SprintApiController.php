@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\ProjectManagement\Models\Sprint;
 use App\Modules\ProjectManagement\Services\SprintService;
 use App\Modules\ProjectManagement\Http\Requests\StoreSprintRequest;
+use App\Modules\ProjectManagement\Http\Requests\UpdateSprintRequest;
 use App\Modules\ProjectManagement\Http\Resources\SprintResource;
 use App\Modules\ProjectManagement\Models\Project;
 use App\Shared\Helpers\ApiResponse;
@@ -14,17 +15,13 @@ use Illuminate\Http\Request;
 
 class SprintApiController extends Controller
 {
-    protected SprintService $sprintService;
-
-    public function __construct(SprintService $sprintService)
-    {
-        $this->sprintService = $sprintService;
-    }
+    public function __construct(
+        protected SprintService $sprintService
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $orgId = $request->user()->organization_id;
-        $query = Sprint::whereHas('project', fn ($q) => $q->where('organization_id', $orgId));
+        $query = Sprint::whereHas('project');
 
         if ($request->has('project_id')) {
             $query->where('project_id', $request->project_id);
@@ -35,9 +32,7 @@ class SprintApiController extends Controller
 
     public function store(StoreSprintRequest $request): JsonResponse
     {
-        $project = Project::where('id', $request->project_id)
-            ->where('organization_id', $request->user()->organization_id)
-            ->firstOrFail();
+        $project = Project::findOrFail($request->project_id);
 
         $sprint = $this->sprintService->createSprint($project, $request->validated());
         return ApiResponse::success(new SprintResource($sprint), 'Sprint created successfully.', [], 201);
@@ -45,49 +40,52 @@ class SprintApiController extends Controller
 
     public function show(Request $request, Sprint $sprint): JsonResponse
     {
-        $this->authorizeProjectId($sprint->project_id);
+        if (!$request->user()->hasPermission('view', 'sprint')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $sprint->load('project');
         return ApiResponse::success(new SprintResource($sprint));
     }
 
-    public function update(Request $request, Sprint $sprint): JsonResponse
+    public function update(UpdateSprintRequest $request, Sprint $sprint): JsonResponse
     {
-        $this->authorizeProjectId($sprint->project_id);
-
-        $data = $request->validate([
-            'name' => 'nullable|string|max:255',
-            'goal' => 'nullable|string',
-            'status' => 'nullable|in:planning,active,completed,cancelled',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date',
-            'velocity_planned' => 'nullable|integer',
-            'velocity_actual' => 'nullable|integer',
-        ]);
-
-        $sprint->update($data);
+        $sprint->update($request->validated());
         return ApiResponse::success(new SprintResource($sprint), 'Sprint updated successfully.');
     }
 
     public function destroy(Request $request, Sprint $sprint): JsonResponse
     {
-        $this->authorizeProjectId($sprint->project_id);
-        abort_if($sprint->status === 'active', 422, 'Cannot delete an active sprint. Complete it first.');
+        if (!$request->user()->hasPermission('delete', 'sprint')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        abort_if($sprint->status === 'active' || (is_object($sprint->status) && $sprint->status->value === 'active'), 422, 'Cannot delete an active sprint. Complete it first.');
         $sprint->delete();
         return ApiResponse::success(null, 'Sprint deleted successfully.');
     }
 
     public function start(Request $request, Sprint $sprint): JsonResponse
     {
-        $this->authorizeProjectId($sprint->project_id);
-        abort_if($sprint->status !== 'planning', 422, 'Only a sprint in planning can be started.');
+        if (!$request->user()->hasPermission('update', 'sprint')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $statusValue = is_object($sprint->status) ? $sprint->status->value : $sprint->status;
+        abort_if($statusValue !== 'planning', 422, 'Only a sprint in planning can be started.');
+        
         $sprint = $this->sprintService->startSprint($sprint);
         return ApiResponse::success(new SprintResource($sprint), 'Sprint started successfully.');
     }
 
     public function complete(Request $request, Sprint $sprint): JsonResponse
     {
-        $this->authorizeProjectId($sprint->project_id);
-        abort_if($sprint->status !== 'active', 422, 'Only an active sprint can be completed.');
+        if (!$request->user()->hasPermission('update', 'sprint')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $statusValue = is_object($sprint->status) ? $sprint->status->value : $sprint->status;
+        abort_if($statusValue !== 'active', 422, 'Only an active sprint can be completed.');
 
         $action       = $request->input('unfinished_task_action', 'backlog');
         $nextSprintId = $request->input('next_sprint_id');
@@ -98,7 +96,7 @@ class SprintApiController extends Controller
                 return ApiResponse::error('next_sprint_id is required when action is next_sprint.', [], 422);
             }
             $nextSprint = Sprint::where('id', $nextSprintId)
-                ->whereHas('project', fn ($q) => $q->where('organization_id', $request->user()->organization_id))
+                ->whereHas('project')
                 ->where('status', 'planning')
                 ->first();
 

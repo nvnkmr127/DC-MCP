@@ -157,8 +157,8 @@ class NotionAdapterTest extends TestCase
         $task = Task::where('project_id', $this->project->id)->first();
         $this->assertNotNull($task);
         $this->assertEquals('Write Notion Integration', $task->title);
-        $this->assertEquals('in_progress', $task->status);
-        $this->assertEquals('high', $task->priority);
+        $this->assertEquals('in_progress', is_object($task->status) ? $task->status->value : $task->status);
+        $this->assertEquals('high', is_object($task->priority) ? $task->priority->value : $task->priority);
         $this->assertEquals('2026-06-01', $task->due_date->format('Y-m-d'));
         $this->assertEquals($this->user->id, $task->assigned_to);
     }

@@ -171,8 +171,8 @@ class GmailAdapterTest extends TestCase
         $this->assertNotNull($task);
         $this->assertEquals('Feedback on Landing Page', $task->title);
         $this->assertEquals("Email from: john@client.com\n\nSnippet: Review needed for new landing page designs.", $task->description);
-        $this->assertEquals('review', $task->type);
-        $this->assertEquals('project_manager', $task->role_required);
+        $this->assertEquals('review', is_object($task->type) ? $task->type->value : $task->type);
+        $this->assertEquals('project_manager', is_object($task->role_required) ? $task->role_required->value : $task->role_required);
         $this->assertEquals('thread123', $task->meta['gmail_thread_id'] ?? null);
     }
 

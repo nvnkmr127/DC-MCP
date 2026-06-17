@@ -66,6 +66,10 @@ class Task extends BaseModel
         'deleted_at' => 'datetime',
         'sort_order' => 'integer',
         'sla_hours' => 'integer',
+        'type' => \App\Shared\Enums\TaskType::class,
+        'status' => \App\Shared\Enums\TaskStatus::class,
+        'priority' => \App\Shared\Enums\TaskPriority::class,
+        'role_required' => \App\Shared\Enums\RoleType::class,
     ];
 
     /**

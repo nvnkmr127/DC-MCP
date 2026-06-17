@@ -6,11 +6,22 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Modules\ProjectManagement\Models\Client;
+use App\Modules\ProjectManagement\Services\ClientService;
+use App\Modules\ProjectManagement\Http\Requests\StoreClientRequest;
+use App\Modules\ProjectManagement\Http\Requests\UpdateClientRequest;
 
 class ClientWebController extends Controller
 {
+    public function __construct(
+        protected ClientService $clientService
+    ) {}
+
     public function index(Request $request)
     {
+        if (!$request->user()->hasPermission('view', 'client')) {
+            abort(403);
+        }
+
         $query = Client::withCount('projects')
             ->orderBy('name');
 
@@ -42,34 +53,26 @@ class ClientWebController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        if (!$request->user()->hasPermission('create', 'client')) {
+            abort(403);
+        }
         return Inertia::render('Clients/Create');
     }
 
-    public function store(Request $request)
+    public function store(StoreClientRequest $request)
     {
-        $data = $request->validate([
-            'name'    => 'required|string|max:200',
-            'company' => 'required|string|max:200',
-            'email'   => 'required|email|max:255',
-            'phone'   => 'nullable|string',
-            'website' => 'nullable|url',
-            'tier'    => 'required|in:basic,standard,premium,enterprise',
-            'status'  => 'required|in:active,inactive,prospect,churned',
-            'notes'   => 'nullable|string',
-        ]);
-
-        $client = Client::create([
-            ...$data,
-            'organization_id' => $request->user()->organization_id,
-        ]);
-
+        $client = $this->clientService->createClient($request->validated());
         return redirect()->route('web.clients.show', $client)->with('success', 'Client created.');
     }
 
-    public function show(Client $client)
+    public function show(Request $request, Client $client)
     {
+        if (!$request->user()->hasPermission('view', 'client')) {
+            abort(403);
+        }
+
         $client->load(['projects' => fn($q) => $q->withCount('tasks')->orderByDesc('updated_at')]);
 
         $communications = \App\Modules\Revenue\Models\ClientCommunication::where('client_id', $client->id)
@@ -95,39 +98,36 @@ class ClientWebController extends Controller
         ]);
     }
 
-    public function edit(Client $client)
+    public function edit(Request $request, Client $client)
     {
+        if (!$request->user()->hasPermission('update', 'client')) {
+            abort(403);
+        }
         return Inertia::render('Clients/Edit', [
             'client' => $client,
         ]);
     }
 
-    public function update(Request $request, Client $client)
+    public function update(UpdateClientRequest $request, Client $client)
     {
-        $data = $request->validate([
-            'name'    => 'sometimes|string|max:200',
-            'company' => 'sometimes|string|max:200',
-            'email'   => 'sometimes|email|max:255',
-            'phone'   => 'nullable|string',
-            'website' => 'nullable|url',
-            'tier'    => 'sometimes|in:basic,standard,premium,enterprise',
-            'status'  => 'sometimes|in:active,inactive,prospect,churned',
-            'notes'   => 'nullable|string',
-        ]);
-
-        $client->update($data);
+        $client = $this->clientService->updateClient($client, $request->validated());
         return back()->with('success', 'Client updated.');
     }
 
-    public function destroy(Client $client)
+    public function destroy(Request $request, Client $client)
     {
-        $client->delete();
+        if (!$request->user()->hasPermission('delete', 'client')) {
+            abort(403);
+        }
+        $this->clientService->deleteClient($client);
         return redirect()->route('web.clients.index')->with('success', 'Client deleted.');
     }
 
     public function flagUpsell(Request $request, Client $client): \Illuminate\Http\RedirectResponse
     {
-        $this->authorizeOrg($client);
+        if (!$request->user()->hasPermission('update', 'client')) {
+            abort(403);
+        }
 
         if ($request->boolean('clear')) {
             $client->update(['upsell_flagged' => false, 'upsell_notes' => null, 'upsell_potential' => null, 'upsell_flagged_at' => null]);
@@ -151,7 +151,9 @@ class ClientWebController extends Controller
 
     public function updateSuccessScore(Request $request, Client $client): \Illuminate\Http\RedirectResponse
     {
-        $this->authorizeOrg($client);
+        if (!$request->user()->hasPermission('update', 'client')) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'overall_score' => 'required|integer|min:0|max:100',

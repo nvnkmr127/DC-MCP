@@ -2,7 +2,6 @@
 
 namespace App\Modules\ProjectManagement\Http\Requests;
 
-use App\Modules\ProjectManagement\Models\Project;
 use App\Modules\ProjectManagement\Models\Sprint;
 use App\Modules\ProjectManagement\Models\Milestone;
 use App\Modules\ProjectManagement\Models\Task;
@@ -15,38 +14,37 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
-class StoreTaskRequest extends FormRequest
+class UpdateTaskRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->hasPermission('create', 'task');
+        return $this->user()->hasPermission('update', 'task');
     }
 
     public function rules(): array
     {
+        $task = $this->route('task');
+        $projectId = $task ? $task->project_id : null;
+
         return [
-            'project_id'     => [
-                'required', 'uuid',
-                Rule::exists(Project::class, 'id')->whereNull('deleted_at'),
-            ],
-            'sprint_id'      => [
+            'sprint_id' => [
                 'nullable', 'uuid',
-                Rule::exists(Sprint::class, 'id')->where('project_id', $this->input('project_id')),
+                Rule::exists(Sprint::class, 'id')->where('project_id', $projectId),
             ],
-            'milestone_id'   => [
+            'milestone_id' => [
                 'nullable', 'uuid',
-                Rule::exists(Milestone::class, 'id')->where('project_id', $this->input('project_id')),
+                Rule::exists(Milestone::class, 'id')->where('project_id', $projectId),
             ],
             'parent_task_id' => [
                 'nullable', 'uuid',
                 Rule::exists(Task::class, 'id')
-                    ->where('project_id', $this->input('project_id')),
+                    ->where('project_id', $projectId),
             ],
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'type' => ['required', new Enum(TaskType::class)],
+            'type' => ['nullable', new Enum(TaskType::class)],
             'status' => ['nullable', new Enum(TaskStatus::class)],
-            'priority' => ['required', new Enum(TaskPriority::class)],
+            'priority' => ['nullable', new Enum(TaskPriority::class)],
             'assigned_to' => [
                 'nullable',
                 'uuid',

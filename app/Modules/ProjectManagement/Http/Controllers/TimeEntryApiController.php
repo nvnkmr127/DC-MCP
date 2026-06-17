@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\ProjectManagement\Models\TimeEntry;
 use App\Modules\ProjectManagement\Models\Task;
 use App\Modules\ProjectManagement\Http\Requests\StoreTimeEntryRequest;
+use App\Modules\ProjectManagement\Http\Requests\UpdateTimeEntryRequest;
 use App\Modules\ProjectManagement\Http\Resources\TimeEntryResource;
 use App\Shared\Helpers\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -16,8 +17,7 @@ class TimeEntryApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $orgId = $request->user()->organization_id;
-        $query = TimeEntry::where('organization_id', $orgId);
+        $query = TimeEntry::query();
 
         if ($request->has('project_id')) {
             $query->where('project_id', $request->project_id);
@@ -35,14 +35,10 @@ class TimeEntryApiController extends Controller
 
     public function store(StoreTimeEntryRequest $request): JsonResponse
     {
-        $orgId = $request->user()->organization_id;
-        $task  = Task::where('id', $request->task_id)
-            ->where('organization_id', $orgId)
-            ->firstOrFail();
+        $task = Task::findOrFail($request->task_id);
 
-        $entry = DB::transaction(function () use ($task, $request, $orgId) {
+        $entry = DB::transaction(function () use ($task, $request) {
             $entry = TimeEntry::create([
-                'organization_id' => $orgId,
                 'task_id'         => $task->id,
                 'user_id'         => $request->user()->id,
                 'project_id'      => $task->project_id,
@@ -60,16 +56,9 @@ class TimeEntryApiController extends Controller
         return ApiResponse::success(new TimeEntryResource($entry), 'Time entry created successfully.', [], 201);
     }
 
-    public function update(Request $request, TimeEntry $timeEntry): JsonResponse
+    public function update(UpdateTimeEntryRequest $request, TimeEntry $timeEntry): JsonResponse
     {
-        $this->authorizeOrg($timeEntry);
-
-        $data = $request->validate([
-            'description' => 'nullable|string|max:1000',
-            'hours'       => 'nullable|numeric|min:0.01',
-            'logged_date' => 'nullable|date',
-            'is_billable' => 'nullable|boolean',
-        ]);
+        $data = $request->validated();
 
         $updated = DB::transaction(function () use ($timeEntry, $data) {
             // Lock the row so concurrent requests see consistent old hours
@@ -94,7 +83,9 @@ class TimeEntryApiController extends Controller
 
     public function destroy(Request $request, TimeEntry $timeEntry): JsonResponse
     {
-        $this->authorizeOrg($timeEntry);
+        if (!$request->user()->hasPermission('delete', 'time_entry')) {
+            abort(403, 'Unauthorized action.');
+        }
 
         DB::transaction(function () use ($timeEntry) {
             $task = $timeEntry->task()->lockForUpdate()->first();
@@ -107,8 +98,7 @@ class TimeEntryApiController extends Controller
 
     public function summary(Request $request): JsonResponse
     {
-        $query = DB::table('time_entries')
-            ->where('organization_id', $request->user()->organization_id);
+        $query = TimeEntry::query();
 
         if ($request->has('project_id')) {
             $query->where('project_id', $request->project_id);

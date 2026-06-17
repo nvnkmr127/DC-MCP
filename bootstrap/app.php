@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
         ]);
 
+        $middleware->alias([
+            'webhook.signature' => \App\Http\Middleware\VerifyWebhookSignature::class,
+        ]);
+
         // Exempt auth API routes and webhook endpoints from CSRF verification.
         // These are registered in web.php with explicit 'api' middleware so they
         // don't need a CSRF token, but the outer 'web' group still runs VerifyCsrfToken.
@@ -36,6 +40,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        \Sentry\Laravel\Integration::handles($exceptions);
+
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
             Log::warning('Unauthenticated request', [
                 'path'   => $request->path(),

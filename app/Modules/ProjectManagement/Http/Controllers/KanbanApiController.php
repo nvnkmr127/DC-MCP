@@ -13,6 +13,10 @@ class KanbanApiController extends Controller
 {
     public function board(Request $request, Project $project): JsonResponse
     {
+        if (!$request->user()->hasPermission('view', 'project')) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $tasks = $project->tasks()
             ->with(['assignee', 'sprint', 'milestone'])
             ->orderBy('sort_order')
@@ -29,7 +33,7 @@ class KanbanApiController extends Controller
         ];
 
         foreach ($tasks as $task) {
-            $status = $task->status;
+            $status = is_object($task->status) ? $task->status->value : $task->status;
             if (array_key_exists($status, $grouped)) {
                 $grouped[$status][] = new TaskResource($task);
             }

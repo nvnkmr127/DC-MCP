@@ -622,10 +622,14 @@ class NotionAdapter extends BaseAdapter
     }
 
     /**
-     * Map local status strings to status/select names expected in Notion.
+     * Map local status strings or Enums to status/select names expected in Notion.
      */
-    protected function mapLocalStatusToNotion(string $status): string
+    protected function mapLocalStatusToNotion(\App\Shared\Enums\TaskStatus|string $status): string
     {
+        if ($status instanceof \App\Shared\Enums\TaskStatus) {
+            $status = $status->value;
+        }
+
         return match ($status) {
             'backlog' => 'Backlog',
             'todo' => 'To Do',

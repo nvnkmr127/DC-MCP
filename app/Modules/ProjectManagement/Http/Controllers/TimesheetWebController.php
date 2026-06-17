@@ -16,8 +16,11 @@ class TimesheetWebController extends Controller
 {
     public function index(Request $request): Response
     {
+        if (!$request->user()->hasPermission('view', 'time_entry')) {
+            abort(403);
+        }
+
         $user  = $request->user();
-        $orgId = $user->organization_id;
         $isCeo = $user->hasRoles(['ceo', 'project_manager']);
 
         $weekStart = $request->filled('week')
@@ -29,7 +32,7 @@ class TimesheetWebController extends Controller
             ? $request->user_id
             : $user->id;
 
-        $entries = TimeEntry::where('organization_id', $orgId)
+        $entries = TimeEntry::query()
             ->when(!$isCeo || !$request->filled('user_id'), fn($q) => $q->where('user_id', $viewUser))
             ->when($isCeo && $request->filled('user_id'), fn($q) => $q->where('user_id', $viewUser))
             ->whereBetween('logged_date', [$weekStart->toDateString(), $weekEnd->toDateString()])
@@ -54,15 +57,13 @@ class TimesheetWebController extends Controller
 
         $teamMembers = [];
         if ($isCeo) {
-            $teamMembers = User::where('organization_id', $orgId)
-                ->where('is_active', true)
+            $teamMembers = User::where('is_active', true)
                 ->select('id', 'name')
                 ->orderBy('name')
                 ->get();
         }
 
-        $tasks = Task::where('organization_id', $orgId)
-            ->whereIn('status', ['todo', 'in_progress', 'in_review'])
+        $tasks = Task::whereIn('status', ['todo', 'in_progress', 'in_review'])
             ->select('id', 'title')
             ->orderBy('title')
             ->limit(200)
@@ -84,33 +85,29 @@ class TimesheetWebController extends Controller
 
     public function startTimer(Request $request): RedirectResponse
     {
-        $orgId = $request->user()->organization_id;
+        if (!$request->user()->hasPermission('create', 'time_entry')) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'task_id'     => [
                 'required',
                 'uuid',
-                Rule::exists('tasks', 'id')
-                    ->where('organization_id', $orgId)
-                    ->whereNull('deleted_at'),
+                Rule::exists('tasks', 'id')->whereNull('deleted_at'),
             ],
             'description' => 'nullable|string|max:500',
             'is_billable' => 'boolean',
         ]);
 
-        $hasActive = TimeEntry::where('organization_id', $orgId)
-            ->where('user_id', $request->user()->id)
+        $hasActive = TimeEntry::where('user_id', $request->user()->id)
             ->whereNotNull('timer_started_at')
             ->exists();
 
         abort_if($hasActive, 422, 'A timer is already running.');
 
-        $task = Task::where('id', $validated['task_id'])
-            ->where('organization_id', $orgId)
-            ->firstOrFail();
+        $task = Task::findOrFail($validated['task_id']);
 
         TimeEntry::create([
-            'organization_id'  => $orgId,
             'user_id'          => $request->user()->id,
             'task_id'          => $validated['task_id'],
             'project_id'       => $task->project_id,
@@ -126,7 +123,10 @@ class TimesheetWebController extends Controller
 
     public function stopTimer(Request $request, TimeEntry $timeEntry): RedirectResponse
     {
-        $this->authorizeOrg($timeEntry);
+        if (!$request->user()->hasPermission('update', 'time_entry')) {
+            abort(403);
+        }
+
         abort_if($timeEntry->user_id !== $request->user()->id, 403);
         abort_if(!$timeEntry->timer_started_at, 422);
 

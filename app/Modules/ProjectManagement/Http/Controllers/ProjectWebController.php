@@ -4,18 +4,26 @@ namespace App\Modules\ProjectManagement\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Modules\ProjectManagement\Models\Project;
-use App\Modules\ProjectManagement\Models\Task;
 use App\Modules\Auth\Models\User;
 use App\Modules\ProjectManagement\Models\Client;
+use App\Modules\ProjectManagement\Services\ProjectService;
+use App\Modules\ProjectManagement\Http\Requests\StoreProjectRequest;
+use App\Modules\ProjectManagement\Http\Requests\UpdateProjectRequest;
 
 class ProjectWebController extends Controller
 {
+    public function __construct(
+        protected ProjectService $projectService
+    ) {}
+
     public function index(Request $request)
     {
+        if (!$request->user()->hasPermission('view', 'project')) {
+            abort(403);
+        }
+
         $query = Project::with('client')
             ->withCount(['tasks', 'tasks as completed_tasks_count' => fn($q) => $q->where('status', 'done')])
             ->orderByDesc('updated_at');
@@ -51,6 +59,10 @@ class ProjectWebController extends Controller
 
     public function create(Request $request)
     {
+        if (!$request->user()->hasPermission('create', 'project')) {
+            abort(403);
+        }
+
         $clients = Client::select('id', 'name')->orderBy('name')->get();
         $members = User::where('organization_id', $request->user()->organization_id)
             ->select('id', 'name')
@@ -67,45 +79,18 @@ class ProjectWebController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreProjectRequest $request)
     {
-        $data = $request->validate([
-            'name'               => 'required|string|max:200',
-            'description'        => 'nullable|string',
-            'client_id'          => [
-                'nullable',
-                'uuid',
-                Rule::exists('clients', 'id')
-                    ->where('organization_id', $request->user()->organization_id)
-                    ->whereNull('deleted_at'),
-            ],
-            'status'             => 'required|in:draft,planning,active,on_hold,completed,cancelled',
-            'priority'           => 'required|in:low,medium,high,critical',
-            'start_date'         => 'nullable|date',
-            'end_date'           => 'nullable|date',
-            'budget'             => 'nullable|numeric|min:0',
-            'project_manager_id' => [
-                'nullable',
-                'uuid',
-                Rule::exists('users', 'id')
-                    ->where('organization_id', $request->user()->organization_id)
-                    ->whereNull('deleted_at'),
-            ],
-            'tags'               => 'nullable|array',
-            'type'               => 'required|in:seo,social_media,performance_ads,web_dev,app_dev,content,brand,whatsapp,email_marketing,ecommerce',
-        ]);
-
-        $project = Project::create([
-            ...$data,
-            'organization_id' => $request->user()->organization_id,
-            'slug'            => Str::slug($data['name']) . '-' . substr(uniqid(), -5),
-        ]);
-
+        $project = $this->projectService->createProject($request->validated());
         return redirect()->route('web.projects.show', $project)->with('success', 'Project created.');
     }
 
-    public function show(Project $project)
+    public function show(Request $request, Project $project)
     {
+        if (!$request->user()->hasPermission('view', 'project')) {
+            abort(403);
+        }
+
         $project->load(['client', 'manager', 'milestones', 'sprints']);
         $project->loadCount(['tasks', 'tasks as completed_tasks_count' => fn($q) => $q->where('status', 'done')]);
 
@@ -116,10 +101,14 @@ class ProjectWebController extends Controller
         ]);
     }
 
-    public function edit(Project $project)
+    public function edit(Request $request, Project $project)
     {
+        if (!$request->user()->hasPermission('update', 'project')) {
+            abort(403);
+        }
+
         $clients = Client::select('id', 'name')->orderBy('name')->get();
-        $members = User::where('organization_id', request()->user()->organization_id)
+        $members = User::where('organization_id', $request->user()->organization_id)
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
@@ -131,47 +120,28 @@ class ProjectWebController extends Controller
         ]);
     }
 
-    public function update(Request $request, Project $project)
+    public function update(UpdateProjectRequest $request, Project $project)
     {
-        $data = $request->validate([
-            'name'               => 'sometimes|string|max:200',
-            'description'        => 'nullable|string',
-            'client_id'          => [
-                'nullable',
-                'uuid',
-                Rule::exists('clients', 'id')
-                    ->where('organization_id', $request->user()->organization_id)
-                    ->whereNull('deleted_at'),
-            ],
-            'status'             => 'sometimes|in:draft,planning,active,on_hold,completed,cancelled',
-            'priority'           => 'sometimes|in:low,medium,high,critical',
-            'start_date'         => 'nullable|date',
-            'end_date'           => 'nullable|date',
-            'budget'             => 'nullable|numeric|min:0',
-            'project_manager_id' => [
-                'nullable',
-                'uuid',
-                Rule::exists('users', 'id')
-                    ->where('organization_id', $request->user()->organization_id)
-                    ->whereNull('deleted_at'),
-            ],
-            'tags'               => 'nullable|array',
-            'type'               => 'sometimes|in:seo,social_media,performance_ads,web_dev,app_dev,content,brand,whatsapp,email_marketing,ecommerce',
-        ]);
-
-        $project->update($data);
-
+        $project = $this->projectService->updateProject($project, $request->validated());
         return back()->with('success', 'Project updated.');
     }
 
-    public function destroy(Project $project)
+    public function destroy(Request $request, Project $project)
     {
-        $project->delete();
+        if (!$request->user()->hasPermission('delete', 'project')) {
+            abort(403);
+        }
+
+        $this->projectService->deleteProject($project);
         return redirect()->route('web.projects.index')->with('success', 'Project deleted.');
     }
 
-    public function kanban(Project $project)
+    public function kanban(Request $request, Project $project)
     {
+        if (!$request->user()->hasPermission('view', 'project')) {
+            abort(403);
+        }
+
         $tasks = $project->tasks()
             ->with('assignee:id,name')
             ->whereNull('parent_task_id')
@@ -180,8 +150,8 @@ class ProjectWebController extends Controller
             ->map(fn($t) => [
                 'id'              => $t->id,
                 'title'           => $t->title,
-                'status'          => $t->status,
-                'priority'        => $t->priority,
+                'status'          => is_object($t->status) ? $t->status->value : $t->status,
+                'priority'        => is_object($t->priority) ? $t->priority->value : $t->priority,
                 'due_date'        => $t->due_date?->toDateString(),
                 'estimated_hours' => (float) $t->estimated_hours,
                 'assignee'        => $t->assignee ? ['id' => $t->assignee->id, 'name' => $t->assignee->name] : null,
@@ -194,8 +164,12 @@ class ProjectWebController extends Controller
         ]);
     }
 
-    public function stats(Project $project)
+    public function stats(Request $request, Project $project)
     {
+        if (!$request->user()->hasPermission('view', 'project')) {
+            abort(403);
+        }
+
         $project->load(['client']);
         $tasksByStatus = $project->tasks()->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status');
 
