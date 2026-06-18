@@ -3,7 +3,8 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import type { Task } from '@/types';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, AlignLeft } from 'lucide-react';
+import { RichTextEditor } from '@/Components/Shared/RichTextEditor';
 
 interface Props {
     task: Task;
@@ -15,7 +16,7 @@ const inputCls = 'w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-[1
 const labelCls = 'block text-[12px] font-semibold text-gray-700 mb-1.5';
 
 export default function TaskEdit({ task, projects, members }: Props) {
-    const form = useForm({
+    const { data, setData, post, processing, errors, transform } = useForm({
         title:           task.title,
         description:     task.description ?? '',
         project_id:      task.project_id,
@@ -29,11 +30,12 @@ export default function TaskEdit({ task, projects, members }: Props) {
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
-        form.transform(data => ({
+        transform(data => ({
             ...data,
+            _method: 'patch',
             tags: data.tags ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         }));
-        form.patch(`/tasks/${task.id}`);
+        post(`/tasks/${task.id}`);
     }
 
     return (
@@ -63,24 +65,24 @@ export default function TaskEdit({ task, projects, members }: Props) {
                             <label className={labelCls}>Title <span className="text-red-400">*</span></label>
                             <input
                                 type="text"
-                                value={form.data.title}
-                                onChange={e => form.setData('title', e.target.value)}
-                                className={cn(inputCls, form.errors.title && 'border-red-300 bg-red-50')}
+                                value={data.title}
+                                onChange={e => setData('title', e.target.value)}
+                                className={cn(inputCls, errors.title && 'border-red-300 bg-red-50')}
                                 required
                                 autoFocus
                             />
-                            {form.errors.title && <p className="mt-1.5 text-[11px] text-red-500 font-medium">{form.errors.title}</p>}
+                            {errors.title && <p className="mt-1.5 text-[11px] text-red-500 font-medium">{errors.title}</p>}
                         </div>
 
                         {/* Description */}
                         <div>
-                            <label className={labelCls}>Description</label>
-                            <textarea
-                                value={form.data.description}
-                                onChange={e => form.setData('description', e.target.value)}
-                                rows={4}
-                                className={cn(inputCls, 'resize-none')}
-                                placeholder="Describe what needs to be done…"
+                            <label className="flex items-center gap-1.5 text-[13px] font-semibold text-gray-700 mb-2">
+                                <AlignLeft size={14} className="text-gray-400" /> Description
+                            </label>
+                            <RichTextEditor
+                                value={data.description}
+                                onChange={(value) => setData('description', value)}
+                                placeholder="Add more details to this task..."
                             />
                         </div>
 

@@ -6,6 +6,7 @@ import type { PageProps } from '@/types';
 import { toast } from 'sonner';
 import { SearchOverlay } from '@/Components/Shared/SearchOverlay';
 import { ConfirmProvider } from '@/hooks/useConfirm';
+import { ThemeToggle } from '@/Components/Shared/ThemeToggle';
 import {
     LayoutDashboard, FolderKanban, CheckSquare, Users, BarChart3,
     Settings, Bell, Search, ChevronLeft, ChevronRight,
@@ -17,7 +18,7 @@ import {
     ListChecks, Star, ReceiptText, Package, Percent,
     FileCheck, MessageSquare, UserPlus, BookOpen, Smile,
     BarChart2, Workflow, ShoppingCart, FileX, Trophy, Send,
-    Megaphone,
+    Megaphone, Trash2
 } from 'lucide-react';
 
 interface NavItem {
@@ -36,15 +37,20 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Calendar',       href: '/calendar',      icon: Calendar,        section: 'main' },
     { label: 'Clients',        href: '/clients',       icon: Briefcase,       section: 'main' },
     { label: 'Content',        href: '/content',       icon: PenTool,         section: 'main' },
-    { label: 'Revenue',        href: '/retainers',    icon: TrendingUp,   section: 'main',     roles: ['ceo', 'project_manager'] },
+    { label: 'Revenue',        href: '/retainers',    icon: TrendingUp,   section: 'finance',     roles: ['ceo', 'project_manager'] },
+    { label: 'P&L',            href: '/financials',    icon: DollarSign,   section: 'finance', roles: ['ceo'] },
+    { label: 'Payroll',        href: '/payroll',       icon: CreditCard,   section: 'finance', roles: ['ceo'] },
+    { label: 'Ad Budgets',     href: '/campaign-budgets', icon: Target,      section: 'finance', roles: ['ceo', 'project_manager'] },
+    { label: 'GST Report',     href: '/gst-report',       icon: Percent,    section: 'finance', roles: ['ceo'] },
+    { label: 'Rate Card',      href: '/rate-cards',       icon: ReceiptText, section: 'finance', roles: ['ceo'] },
+    { label: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart, section: 'finance', roles: ['ceo', 'project_manager'] },
+    { label: 'Credit Notes',   href: '/credit-notes',     icon: FileX,      section: 'finance', roles: ['ceo'] },
+
     { label: 'Pipeline',       href: '/prospects',    icon: GitBranch,    section: 'main',     roles: ['ceo', 'project_manager'] },
     { label: 'SOW',            href: '/sow',          icon: FileText,     section: 'main',     roles: ['ceo', 'project_manager'] },
     { label: 'Capacity',       href: '/capacity',     icon: Activity,     section: 'main',     roles: ['ceo', 'project_manager'] },
     { label: 'Standup',        href: '/standup',      icon: ClipboardList, section: 'main' },
-    { label: 'P&L',            href: '/financials',    icon: DollarSign,   section: 'main', roles: ['ceo'] },
-    { label: 'Payroll',        href: '/payroll',       icon: CreditCard,   section: 'main', roles: ['ceo'] },
     { label: 'Onboarding',     href: '/onboarding',    icon: UserCheck,    section: 'main', roles: ['ceo', 'project_manager'] },
-    { label: 'Ad Budgets',     href: '/campaign-budgets', icon: Target,      section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Goals',          href: '/goals',            icon: Flag,        section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Timesheets',     href: '/timesheets',        icon: Clock,       section: 'main' },
     { label: '1:1 Notes',      href: '/one-on-one',        icon: Users2,      section: 'main', roles: ['ceo', 'project_manager'] },
@@ -57,10 +63,6 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Proposals',      href: '/proposals',        icon: Send,       section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Client Reports', href: '/client-reports',   icon: FileCheck,  section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'NPS Surveys',    href: '/client-surveys',   icon: Smile,      section: 'main', roles: ['ceo', 'project_manager'] },
-    { label: 'GST Report',     href: '/gst-report',       icon: Percent,    section: 'main', roles: ['ceo'] },
-    { label: 'Rate Card',      href: '/rate-cards',       icon: ReceiptText, section: 'main', roles: ['ceo'] },
-    { label: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart, section: 'main', roles: ['ceo', 'project_manager'] },
-    { label: 'Credit Notes',   href: '/credit-notes',     icon: FileX,      section: 'main', roles: ['ceo'] },
     { label: 'Daily Briefing', href: '/briefings',    icon: Sun,      section: 'insights' },
     { label: 'AI Suggestions', href: '/suggestions',  icon: Sparkles, section: 'insights', roles: ['ceo', 'project_manager'] },
     { label: 'Reports',        href: '/reports',      icon: BarChart3, section: 'insights' },
@@ -77,10 +79,12 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Client Portal',  href: '/settings/client-portal', icon: Globe,   section: 'manage', roles: ['ceo'] },
     { label: 'Workflows',      href: '/workflows',              icon: Workflow, section: 'manage', roles: ['ceo', 'project_manager'] },
     { label: 'Settings',       href: '/settings',               icon: Settings, section: 'manage' },
+    { label: 'Trash',          href: '/settings/trash',         icon: Trash2,   section: 'manage' },
 ];
 
 const NAV_SECTIONS = [
     { key: 'main',     label: 'Workspace' },
+    { key: 'finance',  label: 'Finance' },
     { key: 'insights', label: 'Insights' },
     { key: 'hr',       label: 'HR' },
     { key: 'manage',   label: 'Manage' },
@@ -92,8 +96,13 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
     const [collapsed, setCollapsed] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>({ main: true, finance: false, insights: false, hr: false, manage: false });
     const userMenuRef = useRef<HTMLDivElement>(null);
     const user = auth.user!;
+
+    const toggleSection = (key: string) => {
+        setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+    };
 
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
@@ -143,13 +152,13 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
             {/* ──────────── SIDEBAR ──────────── */}
             <aside className={cn(
                 'relative flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out',
-                'bg-gradient-to-b from-[#0e1017] via-[#131622] to-[#090b10] border-r border-[#1c1e2b] shadow-[4px_0_24px_rgba(0,0,0,0.12)]',
+                'bg-slate-900 dark:bg-slate-950 border-r border-slate-800 shadow-xl',
                 collapsed ? 'w-[58px]' : 'w-[230px]',
             )}>
 
                 {/* Logo row */}
                 <div className={cn(
-                    'flex items-center h-[56px] border-b border-[#1c1e2b] px-4 gap-3 flex-shrink-0',
+                    'flex items-center h-[56px] border-b border-slate-800 px-4 gap-3 flex-shrink-0',
                     collapsed && 'justify-center',
                 )}>
                     <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-violet-500 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(99,102,241,0.35)] animate-pulse">
@@ -163,7 +172,7 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                             </div>
                             <button
                                 onClick={() => setCollapsed(true)}
-                                className="p-1 rounded-lg text-[#4e566d] hover:text-[#a5b4fc] hover:bg-white/5 transition-colors"
+                                className="p-1 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-white/5 transition-colors"
                             >
                                 <ChevronLeft size={14} />
                             </button>
@@ -171,11 +180,10 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                     )}
                 </div>
 
-                {/* Expand toggle (collapsed state) */}
                 {collapsed && (
                     <button
                         onClick={() => setCollapsed(false)}
-                        className="flex items-center justify-center mx-auto mt-2.5 w-8 h-8 rounded-lg text-[#4e566d] hover:text-[#a5b4fc] hover:bg-white/5 transition-colors"
+                        className="flex items-center justify-center mx-auto mt-2.5 w-8 h-8 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-white/5 transition-colors"
                     >
                         <ChevronRight size={14} />
                     </button>
@@ -186,7 +194,7 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                     {!collapsed ? (
                         <button
                             onClick={() => setSearchOpen(true)}
-                            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-[#171a27] border border-[#23273a]/40 text-[#5f6885] hover:text-indigo-200 hover:border-indigo-500/20 hover:bg-[#1a1e2f] transition-all text-[12px]"
+                            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 hover:text-indigo-200 hover:border-indigo-500/30 transition-all text-[12px]"
                         >
                             <Search size={12} className="shrink-0" />
                             <span className="flex-1 text-left">Search…</span>
@@ -197,63 +205,69 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                     ) : (
                         <button
                             onClick={() => setSearchOpen(true)}
-                            className="w-9 h-9 flex items-center justify-center rounded-xl text-[#5f6885] hover:text-[#a5b4fc] hover:bg-white/5 transition-colors"
+                            className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-indigo-300 hover:bg-white/5 transition-colors"
                         >
                             <Search size={15} />
                         </button>
                     )}
                 </div>
 
-                {/* Nav */}
-                <nav className="flex-1 overflow-y-auto sidebar-scroll pb-3 space-y-4 mt-2">
+                <nav className="flex-1 overflow-y-auto sidebar-scroll pb-3 mt-2">
                     {NAV_SECTIONS.map(({ key, label }) => {
                         const items = visibleNav.filter((i) => i.section === key);
                         if (!items.length) return null;
+                        const isOpen = collapsed || openSections[key];
                         return (
-                            <div key={key}>
+                            <div key={key} className="mb-2">
                                 {!collapsed && (
-                                    <p className="px-5 mb-1.5 text-[9px] font-bold uppercase tracking-widest text-[#3b4157]">
+                                    <button
+                                        onClick={() => toggleSection(key)}
+                                        className="w-full flex items-center justify-between px-5 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors"
+                                    >
                                         {label}
-                                    </p>
+                                        <ChevronDown size={12} className={cn("transition-transform duration-200", isOpen ? "rotate-180" : "")} />
+                                    </button>
                                 )}
-                                <div className="space-y-[3px] px-3">
-                                    {items.map((item) => {
-                                        const Icon = item.icon;
-                                        const active = isActive(item.href);
-                                        return (
-                                            <Link
-                                                key={item.href}
-                                                href={item.href}
-                                                title={collapsed ? item.label : undefined}
-                                                className={cn(
-                                                    'flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-200 relative group',
-                                                    active
-                                                        ? 'bg-indigo-600/10 text-indigo-200 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)] border border-indigo-500/20'
-                                                        : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent',
-                                                    collapsed && 'justify-center',
-                                                )}
-                                            >
-                                                <Icon
-                                                    size={15}
-                                                    className={cn('shrink-0 transition-colors', active ? 'text-indigo-400' : 'text-[#4e566d] group-hover:text-indigo-300')}
-                                                />
-                                                {!collapsed && <span className="truncate">{item.label}</span>}
-                                                {!collapsed && !!item.badge && (
-                                                    <span className="ml-auto min-w-[18px] h-[18px] text-[10px] font-bold bg-indigo-500 text-white rounded-full flex items-center justify-center px-1">
-                                                        {item.badge}
-                                                    </span>
-                                                )}
-                                            </Link>
-                                        );
-                                    })}
-                                </div>
+                                {isOpen && (
+                                    <div className="space-y-[2px] px-3 mt-1">
+                                        {items.map((item) => {
+                                            const Icon = item.icon;
+                                            const active = isActive(item.href);
+                                            return (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    title={collapsed ? item.label : undefined}
+                                                    className={cn(
+                                                        'flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-200 relative group',
+                                                        active
+                                                            ? 'bg-indigo-600/15 text-indigo-100 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] border border-indigo-500/30'
+                                                            : 'text-slate-400 hover:bg-white/5 hover:text-slate-100 border border-transparent',
+                                                        collapsed && 'justify-center',
+                                                    )}
+                                                >
+                                                    <Icon
+                                                        size={15}
+                                                        className={cn('shrink-0 transition-colors', active ? 'text-indigo-400' : 'text-slate-500 group-hover:text-indigo-300')}
+                                                    />
+                                                    {!collapsed && <span className="truncate">{item.label}</span>}
+                                                    {!collapsed && !!item.badge && (
+                                                        <span className="ml-auto min-w-[18px] h-[18px] text-[10px] font-bold bg-indigo-500 text-white rounded-full flex items-center justify-center px-1">
+                                                            {item.badge}
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
                 </nav>
 
                 {/* User row */}
-                <div className="border-t border-[#1c1e2b] p-3 flex-shrink-0" ref={userMenuRef}>
+                <div className="border-t border-slate-800 p-3 flex-shrink-0" ref={userMenuRef}>
                     <div className="relative">
                         <button
                             onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -271,22 +285,22 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                             {!collapsed && (
                                 <>
                                     <div className="flex-1 min-w-0 text-left">
-                                        <p className="text-[12px] font-semibold text-[#e2e8f0] truncate leading-tight">{user.name}</p>
-                                        <p className="text-[10px] text-[#4e566d] truncate leading-tight">{user.email}</p>
+                                        <p className="text-[12px] font-semibold text-slate-200 truncate leading-tight">{user.name}</p>
+                                        <p className="text-[10px] text-slate-500 truncate leading-tight">{user.email}</p>
                                     </div>
-                                    <ChevronDown size={11} className="text-[#4e566d] shrink-0" />
+                                    <ChevronDown size={11} className="text-slate-500 shrink-0" />
                                 </>
                             )}
                         </button>
 
                         {userMenuOpen && (
                             <div className={cn(
-                                'absolute bottom-full mb-2.5 z-50 bg-[#12141f] border border-[#23273a]/60 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] py-1.5 min-w-[200px] backdrop-blur-xl',
+                                'absolute bottom-full mb-2.5 z-50 bg-slate-900 border border-slate-700 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] py-1.5 min-w-[200px]',
                                 collapsed ? 'left-11' : 'left-0 right-0',
                             )}>
-                                <div className="px-3.5 py-2 border-b border-[#23273a]/60 mb-1">
+                                <div className="px-3.5 py-2 border-b border-slate-800 mb-1">
                                     <p className="text-[12px] font-semibold text-white truncate">{user.name}</p>
-                                    <p className="text-[10px] text-[#4e566d] truncate">{user.email}</p>
+                                    <p className="text-[10px] text-slate-400 truncate">{user.email}</p>
                                 </div>
                                 {[
                                     { href: '/settings/profile', Icon: User,        label: 'Profile Settings' },
@@ -301,7 +315,11 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                                         <Icon size={12} className="shrink-0" /> {label}
                                     </Link>
                                 ))}
-                                <div className="my-1.5 border-t border-[#23273a]/60" />
+                                <div className="my-1.5 border-t border-slate-800" />
+                                <div className="px-3.5 py-1.5">
+                                    <ThemeToggle />
+                                </div>
+                                <div className="my-1.5 border-t border-slate-800" />
                                 <Link
                                     href="/logout"
                                     method="post"

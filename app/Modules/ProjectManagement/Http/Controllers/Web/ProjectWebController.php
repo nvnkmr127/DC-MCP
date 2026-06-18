@@ -94,9 +94,24 @@ class ProjectWebController extends Controller
         $project->load(['client', 'manager', 'milestones', 'sprints']);
         $project->loadCount(['tasks', 'tasks as completed_tasks_count' => fn($q) => $q->where('status', 'done')]);
 
+        $activities = \App\Models\Activity::where('subject_type', 'project')
+            ->where('subject_id', $project->id)
+            ->with('user:id,name')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn($a) => [
+                'id'          => $a->id,
+                'event'       => $a->event,
+                'description' => $a->description,
+                'changes'     => $a->changes,
+                'created_at'  => $a->created_at->toISOString(),
+                'user'        => $a->user ? ['id' => $a->user->id, 'name' => $a->user->name] : null,
+            ]);
+
         return Inertia::render('Projects/Show', [
             'project' => array_merge($project->toArray(), [
                 'completion_pct' => $project->completionPct($project->tasks_count, $project->completed_tasks_count),
+                'activities' => $activities,
             ]),
         ]);
     }
@@ -176,6 +191,20 @@ class ProjectWebController extends Controller
         return Inertia::render('Projects/Stats', [
             'project'       => $project->only('id', 'name', 'status', 'budget', 'budget_used', 'start_date', 'end_date'),
             'tasks_by_status' => $tasksByStatus,
+        ]);
+    }
+
+    public function milestones(Request $request, Project $project)
+    {
+        if (!$request->user()->hasPermission('view', 'project')) {
+            abort(403);
+        }
+
+        $project->load('milestones');
+
+        return Inertia::render('Projects/Milestones', [
+            'project' => $project->only('id', 'name', 'status'),
+            'milestones' => $project->milestones,
         ]);
     }
 }

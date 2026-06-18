@@ -22,6 +22,9 @@ Route::middleware(['auth'])->group(function () {
     // Redirect root to dashboard
     Route::get('/', fn() => redirect()->to('/dashboard'));
     
+    // Global Search
+    Route::get('/api/search', \App\Http\Controllers\SearchController::class);
+    
     // /settings -> redirect to profile
     Route::get('/settings', fn() => redirect()->to('/settings/profile'));
     

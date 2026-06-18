@@ -27,9 +27,11 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/projects/{project}',       [ProjectWebController::class, 'destroy'])->name('web.projects.destroy');
     Route::get('/projects/{project}/kanban',   [ProjectWebController::class, 'kanban'])->name('web.projects.kanban');
     Route::get('/projects/{project}/stats',    [ProjectWebController::class, 'stats'])->name('web.projects.stats');
+    Route::get('/projects/{project}/milestones',[ProjectWebController::class, 'milestones'])->name('web.projects.milestones');
     Route::post('/projects/{project}/bulk-tasks',            [TaskWebController::class, 'bulkStore'])->name('web.projects.bulk-tasks');
 
     // Tasks
+    Route::get('/tasks/export',                [TaskWebController::class, 'export'])->name('web.tasks.export');
     Route::get('/tasks',                       [TaskWebController::class, 'index'])->name('web.tasks.index');
     Route::get('/tasks/create',                [TaskWebController::class, 'create'])->name('web.tasks.create');
     Route::post('/tasks',                      [TaskWebController::class, 'store'])->name('web.tasks.store');
@@ -44,8 +46,10 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/attachments/{attachment}', [TaskWebController::class, 'destroyAttachment'])->name('web.attachments.destroy');
     Route::delete('/tasks/{task}/comments/{comment}',       [TaskWebController::class, 'destroyComment'])->name('web.tasks.comments.destroy');
     Route::delete('/tasks/{task}/time-entries/{timeEntry}', [TaskWebController::class, 'destroyTimeEntry'])->name('web.tasks.time.destroy');
-    Route::post('/tasks/{task}/dependencies',                [TaskWebController::class, 'addDependency'])->name('web.tasks.dependencies.add');
-    Route::delete('/tasks/{task}/dependencies/{dependency}', [TaskWebController::class, 'removeDependency'])->name('web.tasks.dependencies.remove');
+    Route::post('/tasks/{task}/dependencies',  [TaskWebController::class, 'addDependency'])->name('web.tasks.dependencies.store');
+    Route::delete('/tasks/{task}/dependencies/{dependency}', [TaskWebController::class, 'removeDependency'])->name('web.tasks.dependencies.destroy');
+    Route::post('/tasks/bulk-update',          [TaskWebController::class, 'bulkUpdate'])->name('web.tasks.bulk-update');
+    Route::delete('/tasks/bulk-destroy',       [TaskWebController::class, 'bulkDestroy'])->name('web.tasks.bulk-destroy');
 
     // Clients
     Route::get('/clients',                     [ClientWebController::class, 'index'])->name('web.clients.index');

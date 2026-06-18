@@ -3,7 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn, formatDate, dueDateLabel } from '@/lib/utils';
 import type { Task, PaginatedResponse } from '@/types';
-import { Plus, SlidersHorizontal, CheckSquare, AlertCircle } from 'lucide-react';
+import { Plus, SlidersHorizontal, CheckSquare, AlertCircle, Download } from 'lucide-react';
 import { TASK_STATUS_DOT, TASK_PRIORITY_DOT } from '@/lib/constants';
 import { StatusBadge } from '@/Components/Shared/StatusBadge';
 import { Pagination } from '@/Components/ui/Pagination';
@@ -29,6 +29,25 @@ export default function TasksIndex({ tasks, filters }: Props) {
     function toggleAll() {
         if (selected.length === tasks.data.length) setSelected([]);
         else setSelected(tasks.data.map((t) => t.id));
+    }
+
+    function handleBulkDelete() {
+        if (!confirm(`Are you sure you want to delete ${selected.length} tasks?`)) return;
+        router.delete('/tasks/bulk-destroy', {
+            data: { task_ids: selected },
+            onSuccess: () => setSelected([]),
+        });
+    }
+
+    function handleBulkUpdate(field: string, value: string) {
+        router.post('/tasks/bulk-update', {
+            task_ids: selected,
+            [field]: value
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => setSelected([]),
+        });
     }
 
     const statuses  = ['backlog', 'todo', 'in_progress', 'in_review', 'blocked', 'done'];
@@ -83,16 +102,40 @@ export default function TasksIndex({ tasks, filters }: Props) {
                     {selected.length > 0 && (
                         <div className="flex items-center gap-2 ml-1 pl-3 border-l border-gray-200">
                             <span className="text-[12px] text-gray-500">{selected.length} selected</span>
+                            
+                            <select 
+                                onChange={(e) => handleBulkUpdate('status', e.target.value)}
+                                value=""
+                                className="px-2 py-1 bg-white border border-gray-200 text-[11px] rounded hover:bg-gray-50 outline-none text-gray-600"
+                            >
+                                <option value="" disabled>Set Status...</option>
+                                {statuses.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+                            </select>
+
+                            <button
+                                onClick={handleBulkDelete}
+                                className="px-2.5 py-1 bg-red-600 text-white text-[11px] font-semibold rounded hover:bg-red-700 transition-colors"
+                            >
+                                Delete
+                            </button>
                         </div>
                     )}
                 </div>
 
-                <Link
-                    href="/tasks/create"
-                    className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-[13px] font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-                >
-                    <Plus size={14} /> New Task
-                </Link>
+                <div className="flex items-center gap-2">
+                    <a
+                        href="/tasks/export"
+                        className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-[13px] font-semibold rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                    >
+                        <Download size={14} /> Export CSV
+                    </a>
+                    <Link
+                        href="/tasks/create"
+                        className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-[13px] font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+                    >
+                        <Plus size={14} /> New Task
+                    </Link>
+                </div>
             </div>
 
             {/* ── Filter panel ── */}

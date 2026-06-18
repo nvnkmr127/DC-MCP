@@ -3,7 +3,8 @@ import { useForm, router } from '@inertiajs/react';
 import type { Comment } from '@/types';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Send, Trash2 } from 'lucide-react';
-import { timeAgo } from '@/lib/utils';
+import { timeAgo, cn } from '@/lib/utils';
+import { RichTextEditor } from '@/Components/Shared/RichTextEditor';
 
 interface CommentsSectionProps {
     taskId: string;
@@ -53,23 +54,25 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ taskId, commen
                                 <Trash2 size={12} />
                             </button>
                         </div>
-                        <p className="text-sm text-gray-700">{comment.body}</p>
+                        <div 
+                            className="text-sm text-gray-700 prose prose-sm max-w-none"
+                            dangerouslySetInnerHTML={{ __html: comment.body }} 
+                        />
                     </div>
                 </div>
             ))}
             <form onSubmit={submitComment} className="flex gap-3">
                 <div className="flex-1">
-                    <textarea
+                    <RichTextEditor
                         value={commentForm.data.body}
-                        onChange={(e) => commentForm.setData('body', e.target.value)}
-                        rows={2}
+                        onChange={(value) => commentForm.setData('body', value)}
                         placeholder="Add a comment…"
-                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                        className="bg-white"
                     />
                 </div>
                 <button
                     type="submit"
-                    disabled={!commentForm.data.body || commentForm.processing}
+                    disabled={!commentForm.data.body || commentForm.data.body === '<p></p>' || commentForm.processing}
                     className="self-end p-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
                 >
                     <Send size={16} />

@@ -15,6 +15,7 @@ use App\Modules\ProjectManagement\Models\Attachment;
 use App\Modules\ProjectManagement\Models\TimeEntry;
 use App\Modules\ProjectManagement\Models\TaskDependency;
 use App\Modules\Auth\Models\User;
+use App\Models\Activity;
 use Illuminate\Validation\Rule;
 use App\Modules\ProjectManagement\Http\Requests\StoreTaskRequest;
 use App\Modules\ProjectManagement\Http\Requests\UpdateTaskRequest;
@@ -22,9 +23,12 @@ use App\Shared\Enums\TaskStatus;
 use App\Shared\Enums\TaskType;
 use App\Shared\Enums\TaskPriority;
 use App\Shared\Enums\RoleType;
+use App\Traits\Exportable;
 
 class TaskWebController extends Controller
 {
+    use Exportable;
+
     public function __construct(private TaskService $taskService) {}
     public function index(Request $request)
     {
@@ -69,6 +73,48 @@ class TaskWebController extends Controller
             'tasks'   => $tasks,
             'filters' => $request->only(['status', 'priority', 'assigned', 'overdue', 'project_id']),
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        if (!$request->user()->hasPermission('view', 'task')) {
+            abort(403);
+        }
+
+        $query = Task::with(['project:id,name', 'assignee:id,name'])
+            ->whereNull('parent_task_id')
+            ->orderByDesc('updated_at');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+        if ($request->assigned === 'me') {
+            $query->where('assigned_to', $request->user()->id);
+        }
+        if ($request->overdue === '1') {
+            $query->whereDate('due_date', '<', now())->whereNotIn('status', ['done', 'cancelled']);
+        }
+
+        $headers = [
+            'id' => 'ID',
+            'title' => 'Title',
+            'status' => 'Status',
+            'priority' => 'Priority',
+            'due_date' => 'Due Date',
+            'estimated_hours' => 'Estimated Hours',
+            'actual_hours' => 'Actual Hours',
+            'project.name' => 'Project',
+            'assignee.name' => 'Assignee',
+            'created_at' => 'Created At',
+        ];
+
+        return $this->exportCsv($query, 'tasks_export_' . now()->format('Ymd_His'), $headers);
     }
 
     public function create(Request $request)
@@ -159,6 +205,20 @@ class TaskWebController extends Controller
                 ];
             });
 
+        $activities = Activity::where('subject_type', 'task')
+            ->where('subject_id', $task->id)
+            ->with('user:id,name')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn($a) => [
+                'id'          => $a->id,
+                'event'       => $a->event,
+                'description' => $a->description,
+                'changes'     => $a->changes,
+                'created_at'  => $a->created_at->toISOString(),
+                'user'        => $a->user ? ['id' => $a->user->id, 'name' => $a->user->name] : null,
+            ]);
+
         return Inertia::render('Tasks/Show', [
             'task' => array_merge(
                 $task->toArray(),
@@ -182,6 +242,7 @@ class TaskWebController extends Controller
                         'user'        => ['id' => $e->user?->id, 'name' => $e->user?->name],
                     ]),
                     'dependencies' => $depTasks,
+                    'activities'   => $activities,
                 ]
             ),
             'projectTasks' => $projectTasks,
@@ -448,5 +509,47 @@ class TaskWebController extends Controller
             ->delete();
 
         return back()->with('success', 'Dependency removed.');
+    }
+
+    public function bulkDestroy(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        if (!$request->user()->hasPermission('delete', 'task')) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'task_ids'   => 'required|array|min:1',
+            'task_ids.*' => 'required|uuid',
+        ]);
+
+        Task::whereIn('id', $data['task_ids'])
+            ->where('organization_id', $request->user()->organization_id)
+            ->delete();
+
+        return back()->with('success', count($data['task_ids']) . ' tasks deleted.');
+    }
+    public function bulkUpdate(Request $request): \Illuminate\Http\RedirectResponse
+    {
+        if (!$request->user()->hasPermission('update', 'task')) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'task_ids'   => 'required|array|min:1',
+            'task_ids.*' => 'required|uuid',
+            'status'     => 'nullable|in:backlog,todo,in_progress,in_review,blocked,done,cancelled',
+        ]);
+
+        $tasks = Task::whereIn('id', $data['task_ids'])
+            ->where('organization_id', $request->user()->organization_id)
+            ->get();
+
+        foreach ($tasks as $task) {
+            if (isset($data['status'])) {
+                $this->taskService->updateTaskStatus($task, $data['status'], $request->user());
+            }
+        }
+
+        return back()->with('success', count($data['task_ids']) . ' tasks updated.');
     }
 }

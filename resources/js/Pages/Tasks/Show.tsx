@@ -7,11 +7,12 @@ import type { Task, Attachment, TimeEntry } from '@/types';
 import {
     MessageSquare, Paperclip, Clock,
     Upload, Trash2, Edit,
-    GitFork, AlertCircle,
+    GitFork, AlertCircle, Activity,
 } from 'lucide-react';
 import { CommentsSection } from './Partials/CommentsSection';
 import { TimeTracker } from './Partials/TimeTracker';
 import { DependenciesSection, TaskDep } from './Partials/DependenciesSection';
+import { ActivityLog } from '@/Components/Shared/ActivityLog';
 import { StatusBadge } from '@/Components/Shared/StatusBadge';
 
 interface Props {
@@ -20,12 +21,13 @@ interface Props {
         attachments: Attachment[];
         time_entries: TimeEntry[];
         dependencies?: TaskDep[];
+        activities: any[];
     };
     projectTasks?: TaskDep[];
 }
 
 export default function TaskShow({ task, projectTasks = [] }: Props) {
-    const [activeTab, setActiveTab] = useState<'comments' | 'attachments' | 'time' | 'dependencies'>('comments');
+    const [activeTab, setActiveTab] = useState<'comments' | 'attachments' | 'time' | 'dependencies' | 'activities'>('comments');
     const fileRef = useRef<HTMLInputElement>(null);
 
     const confirm = useConfirm();
@@ -130,6 +132,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                     { key: 'attachments', label: 'Files', icon: Paperclip, count: task.attachments.length },
                                     { key: 'time', label: 'Time', icon: Clock, count: null },
                                     { key: 'dependencies', label: 'Dependencies', icon: GitFork, count: dependencies.length || null },
+                                    { key: 'activities', label: 'Activity', icon: Activity, count: task.activities.length },
                                 ].map(({ key, label, icon: Icon, count }) => (
                                     <button
                                         key={key}
@@ -204,6 +207,10 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
 
                                 {activeTab === 'dependencies' && (
                                     <DependenciesSection taskId={task.id} dependencies={dependencies} projectTasks={projectTasks} />
+                                )}
+
+                                {activeTab === 'activities' && (
+                                    <ActivityLog activities={task.activities} />
                                 )}
                             </div>
                         </div>

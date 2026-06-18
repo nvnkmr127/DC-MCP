@@ -8,6 +8,11 @@ use App\Modules\ProjectManagement\Http\Controllers\Api\TaskApiController;
 use App\Modules\ProjectManagement\Http\Controllers\Api\SprintApiController;
 use App\Modules\ProjectManagement\Http\Controllers\Api\MilestoneApiController;
 use App\Modules\ProjectManagement\Http\Controllers\Api\ClientApiController;
+use App\Modules\ProjectManagement\Http\Controllers\Api\DeliverableApiController;
+use App\Modules\ProjectManagement\Http\Controllers\Api\GoalApiController;
+use App\Modules\ProjectManagement\Http\Controllers\Api\CapacityApiController;
+use App\Modules\ProjectManagement\Http\Controllers\Api\OnboardingApiController;
+use App\Modules\ProjectManagement\Http\Controllers\Api\AuditChecklistApiController;
 
 Route::get('organizations/team-workload', [ProjectApiController::class, 'teamWorkload']);
 Route::get('projects/{project}/kanban', [KanbanApiController::class, 'board']);
@@ -30,3 +35,9 @@ Route::get('time-entries/summary', [TimeEntryApiController::class, 'summary']);
 Route::apiResource('time-entries', TimeEntryApiController::class);
 
 Route::apiResource('clients', ClientApiController::class);
+
+Route::apiResource('deliverables', DeliverableApiController::class);
+Route::apiResource('goals', GoalApiController::class);
+Route::get('capacity', [CapacityApiController::class, 'index']);
+Route::apiResource('onboardings', OnboardingApiController::class);
+Route::apiResource('audit-checklists', AuditChecklistApiController::class);

@@ -19,6 +19,7 @@ import {
     Widget
 } from '@/hooks/queries/useDashboards';
 import { Button } from '@/Components/ui/Button';
+import { Skeleton } from '@/Components/ui/Skeleton';
 
 interface DashboardStats {
     my_active_tasks: number;
@@ -181,11 +182,11 @@ export default function DashboardIndex({ stats, briefing }: Props) {
             {/* Loading / Custom layout view */}
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="bg-white/80 border border-gray-100 rounded-2xl p-6 h-[200px] animate-pulse">
-                            <div className="h-4 bg-gray-100 rounded-full w-24 mb-4"></div>
-                            <div className="h-10 bg-gray-50 rounded-full w-12 mb-4"></div>
-                            <div className="h-4 bg-gray-50 rounded-full w-full"></div>
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <div key={i} className="bg-white border border-gray-100 dark:bg-slate-900 dark:border-slate-800 rounded-2xl p-6 h-[200px] shadow-sm">
+                            <Skeleton className="h-4 w-24 mb-4" />
+                            <Skeleton className="h-10 w-12 mb-4" />
+                            <Skeleton className="h-4 w-full" />
                         </div>
                     ))}
                 </div>

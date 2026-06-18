@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import { UserPlus, Users } from 'lucide-react';
@@ -139,14 +139,18 @@ export default function TeamSettings({ members, roles }: Props) {
                                     </td>
                                     <td className="px-4 py-3 text-gray-500">{member.email}</td>
                                     <td className="px-4 py-3">
-                                        <div className="flex flex-wrap gap-1">
-                                            {member.roles.map(r => (
-                                                <span key={r.id} className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs rounded-full capitalize">
-                                                    {r.name}
-                                                </span>
+                                        <select 
+                                            value={member.roles[0]?.id ?? ''}
+                                            onChange={(e) => {
+                                                router.patch(`/settings/team/${member.id}/role`, { role_id: e.target.value }, { preserveScroll: true });
+                                            }}
+                                            className="px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                                        >
+                                            <option value="" disabled>Select a role...</option>
+                                            {roles.map(r => (
+                                                <option key={r.id} value={r.id}>{r.name}</option>
                                             ))}
-                                            {member.roles.length === 0 && <span className="text-gray-400 text-xs">No role</span>}
-                                        </div>
+                                        </select>
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', member.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500')}>

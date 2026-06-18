@@ -4,7 +4,8 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
 import { cn, formatDate, formatCurrency, TASK_STATUS_COLORS, PRIORITY_COLORS } from '@/lib/utils';
 import type { Project, Task } from '@/types';
-import { Kanban, Plus, BarChart, Edit, ArrowLeft, Trash2 } from 'lucide-react';
+import { Kanban, Plus, BarChart, Edit, ArrowLeft, Trash2, Activity } from 'lucide-react';
+import { ActivityLog } from '@/Components/Shared/ActivityLog';
 
 interface Props {
     project: Project & {
@@ -15,6 +16,7 @@ interface Props {
         manager?: { id: string; name: string } | null;
         milestones?: Array<{ id: string; name: string; due_date: string; status: string }>;
         sprints?: Array<{ id: string; name: string; status: string; start_date: string; end_date: string }>;
+        activities?: any[];
     };
 }
 
@@ -120,6 +122,15 @@ export default function ProjectShow({ project }: Props) {
                                     + Add Task
                                 </Link>
                             </div>
+                        </div>
+
+                        {/* Activities */}
+                        <div className="bg-white rounded-xl border border-gray-200 p-5 mt-4">
+                            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
+                                <Activity size={16} className="text-gray-400" />
+                                <h3 className="text-sm font-semibold text-gray-900">Project Activity</h3>
+                            </div>
+                            <ActivityLog activities={project.activities || []} />
                         </div>
                     </div>
 

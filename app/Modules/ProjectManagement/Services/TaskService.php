@@ -12,6 +12,7 @@ use App\Modules\ProjectManagement\Events\TaskAssigned;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use App\Models\Activity;
 use Carbon\Carbon;
 
 class TaskService
@@ -45,6 +46,16 @@ class TaskService
                 'new_value' => json_encode($task->toArray()),
                 'comment' => 'Task created.',
                 'logged_at' => now(),
+            ]);
+
+            Activity::create([
+                'organization_id' => $task->organization_id,
+                'subject_type' => 'task',
+                'subject_id' => $task->id,
+                'event' => 'created',
+                'user_id' => auth()->id() ?: $task->created_by,
+                'changes' => ['new' => $task->toArray()],
+                'description' => 'Task created',
             ]);
 
             // Notify assignee if set
@@ -100,6 +111,16 @@ class TaskService
                 'new_value' => json_encode(['status' => $newStatus]),
                 'comment' => "Status changed from {$oldStatus} to {$newStatus}.",
                 'logged_at' => now(),
+            ]);
+
+            Activity::create([
+                'organization_id' => $task->organization_id,
+                'subject_type' => 'task',
+                'subject_id' => $task->id,
+                'event' => 'status_changed',
+                'user_id' => $actor->id,
+                'changes' => ['old' => ['status' => $oldStatus], 'new' => ['status' => $newStatus]],
+                'description' => "Status changed from {$oldStatus} to {$newStatus}",
             ]);
 
             // Unlock downstream dependent tasks if this task is completed
@@ -182,6 +203,16 @@ class TaskService
                 'new_value' => json_encode(['assigned_to' => $user->id]),
                 'comment' => "Assigned to {$user->name}.",
                 'logged_at' => now(),
+            ]);
+
+            Activity::create([
+                'organization_id' => $task->organization_id,
+                'subject_type' => 'task',
+                'subject_id' => $task->id,
+                'event' => 'assigned',
+                'user_id' => $actor->id,
+                'changes' => ['old' => ['assigned_to' => $oldAssignedTo], 'new' => ['assigned_to' => $user->id]],
+                'description' => "Assigned to {$user->name}",
             ]);
 
             // Dispatch notification to user

@@ -28,10 +28,41 @@ class SettingsWebController extends Controller
             'name'     => 'required|string|max:120',
             'email'    => 'required|email|unique:users,email,' . $request->user()->id,
             'timezone' => 'nullable|string|timezone',
+            'date_format' => 'nullable|string',
+            'currency' => 'nullable|string|max:3',
         ]);
 
         $request->user()->update($data);
         return back()->with('success', 'Profile updated.');
+    }
+
+    public function localization(Request $request)
+    {
+        return Inertia::render('Settings/Localization');
+    }
+
+    public function notifications(Request $request)
+    {
+        return Inertia::render('Settings/Notifications', [
+            'user' => $request->user()->only('notification_preferences'),
+        ]);
+    }
+
+    public function updateNotifications(Request $request)
+    {
+        $data = $request->validate([
+            'preferences' => 'required|array',
+            'preferences.email_tasks' => 'boolean',
+            'preferences.push_tasks' => 'boolean',
+            'preferences.email_projects' => 'boolean',
+            'preferences.push_projects' => 'boolean',
+        ]);
+
+        $request->user()->update([
+            'notification_preferences' => $data['preferences']
+        ]);
+
+        return back()->with('success', 'Notification preferences updated.');
     }
 
     public function updatePassword(Request $request)
@@ -121,5 +152,25 @@ class SettingsWebController extends Controller
 
         // TODO: send invite email with temp password
         return back()->with('success', "Invite sent to {$data['email']}. Temp password: {$tempPassword}");
+    }
+
+    public function updateMemberRole(Request $request, User $user)
+    {
+        if ($user->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'role_id' => 'required|uuid|exists:roles,id',
+        ]);
+
+        $role = Role::where('id', $data['role_id'])
+            ->where('organization_id', $request->user()->organization_id)
+            ->firstOrFail();
+
+        // Sync the role (since we enforce a single role dropdown in UI)
+        $user->roles()->sync([$role->id]);
+
+        return back()->with('success', 'User role updated successfully.');
     }
 }

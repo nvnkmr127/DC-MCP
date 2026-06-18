@@ -1,7 +1,8 @@
 import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, AlignLeft } from 'lucide-react';
+import { RichTextEditor } from '@/Components/Shared/RichTextEditor';
 
 interface Props {
     projects: Array<{ id: string; name: string }>;
@@ -61,13 +62,13 @@ export default function TaskCreate({ projects, members, defaults }: Props) {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                            <textarea
+                            <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
+                                <AlignLeft size={14} className="text-gray-400" /> Description
+                            </label>
+                            <RichTextEditor
                                 value={form.data.description}
-                                onChange={e => form.setData('description', e.target.value)}
-                                rows={3}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                                placeholder="Describe what needs to be done…"
+                                onChange={(value) => form.setData('description', value)}
+                                placeholder="Add more details to this task..."
                             />
                         </div>
 
