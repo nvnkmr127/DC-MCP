@@ -41,7 +41,8 @@ abstract class BaseAdapter implements MCPAdapter
     protected function setupClient(string $baseUri, array $headers = [], array $clientConfig = []): void
     {
         $stack = HandlerStack::create();
-        $stack->push($this->createRetryMiddleware());
+        $stack->push($this->createCircuitBreakerMiddleware(), 'circuit_breaker');
+        $stack->push($this->createRetryMiddleware(), 'retry');
 
         $config = array_merge([
             'base_uri' => $baseUri,
@@ -183,5 +184,44 @@ abstract class BaseAdapter implements MCPAdapter
                 return (int) (pow(2, $retries) * $this->baseDelayMs);
             }
         );
+    }
+
+    /**
+     * Create circuit breaker middleware.
+     *
+     * @return callable
+     */
+    protected function createCircuitBreakerMiddleware(): callable
+    {
+        return function (callable $handler) {
+            return function (RequestInterface $request, array $options) use ($handler) {
+                $provider = $this->getProviderName();
+                $cacheKey = "mcp_circuit_breaker_{$provider}_failures";
+                
+                // Check if circuit is open
+                if (\Illuminate\Support\Facades\Cache::get($cacheKey) >= 5) {
+                    throw new \App\Modules\MCP\Exceptions\CircuitBreakerOpenException($provider);
+                }
+
+                return $handler($request, $options)->then(
+                    function (ResponseInterface $response) use ($cacheKey) {
+                        // Success resets the circuit
+                        if ($response->getStatusCode() < 500 && $response->getStatusCode() !== 429) {
+                            \Illuminate\Support\Facades\Cache::forget($cacheKey);
+                        } else {
+                            \Illuminate\Support\Facades\Cache::add($cacheKey, 0, now()->addMinutes(5));
+                            \Illuminate\Support\Facades\Cache::increment($cacheKey);
+                        }
+                        return $response;
+                    },
+                    function (\Exception $reason) use ($cacheKey) {
+                        // Failure increments the circuit
+                        \Illuminate\Support\Facades\Cache::add($cacheKey, 0, now()->addMinutes(5));
+                        \Illuminate\Support\Facades\Cache::increment($cacheKey);
+                        return \GuzzleHttp\Promise\Create::rejectionFor($reason);
+                    }
+                );
+            };
+        };
     }
 }

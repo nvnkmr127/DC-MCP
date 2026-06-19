@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Notifications\Http\Controllers\Api;
+namespace App\Modules\Notifications\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Shared\Helpers\ApiResponse;

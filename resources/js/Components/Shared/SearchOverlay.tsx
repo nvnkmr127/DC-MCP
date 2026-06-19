@@ -36,7 +36,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ open, onClose }) =
         }
         setLoading(true);
         try {
-            const { data } = await axios.get<SearchResponse>(`/api/search?q=${encodeURIComponent(q)}`);
+            const { data } = await axios.get<SearchResponse>(`/api/v1/search?q=${encodeURIComponent(q)}`);
             setResults(data);
         } catch (error) {
             console.error('Search failed', error);

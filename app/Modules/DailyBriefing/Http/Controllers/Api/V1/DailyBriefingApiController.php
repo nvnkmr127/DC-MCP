@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\DailyBriefing\Http\Controllers\Api;
+namespace App\Modules\DailyBriefing\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Modules\DailyBriefing\Models\DailyBriefing;

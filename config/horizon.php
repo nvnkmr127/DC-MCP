@@ -61,7 +61,19 @@ return [
             'maxJobs'             => 0,
             // Memory per worker — raise if jobs OOM
             'memory'              => 256,
-            // Align with longest job timeout (180s briefing + 30s margin)
+            // Align with longest job timeout
+            'timeout'             => 60,
+            'nice'                => 0,
+        ],
+        'supervisor-ai' => [
+            'connection'          => env('HORIZON_CONNECTION', 'redis'),
+            'queue'               => ['ai-tasks'],
+            'balance'             => 'auto',
+            'autoScalingStrategy' => 'time',
+            'maxProcesses'        => 3,
+            'maxTime'             => 0,
+            'maxJobs'             => 0,
+            'memory'              => 512,
             'timeout'             => 210,
             'nice'                => 0,
         ],
@@ -74,11 +86,19 @@ return [
                 'balanceMaxShift'   => 2,
                 'balanceCooldown'   => 3,
             ],
+            'supervisor-ai' => [
+                'maxProcesses'      => 5,
+                'balanceMaxShift'   => 1,
+                'balanceCooldown'   => 3,
+            ],
         ],
 
         'local' => [
             'supervisor-default' => [
                 'maxProcesses' => 2,
+            ],
+            'supervisor-ai' => [
+                'maxProcesses' => 1,
             ],
         ],
     ],

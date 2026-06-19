@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Modules\ProjectManagement\Http\Controllers\Api;
+namespace App\Modules\ProjectManagement\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class AuditChecklistApiController extends Controller
+class GoalApiController extends Controller
 {
     /**
      * Display a listing of the resource.

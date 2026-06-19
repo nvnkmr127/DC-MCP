@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\ProjectManagement\Http\Controllers\Api;
+namespace App\Modules\ProjectManagement\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Modules\ProjectManagement\Http\Requests\StoreClientRequest;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Reporting\Http\Controllers\Api;
+namespace App\Modules\Reporting\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Reporting\Models\ReportSchedule;

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Modules\ProjectManagement\Http\Controllers\Api;
+namespace App\Modules\ProjectManagement\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class CapacityApiController extends Controller
+class DeliverableApiController extends Controller
 {
     /**
      * Display a listing of the resource.

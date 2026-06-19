@@ -5,8 +5,6 @@ namespace App\Modules\DailyBriefing\Jobs;
 use App\Modules\Auth\Models\User;
 use App\Modules\DailyBriefing\Services\BriefingDataCollector;
 use App\Modules\DailyBriefing\Services\BriefingGenerator;
-use App\Modules\MCP\Adapters\GmailAdapter;
-use App\Modules\MCP\Adapters\ZohoCliqAdapter;
 use App\Modules\TaskEngine\Services\TaskSuggestionService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
@@ -22,6 +20,7 @@ class GenerateDailyBriefingJob implements ShouldQueue
 
     public int $tries = 2;
     public int $timeout = 180; // LLM generation can be slow on large orgs
+    public string $queue = 'ai-tasks';
 
     /** Backoff: retry after 60s on second attempt */
     public function backoff(): array
@@ -37,8 +36,6 @@ class GenerateDailyBriefingJob implements ShouldQueue
     public function handle(
         BriefingDataCollector $collector,
         BriefingGenerator $generator,
-        GmailAdapter $gmailAdapter,
-        ZohoCliqAdapter $cliqAdapter,
         TaskSuggestionService $suggestionService,
     ): void {
         $date = Carbon::parse($this->date ?? now()->toDateString());
@@ -67,26 +64,13 @@ class GenerateDailyBriefingJob implements ShouldQueue
                 }
             }
 
-            $deliveredVia = [];
+            // Dispatch notification jobs instead of synchronous execution
+            SendBriefingEmailJob::dispatch($this->user, $briefing);
+            SendBriefingCliqJob::dispatch($this->user, $briefing);
 
-            if ($gmailAdapter->sendBriefingEmail($this->user, $briefing)) {
-                $deliveredVia[] = 'email';
-            }
-
-            if ($cliqAdapter->sendDailyBriefing($this->user, $briefing)) {
-                $deliveredVia[] = 'zoho_cliq';
-            }
-
-            $briefing->update([
-                'delivered_via' => $deliveredVia,
-                'delivered_at'  => now(),
-                'status'        => 'delivered',
-            ]);
-
-            Log::info('Daily briefing delivered', [
+            Log::info('Daily briefing notification jobs dispatched', [
                 'user_id'       => $this->user->id,
                 'briefing_id'   => $briefing->id,
-                'delivered_via' => $deliveredVia,
             ]);
         } catch (\Exception $e) {
             Log::error('Daily briefing generation failed', [
