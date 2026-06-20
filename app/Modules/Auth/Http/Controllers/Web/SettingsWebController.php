@@ -322,7 +322,8 @@ class SettingsWebController extends Controller
             ]);
 
         return response()->json($activities);
-    }        DB::table('sessions')->where('id', $id)->where('user_id', $request->user()->id)->delete();
+    }
+
     public function forceLogoutUser(Request $request, User $user)
     {
         if ($user->organization_id !== $request->user()->organization_id) {
@@ -336,8 +337,17 @@ class SettingsWebController extends Controller
     public function impersonate(Request $request, User $user)
     {
         if ($user->organization_id !== $request->user()->organization_id) {
-        DB::table('sessions')->where('user_id', $user->id)->delete();
-        return back()->with('success', "Force logged out {$user->name}.");
+            abort(403);
+        }
+
+        if ($user->id === $request->user()->id) {
+            return back()->with('error', 'Cannot impersonate yourself.');
+        }
+
+        $request->session()->put('impersonated_by', $request->user()->id);
+        Auth::login($user);
+
+        return redirect('/dashboard')->with('success', "You are now impersonating {$user->name}.");
     }
 
     public function transferWork(Request $request, User $user)
@@ -365,14 +375,15 @@ class SettingsWebController extends Controller
     }
 
     public function toggleActive(Request $request, User $user)
-    public function impersonate(Request $request, User $user)        if ($user->id === $request->user()->id) {
-            return back()->with('error', 'Cannot impersonate yourself.');
+    {
+        if ($user->organization_id !== $request->user()->organization_id) {
+            abort(403);
         }
 
-        $request->session()->put('impersonated_by', $request->user()->id);
-        Auth::login($user);
+        $user->update(['is_active' => !$user->is_active]);
+        $status = $user->is_active ? 'activated' : 'deactivated';
 
-        return redirect('/dashboard')->with('success', "You are now impersonating {$user->name}.");
+        return back()->with('success', "User {$user->name} has been {$status}.");
     }
 
     public function stopImpersonating(Request $request)
@@ -391,8 +402,10 @@ class SettingsWebController extends Controller
 
         Auth::logout();
         return redirect('/login');
-    }        return back()->with('success', "Force logged out {$user->name}.");
-    }    {
+    }
+
+    public function terminateSession(Request $request, string $id)
+    {
         DB::table('sessions')->where('id', $id)->where('user_id', $request->user()->id)->delete();
         return back()->with('success', 'Session terminated.');
     }
