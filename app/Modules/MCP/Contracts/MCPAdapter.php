@@ -21,18 +21,20 @@ interface MCPAdapter
      * Pull data from the external source to local database.
      *
      * @param string $connectionId
+     * @param array $options
      * @return SyncResult
      */
-    public function sync(string $connectionId): SyncResult;
+    public function sync(string $connectionId, array $options = []): SyncResult;
 
     /**
      * Push local changes to the external system.
      *
      * @param string $connectionId
      * @param array $data
+     * @param array $options
      * @return SyncResult
      */
-    public function push(string $connectionId, array $data): SyncResult;
+    public function push(string $connectionId, array $data, array $options = []): SyncResult;
 
     /**
      * Handle incoming webhooks from the external service.

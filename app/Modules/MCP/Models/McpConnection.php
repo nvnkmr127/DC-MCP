@@ -65,7 +65,57 @@ class McpConnection extends BaseModel
         'consecutive_failure_count',
         'uptime_percentage',
         'health_score',
+        'sync_progress',
     ];
+
+    public function getSyncProgressAttribute(): ?int
+    {
+        return \Illuminate\Support\Facades\Cache::get("mcp_sync_progress_{$this->id}");
+    }
+
+    public function updateSyncProgress(int $percentage): void
+    {
+        \Illuminate\Support\Facades\Cache::put("mcp_sync_progress_{$this->id}", min(100, max(0, $percentage)), 3600);
+    }
+
+    public function clearSyncProgress(): void
+    {
+        \Illuminate\Support\Facades\Cache::forget("mcp_sync_progress_{$this->id}");
+    }
+
+    public function pauseSync(): void
+    {
+        $settings = $this->settings ?? [];
+        $settings['sync_paused'] = true;
+        $this->update(['settings' => $settings]);
+    }
+
+    public function resumeSync(): void
+    {
+        $settings = $this->settings ?? [];
+        $settings['sync_paused'] = false;
+        $this->update(['settings' => $settings]);
+    }
+
+    public function isSyncPaused(): bool
+    {
+        // Read fresh from DB if inside a long-running job loop
+        $fresh = static::where('id', $this->id)->value('settings');
+        $settings = is_string($fresh) ? json_decode($fresh, true) : $fresh;
+        return !empty($settings['sync_paused']);
+    }
+
+    public function setLastSyncedRecordReference(string $recordId): void
+    {
+        $settings = $this->settings ?? [];
+        $settings['last_synced_record_id'] = $recordId;
+        $this->update(['settings' => $settings]);
+    }
+
+    public function getLastSyncedRecordReference(): ?string
+    {
+        return $this->settings['last_synced_record_id'] ?? null;
+    }
 
     public function getLastErrorMessageAttribute(): ?string
     {
@@ -143,6 +193,45 @@ class McpConnection extends BaseModel
     public function user(): BelongsTo
     {
         return $this->belongsTo(\App\Modules\Auth\Models\User::class);
+    }
+
+    /**
+     * Get a synchronization cursor for an entity.
+     *
+     * @param string $entity
+     * @return string|null
+     */
+    public function getCursor(string $entity): ?string
+    {
+        return $this->settings['cursors'][$entity] ?? null;
+    }
+
+    /**
+     * Set a synchronization cursor for an entity.
+     *
+     * @param string $entity
+     * @param string|null $cursor
+     * @return void
+     */
+    public function setCursor(string $entity, ?string $cursor): void
+    {
+        $settings = $this->settings ?? [];
+        if ($cursor === null) {
+            unset($settings['cursors'][$entity]);
+        } else {
+            $settings['cursors'][$entity] = $cursor;
+        }
+        $this->update(['settings' => $settings]);
+    }
+
+    /**
+     * Get the configured sync interval in minutes. Default is 60.
+     *
+     * @return int
+     */
+    public function getSyncIntervalMinutes(): int
+    {
+        return $this->settings['sync_interval_minutes'] ?? 60;
     }
 
     /**

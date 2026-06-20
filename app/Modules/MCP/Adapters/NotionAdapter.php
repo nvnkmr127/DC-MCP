@@ -65,7 +65,7 @@ class NotionAdapter extends BaseAdapter
      * @param string $connectionId
      * @return SyncResult
      */
-    public function sync(string $connectionId): SyncResult
+    public function sync(string $connectionId, array $options = []): SyncResult
     {
         $startTime = microtime(true);
         $connection = McpConnection::findOrFail($connectionId);
@@ -322,7 +322,7 @@ class NotionAdapter extends BaseAdapter
      * @param array $data
      * @return SyncResult
      */
-    public function push(string $connectionId, array $data): SyncResult
+    public function push(string $connectionId, array $data, array $options = []): SyncResult
     {
         $connection = McpConnection::findOrFail($connectionId);
         $settings = $connection->settings ?? [];

@@ -50,13 +50,21 @@ class MCPServiceProvider extends ModuleServiceProvider
     {
         parent::boot();
 
+        Event::listen(\App\Modules\MCP\Events\McpConnectionRequiresUpdate::class, \App\Modules\MCP\Listeners\HandleMcpConnectionUpdate::class);
         Event::listen(McpSyncCompleted::class, HandleMcpSyncCompleted::class);
         Event::listen(McpSyncFailed::class, HandleMcpSyncFailed::class);
+        Event::listen(\App\Modules\MCP\Events\McpWebhookReceived::class, \App\Modules\MCP\Listeners\ProcessMcpWebhookEvent::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \App\Modules\MCP\Console\Commands\CheckProviderUpdatesCommand::class,
+                \App\Modules\MCP\Console\Commands\RunScheduledMcpSyncs::class,
             ]);
+
+            $this->app->booted(function () {
+                $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
+                $schedule->command('mcp:sync-scheduled')->everyFiveMinutes();
+            });
         }
     }
 }

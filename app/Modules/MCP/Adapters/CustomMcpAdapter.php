@@ -45,7 +45,7 @@ class CustomMcpAdapter extends BaseAdapter
         return !empty($credentials['access_token']) || !empty($credentials['api_key']);
     }
 
-    public function sync(string $connectionId): SyncResult
+    public function sync(string $connectionId, array $options = []): SyncResult
     {
         $connection = McpConnection::find($connectionId);
         if (!$connection) {
@@ -110,7 +110,7 @@ class CustomMcpAdapter extends BaseAdapter
         }
     }
 
-    public function push(string $connectionId, array $data): SyncResult
+    public function push(string $connectionId, array $data, array $options = []): SyncResult
     {
         $connection = McpConnection::find($connectionId);
         if (!$connection) {
@@ -158,16 +158,33 @@ class CustomMcpAdapter extends BaseAdapter
         $connectionId = $request->route('connectionId');
         if ($connectionId) {
             $connection = McpConnection::find($connectionId);
-            $secret = $connection?->settings['webhook_secret'] ?? null;
+            $secrets = [];
+            if (!empty($connection?->settings['webhook_secret'])) {
+                $secrets[] = $connection->settings['webhook_secret'];
+            }
+            if (!empty($connection?->settings['webhook_secrets']) && is_array($connection->settings['webhook_secrets'])) {
+                $secrets = array_merge($secrets, $connection->settings['webhook_secrets']);
+            }
+            
+            $secrets = array_unique(array_filter($secrets));
 
-            if ($secret) {
+            if (!empty($secrets)) {
                 $signature = $request->header('X-Signature') ?? $request->header('X-Hub-Signature-256');
                 if (!$signature) {
                     return WebhookResult::failed('Missing webhook signature.');
                 }
 
-                $expected = 'sha256=' . hash_hmac('sha256', $request->getContent(), $secret);
-                if (!hash_equals($expected, $signature)) {
+                $matched = false;
+                $payload = $request->getContent();
+                foreach ($secrets as $secret) {
+                    $expected = 'sha256=' . hash_hmac('sha256', $payload, $secret);
+                    if (hash_equals($expected, $signature)) {
+                        $matched = true;
+                        break;
+                    }
+                }
+                
+                if (!$matched) {
                     return WebhookResult::failed('Webhook signature mismatch.');
                 }
             }
@@ -301,5 +318,23 @@ class CustomMcpAdapter extends BaseAdapter
         $metadata['logo_url'] = null;
         $metadata['setup_guide_url'] = null;
         return $metadata;
+    }
+
+    public function extractWebhookTimestamp(Request $request): ?int
+    {
+        $ts = $request->header('X-Webhook-Timestamp') ?? $request->header('X-Timestamp');
+        if ($ts && is_numeric($ts)) {
+            return (int) $ts;
+        }
+        return null;
+    }
+
+    public function extractWebhookIdempotencyKey(Request $request): ?string
+    {
+        return $request->header('Idempotency-Key') ?? 
+               $request->header('X-Idempotency-Key') ?? 
+               $request->header('X-Request-ID') ?? 
+               $request->input('idempotency_key') ?? 
+               $request->input('event_id');
     }
 }

@@ -292,9 +292,45 @@ class McpConnectionApiController extends Controller
 
     public function sync(Request $request, McpConnection $mcpConnection): JsonResponse
     {
-        $environment = $request->query('environment', 'production');
-        \App\Jobs\SyncMcpProviderJob::dispatch($mcpConnection, $environment);
+        $options = [
+            'environment' => $request->query('environment', 'production'),
+            'full_resync' => $request->boolean('full_resync', false),
+            'dry_run'     => $request->boolean('dry_run', false),
+            'date_range'  => $request->input('date_range'),
+            'records'     => $request->input('records'),
+        ];
+        
+        \App\Modules\MCP\Jobs\SyncMcpProviderJob::dispatch($mcpConnection, $options);
+        
         return ApiResponse::success(null, 'Sync queued.', [], 202);
+    }
+
+    public function pause(Request $request, McpConnection $mcpConnection): JsonResponse
+    {
+        $mcpConnection->pauseSync();
+        return ApiResponse::success(null, 'Sync paused.');
+    }
+
+    public function resume(Request $request, McpConnection $mcpConnection): JsonResponse
+    {
+        $mcpConnection->resumeSync();
+        return ApiResponse::success(null, 'Sync resumed.');
+    }
+
+    public function getSyncTrending(Request $request, McpConnection $mcpConnection): JsonResponse
+    {
+        // Get the last 30 days of sync data for this connection
+        $since = now()->subDays(30);
+
+        $logs = \App\Modules\MCP\Models\McpSyncLog::where('mcp_connection_id', $mcpConnection->id)
+            ->where('created_at', '>=', $since)
+            ->where('status', 'success')
+            ->selectRaw('DATE(created_at) as date, SUM(records_processed) as total_processed, SUM(bytes_transferred) as total_bytes')
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get();
+
+        return ApiResponse::success($logs);
     }
 
     public function syncPreview(Request $request, McpConnection $mcpConnection): JsonResponse
@@ -447,11 +483,54 @@ class McpConnectionApiController extends Controller
             return response()->json(['message' => 'Not found.'], 404);
         }
 
+        // IP Allowlisting Enforcement
+        $allowedIps = $connection->settings['allowed_ips'] ?? [];
+        if (!empty($allowedIps) && is_array($allowedIps)) {
+            if (!\Symfony\Component\HttpFoundation\IpUtils::checkIp($request->ip(), $allowedIps)) {
+                return response()->json(['message' => 'IP address not allowed.'], 403);
+            }
+        }
+
         try {
             $adapter = $this->resolveAdapter($provider);
+            
+            // Replay Attack Prevention (5 minute window)
+            $timestamp = $adapter->extractWebhookTimestamp($request);
+            if ($timestamp !== null && abs(time() - $timestamp) > 300) {
+                return response()->json(['message' => 'Webhook payload is too old (replay attack prevention).'], 403);
+            }
+
+            // Idempotency Key Tracking
+            $idempotencyKey = $adapter->extractWebhookIdempotencyKey($request);
+            if ($idempotencyKey !== null) {
+                $exists = \Illuminate\Support\Facades\DB::table('mcp_webhook_events')
+                    ->where('mcp_connection_id', $connection->id)
+                    ->where('idempotency_key', $idempotencyKey)
+                    ->exists();
+
+                if ($exists) {
+                    // Already processed, return 200 OK immediately to acknowledge retry without processing
+                    return response()->json(['message' => 'Webhook already processed (idempotency key matched).', 'status' => 'success'], 200);
+                }
+            }
+
+            // Log event to database
+            $eventId = (string) \Illuminate\Support\Str::uuid();
+            \Illuminate\Support\Facades\DB::table('mcp_webhook_events')->insert([
+                'id' => $eventId,
+                'mcp_connection_id' => $connection->id,
+                'provider' => $provider,
+                'event_type' => $request->input('type') ?? 'webhook_received',
+                'idempotency_key' => $idempotencyKey,
+                'payload' => json_encode($request->all()),
+                'status' => 'received',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
             $result  = $adapter->handleWebhook($request);
 
-            event(new \App\Modules\MCP\Events\McpWebhookReceived($connection, $result, $request->all()));
+            event(new \App\Modules\MCP\Events\McpWebhookReceived($connection, $result, $request->all(), $eventId));
 
             return response()->json([
                 'message' => 'Webhook processed.',
@@ -459,6 +538,56 @@ class McpConnectionApiController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Webhook processing failed.'], 500);
+        }
+    }
+
+    public function replayWebhook(Request $request, string $eventId): JsonResponse
+    {
+        $event = \Illuminate\Support\Facades\DB::table('mcp_webhook_events')
+            ->where('id', $eventId)
+            ->first();
+
+        if (!$event) {
+            return response()->json(['message' => 'Webhook event not found.'], 404);
+        }
+
+        $connection = McpConnection::find($event->mcp_connection_id);
+        if (!$connection) {
+            return response()->json(['message' => 'Associated connection not found.'], 404);
+        }
+
+        \Illuminate\Support\Facades\DB::table('mcp_webhook_events')
+            ->where('id', $eventId)
+            ->update([
+                'status' => 'processing',
+                'updated_at' => now(),
+            ]);
+
+        $payload = json_decode($event->payload, true) ?? [];
+        
+        try {
+            $adapter = $this->resolveAdapter($event->provider);
+            
+            // Create a mock request with the original payload
+            $mockRequest = Request::create('/webhook', 'POST', $payload);
+            $mockRequest->headers->set('Content-Type', 'application/json');
+            
+            $result = $adapter->handleWebhook($mockRequest);
+
+            event(new \App\Modules\MCP\Events\McpWebhookReceived($connection, $result, $payload, $eventId));
+
+            return response()->json([
+                'message' => 'Webhook replay initiated.',
+                'status'  => 'processing',
+            ], 202);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::table('mcp_webhook_events')
+                ->where('id', $eventId)
+                ->update([
+                    'status' => 'failed',
+                    'updated_at' => now(),
+                ]);
+            return response()->json(['message' => 'Webhook replay failed to initiate.'], 500);
         }
     }
 

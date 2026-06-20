@@ -11,6 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 
 class SyncMcpProviderJob implements ShouldQueue
 {
@@ -25,23 +26,45 @@ class SyncMcpProviderJob implements ShouldQueue
         return [30, 120, 300];
     }
 
+    public function middleware(): array
+    {
+        return [new WithoutOverlapping((string) $this->mcpConnection->id)];
+    }
+
     public function __construct(
-        public readonly McpConnection $mcpConnection
+        public readonly McpConnection $mcpConnection,
+        public readonly array $options = []
     ) {}
 
     public function handle(): void
     {
+        $options = $this->options;
+        if (!empty($options['full_resync']) || !empty($options['reconcile'])) {
+            $options['sync_session_id'] = (string) \Illuminate\Support\Str::uuid();
+        }
+
         Log::info('MCP sync started', [
             'connection_id'  => $this->mcpConnection->id,
             'provider'       => $this->mcpConnection->provider,
             'organization_id'=> $this->mcpConnection->organization_id,
+            'options'        => $options,
         ]);
 
         $adapter = $this->resolveAdapter($this->mcpConnection->provider);
         try {
             $startTime = microtime(true);
-            $result  = $adapter->sync($this->mcpConnection->id);
+            $result  = $adapter->sync($this->mcpConnection->id, $options);
             $latencyMs = (int) round((microtime(true) - $startTime) * 1000);
+
+            if (!empty($options['dry_run'])) {
+                Log::info('MCP sync completed (DRY RUN)', [
+                    'connection_id' => $this->mcpConnection->id,
+                    'provider'      => $this->mcpConnection->provider,
+                    'processed'     => $result->processedCount,
+                    'latency_ms'    => $latencyMs,
+                ]);
+                return;
+            }
 
             if ($result->isSuccess) {
                 Log::info('MCP sync completed', [
@@ -49,6 +72,25 @@ class SyncMcpProviderJob implements ShouldQueue
                     'provider'      => $this->mcpConnection->provider,
                     'latency_ms'    => $latencyMs,
                 ]);
+
+                // Anomaly Detection: Flag if actual processed count is off by > 10% from expected estimate
+                $hasAnomaly = false;
+                if ($result->expectedCount > 0) {
+                    $deviation = abs($result->expectedCount - $result->processedCount) / $result->expectedCount;
+                    if ($deviation > 0.1) {
+                        $hasAnomaly = true;
+                        Log::warning('MCP sync anomaly detected', [
+                            'connection_id' => $this->mcpConnection->id,
+                            'expected'      => $result->expectedCount,
+                            'actual'        => $result->processedCount,
+                        ]);
+                    }
+                }
+                
+                $settings = $this->mcpConnection->settings ?? [];
+                $settings['has_anomaly'] = $hasAnomaly;
+                $this->mcpConnection->update(['settings' => $settings]);
+
                 $this->mcpConnection->markSuccess($latencyMs);
                 event(new McpSyncCompleted($this->mcpConnection, $result));
             } else {
@@ -64,6 +106,8 @@ class SyncMcpProviderJob implements ShouldQueue
         } catch (\Throwable $e) {
             $this->mcpConnection->handleException($e);
             throw $e; // Rethrow to let the queue manager know it failed and handle backoff
+        } finally {
+            $this->mcpConnection->clearSyncProgress();
         }
     }
 

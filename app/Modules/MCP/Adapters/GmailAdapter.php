@@ -244,7 +244,7 @@ class GmailAdapter extends BaseAdapter
      * @param string $connectionId
      * @return SyncResult
      */
-    public function sync(string $connectionId): SyncResult
+    public function sync(string $connectionId, array $options = []): SyncResult
     {
         $startTime = microtime(true);
         $connection = McpConnection::findOrFail($connectionId);
@@ -262,116 +262,213 @@ class GmailAdapter extends BaseAdapter
             $processedCount = 0;
             $failedCount = 0;
 
+            if (!empty($options['full_resync'])) {
+                $connection->setCursor('messages_page_token', null);
+            }
+
             // Search query for unread messages from watched labels in the last 24h
-            $afterTimestamp = time() - 86400;
-            $q = 'is:unread after:' . $afterTimestamp;
+            // Search query configuration
+            $q = '';
+            
+            $fromTimestamp = !empty($settings['sync_from_date']) ? strtotime($settings['sync_from_date']) : (time() - 86400);
+            $q .= 'after:' . $fromTimestamp;
+            
+            if (!empty($settings['sync_to_date'])) {
+                $toTimestamp = strtotime($settings['sync_to_date']);
+                $q .= ' before:' . $toTimestamp;
+            } else {
+                $q .= ' is:unread'; // Default behavior if no explicit range
+            }
+            
+            if (!empty($settings['sync_filter'])) {
+                $q .= ' ' . $settings['sync_filter'];
+            }
 
             if (!empty($labelsToWatch)) {
                 $labelQueries = array_map(fn($label) => 'label:"' . $label . '"', $labelsToWatch);
                 $q .= ' (' . implode(' OR ', $labelQueries) . ')';
             }
+            
+            $expectedCount = 0;
 
-            $messagesResponse = $service->users_messages->listUsersMessages('me', ['q' => $q]);
-            $messages = $messagesResponse->getMessages();
+            $params = ['q' => $q];
+            $pageToken = $connection->getCursor('messages_page_token');
+            if ($pageToken) {
+                $params['pageToken'] = $pageToken;
+            }
 
-            if ($messages) {
-                foreach ($messages as $msgSummary) {
-                    try {
-                        $messageId = $msgSummary->getId();
-                        $message = $service->users_messages->get('me', $messageId, ['format' => 'full']);
-                        
-                        $payload = $message->getPayload();
-                        $headers = $payload->getHeaders();
-                        
-                        $subject = '';
-                        $sender = '';
-                        $dateStr = '';
-                        
-                        foreach ($headers as $header) {
-                            $name = strtolower($header->getName());
-                            if ($name === 'subject') {
-                                $subject = $header->getValue();
-                            } elseif ($name === 'from') {
-                                $sender = $header->getValue();
-                            } elseif ($name === 'date') {
-                                $dateStr = $header->getValue();
+            do {
+                if ($connection->isSyncPaused()) {
+                    break;
+                }
+                $messagesResponse = $service->users_messages->listUsersMessages('me', $params);
+                $messages = $messagesResponse->getMessages();
+                
+                if ($expectedCount === 0) {
+                    $expectedCount = $messagesResponse->getResultSizeEstimate() ?? 0;
+                }
+                
+                $lastMessageId = null;
+
+                if ($messages) {
+                    foreach ($messages as $msgSummary) {
+                        try {
+                            $messageId = $msgSummary->getId();
+                            $message = $service->users_messages->get('me', $messageId, ['format' => 'full']);
+                            
+                            $payload = $message->getPayload();
+                            $headers = $payload->getHeaders();
+                            
+                            $subject = '';
+                            $sender = '';
+                            $dateStr = '';
+                            
+                            foreach ($headers as $header) {
+                                $name = strtolower($header->getName());
+                                if ($name === 'subject') {
+                                    $subject = $header->getValue();
+                                } elseif ($name === 'from') {
+                                    $sender = $header->getValue();
+                                } elseif ($name === 'date') {
+                                    $dateStr = $header->getValue();
+                                }
+                            }
+
+                            $threadId = $message->getThreadId();
+                            $snippet = $message->getSnippet();
+
+                            if (empty($options['dry_run'])) {
+                                // Log sync attempt
+                                $this->logSync(
+                                    $connectionId,
+                                    'inbound',
+                                    'gmail_message',
+                                    $messageId,
+                                    'success',
+                                    1,
+                                    0,
+                                    [
+                                        'id' => $messageId,
+                                        'thread_id' => $threadId,
+                                        'subject' => $subject,
+                                        'from' => $sender,
+                                        'snippet' => $snippet,
+                                        'date' => $dateStr
+                                    ]
+                                );
+
+                                if ($autoCreateTasks && $projectId) {
+                                    // Handle threading - search for existing task linked to thread_id
+                                    $task = Task::where('project_id', $projectId)
+                                        ->where('meta->gmail_thread_id', $threadId)
+                                        ->first();
+
+                                    if (!$task) {
+                                        $task = new Task();
+                                        $task->organization_id = $connection->organization_id;
+                                        $task->project_id = $projectId;
+                                        $task->type = 'review';
+                                        $task->status = 'backlog';
+                                        $task->priority = 'medium';
+                                        $task->role_required = 'project_manager';
+                                        $task->due_date = now()->addDay()->toDateString();
+                                        
+                                        $task->title = $subject ?: 'Review Email';
+                                        $task->description = "Email from: {$sender}\n\nSnippet: {$snippet}";
+                                        
+                                        $meta = ['gmail_thread_id' => $threadId];
+                                        if (!empty($options['sync_session_id'])) {
+                                            $meta['last_sync_session_id'] = $options['sync_session_id'];
+                                        }
+                                        $task->meta = $meta;
+                                        $task->save();
+                                    } else {
+                                        // Reconcile and/or update tombstone session
+                                        $needsUpdate = false;
+                                        if (!empty($options['reconcile'])) {
+                                            $task->title = $subject ?: 'Review Email';
+                                            $task->description = "Email from: {$sender}\n\nSnippet: {$snippet}";
+                                            $needsUpdate = true;
+                                        }
+                                        
+                                        if (!empty($options['sync_session_id'])) {
+                                            $meta = $task->meta ?? [];
+                                            $meta['last_sync_session_id'] = $options['sync_session_id'];
+                                            $task->meta = $meta;
+                                            $needsUpdate = true;
+                                        }
+                                        
+                                        if ($needsUpdate) {
+                                            $task->save();
+                                        }
+                                    }
+                                }
+
+                                // Mark the message as read
+                                $mods = new Google_Service_Gmail_ModifyMessageRequest();
+                                $mods->setRemoveLabelIds(['UNREAD']);
+                                $service->users_messages->modify('me', $messageId, $mods);
+                            }
+
+                            $processedCount++;
+                            $lastMessageId = $messageId;
+                        } catch (\Exception $e) {
+                            $failedCount++;
+                            if (empty($options['dry_run'])) {
+                                $this->logSync(
+                                    $connectionId,
+                                    'inbound',
+                                    'gmail_message',
+                                    $msgSummary->getId(),
+                                    'failed',
+                                    0,
+                                    1,
+                                    null,
+                                    $e->getMessage()
+                                );
                             }
                         }
-
-                        $threadId = $message->getThreadId();
-                        $snippet = $message->getSnippet();
-
-                        // Log sync attempt
-                        $this->logSync(
-                            $connectionId,
-                            'inbound',
-                            'gmail_message',
-                            $messageId,
-                            'success',
-                            1,
-                            0,
-                            [
-                                'id' => $messageId,
-                                'thread_id' => $threadId,
-                                'subject' => $subject,
-                                'from' => $sender,
-                                'snippet' => $snippet,
-                                'date' => $dateStr
-                            ]
-                        );
-
-                        if ($autoCreateTasks && $projectId) {
-                            // Handle threading - search for existing task linked to thread_id
-                            $task = Task::where('project_id', $projectId)
-                                ->where('meta->gmail_thread_id', $threadId)
-                                ->first();
-
-                            if (!$task) {
-                                $task = new Task();
-                                $task->organization_id = $connection->organization_id;
-                                $task->project_id = $projectId;
-                                $task->title = $subject ?: 'Review Email';
-                                $task->description = "Email from: {$sender}\n\nSnippet: {$snippet}";
-                                $task->type = 'review';
-                                $task->status = 'backlog';
-                                $task->priority = 'medium';
-                                $task->role_required = 'project_manager';
-                                $task->due_date = now()->addDay()->toDateString();
-                                $task->meta = ['gmail_thread_id' => $threadId];
-                                $task->save();
-                            }
-                        }
-
-                        // Mark the message as read
-                        $mods = new Google_Service_Gmail_ModifyMessageRequest();
-                        $mods->setRemoveLabelIds(['UNREAD']);
-                        $service->users_messages->modify('me', $messageId, $mods);
-
-                        $processedCount++;
-                    } catch (\Exception $e) {
-                        $failedCount++;
-                        $this->logSync(
-                            $connectionId,
-                            'inbound',
-                            'gmail_message',
-                            $msgSummary->getId(),
-                            'failed',
-                            0,
-                            1,
-                            null,
-                            $e->getMessage()
-                        );
                     }
                 }
+
+                $nextPageToken = $messagesResponse->getNextPageToken();
+                if ($nextPageToken && empty($options['dry_run'])) {
+                    $connection->setCursor('messages_page_token', $nextPageToken);
+                    $params['pageToken'] = $nextPageToken;
+                } else {
+                    if (empty($options['dry_run'])) {
+                        $connection->setCursor('messages_page_token', null);
+                    }
+                    $params['pageToken'] = null;
+                }
+
+            } while ($params['pageToken']);
+            
+            if ($lastMessageId && empty($options['dry_run'])) {
+                $connection->setLastSyncedRecordReference($lastMessageId);
+            }
+
+            // Tombstone cleanup
+            if (!empty($options['sync_session_id']) && empty($options['dry_run']) && $projectId && !$connection->isSyncPaused()) {
+                Task::where('project_id', $projectId)
+                    ->whereNotNull('meta->gmail_thread_id')
+                    ->where(function($q) use ($options) {
+                        $q->whereNull('meta->last_sync_session_id')
+                          ->orWhere('meta->last_sync_session_id', '!=', $options['sync_session_id']);
+                    })
+                    ->delete();
             }
 
             $durationMs = (int) ((microtime(true) - $startTime) * 1000);
-            $connection->markSynced();
+            
+            if (empty($options['dry_run'])) {
+                $connection->markSynced();
+            }
 
             return SyncResult::success($processedCount, [
                 'duration_ms' => $durationMs,
                 'failed_count' => $failedCount
-            ]);
+            ], $durationMs, 0, $expectedCount);
 
         } catch (\Exception $e) {
             $durationMs = (int) ((microtime(true) - $startTime) * 1000);
@@ -387,7 +484,7 @@ class GmailAdapter extends BaseAdapter
      * @param array $data
      * @return SyncResult
      */
-    public function push(string $connectionId, array $data): SyncResult
+    public function push(string $connectionId, array $data, array $options = []): SyncResult
     {
         $connection = McpConnection::findOrFail($connectionId);
         $entityType = $data['entity_type'] ?? null;

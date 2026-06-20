@@ -14,6 +14,7 @@ class McpWebhookReceived
     public function __construct(
         public readonly McpConnection $connection,
         public readonly WebhookResult $result,
-        public readonly array $payload = []
+        public readonly array $payload = [],
+        public readonly ?string $eventId = null
     ) {}
 }

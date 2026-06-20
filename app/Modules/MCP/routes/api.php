@@ -22,4 +22,12 @@ Route::prefix('v1')->group(function () {
     Route::apiResource('mcp/connections', McpConnectionApiController::class)
         ->parameters(['connections' => 'mcpConnection']);
     
+    Route::prefix('mcp/connections')->group(function () {
+        Route::post('/{mcpConnection}/pause', [McpConnectionApiController::class, 'pause']);
+        Route::post('/{mcpConnection}/resume', [McpConnectionApiController::class, 'resume']);
+        Route::get('/{mcpConnection}/trending', [McpConnectionApiController::class, 'getSyncTrending']);
+    });
+    
+    Route::post('/mcp/webhooks/{eventId}/replay', [McpConnectionApiController::class, 'replayWebhook']);
+    
 });

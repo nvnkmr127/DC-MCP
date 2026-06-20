@@ -11,16 +11,18 @@ class SyncResult
         public readonly ?string $errorMessage = null,
         public readonly array $metadata = [],
         public readonly ?int $durationMs = null,
-        public readonly int $bytesTransferred = 0
+        public readonly int $bytesTransferred = 0,
+        public readonly ?int $expectedCount = null,
+        public readonly bool $hasAnomaly = false
     ) {}
 
-    public static function success(int $processedCount = 0, array $metadata = [], ?int $durationMs = null, int $bytesTransferred = 0): self
+    public static function success(int $processedCount = 0, array $metadata = [], ?int $durationMs = null, int $bytesTransferred = 0, ?int $expectedCount = null, bool $hasAnomaly = false): self
     {
-        return new self(true, $processedCount, 0, null, $metadata, $durationMs, $bytesTransferred);
+        return new self(true, $processedCount, 0, null, $metadata, $durationMs, $bytesTransferred, $expectedCount, $hasAnomaly);
     }
 
-    public static function failure(string $errorMessage, int $processedCount = 0, int $failedCount = 0, array $metadata = [], ?int $durationMs = null, int $bytesTransferred = 0): self
+    public static function failure(string $errorMessage, int $processedCount = 0, int $failedCount = 0, array $metadata = [], ?int $durationMs = null, int $bytesTransferred = 0, ?int $expectedCount = null, bool $hasAnomaly = false): self
     {
-        return new self(false, $processedCount, $failedCount, $errorMessage, $metadata, $durationMs, $bytesTransferred);
+        return new self(false, $processedCount, $failedCount, $errorMessage, $metadata, $durationMs, $bytesTransferred, $expectedCount, $hasAnomaly);
     }
 }

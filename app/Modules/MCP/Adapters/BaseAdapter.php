@@ -382,4 +382,28 @@ abstract class BaseAdapter implements MCPAdapter
             'message' => 'Sync preview is not supported for this provider.'
         ];
     }
+
+    /**
+     * Extract the webhook timestamp from the request for replay attack prevention.
+     *
+     * @param Request $request
+     * @return int|null
+     */
+    public function extractWebhookTimestamp(Request $request): ?int
+    {
+        // To be overridden by specific adapters
+        return null;
+    }
+
+    /**
+     * Extract an idempotency key from the webhook request to prevent duplicate processing.
+     *
+     * @param Request $request
+     * @return string|null
+     */
+    public function extractWebhookIdempotencyKey(Request $request): ?string
+    {
+        // To be overridden by specific adapters
+        return null;
+    }
 }
