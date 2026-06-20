@@ -19,6 +19,7 @@ class DashboardConfig extends BaseModel
         'name',
         'is_default',
         'layout',
+        'share_token',
     ];
 
     protected $casts = [

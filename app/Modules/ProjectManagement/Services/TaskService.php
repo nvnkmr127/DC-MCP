@@ -62,13 +62,22 @@ class TaskService
             if ($task->assigned_to) {
                 $assignee = User::find($task->assigned_to);
                 if ($assignee) {
+                    $project = \App\Modules\ProjectManagement\Models\Project::find($task->project_id);
+                    $projectName = $project ? $project->name : 'Unknown Project';
+
                     $this->notificationService->sendNotification(
                         $assignee,
                         'task_assigned',
                         'in_app',
                         'Task Assigned: ' . $task->title,
                         'You have been assigned to: ' . $task->title,
-                        ['task_id' => $task->id]
+                        [
+                            'task_id' => $task->id,
+                            'project_id' => $task->project_id,
+                            'group_key' => 'project_assigned_' . $task->project_id,
+                            'group_title' => '{count} new tasks assigned in ' . $projectName,
+                            'group_body' => 'You have {count} new tasks assigned to you in ' . $projectName,
+                        ]
                     );
                 }
             }
@@ -216,13 +225,22 @@ class TaskService
             ]);
 
             // Dispatch notification to user
+            $project = \App\Modules\ProjectManagement\Models\Project::find($task->project_id);
+            $projectName = $project ? $project->name : 'Unknown Project';
+
             $this->notificationService->sendNotification(
                 $user,
                 'task_assigned',
                 'in_app',
                 'Task Assigned: ' . $task->title,
                 'You have been assigned to: ' . $task->title,
-                ['task_id' => $task->id]
+                [
+                    'task_id' => $task->id,
+                    'project_id' => $task->project_id,
+                    'group_key' => 'project_assigned_' . $task->project_id,
+                    'group_title' => '{count} new tasks assigned in ' . $projectName,
+                    'group_body' => 'You have {count} new tasks assigned to you in ' . $projectName,
+                ]
             );
 
             return $task;

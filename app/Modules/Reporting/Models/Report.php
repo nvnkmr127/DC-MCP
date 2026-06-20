@@ -6,6 +6,7 @@ use App\Shared\Models\BaseModel;
 use App\Shared\Traits\HasOrganization;
 use App\Shared\Traits\HasClientScope;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Report extends BaseModel
@@ -30,6 +31,8 @@ class Report extends BaseModel
         'sent_at',
         'generated_by',
         'recipients',
+        'share_token',
+        'is_public',
     ];
 
     protected $casts = [
@@ -39,6 +42,7 @@ class Report extends BaseModel
         'date_to' => 'date',
         'generated_at' => 'datetime',
         'sent_at' => 'datetime',
+        'is_public' => 'boolean',
     ];
 
     public function project(): BelongsTo
@@ -54,5 +58,10 @@ class Report extends BaseModel
     public function generatedBy(): BelongsTo
     {
         return $this->belongsTo(\App\Modules\Auth\Models\User::class, 'generated_by');
+    }
+
+    public function comments(): MorphMany
+    {
+        return $this->morphMany(\App\Modules\ProjectManagement\Models\Comment::class, 'commentable');
     }
 }

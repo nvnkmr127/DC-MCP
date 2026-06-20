@@ -2,12 +2,22 @@
 
 namespace App\Modules\ProjectManagement\Models;
 
+use Laravel\Scout\Searchable;
+
 use App\Shared\Models\BaseModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sprint extends BaseModel
 {
+    use Searchable;
+
+    public function toSearchableArray()
+    {
+        $array = $this->toArray();
+        $array['organization_id'] = $this->project->organization_id ?? null;
+        return $array;
+    }
     /**
      * The table associated with the model.
      *
@@ -29,6 +39,7 @@ class Sprint extends BaseModel
         'end_date',
         'velocity_planned',
         'velocity_actual',
+        'retrospective_notes',
     ];
 
     /**

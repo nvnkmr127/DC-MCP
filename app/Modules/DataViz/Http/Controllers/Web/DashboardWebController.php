@@ -81,6 +81,20 @@ class DashboardWebController extends Controller
             ->whereDate('date', $today)
             ->first();
 
+        // Setup Checklist
+        $teamInvited = \App\Modules\Auth\Models\User::where('organization_id', $orgId)->count() > 1;
+        $projectCreated = Project::where('organization_id', $orgId)->count() > 0;
+        $mcpConnected = DB::table('mcp_connections')->where('organization_id', $orgId)->exists();
+        $taskCreated = Task::where('organization_id', $orgId)->exists();
+        
+        $setupChecklist = [
+            ['id' => 'org', 'title' => 'Register Organization', 'done' => true, 'href' => null],
+            ['id' => 'team', 'title' => 'Invite Team Members', 'done' => $teamInvited, 'href' => '/settings/team'],
+            ['id' => 'project', 'title' => 'Create First Project', 'done' => $projectCreated, 'href' => '/projects/create'],
+            ['id' => 'mcp', 'title' => 'Connect MCP Provider', 'done' => $mcpConnected, 'href' => '/settings/mcp'],
+            ['id' => 'task', 'title' => 'Create First Task', 'done' => $taskCreated, 'href' => '/projects'],
+        ];
+
         return Inertia::render('Dashboard/Index', [
             'stats' => [
                 'my_active_tasks'    => $myActiveTasks,
@@ -97,6 +111,7 @@ class DashboardWebController extends Controller
                 'digest_text' => $briefing->digest_text,
                 'status'      => $briefing->status,
             ] : null,
+            'setup_checklist' => $setupChecklist,
         ]);
     }
 }

@@ -30,6 +30,7 @@ class Organization extends BaseModel
         'plan',
         'settings',
         'is_active',
+        'is_onboarded',
     ];
 
     /**
@@ -40,6 +41,7 @@ class Organization extends BaseModel
     protected $casts = [
         'settings' => 'array',
         'is_active' => 'boolean',
+        'is_onboarded' => 'boolean',
         'deleted_at' => 'datetime',
     ];
 

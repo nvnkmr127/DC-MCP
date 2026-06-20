@@ -3,12 +3,19 @@ use Illuminate\Support\Facades\Route;
 use App\Modules\Reporting\Http\Controllers\Web\ReportWebController;
 use App\Modules\Reporting\Http\Controllers\Web\ClientReportWebController;
 use App\Modules\Reporting\Http\Controllers\Web\CampaignResultWebController;
+use App\Modules\Reporting\Http\Controllers\Web\SharedReportWebController;
+
+// Public Shared Reports
+Route::get('/shared/reports/{token}', [SharedReportWebController::class, 'show'])->name('web.reports.shared');
 
 Route::middleware(['auth'])->group(function () {
     // Reports
     Route::get('/reports',                     [ReportWebController::class, 'index'])->name('web.reports.index');
+    Route::get('/reports/compare',             [ReportWebController::class, 'compare'])->name('web.reports.compare');
     Route::get('/reports/create',              [ReportWebController::class, 'create'])->name('web.reports.create');
     Route::get('/reports/{report}',            [ReportWebController::class, 'show'])->name('web.reports.show');
+    Route::post('/reports/{report}/comments',  [ReportWebController::class, 'storeComment'])->name('web.reports.comments.store');
+    Route::delete('/reports/{report}/comments/{comment}', [ReportWebController::class, 'destroyComment'])->name('web.reports.comments.destroy');
 
     // Client Reports
     Route::get('/client-reports',                            [ClientReportWebController::class, 'index'])->name('web.client-reports.index');

@@ -39,9 +39,6 @@ return new class extends Migration
 
         // 4. Issues Table
         Schema::table('issues', function (Blueprint $table) {
-            if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
-                $table->dropIndex(['organization_id']);
-            }
             $table->index(['organization_id', 'deleted_at', 'status'], 'issues_org_del_status_idx');
         });
     }

@@ -65,6 +65,9 @@ Schedule::call(function () {
     }
 })->hourly()->name('sync-mcp-connections')->withoutOverlapping();
 
+// Process active report schedules and dispatch report generation jobs at 08:00 UTC
+Schedule::command('reports:process-schedules')->dailyAt('08:00')->timezone('UTC')->name('process-report-schedules')->withoutOverlapping();
+
 // Weekly client performance briefing every Monday 8:00 AM IST (02:30 UTC)
 Schedule::call(function () {
     // Generate briefings for CEO users only (weekly digest)

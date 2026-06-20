@@ -133,6 +133,33 @@ class DashboardApiController extends Controller
     }
 
     /**
+     * Generate or revoke a share token for the dashboard.
+     */
+    public function share(DashboardConfig $dashboard, Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'enabled' => 'required|boolean',
+        ]);
+
+        if ($validated['enabled']) {
+            if (!$dashboard->share_token) {
+                $dashboard->update([
+                    'share_token' => \Illuminate\Support\Str::random(32)
+                ]);
+            }
+        } else {
+            $dashboard->update([
+                'share_token' => null
+            ]);
+        }
+
+        return ApiResponse::success([
+            'dashboard' => $dashboard,
+            'url' => $dashboard->share_token ? url("/public/dashboards/{$dashboard->share_token}") : null,
+        ]);
+    }
+
+    /**
      * List all active KPIs definitions.
      */
     public function kpis(Request $request): JsonResponse

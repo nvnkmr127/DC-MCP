@@ -15,8 +15,19 @@ const queryClient = new QueryClient({
 
 const appName = (window as any).__APP_NAME__ ?? 'Digicloudify';
 
+declare global {
+    interface Window {
+        unreadNotificationCount?: number;
+    }
+}
+
 createInertiaApp({
-    title: (title) => (title ? `${title} — ${appName}` : appName),
+    title: (title) => {
+        const prefix = window.unreadNotificationCount && window.unreadNotificationCount > 0 
+            ? `(${window.unreadNotificationCount}) ` 
+            : '';
+        return `${prefix}${title ? `${title} — ${appName}` : appName}`;
+    },
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.tsx`,

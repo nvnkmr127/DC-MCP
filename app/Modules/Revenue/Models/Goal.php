@@ -2,6 +2,8 @@
 
 namespace App\Modules\Revenue\Models;
 
+use Laravel\Scout\Searchable;
+
 use App\Shared\Models\BaseModel;
 use App\Shared\Traits\HasOrganization;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Goal extends BaseModel
 {
-    use HasOrganization, SoftDeletes;
+    use HasOrganization, SoftDeletes, Searchable;
 
     protected $table = 'goals';
 

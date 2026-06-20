@@ -37,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register Inertia HandleInertiaRequests for web routes
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
+            \App\Http\Middleware\EnsureOrganizationIsOnboarded::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

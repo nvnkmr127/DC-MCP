@@ -36,11 +36,12 @@ class SprintWebController extends Controller
                 'id'           => $s->id,
                 'name'         => $s->name,
                 'goal'         => $s->goal,
-                'status'       => is_object($s->status) ? $s->status->value : $s->status,
-                'start_date'   => $s->start_date?->toDateString(),
-                'end_date'     => $s->end_date?->toDateString(),
-                'project'      => $s->project ? ['id' => $s->project->id, 'name' => $s->project->name] : null,
-                'sprint_tasks' => $s->sprintTasks->map(fn($st) => [
+                'status'              => is_object($s->status) ? $s->status->value : $s->status,
+                'start_date'          => $s->start_date?->toDateString(),
+                'end_date'            => $s->end_date?->toDateString(),
+                'retrospective_notes' => $s->retrospective_notes,
+                'project'             => $s->project ? ['id' => $s->project->id, 'name' => $s->project->name] : null,
+                'sprint_tasks'        => $s->sprintTasks->map(fn($st) => [
                     'id'           => $st->id,
                     'story_points' => $st->story_points,
                     'task'         => $st->task ? ['id' => $st->task->id, 'title' => $st->task->title, 'status' => is_object($st->task->status) ? $st->task->status->value : $st->task->status] : null,
@@ -115,5 +116,53 @@ class SprintWebController extends Controller
 
         SprintTask::where('sprint_id', $sprint->id)->where('task_id', $task->id)->delete();
         return back()->with('success', 'Task removed from sprint.');
+    }
+
+    public function complete(Request $request, Sprint $sprint): RedirectResponse
+    {
+        if (!$request->user()->hasPermission('update', 'sprint')) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'unfinished_action'   => 'required|in:backlog,new_sprint',
+            'new_sprint_name'     => 'nullable|string|max:255',
+            'retrospective_notes' => 'nullable|string',
+        ]);
+
+        $openSprintTasks = SprintTask::where('sprint_id', $sprint->id)
+            ->whereHas('task', function($q) {
+                $q->whereNotIn('status', ['done', 'cancelled']);
+            })->get();
+
+        if ($validated['unfinished_action'] === 'new_sprint' && !empty($validated['new_sprint_name'])) {
+            $newSprint = Sprint::create([
+                'project_id' => $sprint->project_id,
+                'name'       => $validated['new_sprint_name'],
+                'status'     => 'planning',
+                'start_date' => now()->toDateString(),
+                'end_date'   => now()->addWeeks(2)->toDateString(),
+            ]);
+
+            foreach ($openSprintTasks as $st) {
+                SprintTask::create([
+                    'sprint_id'    => $newSprint->id,
+                    'task_id'      => $st->task_id,
+                    'story_points' => $st->story_points,
+                ]);
+            }
+        }
+
+        // Remove open tasks from the current sprint to clean it up
+        foreach ($openSprintTasks as $st) {
+            $st->delete();
+        }
+
+        $sprint->update([
+            'status' => 'completed',
+            'retrospective_notes' => $validated['retrospective_notes'] ?? null,
+        ]);
+
+        return back()->with('success', 'Sprint completed.');
     }
 }

@@ -54,4 +54,16 @@ class NotificationWebController extends Controller
             ->update(['status' => 'read', 'read_at' => now()]);
         return back()->with('success', 'All notifications marked as read.');
     }
+
+    public function snooze(Request $request, InAppNotification $notification)
+    {
+        if ($notification->user_id !== $request->user()->id) {
+            abort(403);
+        }
+
+        $hours = $request->input('hours', 1);
+        $notification->update(['snoozed_until' => now()->addHours($hours)]);
+
+        return back();
+    }
 }

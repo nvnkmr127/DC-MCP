@@ -6,6 +6,7 @@ import { cn, formatDate, formatCurrency, TASK_STATUS_COLORS, PRIORITY_COLORS } f
 import type { Project, Task } from '@/types';
 import { Kanban, Plus, BarChart, Edit, ArrowLeft, Trash2, Activity } from 'lucide-react';
 import { ActivityLog } from '@/Components/Shared/ActivityLog';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 
 interface Props {
     project: Project & {
@@ -36,10 +37,11 @@ export default function ProjectShow({ project }: Props) {
 
             <div className="max-w-5xl mx-auto">
                 {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                    <Link href="/projects" className="hover:text-indigo-600">Projects</Link>
-                    <span>/</span>
-                    <span className="text-gray-900">{project.name}</span>
+                <div className="mb-4">
+                    <Breadcrumbs items={[
+                        { label: 'Projects', href: '/projects' },
+                        { label: project.name }
+                    ]} />
                 </div>
 
                 {/* Header */}

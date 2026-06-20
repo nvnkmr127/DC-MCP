@@ -55,6 +55,8 @@ export function useStopwatch(taskId: string) {
 
     const start = () => setTimerRunning(true);
     
+    const pause = () => setTimerRunning(false);
+
     const stop = () => {
         setTimerRunning(false);
         return timerSeconds;
@@ -80,6 +82,7 @@ export function useStopwatch(taskId: string) {
         timerSeconds,
         formattedTime: formatTimer(timerSeconds),
         start,
+        pause,
         stop,
         reset,
     };

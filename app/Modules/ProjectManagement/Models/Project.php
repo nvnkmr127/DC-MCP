@@ -8,10 +8,11 @@ use App\Shared\Traits\HasClientScope;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Project extends BaseModel
 {
-    use HasOrganization, HasClientScope, SoftDeletes;
+    use HasOrganization, HasClientScope, SoftDeletes, Searchable;
 
     /**
      * The table associated with the model.
@@ -129,5 +130,15 @@ class Project extends BaseModel
         $total     ??= $this->tasks()->count();
         $completed ??= $this->tasks()->where('status', 'done')->count();
         return $total > 0 ? (int) round(($completed / $total) * 100) : 0;
+    }
+
+    public function toSearchableArray()
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'organization_id' => $this->organization_id,
+        ];
     }
 }

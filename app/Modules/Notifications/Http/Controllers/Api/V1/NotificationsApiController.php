@@ -17,7 +17,11 @@ class NotificationsApiController extends Controller
             ->orderByDesc('created_at');
 
         if ($request->boolean('unread')) {
-            $query->whereNull('read_at');
+            $query->whereNull('read_at')
+                  ->where(function($q) {
+                      $q->whereNull('snoozed_until')
+                        ->orWhere('snoozed_until', '<=', now());
+                  });
         }
 
         $notifications = $query->paginate(25);
@@ -36,6 +40,10 @@ class NotificationsApiController extends Controller
         $count = DB::table('notifications_log')
             ->where('user_id', $request->user()->id)
             ->whereNull('read_at')
+            ->where(function($q) {
+                $q->whereNull('snoozed_until')
+                  ->orWhere('snoozed_until', '<=', now());
+            })
             ->count();
 
         return ApiResponse::success(['count' => $count]);

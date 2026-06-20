@@ -8,10 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Task extends BaseModel
 {
-    use HasOrganization, SoftDeletes;
+    use HasOrganization, SoftDeletes, Searchable;
 
     /**
      * The table associated with the model.
@@ -170,6 +171,16 @@ class Task extends BaseModel
     public function logs(): HasMany
     {
         return $this->hasMany(TaskLog::class)->with('actor')->orderByDesc('logged_at');
+    }
+
+    public function toSearchableArray()
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'organization_id' => $this->organization_id,
+        ];
     }
 
 }

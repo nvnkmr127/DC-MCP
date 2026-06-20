@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { ArrowLeft, Download, Mail, RefreshCw, FileText, Calendar, Check, Send } from 'lucide-react';
+import { ArrowLeft, Download, Mail, RefreshCw, FileText, Calendar, Check, Send, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { CommentsSection } from '@/Pages/Tasks/Partials/CommentsSection';
 
 interface Report {
     id: string;
@@ -20,6 +21,7 @@ interface Report {
     project?: { name: string } | null;
     client?: { name: string } | null;
     generated_by?: { name: string } | null;
+    comments?: any[];
 }
 
 interface Props {
@@ -196,6 +198,18 @@ export default function ReportsShow({ report }: Props) {
                             )}
                         </div>
                     )}
+
+                    {/* Internal Comments Section */}
+                    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+                        <h3 className="text-xs font-bold text-gray-900 border-b border-gray-55 pb-2 flex items-center gap-2">
+                            <MessageSquare size={14} className="text-gray-400" /> Internal Notes & Annotations
+                        </h3>
+                        <CommentsSection
+                            submitUrl={`/reports/${report.id}/comments`}
+                            deleteUrlTemplate={(id) => `/reports/${report.id}/comments/${id}`}
+                            comments={report.comments || []}
+                        />
+                    </div>
                 </div>
             </div>
         </AppLayout>

@@ -36,24 +36,22 @@ class TaskWebController extends Controller
             abort(403);
         }
 
-        $query = Task::with(['project:id,name', 'assignee:id,name'])
-            ->whereNull('parent_task_id')
-            ->orderByDesc('updated_at');
+        $query = $this->buildTaskQuery($request);
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
-        }
-        if ($request->filled('project_id')) {
-            $query->where('project_id', $request->project_id);
-        }
-        if ($request->assigned === 'me') {
-            $query->where('assigned_to', $request->user()->id);
-        }
-        if ($request->overdue === '1') {
-            $query->whereDate('due_date', '<', now())->whereNotIn('status', ['done', 'cancelled']);
+        if ($request->filled('sort')) {
+            $sorts = is_array($request->sort) ? $request->sort : explode(',', $request->sort);
+            foreach ($sorts as $sort) {
+                $parts = explode(':', $sort);
+                $column = $parts[0];
+                $direction = rtrim($parts[1] ?? 'asc', ',');
+                
+                $allowed = ['title', 'status', 'priority', 'due_date', 'estimated_hours', 'created_at', 'updated_at'];
+                if (in_array($column, $allowed)) {
+                    $query->orderBy($column, $direction === 'desc' ? 'desc' : 'asc');
+                }
+            }
+        } else {
+            $query->orderByDesc('updated_at');
         }
 
         $tasks = $query->paginate(25)->through(fn($t) => [
@@ -81,25 +79,8 @@ class TaskWebController extends Controller
             abort(403);
         }
 
-        $query = Task::with(['project:id,name', 'assignee:id,name'])
-            ->whereNull('parent_task_id')
-            ->orderByDesc('updated_at');
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
-        }
-        if ($request->filled('project_id')) {
-            $query->where('project_id', $request->project_id);
-        }
-        if ($request->assigned === 'me') {
-            $query->where('assigned_to', $request->user()->id);
-        }
-        if ($request->overdue === '1') {
-            $query->whereDate('due_date', '<', now())->whereNotIn('status', ['done', 'cancelled']);
-        }
+        $query = $this->buildTaskQuery($request);
+        $query->orderByDesc('updated_at');
 
         $headers = [
             'id' => 'ID',
@@ -115,6 +96,47 @@ class TaskWebController extends Controller
         ];
 
         return $this->exportCsv($query, 'tasks_export_' . now()->format('Ymd_His'), $headers);
+    }
+
+    private function buildTaskQuery(Request $request)
+    {
+        $query = Task::with(['project:id,name', 'assignee:id,name'])
+            ->whereNull('parent_task_id');
+
+        if ($request->filled('status')) {
+            $statuses = is_array($request->status) ? $request->status : explode(',', $request->status);
+            $query->whereIn('status', $statuses);
+        }
+        if ($request->filled('priority')) {
+            $priorities = is_array($request->priority) ? $request->priority : explode(',', $request->priority);
+            $query->whereIn('priority', $priorities);
+        }
+        if ($request->filled('project_id')) {
+            $projectIds = is_array($request->project_id) ? $request->project_id : explode(',', $request->project_id);
+            $query->whereIn('project_id', $projectIds);
+        }
+        if ($request->filled('assigned')) {
+            $assignees = is_array($request->assigned) ? $request->assigned : explode(',', $request->assigned);
+            if (($key = array_search('me', $assignees)) !== false) {
+                $assignees[$key] = $request->user()->id;
+            }
+            if (($key = array_search('unassigned', $assignees)) !== false) {
+                unset($assignees[$key]);
+                $query->where(function($q) use ($assignees) {
+                    $q->whereNull('assigned_to');
+                    if (!empty($assignees)) {
+                        $q->orWhereIn('assigned_to', $assignees);
+                    }
+                });
+            } else {
+                $query->whereIn('assigned_to', $assignees);
+            }
+        }
+        if ($request->overdue === '1') {
+            $query->whereDate('due_date', '<', now())->whereNotIn('status', ['done', 'cancelled']);
+        }
+
+        return $query;
     }
 
     public function create(Request $request)

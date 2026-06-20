@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { cn } from '@/lib/utils';
 import type { Task } from '@/types';
 import { ArrowLeft, Save, AlignLeft } from 'lucide-react';
@@ -16,7 +17,7 @@ const inputCls = 'w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-[1
 const labelCls = 'block text-[12px] font-semibold text-gray-700 mb-1.5';
 
 export default function TaskEdit({ task, projects, members }: Props) {
-    const { data, setData, post, processing, errors, transform } = useForm({
+    const { data, setData, post, processing, errors, transform, isDirty } = useForm({
         title:           task.title,
         description:     task.description ?? '',
         project_id:      task.project_id,
@@ -27,6 +28,8 @@ export default function TaskEdit({ task, projects, members }: Props) {
         estimated_hours: task.estimated_hours > 0 ? String(task.estimated_hours) : '',
         tags:            (task.tags ?? []).join(', '),
     });
+
+    useUnsavedChanges(isDirty);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();

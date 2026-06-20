@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { FileText, ArrowLeft, ArrowRight, Check, AlertTriangle, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import axios from 'axios';
@@ -46,7 +47,16 @@ export default function ReportsCreate({ projects, clients }: Props) {
         // Schedule options
         frequency: 'weekly',
         send_day: 1,
+        config: {
+            selected_projects: [] as string[],
+            selected_tasks: [] as string[],
+        }
     });
+
+    useUnsavedChanges(form.isDirty);
+
+    const [availableTasks, setAvailableTasks] = useState<any[]>([]);
+    const [fetchingTasks, setFetchingTasks] = useState(false);
 
     const [recipientInput, setRecipientInput] = useState('');
 
@@ -68,6 +78,29 @@ export default function ReportsCreate({ projects, clients }: Props) {
         if (proj && proj.client_id) {
             form.setData('client_id', proj.client_id);
         }
+        
+        // Clear tasks and fetch new
+        form.setData('config', { ...form.data.config, selected_tasks: [] });
+        if (id) {
+            setFetchingTasks(true);
+            axios.get(`/api/v1/tasks?project_id=${id}`)
+                .then(res => {
+                    setAvailableTasks(res.data?.data || []);
+                    setFetchingTasks(false);
+                })
+                .catch(() => setFetchingTasks(false));
+        } else {
+            setAvailableTasks([]);
+        }
+    };
+
+    const handleClientChange = (id: string) => {
+        form.setData('client_id', id);
+        form.setData('config', { ...form.data.config, selected_projects: [] });
+        if (!id) {
+            form.setData('project_id', '');
+            setAvailableTasks([]);
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -83,6 +116,7 @@ export default function ReportsCreate({ projects, clients }: Props) {
             date_from: form.data.date_from,
             date_to: form.data.date_to,
             recipients: form.data.recipients,
+            config: form.data.config,
         })
         .then(() => {
             // Check if we should also store a recurring schedule
@@ -96,6 +130,7 @@ export default function ReportsCreate({ projects, clients }: Props) {
                     frequency: form.data.frequency,
                     send_day: form.data.send_day,
                     recipients: form.data.recipients,
+                    config: form.data.config,
                 });
             }
         })
@@ -130,10 +165,11 @@ export default function ReportsCreate({ projects, clients }: Props) {
                     <h3 className="text-sm font-bold text-gray-900">
                         {step === 1 && "Choose Report Template"}
                         {step === 2 && "Configure Target & Dates"}
-                        {step === 3 && "Recipients & Automation"}
+                        {step === 3 && "Select Scope"}
+                        {step === 4 && "Recipients & Automation"}
                     </h3>
                     <span className="text-[10px] uppercase font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
-                        Step {step} of 3
+                        Step {step} of 4
                     </span>
                 </div>
 
@@ -211,7 +247,7 @@ export default function ReportsCreate({ projects, clients }: Props) {
                                     <label className="block text-xs font-bold text-gray-600 mb-1">Link to Client (Optional)</label>
                                     <select
                                         value={form.data.client_id}
-                                        onChange={e => form.setData('client_id', e.target.value)}
+                                        onChange={e => handleClientChange(e.target.value)}
                                         className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white"
                                     >
                                         <option value="">No Client Mapping</option>
@@ -247,8 +283,74 @@ export default function ReportsCreate({ projects, clients }: Props) {
                         </div>
                     )}
 
-                    {/* STEP 3: RECIPIENTS & AUTOMATION SCHEDULE */}
+                    {/* STEP 3: SELECT SCOPE (PROJECTS/TASKS) */}
                     {step === 3 && (
+                        <div className="space-y-4">
+                            {!form.data.client_id && !form.data.project_id && (
+                                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-600">
+                                    No client or project selected. All data will be included by default based on the date range.
+                                </div>
+                            )}
+
+                            {form.data.client_id && !form.data.project_id && (
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 mb-2">Select Campaigns/Projects to Include</label>
+                                    <p className="text-xs text-gray-500 mb-3">Leave empty to include all projects for this client.</p>
+                                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                                        {projects.filter(p => p.client_id === form.data.client_id).map(p => (
+                                            <label key={p.id} className="flex items-center gap-2 p-2 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={form.data.config.selected_projects.includes(p.id)}
+                                                    onChange={e => {
+                                                        const current = form.data.config.selected_projects;
+                                                        const updated = e.target.checked ? [...current, p.id] : current.filter(id => id !== p.id);
+                                                        form.setData('config', { ...form.data.config, selected_projects: updated });
+                                                    }}
+                                                    className="rounded text-indigo-600 focus:ring-indigo-500" 
+                                                />
+                                                <span className="text-sm font-medium text-gray-800">{p.name}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {form.data.project_id && (
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-600 mb-2">Select Tasks to Include</label>
+                                    <p className="text-xs text-gray-500 mb-3">Leave empty to include all tasks for this project in the date range.</p>
+                                    {fetchingTasks ? (
+                                        <p className="text-sm text-gray-500">Loading tasks...</p>
+                                    ) : availableTasks.length > 0 ? (
+                                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                                            {availableTasks.map(t => (
+                                                <label key={t.id} className="flex items-center gap-2 p-2 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={form.data.config.selected_tasks.includes(t.id)}
+                                                        onChange={e => {
+                                                            const current = form.data.config.selected_tasks;
+                                                            const updated = e.target.checked ? [...current, t.id] : current.filter(id => id !== t.id);
+                                                            form.setData('config', { ...form.data.config, selected_tasks: updated });
+                                                        }}
+                                                        className="rounded text-indigo-600 focus:ring-indigo-500" 
+                                                    />
+                                                    <span className="text-sm font-medium text-gray-800">{t.title}</span>
+                                                    <span className="ml-auto text-[10px] px-1.5 py-0.5 bg-gray-100 rounded-full text-gray-500">{t.status?.replace('_', ' ')}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-gray-500">No tasks found for this project.</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* STEP 4: RECIPIENTS & AUTOMATION SCHEDULE */}
+                    {step === 4 && (
                         <div className="space-y-6">
                             
                             {/* Recipients List */}
@@ -350,7 +452,7 @@ export default function ReportsCreate({ projects, clients }: Props) {
                             <div />
                         )}
 
-                        {step < 3 ? (
+                        {step < 4 ? (
                             <button
                                 type="button"
                                 onClick={() => setStep(step + 1)}

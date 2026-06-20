@@ -2,6 +2,8 @@
 
 namespace App\Modules\ProjectManagement\Models;
 
+use Laravel\Scout\Searchable;
+
 use App\Shared\Models\BaseModel;
 use App\Shared\Traits\HasOrganization;
 use App\Shared\Traits\HasClientScope;
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Client extends BaseModel
 {
-    use HasOrganization, HasClientScope, SoftDeletes;
+    use HasOrganization, HasClientScope, SoftDeletes, Searchable;
 
     /**
      * The table associated with the model.

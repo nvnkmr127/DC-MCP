@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { SearchOverlay } from '@/Components/Shared/SearchOverlay';
 import { ConfirmProvider } from '@/hooks/useConfirm';
 import { ThemeToggle } from '@/Components/Shared/ThemeToggle';
+import { useNotificationPoller } from '@/hooks/useNotificationPoller';
+import axios from 'axios';
 import {
     LayoutDashboard, FolderKanban, CheckSquare, Users, BarChart3,
     Settings, Bell, Search, ChevronLeft, ChevronRight,
@@ -18,7 +20,7 @@ import {
     ListChecks, Star, ReceiptText, Package, Percent,
     FileCheck, MessageSquare, UserPlus, BookOpen, Smile,
     BarChart2, Workflow, ShoppingCart, FileX, Trophy, Send,
-    Megaphone, Trash2
+    Megaphone, Trash2, CheckCheck
 } from 'lucide-react';
 
 interface NavItem {
@@ -32,19 +34,20 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
     { label: 'Dashboard',      href: '/dashboard',     icon: LayoutDashboard, section: 'main' },
+    { label: 'My Activity',    href: '/my-activity',   icon: Activity,        section: 'main' },
     { label: 'Projects',       href: '/projects',      icon: FolderKanban,    section: 'main' },
     { label: 'Tasks',          href: '/tasks',         icon: CheckSquare,     section: 'main' },
     { label: 'Calendar',       href: '/calendar',      icon: Calendar,        section: 'main' },
     { label: 'Clients',        href: '/clients',       icon: Briefcase,       section: 'main' },
     { label: 'Content',        href: '/content',       icon: PenTool,         section: 'main' },
-    { label: 'Revenue',        href: '/retainers',    icon: TrendingUp,   section: 'finance',     roles: ['ceo', 'project_manager'] },
-    { label: 'P&L',            href: '/financials',    icon: DollarSign,   section: 'finance', roles: ['ceo'] },
-    { label: 'Payroll',        href: '/payroll',       icon: CreditCard,   section: 'finance', roles: ['ceo'] },
-    { label: 'Ad Budgets',     href: '/campaign-budgets', icon: Target,      section: 'finance', roles: ['ceo', 'project_manager'] },
-    { label: 'GST Report',     href: '/gst-report',       icon: Percent,    section: 'finance', roles: ['ceo'] },
-    { label: 'Rate Card',      href: '/rate-cards',       icon: ReceiptText, section: 'finance', roles: ['ceo'] },
-    { label: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart, section: 'finance', roles: ['ceo', 'project_manager'] },
-    { label: 'Credit Notes',   href: '/credit-notes',     icon: FileX,      section: 'finance', roles: ['ceo'] },
+    { label: 'Revenue',        href: '/retainers',    icon: TrendingUp,   section: 'financial',     roles: ['ceo', 'project_manager'] },
+    { label: 'P&L',            href: '/financials',    icon: DollarSign,   section: 'financial', roles: ['ceo'] },
+    { label: 'Payroll',        href: '/payroll',       icon: CreditCard,   section: 'financial', roles: ['ceo'] },
+    { label: 'Ad Budgets',     href: '/campaign-budgets', icon: Target,      section: 'financial', roles: ['ceo', 'project_manager'] },
+    { label: 'GST Report',     href: '/gst-report',       icon: Percent,    section: 'financial', roles: ['ceo'] },
+    { label: 'Rate Card',      href: '/rate-cards',       icon: ReceiptText, section: 'financial', roles: ['ceo'] },
+    { label: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart, section: 'financial', roles: ['ceo', 'project_manager'] },
+    { label: 'Credit Notes',   href: '/credit-notes',     icon: FileX,      section: 'financial', roles: ['ceo'] },
 
     { label: 'Pipeline',       href: '/prospects',    icon: GitBranch,    section: 'main',     roles: ['ceo', 'project_manager'] },
     { label: 'SOW',            href: '/sow',          icon: FileText,     section: 'main',     roles: ['ceo', 'project_manager'] },
@@ -75,19 +78,21 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Knowledge Base',  href: '/knowledge-base', icon: BookOpen,      section: 'hr' },
     // Manage
     { label: 'Team',           href: '/settings/team', icon: Users,           section: 'manage', roles: ['ceo', 'project_manager'] },
-    { label: 'MCP Connect',    href: '/settings/mcp',           icon: Plug,    section: 'manage', roles: ['ceo', 'project_manager'] },
     { label: 'Client Portal',  href: '/settings/client-portal', icon: Globe,   section: 'manage', roles: ['ceo'] },
     { label: 'Workflows',      href: '/workflows',              icon: Workflow, section: 'manage', roles: ['ceo', 'project_manager'] },
     { label: 'Settings',       href: '/settings',               icon: Settings, section: 'manage' },
     { label: 'Trash',          href: '/settings/trash',         icon: Trash2,   section: 'manage' },
+    // MCP
+    { label: 'Integrations',   href: '/settings/mcp',           icon: Plug,    section: 'mcp', roles: ['ceo', 'project_manager'] },
 ];
 
 const NAV_SECTIONS = [
-    { key: 'main',     label: 'Workspace' },
-    { key: 'finance',  label: 'Finance' },
-    { key: 'insights', label: 'Insights' },
-    { key: 'hr',       label: 'HR' },
-    { key: 'manage',   label: 'Manage' },
+    { key: 'main',      label: 'Workspace' },
+    { key: 'financial', label: 'Financial' },
+    { key: 'insights',  label: 'Insights' },
+    { key: 'hr',        label: 'HR' },
+    { key: 'manage',    label: 'Manage' },
+    { key: 'mcp',       label: 'MCP' },
 ];
 
 export default function AppLayout({ children, title }: { children: React.ReactNode; title?: string }) {
@@ -96,12 +101,34 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
     const [collapsed, setCollapsed] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
-    const [openSections, setOpenSections] = useState<Record<string, boolean>>({ main: true, finance: false, insights: false, hr: false, manage: false });
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>({ main: true, financial: false, insights: false, hr: false, manage: false, mcp: false });
     const userMenuRef = useRef<HTMLDivElement>(null);
     const user = auth.user!;
+    const { unreadCount, requestNotificationPermission, permission, refetch } = useNotificationPoller(30000);
+
+    const markAllReadGlobally = async () => {
+        try {
+            await axios.post('/api/v1/notifications/mark-all-read');
+            toast.success('All notifications marked as read');
+            refetch(); // Trigger the poller to reset badge to 0
+        } catch (error) {
+            toast.error('Failed to mark notifications as read');
+        }
+    };
 
     const toggleSection = (key: string) => {
-        setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
+        setOpenSections(prev => {
+            // If already open, just close it.
+            if (prev[key]) return { ...prev, [key]: false };
+            
+            // Accordion behavior: close all others, open the selected one
+            const next = Object.keys(prev).reduce((acc, k) => {
+                acc[k] = false;
+                return acc;
+            }, {} as Record<string, boolean>);
+            next[key] = true;
+            return next;
+        });
     };
 
     useEffect(() => {
@@ -111,9 +138,21 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
 
     useEffect(() => {
         function handleKey(e: KeyboardEvent) {
+            // Ignore if user is typing in an input or textarea
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+                return;
+            }
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
                 setSearchOpen(true);
+            }
+            if (e.key === '/') {
+                e.preventDefault();
+                setSearchOpen(true);
+            }
+            if (e.key.toLowerCase() === 'n') {
+                e.preventDefault();
+                router.visit('/tasks/create');
             }
             if (e.key === 'Escape') {
                 setSearchOpen(false);
@@ -151,7 +190,7 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
 
             {/* ──────────── SIDEBAR ──────────── */}
             <aside className={cn(
-                'relative flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out',
+                'relative flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out print:hidden',
                 'bg-slate-900 dark:bg-slate-950 border-r border-slate-800 shadow-xl',
                 collapsed ? 'w-[58px]' : 'w-[230px]',
             )}>
@@ -358,13 +397,38 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                             <kbd className="ml-1 text-[10px] bg-white border border-gray-200 rounded px-1 py-0.5 font-mono text-gray-400">⌘K</kbd>
                         </button>
 
+                        {/* Push Notification Request */}
+                        {permission === 'default' && (
+                            <button
+                                onClick={requestNotificationPermission}
+                                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-xs font-semibold rounded-lg transition-colors shadow-sm"
+                            >
+                                <Bell size={13} /> Enable Alerts
+                            </button>
+                        )}
+
+                        {/* Global Mark All Read */}
+                        {unreadCount > 0 && (
+                            <button
+                                onClick={markAllReadGlobally}
+                                title="Mark all notifications as read"
+                                className="hidden sm:flex items-center gap-1.5 p-2 rounded-lg text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                            >
+                                <CheckCheck size={17} />
+                            </button>
+                        )}
+
                         {/* Notifications */}
                         <Link
                             href="/notifications"
                             className="relative p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
                         >
                             <Bell size={17} />
-                            <span className="absolute top-[7px] right-[7px] w-[7px] h-[7px] bg-red-500 rounded-full ring-[1.5px] ring-white" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-[4px] right-[4px] min-w-[14px] h-[14px] px-[3px] bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-[1.5px] ring-white">
+                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                </span>
+                            )}
                         </Link>
 
                         {/* Quick create */}

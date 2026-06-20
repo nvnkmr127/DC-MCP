@@ -90,4 +90,25 @@ class ReportApiController extends Controller
             return ApiResponse::error($e->getMessage());
         }
     }
+
+    public function share(Report $report, Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'is_public' => ['required', 'boolean'],
+        ]);
+
+        $data = ['is_public' => $validated['is_public']];
+
+        if ($validated['is_public'] && empty($report->share_token)) {
+            $data['share_token'] = \Illuminate\Support\Str::random(32);
+        }
+
+        $report->update($data);
+
+        return ApiResponse::success([
+            'message' => 'Report sharing settings updated.',
+            'is_public' => $report->is_public,
+            'share_token' => $report->share_token,
+        ]);
+    }
 }

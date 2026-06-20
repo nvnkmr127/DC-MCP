@@ -4,8 +4,10 @@ use App\Modules\Auth\Http\Controllers\Web\AuthWebController;
 use App\Modules\Auth\Http\Controllers\Web\SettingsWebController;
 use App\Modules\Auth\Http\Controllers\Web\RoleWebController;
 use App\Modules\Auth\Http\Controllers\Web\TwoFactorWebController;
+use App\Modules\Auth\Http\Controllers\Web\MyActivityWebController;
 use App\Modules\Auth\Http\Controllers\Api\RegisterApiController;
 use App\Modules\Auth\Http\Controllers\Api\LoginApiController;
+use App\Modules\Auth\Http\Controllers\Web\SetupController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login',    [AuthWebController::class, 'showLogin'])->name('login');
@@ -18,9 +20,23 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::post('/logout', [AuthWebController::class, 'logout'])->name('logout');
     
+    // Organization Setup / Onboarding
+    Route::get('/setup', [SetupController::class, 'index'])->name('web.setup.index');
+    Route::post('/setup', [SetupController::class, 'complete'])->name('web.setup.complete');
+    
     Route::get('/settings/profile',                        [SettingsWebController::class, 'profile'])->name('web.settings.profile');
     Route::patch('/settings/profile',                      [SettingsWebController::class, 'updateProfile'])->name('web.settings.profile.update');
     Route::patch('/settings/password',                     [SettingsWebController::class, 'updatePassword'])->name('web.settings.password.update');
+    
+    Route::get('/my-activity',                             [MyActivityWebController::class, 'index'])->name('web.my-activity');
+
+    // Advanced Account Settings
+    Route::delete('/settings/sessions/{id}',               [SettingsWebController::class, 'destroySession'])->name('web.settings.sessions.destroy');
+    Route::post('/settings/tokens',                        [SettingsWebController::class, 'createToken'])->name('web.settings.tokens.store');
+    Route::delete('/settings/tokens/{id}',                 [SettingsWebController::class, 'revokeToken'])->name('web.settings.tokens.destroy');
+    Route::get('/settings/export-data',                    [SettingsWebController::class, 'exportData'])->name('web.settings.export');
+    Route::delete('/settings/account',                     [SettingsWebController::class, 'deleteAccount'])->name('web.settings.account.destroy');
+
     Route::get('/settings/organization',                   [SettingsWebController::class, 'organization'])->name('web.settings.organization');
     Route::patch('/settings/organization',                 [SettingsWebController::class, 'updateOrganization'])->name('web.settings.organization.update');
     Route::get('/settings/team',                           [SettingsWebController::class, 'team'])->name('web.settings.team');

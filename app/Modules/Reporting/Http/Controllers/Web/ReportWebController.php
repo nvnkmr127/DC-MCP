@@ -129,13 +129,72 @@ class ReportWebController extends Controller
         ]);
     }
 
-    public function show(Request $request, Report $report)
+    public function show(Report $report)
     {
-        $this->authorizeOrg($report);
-        $report->load(['project', 'client', 'generatedBy']);
-
+        abort_if($report->organization_id !== request()->user()->organization_id, 403);
+        $report->load([
+            'project', 
+            'client', 
+            'generatedBy',
+            'comments' => fn($q) => $q->with('user:id,name,email')->latest()
+        ]);
+        
         return Inertia::render('Reports/Show', [
             'report' => $report,
         ]);
+    }
+
+    public function compare(Request $request)
+    {
+        $id1 = $request->query('id1');
+        $id2 = $request->query('id2');
+
+        abort_if(!$id1 || !$id2, 400, 'Two report IDs are required for comparison.');
+
+        $orgId = $request->user()->organization_id;
+
+        $report1 = Report::where('organization_id', $orgId)
+            ->with(['project', 'client', 'generatedBy'])
+            ->findOrFail($id1);
+
+        $report2 = Report::where('organization_id', $orgId)
+            ->with(['project', 'client', 'generatedBy'])
+            ->findOrFail($id2);
+
+        return Inertia::render('Reports/Compare', [
+            'report1' => $report1,
+            'report2' => $report2,
+        ]);
+    }
+
+    public function storeComment(Request $request, Report $report)
+    {
+        abort_if($report->organization_id !== $request->user()->organization_id, 403);
+
+        $validated = $request->validate([
+            'body' => 'required|string',
+        ]);
+
+        $report->comments()->create([
+            'user_id' => $request->user()->id,
+            'body'    => $validated['body'],
+        ]);
+
+        return back()->with('success', 'Comment added.');
+    }
+
+    public function destroyComment(Request $request, Report $report, \App\Modules\ProjectManagement\Models\Comment $comment)
+    {
+        abort_if($report->organization_id !== $request->user()->organization_id, 403);
+        abort_if($comment->commentable_id !== $report->id, 403);
+        
+        // Only author or admin can delete
+        if ($comment->user_id !== $request->user()->id && !in_array($request->user()->role, ['owner', 'admin'])) {
+            abort(403);
+        }
+
+        $comment->delete();
+
+        return back()->with('success', 'Comment deleted.');
     }
 }

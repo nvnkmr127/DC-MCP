@@ -19,21 +19,25 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
         logged_date: new Date().toISOString().slice(0, 10)
     });
 
-    const { timerRunning, formattedTime, start, stop, reset } = useStopwatch(taskId);
+    const { timerRunning, timerSeconds, formattedTime, start, pause, stop, reset } = useStopwatch(taskId);
 
-    function handleToggleTimer() {
-        if (timerRunning) {
-            const secs = stop();
-            const calculatedHours = +(secs / 3600).toFixed(2);
-            timeForm.setData({
-                hours: String(calculatedHours),
-                description: 'Time tracked via timer',
-                logged_date: timeForm.data.logged_date,
-            });
-            reset();
+    function handleStopLog() {
+        const secs = stop();
+        const calculatedHours = +(secs / 3600).toFixed(2);
+        if (calculatedHours < 0.01 && secs > 0) {
+             timeForm.setData({
+                 hours: "0.25", // Minimum increment
+                 description: 'Time tracked via timer',
+                 logged_date: timeForm.data.logged_date,
+             });
         } else {
-            start();
+             timeForm.setData({
+                 hours: String(Math.max(calculatedHours, 0.25)), // Enforce min 0.25h to pass validation
+                 description: 'Time tracked via timer',
+                 logged_date: timeForm.data.logged_date,
+             });
         }
+        reset();
     }
 
     function submitTime(e: React.FormEvent) {
@@ -50,20 +54,48 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
         <div className="space-y-4">
             {/* Timer */}
             <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <button
-                    type="button"
-                    onClick={handleToggleTimer}
-                    className={cn(
-                        'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                        timerRunning 
-                            ? 'bg-red-500 text-white hover:bg-red-600' 
-                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                    )}
-                >
-                    {timerRunning ? <><Square size={14} /> Stop</> : <><Play size={14} /> Start Timer</>}
-                </button>
+                {!timerRunning && timerSeconds === 0 && (
+                    <button
+                        type="button"
+                        onClick={start}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-indigo-600 text-white hover:bg-indigo-700"
+                    >
+                        <Play size={14} /> Start Timer
+                    </button>
+                )}
+
+                {timerRunning && (
+                    <button
+                        type="button"
+                        onClick={pause}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-amber-500 text-white hover:bg-amber-600"
+                    >
+                        <Square size={14} /> Pause
+                    </button>
+                )}
+
+                {!timerRunning && timerSeconds > 0 && (
+                    <button
+                        type="button"
+                        onClick={start}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-indigo-600 text-white hover:bg-indigo-700"
+                    >
+                        <Play size={14} /> Resume
+                    </button>
+                )}
+
+                {timerSeconds > 0 && (
+                    <button
+                        type="button"
+                        onClick={handleStopLog}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-500 text-white hover:bg-red-600"
+                    >
+                        <Square size={14} /> Stop & Log
+                    </button>
+                )}
+
                 <span className="font-mono text-lg font-bold text-gray-900">{formattedTime}</span>
-                {!timerRunning && <p className="text-xs text-gray-500">Stop to auto-fill the form below</p>}
+                {timerSeconds === 0 && <p className="text-xs text-gray-500">Track your time</p>}
             </div>
 
             {/* Manual log form */}

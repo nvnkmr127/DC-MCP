@@ -1,13 +1,14 @@
 import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { ArrowLeft, AlignLeft } from 'lucide-react';
 import { RichTextEditor } from '@/Components/Shared/RichTextEditor';
 
 interface Props {
     projects: Array<{ id: string; name: string }>;
     members:  Array<{ id: string; name: string }>;
-    defaults: { project_id?: string; status?: string };
+    defaults: { project_id?: string; status?: string; estimated_hours?: string };
 }
 
 export default function TaskCreate({ projects, members, defaults }: Props) {
@@ -19,10 +20,12 @@ export default function TaskCreate({ projects, members, defaults }: Props) {
         priority:        'medium',
         assigned_to:     '',
         due_date:        '',
-        estimated_hours: '',
+        estimated_hours: defaults.estimated_hours ?? '',
         tags:            '',
         type:            'other',
     });
+
+    useUnsavedChanges(form.isDirty);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();

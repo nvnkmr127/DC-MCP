@@ -6,4 +6,5 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notifications',                           [NotificationWebController::class, 'index'])->name('web.notifications.index');
     Route::post('/notifications/{notification}/read',      [NotificationWebController::class, 'markRead'])->name('web.notifications.read');
     Route::post('/notifications/read-all',                 [NotificationWebController::class, 'markAllRead'])->name('web.notifications.readAll');
+    Route::post('/notifications/{notification}/snooze',    [NotificationWebController::class, 'snooze'])->name('web.notifications.snooze');
 });

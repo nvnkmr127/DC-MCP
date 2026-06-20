@@ -69,6 +69,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/sprints',                                   [SprintWebController::class, 'index'])->name('web.sprints.index');
     Route::post('/sprints',                                  [SprintWebController::class, 'store'])->name('web.sprints.store');
     Route::patch('/sprints/{sprint}',                        [SprintWebController::class, 'update'])->name('web.sprints.update');
+    Route::post('/sprints/{sprint}/complete',                [SprintWebController::class, 'complete'])->name('web.sprints.complete');
     Route::delete('/sprints/{sprint}',                       [SprintWebController::class, 'destroy'])->name('web.sprints.destroy');
     Route::post('/sprints/{sprint}/tasks',                   [SprintWebController::class, 'addTask'])->name('web.sprints.tasks.add');
     Route::delete('/sprints/{sprint}/tasks/{task}',          [SprintWebController::class, 'removeTask'])->name('web.sprints.tasks.remove');

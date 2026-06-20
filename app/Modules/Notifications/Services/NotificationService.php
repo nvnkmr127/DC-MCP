@@ -42,6 +42,34 @@ class NotificationService
             $status = 'pending';
         }
 
+        // Handle Grouping for in_app notifications
+        if ($channel === 'in_app' && isset($data['group_key'])) {
+            $existing = DB::table('notifications_log')
+                ->where('user_id', $user->id)
+                ->where('type', $type)
+                ->where('channel', 'in_app')
+                ->whereNull('read_at')
+                ->whereJsonContains('data->group_key', $data['group_key'])
+                ->orderByDesc('created_at')
+                ->first();
+
+            if ($existing) {
+                $existingData = json_decode($existing->data, true) ?? [];
+                $count = ($existingData['group_count'] ?? 1) + 1;
+                
+                $data = array_merge($existingData, $data);
+                $data['group_count'] = $count;
+                
+                $title = isset($data['group_title']) ? str_replace('{count}', $count, $data['group_title']) : $title;
+                $body = isset($data['group_body']) ? str_replace('{count}', $count, $data['group_body']) : $body;
+
+                // Delete old so the new one triggers UI poller with a fresh ID
+                DB::table('notifications_log')->where('id', $existing->id)->delete();
+            } else {
+                $data['group_count'] = 1;
+            }
+        }
+
         // 3. Log the notification in database
         $notificationId = (string) Str::uuid();
         DB::table('notifications_log')->insert([

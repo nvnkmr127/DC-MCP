@@ -4,7 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { formatHours, timeAgo, getInitials, cn } from '@/lib/utils';
 import {
     CheckSquare, Clock, AlertTriangle, TrendingUp, TrendingDown,
-    FolderKanban, Users, ArrowRight, Zap, Minus, LayoutGrid, Edit3, Save, Plus, X, RefreshCw
+    FolderKanban, Users, ArrowRight, Zap, Minus, LayoutGrid, Edit3, Save, Plus, X, RefreshCw, Share2, Printer
 } from 'lucide-react';
 import {
     AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
@@ -15,6 +15,7 @@ import {
     useDashboardDataQuery,
     useSaveDashboardMutation,
     useQueryWidgetDataMutation,
+    useShareDashboardMutation,
     DashboardConfig,
     Widget
 } from '@/hooks/queries/useDashboards';
@@ -41,15 +42,40 @@ interface DashboardStats {
 interface Props {
     stats: DashboardStats;
     briefing?: { id: string; date: string; digest_text: string | null; status: string } | null;
+    setup_checklist: Array<{ id: string; title: string; done: boolean; href: string | null }>;
 }
 
 const PIE_COLORS = ['#6366f1', '#a855f7', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
 
-export default function DashboardIndex({ stats, briefing }: Props) {
+export default function DashboardIndex({ stats, briefing, setup_checklist }: Props) {
     const { data: dashboards, isLoading: isLoadingConfigs } = useDashboardsQuery();
     const [editMode, setEditMode] = useState(false);
     const [localLayout, setLocalLayout] = useState<Widget[]>([]);
     const [activeDb, setActiveDb] = useState<DashboardConfig | null>(null);
+    const [rangePreset, setRangePreset] = useState('last_30_days');
+    const [shareModalOpen, setShareModalOpen] = useState(false);
+
+    const getDateRange = (range: string) => {
+        const today = new Date();
+        const to = today.toISOString().split('T')[0];
+        let from = to;
+        if (range === 'last_7_days') {
+            const d = new Date(); d.setDate(d.getDate() - 7);
+            from = d.toISOString().split('T')[0];
+        } else if (range === 'last_30_days') {
+            const d = new Date(); d.setDate(d.getDate() - 30);
+            from = d.toISOString().split('T')[0];
+        } else if (range === 'last_quarter') {
+            const d = new Date(); d.setDate(d.getDate() - 90);
+            from = d.toISOString().split('T')[0];
+        } else if (range === 'year_to_date') {
+            const d = new Date(today.getFullYear(), 0, 1);
+            from = d.toISOString().split('T')[0];
+        }
+        return { from, to };
+    };
+
+    const dateRange = getDateRange(rangePreset);
 
     // Sync activeDb and localLayout when dashboards query completes
     useEffect(() => {
@@ -62,11 +88,13 @@ export default function DashboardIndex({ stats, briefing }: Props) {
 
     const { data: widgetsData, isLoading: isLoadingData, refetch: refetchData } = useDashboardDataQuery(
         activeDb?.id,
-        !editMode
+        !editMode,
+        dateRange
     );
 
     const saveMutation = useSaveDashboardMutation();
     const queryWidgetMutation = useQueryWidgetDataMutation();
+    const shareMutation = useShareDashboardMutation();
 
     const [localWidgetsData, setLocalWidgetsData] = useState<Record<string, any>>({});
 
@@ -118,6 +146,23 @@ export default function DashboardIndex({ stats, briefing }: Props) {
         });
     };
 
+    const handleShareToggle = (enabled: boolean) => {
+        if (!activeDb) return;
+        shareMutation.mutate({ id: activeDb.id, enabled });
+    };
+
+    const handleCopyShareLink = () => {
+        if (activeDb?.share_token) {
+            const url = `${window.location.origin}/public/dashboards/${activeDb.share_token}`;
+            navigator.clipboard.writeText(url);
+            alert('Share link copied to clipboard!');
+        }
+    };
+
+    const handlePrint = () => {
+        window.print();
+    };
+
     const loading = isLoadingConfigs || isLoadingData || saveMutation.isPending;
 
     // Build visual representation of current config/layout
@@ -164,6 +209,35 @@ export default function DashboardIndex({ stats, briefing }: Props) {
                                     <Edit3 size={13} className="mr-1.5" /> Edit Layout
                                 </Button>
                             )}
+                            <select
+                                className="text-sm border-gray-200 rounded-lg py-1.5 pl-3 pr-8 focus:ring-indigo-500 focus:border-indigo-500"
+                                value={rangePreset}
+                                onChange={(e) => setRangePreset(e.target.value)}
+                            >
+                                <option value="last_7_days">Last 7 Days</option>
+                                <option value="last_30_days">Last 30 Days</option>
+                                <option value="last_quarter">Last Quarter</option>
+                                <option value="year_to_date">Year to Date</option>
+                            </select>
+                            
+                            <div className="h-4 border-r border-gray-200 mx-1"></div>
+                            
+                            <Button
+                                onClick={() => setShareModalOpen(true)}
+                                variant="outline"
+                                size="sm"
+                            >
+                                <Share2 size={13} className="mr-1.5" /> Share
+                            </Button>
+                            
+                            <Button
+                                onClick={handlePrint}
+                                variant="outline"
+                                size="sm"
+                            >
+                                <Printer size={13} className="mr-1.5" /> Print PDF
+                            </Button>
+
                             <Button
                                 onClick={() => refetchData()}
                                 variant="outline"
@@ -178,6 +252,41 @@ export default function DashboardIndex({ stats, briefing }: Props) {
                 </div>
             </div>
 
+            {/* Setup Checklist / Empty State CTA */}
+            {setup_checklist && setup_checklist.some(i => !i.done) && (
+                <div className="mb-8 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-6 shadow-sm print:hidden">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-bold text-gray-900 tracking-tight flex items-center">
+                            <CheckSquare className="mr-2 text-indigo-600" size={20} />
+                            Setup Checklist
+                        </h2>
+                        <span className="text-sm font-semibold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full">
+                            {setup_checklist.filter(i => i.done).length} of {setup_checklist.length} steps complete
+                        </span>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm border border-indigo-50 overflow-hidden">
+                        <div className="divide-y divide-gray-50">
+                            {setup_checklist.map((item, idx) => (
+                                <div key={item.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn("w-6 h-6 rounded-full flex items-center justify-center shrink-0 border", item.done ? "bg-emerald-500 border-emerald-500 text-white" : "bg-gray-100 border-gray-300 text-transparent")}>
+                                            {item.done && <CheckSquare size={12} className="text-white" />}
+                                        </div>
+                                        <span className={cn("text-sm font-medium", item.done ? "text-gray-400 line-through" : "text-gray-900")}>
+                                            {item.title}
+                                        </span>
+                                    </div>
+                                    {!item.done && item.href && (
+                                        <Link href={item.href} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+                                            Complete task
+                                        </Link>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Loading / Custom layout view */}
             {loading ? (
@@ -317,43 +426,123 @@ export default function DashboardIndex({ stats, briefing }: Props) {
                         </div>
 
                         {/* Task status stacked bar chart */}
-                        <div className="bg-white rounded-2xl border border-gray-100/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                        <div className="bg-white rounded-2xl border border-gray-100/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col">
                             <h3 className="text-[13px] font-bold text-gray-900 mb-5">Workflow Allocation</h3>
                             
-                            <div className="space-y-4">
-                                {Object.entries(stats.tasks_by_status).map(([status, count], i) => {
-                                    const formatted = status.replace('_', ' ').toUpperCase();
-                                    return (
-                                        <div key={status} className="flex items-center justify-between text-xs">
-                                            <span className="text-gray-500 font-medium">{formatted}</span>
-                                            <span className="font-extrabold text-gray-900">{count}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                            {Object.keys(stats.tasks_by_status).length > 0 ? (
+                                <div className="space-y-4">
+                                    {Object.entries(stats.tasks_by_status).map(([status, count], i) => {
+                                        const formatted = status.replace('_', ' ').toUpperCase();
+                                        return (
+                                            <div key={status} className="flex items-center justify-between text-xs">
+                                                <span className="text-gray-500 font-medium">{formatted}</span>
+                                                <span className="font-extrabold text-gray-900">{count}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
+                                    <FolderKanban size={24} className="text-gray-300 mb-2" />
+                                    <p className="text-[12px] text-gray-400 mb-4">No tasks have been created yet.</p>
+                                    <Link
+                                        href="/tasks/create"
+                                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
+                                    >
+                                        Create your first task
+                                    </Link>
+                                </div>
+                            )}
                         </div>
 
                         {/* Recent updates log */}
-                        <div className="bg-white rounded-2xl border border-gray-100/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                        <div className="bg-white rounded-2xl border border-gray-100/80 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col">
                             <h3 className="text-[13px] font-bold text-gray-900 mb-5">Recent Activity</h3>
-                            <div className="space-y-4">
-                                {stats.recent_activity.slice(0, 5).map(act => (
-                                    <div key={act.id} className="flex items-start gap-3">
-                                        <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[10px] font-extrabold text-indigo-600 shrink-0 mt-0.5">
-                                            {getInitials(act.actor_name)}
+                            
+                            {stats.recent_activity.length > 0 ? (
+                                <div className="space-y-4">
+                                    {stats.recent_activity.slice(0, 5).map(act => (
+                                        <div key={act.id} className="flex items-start gap-3">
+                                            <div className="w-6 h-6 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[10px] font-extrabold text-indigo-600 shrink-0 mt-0.5">
+                                                {getInitials(act.actor_name)}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-[12px] text-gray-800 leading-snug">
+                                                    <strong>{act.actor_name}</strong> {act.action.replace('_', ' ')}: <em>{act.task_title}</em>
+                                                </p>
+                                                <span className="text-[10px] text-gray-400 block mt-0.5">{timeAgo(act.logged_at)}</span>
+                                            </div>
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="text-[12px] text-gray-800 leading-snug">
-                                                <strong>{act.actor_name}</strong> {act.action.replace('_', ' ')}: <em>{act.task_title}</em>
-                                            </p>
-                                            <span className="text-[10px] text-gray-400 block mt-0.5">{timeAgo(act.logged_at)}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
+                                    <Users size={24} className="text-gray-300 mb-2" />
+                                    <p className="text-[12px] text-gray-400 mb-4">No recent team activity.</p>
+                                    <Link
+                                        href="/settings/team"
+                                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
+                                    >
+                                        Invite your team
+                                    </Link>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </>
+            )}
+
+            {/* Share Modal */}
+            {shareModalOpen && activeDb && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden">
+                    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-md overflow-hidden">
+                        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                            <h2 className="text-lg font-bold text-slate-800 flex items-center">
+                                <Share2 size={18} className="mr-2 text-indigo-500" /> Share Dashboard
+                            </h2>
+                            <button onClick={() => setShareModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-sm text-slate-500 mb-6">
+                                Create a read-only public link to share this dashboard with stakeholders. They will not need to log in to view the data.
+                            </p>
+                            
+                            <div className="flex items-center justify-between mb-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <div>
+                                    <h4 className="text-sm font-semibold text-slate-800">Public Link Access</h4>
+                                    <p className="text-xs text-slate-500">Anyone with the link can view</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only peer" 
+                                        checked={!!activeDb.share_token}
+                                        onChange={(e) => handleShareToggle(e.target.checked)}
+                                        disabled={shareMutation.isPending}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                </label>
+                            </div>
+
+                            {activeDb.share_token && (
+                                <div className="mt-4">
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1">Share URL</label>
+                                    <div className="flex gap-2">
+                                        <input 
+                                            type="text" 
+                                            readOnly 
+                                            value={`${window.location.origin}/public/dashboards/${activeDb.share_token}`}
+                                            className="flex-1 text-xs px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-600 focus:outline-none"
+                                        />
+                                        <Button onClick={handleCopyShareLink} size="sm">Copy</Button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
         </AppLayout>
     );

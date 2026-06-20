@@ -3,7 +3,7 @@ import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn, timeAgo } from '@/lib/utils';
 import type { Notification, PaginatedResponse } from '@/types';
-import { Bell, CheckCheck, AlertTriangle, MessageSquare, Clock, Zap } from 'lucide-react';
+import { Bell, CheckCheck, AlertTriangle, MessageSquare, Clock, Zap, AlarmClock } from 'lucide-react';
 
 interface Props {
     notifications: PaginatedResponse<Notification>;
@@ -24,6 +24,11 @@ const TYPE_CONFIG: Record<string, { icon: React.ComponentType<any>; bg: string; 
 export default function NotificationsIndex({ notifications, unread_count }: Props) {
     function markRead(id: string) {
         router.post(`/notifications/${id}/read`, {}, { preserveScroll: true });
+    }
+
+    function snooze(id: string, e: React.MouseEvent) {
+        e.stopPropagation();
+        router.post(`/notifications/${id}/snooze`, { hours: 1 }, { preserveScroll: true });
     }
 
     function markAllRead() {
@@ -91,7 +96,14 @@ export default function NotificationsIndex({ notifications, unread_count }: Prop
                                     </div>
 
                                     {!notif.is_read && (
-                                        <div className="flex items-start pt-1 shrink-0">
+                                        <div className="flex items-center gap-3 pt-1 shrink-0">
+                                            <button
+                                                onClick={(e) => snooze(notif.id, e)}
+                                                className="hidden group-hover:flex items-center gap-1 text-[11px] font-medium text-gray-500 hover:text-indigo-600 transition-colors bg-white px-2 py-1 rounded-md border border-gray-200 shadow-sm"
+                                                title="Snooze for 1 hour"
+                                            >
+                                                <AlarmClock size={12} /> Snooze 1h
+                                            </button>
                                             <div className="w-2 h-2 rounded-full bg-indigo-500" />
                                         </div>
                                     )}

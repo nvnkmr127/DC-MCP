@@ -12,7 +12,11 @@ Route::prefix('v1')->group(function () {
     Route::get('dashboards', [DashboardApiController::class, 'index']);
     Route::post('dashboards', [DashboardApiController::class, 'store']);
     Route::put('dashboards/{dashboard}', [DashboardApiController::class, 'update']);
+    Route::post('dashboards/{dashboard}/share', [DashboardApiController::class, 'share']);
     Route::get('dashboards/{dashboard}/data', [DashboardApiController::class, 'data']);
+    
+    // Public Dashboard API
+    Route::get('public-dashboards/{token}/data', [\App\Modules\DataViz\Http\Controllers\Web\PublicDashboardController::class, 'data']);
     
     // Viz Query Engine
     Route::get('viz/kpis', [DashboardApiController::class, 'kpis']);

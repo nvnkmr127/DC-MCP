@@ -23,12 +23,14 @@ class InAppNotification extends Model
         'status',
         'read_at',
         'sent_at',
+        'snoozed_until',
     ];
 
     protected $casts = [
-        'data'    => 'array',
-        'read_at' => 'datetime',
-        'sent_at' => 'datetime',
+        'data'          => 'array',
+        'read_at'       => 'datetime',
+        'sent_at'       => 'datetime',
+        'snoozed_until' => 'datetime',
     ];
 
     public function user()
@@ -54,7 +56,11 @@ class InAppNotification extends Model
     public function scopeUnread($query)
     {
         return $query->whereNotIn('status', ['read'])
-                     ->whereNull('read_at');
+                     ->whereNull('read_at')
+                     ->where(function($q) {
+                         $q->whereNull('snoozed_until')
+                           ->orWhere('snoozed_until', '<=', now());
+                     });
     }
 
     public function scopeInApp($query)

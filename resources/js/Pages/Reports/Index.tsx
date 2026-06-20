@@ -24,6 +24,8 @@ interface Report {
     project?: { name: string } | null;
     client?: { name: string } | null;
     generated_by?: { name: string } | null;
+    is_public?: boolean;
+    share_token?: string | null;
 }
 
 interface Schedule {
@@ -36,6 +38,9 @@ interface Schedule {
     recipients: string[];
     is_active: boolean;
     next_run_at: string | null;
+    project_id?: string | null;
+    client_id?: string | null;
+    config?: { selected_projects?: string[]; selected_tasks?: string[] } | null;
     project?: { name: string } | null;
     client?: { name: string } | null;
 }
@@ -68,7 +73,17 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
     const [from, setFrom] = useState(filters.from);
     const [to, setTo]     = useState(filters.to);
     const [emailModalReport, setEmailModalReport] = useState<Report | null>(null);
+    const [shareModalReport, setShareModalReport] = useState<Report | null>(null);
     const [recipientEmail, setRecipientEmail] = useState('');
+    
+    // Compare state
+    const [compareMode, setCompareMode] = useState(false);
+    const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
+    
+    const [editSchedule, setEditSchedule] = useState<Schedule | null>(null);
+    const [scheduleConfig, setScheduleConfig] = useState<{ selected_projects: string[], selected_tasks: string[] }>({ selected_projects: [], selected_tasks: [] });
+    const [availableItems, setAvailableItems] = useState<any[]>([]);
+    const [fetchingItems, setFetchingItems] = useState(false);
 
     function applyRange() {
         router.get('/reports', { from, to }, { preserveState: true });
@@ -113,12 +128,26 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                     <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Intelligence & Reports</h1>
                     <p className="text-xs text-gray-400 mt-1 font-medium">Generate SEO audits, client performance reports, and sprint summaries.</p>
                 </div>
-                <Link
-                    href="/reports/create"
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md self-start sm:self-auto"
-                >
-                    <Plus size={14} /> New Report
-                </Link>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => {
+                            setCompareMode(!compareMode);
+                            setSelectedForCompare([]);
+                        }}
+                        className={cn(
+                            "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors border",
+                            compareMode ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                        )}
+                    >
+                        {compareMode ? "Cancel Compare" : "Compare Reports"}
+                    </button>
+                    <Link
+                        href="/reports/create"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm"
+                    >
+                        <Plus size={13} /> Build Report
+                    </Link>
+                </div>
             </div>
 
             {/* Tabs */}
@@ -248,11 +277,12 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         <table className="w-full text-xs">
                             <thead>
                                 <tr className="border-b border-gray-100 bg-gray-50/70">
-                                    <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Report Info</th>
-                                    <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Project / Client</th>
-                                    <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Date Period</th>
-                                    <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th className="text-right px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Actions</th>
+                                    {compareMode && <th className="px-5 py-3 w-10 text-center"></th>}
+                                    <th className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Report Title</th>
+                                    <th className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Period</th>
+                                    <th className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Project / Client</th>
+                                    <th className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                                    {!compareMode && <th className="px-5 py-3 text-right font-bold text-gray-400 uppercase tracking-wider">Actions</th>}
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -264,50 +294,78 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                     </tr>
                                 ) : (
                                     reports.map(rep => (
-                                        <tr key={rep.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <tr key={rep.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                            {compareMode && (
+                                                <td className="px-5 py-4 text-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="rounded text-indigo-600 focus:ring-indigo-500 border-gray-300 w-4 h-4"
+                                                        checked={selectedForCompare.includes(rep.id)}
+                                                        disabled={!selectedForCompare.includes(rep.id) && selectedForCompare.length >= 2}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setSelectedForCompare(prev => [...prev, rep.id]);
+                                                            } else {
+                                                                setSelectedForCompare(prev => prev.filter(id => id !== rep.id));
+                                                            }
+                                                        }}
+                                                    />
+                                                </td>
+                                            )}
                                             <td className="px-5 py-4">
-                                                <div className="font-bold text-gray-900 text-[13px]">{rep.title}</div>
-                                                <div className="text-gray-400 mt-0.5 capitalize text-[10px]">{rep.template.replace('_', ' ')}</div>
+                                                <div className="text-sm font-bold text-gray-900">{rep.title}</div>
+                                                <div className="text-[10px] uppercase font-bold tracking-wider text-gray-400 mt-0.5">{rep.template.replace('_', ' ')}</div>
                                             </td>
-                                            <td className="px-5 py-4 text-gray-600">
-                                                {rep.project?.name ?? rep.client?.name ?? 'General'}
+                                            <td className="px-5 py-4 text-xs font-semibold text-gray-500">
+                                                {rep.date_from} — {rep.date_to}
                                             </td>
-                                            <td className="px-5 py-4 text-gray-500">
-                                                {rep.date_from} → {rep.date_to}
+                                            <td className="px-5 py-4">
+                                                {rep.project ? (
+                                                    <div className="text-xs font-bold text-gray-800">{rep.project.name}</div>
+                                                ) : rep.client ? (
+                                                    <div className="text-xs font-bold text-gray-800">{rep.client.name}</div>
+                                                ) : <span className="text-gray-400 text-xs">—</span>}
                                             </td>
                                             <td className="px-5 py-4">
                                                 <span className={cn(
                                                     "px-2 py-0.5 rounded-full text-[10px] font-bold capitalize",
-                                                    rep.status === 'ready' ? "bg-emerald-50 text-emerald-700" :
-                                                    rep.status === 'generating' ? "bg-amber-50 text-amber-700 animate-pulse" : "bg-gray-50 text-gray-600"
+                                                    rep.status === 'ready' ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                                                 )}>
                                                     {rep.status}
                                                 </span>
                                             </td>
-                                            <td className="px-5 py-4 text-right space-x-2">
-                                                <Link
-                                                    href={`/reports/${rep.id}`}
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg font-bold"
-                                                >
-                                                    View
-                                                </Link>
-                                                {rep.status === 'ready' && (
-                                                    <>
-                                                        <a
-                                                            href={`/api/v1/reports/${rep.id}/download`}
-                                                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-55 text-indigo-600 hover:bg-indigo-50 rounded-lg font-bold"
-                                                        >
-                                                            <Download size={12} /> Download
-                                                        </a>
-                                                        <button
-                                                            onClick={() => setEmailModalReport(rep)}
-                                                            className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-sm"
-                                                        >
-                                                            <Mail size={12} /> Send Email
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </td>
+                                            {!compareMode && (
+                                                <td className="px-5 py-4 text-right space-x-2">
+                                                    <Link
+                                                        href={`/reports/${rep.id}`}
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg font-bold"
+                                                    >
+                                                        View
+                                                    </Link>
+                                                    {rep.status === 'ready' && (
+                                                        <>
+                                                            <a
+                                                                href={`/api/v1/reports/${rep.id}/download`}
+                                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-55 text-indigo-600 hover:bg-indigo-50 rounded-lg font-bold"
+                                                            >
+                                                                <Download size={12} /> Download
+                                                            </a>
+                                                            <button
+                                                                onClick={() => setEmailModalReport(rep)}
+                                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-sm"
+                                                            >
+                                                                <Mail size={12} /> Send Email
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setShareModalReport(rep)}
+                                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg font-bold"
+                                                            >
+                                                                Share
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </td>
+                                            )}
                                         </tr>
                                     ))
                                 )}
@@ -329,6 +387,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                     <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Frequency</th>
                                     <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Next Run</th>
                                     <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                                    <th className="text-right px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -355,12 +414,67 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                 {sched.next_run_at ? sched.next_run_at.slice(0, 10) : '—'}
                                             </td>
                                             <td className="px-5 py-4">
-                                                <span className={cn(
-                                                    "px-2 py-0.5 rounded-full text-[10px] font-bold",
-                                                    sched.is_active ? "bg-emerald-50 text-emerald-700" : "bg-gray-50 text-gray-600"
-                                                )}>
-                                                    {sched.is_active ? 'Active' : 'Inactive'}
-                                                </span>
+                                                <button
+                                                    onClick={() => {
+                                                        axios.patch(`/api/v1/report-schedules/${sched.id}`, {
+                                                            is_active: !sched.is_active
+                                                        }).then(() => {
+                                                            toast.success(`Schedule ${sched.is_active ? 'paused' : 'activated'}`);
+                                                            router.reload();
+                                                        });
+                                                    }}
+                                                    className={cn(
+                                                        "px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-colors border",
+                                                        sched.is_active 
+                                                            ? "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100" 
+                                                            : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                                                    )}
+                                                >
+                                                    {sched.is_active ? 'Active' : 'Paused'}
+                                                </button>
+                                            </td>
+                                            <td className="px-5 py-4 text-right">
+                                                <div className="flex justify-end items-center gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setEditSchedule(sched);
+                                                            setScheduleConfig({
+                                                                selected_projects: sched.config?.selected_projects || [],
+                                                                selected_tasks: sched.config?.selected_tasks || [],
+                                                            });
+                                                            if (sched.client_id && !sched.project_id) {
+                                                                setFetchingItems(true);
+                                                                axios.get(`/api/v1/projects?client_id=${sched.client_id}`)
+                                                                    .then(res => setAvailableItems(res.data?.data || []))
+                                                                    .finally(() => setFetchingItems(false));
+                                                            } else if (sched.project_id) {
+                                                                setFetchingItems(true);
+                                                                axios.get(`/api/v1/tasks?project_id=${sched.project_id}`)
+                                                                    .then(res => setAvailableItems(res.data?.data || []))
+                                                                    .finally(() => setFetchingItems(false));
+                                                            } else {
+                                                                setAvailableItems([]);
+                                                            }
+                                                        }}
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg font-bold"
+                                                    >
+                                                        Edit Scope
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (confirm('Are you sure you want to delete this schedule?')) {
+                                                                axios.delete(`/api/v1/report-schedules/${sched.id}`)
+                                                                    .then(() => {
+                                                                        toast.success('Schedule deleted');
+                                                                        router.reload();
+                                                                    });
+                                                            }
+                                                        }}
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg font-bold"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
@@ -411,6 +525,205 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* Share Link Modal */}
+            {shareModalReport && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-100">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-sm font-bold text-gray-900">Share Report</h3>
+                            <button onClick={() => setShareModalReport(null)} className="text-gray-400 hover:text-gray-700">
+                                <Plus className="rotate-45" size={18} />
+                            </button>
+                        </div>
+                        
+                        <p className="text-xs text-gray-500 mb-6">
+                            Create a public link to share <strong>{shareModalReport.title}</strong> with external clients or stakeholders. 
+                            Anyone with this link can view and download the PDF.
+                        </p>
+
+                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-4 mb-6">
+                            <div className="flex items-center justify-between">
+                                <div className="font-semibold text-sm text-gray-800">Public Link</div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        className="sr-only peer" 
+                                        checked={shareModalReport.is_public || false}
+                                        onChange={(e) => {
+                                            const isPublic = e.target.checked;
+                                            axios.patch(`/api/v1/reports/${shareModalReport.id}/share`, { is_public: isPublic })
+                                                .then((res) => {
+                                                    setShareModalReport({ ...shareModalReport, is_public: res.data.data.is_public, share_token: res.data.data.share_token });
+                                                    toast.success(isPublic ? 'Public link generated' : 'Public access revoked');
+                                                    router.reload();
+                                                })
+                                                .catch(() => toast.error('Failed to update sharing settings'));
+                                        }}
+                                    />
+                                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                                </label>
+                            </div>
+
+                            {shareModalReport.is_public && shareModalReport.share_token && (
+                                <div className="space-y-2 pt-2 border-t border-gray-200">
+                                    <div className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Shareable URL</div>
+                                    <div className="flex gap-2">
+                                        <input 
+                                            readOnly 
+                                            value={`${window.location.origin}/shared/reports/${shareModalReport.share_token}`}
+                                            className="w-full text-xs font-mono bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-600 focus:outline-none"
+                                            onClick={e => e.currentTarget.select()}
+                                        />
+                                        <button 
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`${window.location.origin}/shared/reports/${shareModalReport.share_token}`);
+                                                toast.success('Link copied to clipboard');
+                                            }}
+                                            className="bg-gray-800 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-700 transition-colors"
+                                        >
+                                            Copy
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex justify-end pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setShareModalReport(null)}
+                                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all"
+                            >
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Schedule Modal */}
+            {editSchedule && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-100">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-sm font-bold text-gray-900">Edit Scope: {editSchedule.title}</h3>
+                            <button onClick={() => setEditSchedule(null)} className="text-gray-400 hover:text-gray-700">
+                                <Plus className="rotate-45" size={18} />
+                            </button>
+                        </div>
+                        
+                        {!editSchedule.client_id && !editSchedule.project_id && (
+                            <p className="text-sm text-gray-600 mb-4">This schedule includes all data across the organization. No specific scope to edit.</p>
+                        )}
+                        
+                        {(editSchedule.client_id || editSchedule.project_id) && (
+                            <div className="mb-4">
+                                <label className="block text-xs font-bold text-gray-600 mb-2">
+                                    {editSchedule.client_id && !editSchedule.project_id ? "Select Campaigns/Projects" : "Select Tasks"}
+                                </label>
+                                <p className="text-xs text-gray-500 mb-3">Leave empty to include all.</p>
+                                
+                                {fetchingItems ? (
+                                    <p className="text-sm text-gray-500">Loading...</p>
+                                ) : availableItems.length > 0 ? (
+                                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                                        {availableItems.map(item => {
+                                            const isProject = editSchedule.client_id && !editSchedule.project_id;
+                                            const checked = isProject 
+                                                ? scheduleConfig.selected_projects.includes(item.id)
+                                                : scheduleConfig.selected_tasks.includes(item.id);
+                                            
+                                            return (
+                                                <label key={item.id} className="flex items-center gap-2 p-2 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={checked}
+                                                        onChange={e => {
+                                                            if (isProject) {
+                                                                const updated = e.target.checked 
+                                                                    ? [...scheduleConfig.selected_projects, item.id] 
+                                                                    : scheduleConfig.selected_projects.filter(id => id !== item.id);
+                                                                setScheduleConfig({ ...scheduleConfig, selected_projects: updated });
+                                                            } else {
+                                                                const updated = e.target.checked 
+                                                                    ? [...scheduleConfig.selected_tasks, item.id] 
+                                                                    : scheduleConfig.selected_tasks.filter(id => id !== item.id);
+                                                                setScheduleConfig({ ...scheduleConfig, selected_tasks: updated });
+                                                            }
+                                                        }}
+                                                        className="rounded text-indigo-600 focus:ring-indigo-500" 
+                                                    />
+                                                    <span className="text-sm font-medium text-gray-800">{item.name || item.title}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-500">No items found.</p>
+                                )}
+                            </div>
+                        )}
+                        
+                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 mt-4 pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setEditSchedule(null)}
+                                className="px-3.5 py-2 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    axios.patch(`/api/v1/report-schedules/${editSchedule.id}`, {
+                                        config: {
+                                            ...editSchedule.config,
+                                            selected_projects: scheduleConfig.selected_projects,
+                                            selected_tasks: scheduleConfig.selected_tasks
+                                        }
+                                    }).then(() => {
+                                        toast.success('Scope updated successfully.');
+                                        setEditSchedule(null);
+                                        router.reload();
+                                    }).catch(err => {
+                                        toast.error(err.response?.data?.message || 'Failed to update scope.');
+                                    });
+                                }}
+                                disabled={!editSchedule.client_id && !editSchedule.project_id}
+                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Floating Compare Action Bar */}
+            {compareMode && selectedForCompare.length > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-40 border border-gray-700/50 backdrop-blur-lg">
+                    <div className="text-sm font-bold">
+                        {selectedForCompare.length} selected <span className="text-gray-400 font-normal">/ 2 required</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={() => {
+                                setCompareMode(false);
+                                setSelectedForCompare([]);
+                            }}
+                            className="text-gray-300 hover:text-white text-xs font-semibold px-2 py-1"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            disabled={selectedForCompare.length !== 2}
+                            onClick={() => router.get(`/reports/compare?id1=${selectedForCompare[0]}&id2=${selectedForCompare[1]}`)}
+                            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-xs font-bold transition-colors"
+                        >
+                            Compare Side-by-Side
+                        </button>
                     </div>
                 </div>
             )}

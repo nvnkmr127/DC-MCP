@@ -18,6 +18,8 @@ export interface DashboardConfig {
     id: string;
     name: string;
     layout: Widget[];
+    is_shared?: boolean;
+    share_token?: string;
     is_default: boolean;
 }
 
@@ -33,12 +35,20 @@ export function useDashboardsQuery() {
 }
 
 // Fetch specific dashboard data
-export function useDashboardDataQuery(id: string | undefined, enabled: boolean = true) {
+export function useDashboardDataQuery(
+    id: string | undefined, 
+    enabled: boolean = true,
+    dateRange?: { from: string; to: string } | null
+) {
     return useQuery<Record<string, any>>({
-        queryKey: ['dashboardData', id],
+        queryKey: ['dashboardData', id, dateRange],
         queryFn: async () => {
             if (!id) return {};
-            const { data } = await axios.get(`/api/v1/dashboards/${id}/data`);
+            let url = `/api/v1/dashboards/${id}/data`;
+            if (dateRange) {
+                url += `?from=${dateRange.from}&to=${dateRange.to}`;
+            }
+            const { data } = await axios.get(url);
             return data.data?.widgets ?? {};
         },
         enabled: enabled && !!id,
@@ -69,5 +79,38 @@ export function useQueryWidgetDataMutation() {
             const { data } = await axios.post('/api/v1/viz/query', spec);
             return data.data;
         },
+    });
+}
+
+// Generate or revoke share token
+export function useShareDashboardMutation() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
+            const { data } = await axios.post(`/api/v1/dashboards/${id}/share`, { enabled });
+            return data.data;
+        },
+        onSuccess: (data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['dashboards'] });
+        },
+    });
+}
+
+// Fetch public dashboard data
+export function usePublicDashboardDataQuery(
+    token: string, 
+    dateRange?: { from: string; to: string } | null
+) {
+    return useQuery<Record<string, any>>({
+        queryKey: ['publicDashboardData', token, dateRange],
+        queryFn: async () => {
+            let url = `/api/v1/public-dashboards/${token}/data`;
+            if (dateRange) {
+                url += `?from=${dateRange.from}&to=${dateRange.to}`;
+            }
+            const { data } = await axios.get(url);
+            return data.data?.widgets ?? {};
+        },
+        staleTime: 60_000,
     });
 }

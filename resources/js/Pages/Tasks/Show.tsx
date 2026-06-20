@@ -14,6 +14,7 @@ import { TimeTracker } from './Partials/TimeTracker';
 import { DependenciesSection, TaskDep } from './Partials/DependenciesSection';
 import { ActivityLog } from '@/Components/Shared/ActivityLog';
 import { StatusBadge } from '@/Components/Shared/StatusBadge';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 
 interface Props {
     task: Task & {
@@ -42,8 +43,32 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
         router.post('/attachments', form, { preserveScroll: true });
     }
 
-    function updateStatus(status: string) {
-        router.patch(`/tasks/${task.id}`, { status }, { preserveScroll: true });
+    const [skipTimeCheck, setSkipTimeCheck] = useState(false);
+
+    async function updateStatus(status: string) {
+        if (status === 'done' && task.time_entries.length === 0 && !skipTimeCheck) {
+            const ok = await confirm({
+                title: 'No Time Logged',
+                description: 'You are marking this task as done, but no time has been logged. Do you want to proceed anyway?',
+                confirmText: 'Mark Done Anyway',
+                cancelText: 'Cancel & Log Time',
+            });
+            if (ok) {
+                setSkipTimeCheck(true);
+                router.patch(`/tasks/${task.id}`, { status }, { 
+                    preserveScroll: true, 
+                    onSuccess: () => setSkipTimeCheck(false) 
+                });
+            } else {
+                setActiveTab('time');
+            }
+            return;
+        }
+        
+        router.patch(`/tasks/${task.id}`, { status }, { 
+            preserveScroll: true,
+            onSuccess: () => setSkipTimeCheck(false)
+        });
     }
 
     const totalLogged = task.time_entries.reduce((s, e) => s + e.hours, 0);
@@ -74,13 +99,11 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
 
                 {/* Breadcrumb + actions */}
                 <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Link href="/projects" className="hover:text-indigo-600">Projects</Link>
-                        <span>/</span>
-                        <Link href={`/projects/${task.project_id}`} className="hover:text-indigo-600">{task.project?.name}</Link>
-                        <span>/</span>
-                        <span className="text-gray-900 truncate max-w-[200px]">{task.title}</span>
-                    </div>
+                    <Breadcrumbs items={[
+                        { label: 'Projects', href: '/projects' },
+                        { label: task.project?.name ?? 'Project', href: `/projects/${task.project_id}` },
+                        { label: task.title }
+                    ]} />
                     <div className="flex items-center gap-2">
                         <Link
                             href={`/tasks/${task.id}/edit`}
@@ -155,7 +178,11 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
 
                             <div className="p-5">
                                 {activeTab === 'comments' && (
-                                    <CommentsSection taskId={task.id} comments={task.comments} />
+                                    <CommentsSection 
+                                        submitUrl={`/tasks/${task.id}/comments`}
+                                        deleteUrlTemplate={(id) => `/tasks/${task.id}/comments/${id}`}
+                                        comments={task.comments || []} 
+                                    />
                                 )}
 
                                 {activeTab === 'attachments' && (

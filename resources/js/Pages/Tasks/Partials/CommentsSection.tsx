@@ -7,17 +7,18 @@ import { timeAgo, cn } from '@/lib/utils';
 import { RichTextEditor } from '@/Components/Shared/RichTextEditor';
 
 interface CommentsSectionProps {
-    taskId: string;
+    submitUrl: string;
+    deleteUrlTemplate: (commentId: string) => string;
     comments: Comment[];
 }
 
-export const CommentsSection: React.FC<CommentsSectionProps> = ({ taskId, comments }) => {
+export const CommentsSection: React.FC<CommentsSectionProps> = ({ submitUrl, deleteUrlTemplate, comments }) => {
     const confirm = useConfirm();
     const commentForm = useForm({ body: '' });
 
     function submitComment(e: React.FormEvent) {
         e.preventDefault();
-        commentForm.post(`/tasks/${taskId}/comments`, {
+        commentForm.post(submitUrl, {
             preserveScroll: true,
             onSuccess: () => commentForm.reset(),
         });
@@ -47,7 +48,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ taskId, commen
                                         variant: 'destructive',
                                     });
                                     if (!ok) return;
-                                    router.delete(`/tasks/${taskId}/comments/${comment.id}`, { preserveScroll: true });
+                                    router.delete(deleteUrlTemplate(comment.id), { preserveScroll: true });
                                 }}
                                 className="ml-auto p-1 text-gray-300 hover:text-red-500 transition-colors rounded"
                             >

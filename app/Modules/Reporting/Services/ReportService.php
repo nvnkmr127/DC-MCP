@@ -81,7 +81,14 @@ class ReportService
                 ->whereIn('kpi_definitions.slug', $metricSlugs)
                 ->whereBetween('metric_snapshots.date_key', [$report->date_from->toDateString(), $report->date_to->toDateString()])
                 ->when($report->project_id, fn($q) => $q->where('metric_snapshots.project_id', $report->project_id))
-                ->when($report->client_id, fn($q) => $q->where('metric_snapshots.client_id', $report->client_id))
+                ->when($report->client_id && !$report->project_id, function($q) use ($report) {
+                    $selectedProjects = $report->config['selected_projects'] ?? [];
+                    if (!empty($selectedProjects)) {
+                        $q->whereIn('metric_snapshots.project_id', $selectedProjects);
+                    } else {
+                        $q->where('metric_snapshots.client_id', $report->client_id);
+                    }
+                })
                 ->select(
                     'kpi_definitions.slug',
                     'metric_snapshots.value',
@@ -103,15 +110,21 @@ class ReportService
                 ])->values()->toArray();
             }
 
-            // 2. Fetch project/task specific data if project_id is available
+            // 2. Fetch project/task specific data if project_id or client_id is available
             $projectData = null;
             if ($report->project_id) {
                 $project = DB::table('projects')->where('id', $report->project_id)->first();
                 if ($project) {
-                    $totalTasks = DB::table('tasks')->where('project_id', $report->project_id)->count();
-                    $completedTasks = DB::table('tasks')->where('project_id', $report->project_id)->where('status', 'done')->count();
-                    $overdueTasks = DB::table('tasks')
-                        ->where('project_id', $report->project_id)
+                    $selectedTasks = $report->config['selected_tasks'] ?? [];
+                    
+                    $tasksQuery = DB::table('tasks')->where('project_id', $report->project_id);
+                    if (!empty($selectedTasks)) {
+                        $tasksQuery->whereIn('id', $selectedTasks);
+                    }
+                    
+                    $totalTasks = (clone $tasksQuery)->count();
+                    $completedTasks = (clone $tasksQuery)->where('status', 'done')->count();
+                    $overdueTasks = (clone $tasksQuery)
                         ->whereNotNull('due_date')
                         ->where('due_date', '<', now())
                         ->whereNotIn('status', ['done', 'cancelled'])
@@ -123,6 +136,37 @@ class ReportService
                         'status' => $project->status,
                         'budget' => (float) $project->budget,
                         'budget_used' => (float) $project->budget_used,
+                        'tasks_total' => $totalTasks,
+                        'tasks_completed' => $completedTasks,
+                        'tasks_overdue' => $overdueTasks,
+                    ];
+                }
+            } elseif ($report->client_id) {
+                $client = DB::table('clients')->where('id', $report->client_id)->first();
+                if ($client) {
+                    $selectedProjects = $report->config['selected_projects'] ?? [];
+                    
+                    $projectsQuery = DB::table('projects')->where('client_id', $report->client_id);
+                    if (!empty($selectedProjects)) {
+                        $projectsQuery->whereIn('id', $selectedProjects);
+                    }
+                    $projectIds = (clone $projectsQuery)->pluck('id')->toArray();
+                    
+                    $totalTasks = DB::table('tasks')->whereIn('project_id', $projectIds)->count();
+                    $completedTasks = DB::table('tasks')->whereIn('project_id', $projectIds)->where('status', 'done')->count();
+                    $overdueTasks = DB::table('tasks')
+                        ->whereIn('project_id', $projectIds)
+                        ->whereNotNull('due_date')
+                        ->where('due_date', '<', now())
+                        ->whereNotIn('status', ['done', 'cancelled'])
+                        ->count();
+
+                    $projectData = [
+                        'name' => $client->name . ' Campaigns',
+                        'description' => 'Aggregated data for selected client projects',
+                        'status' => 'active',
+                        'budget' => (float) (clone $projectsQuery)->sum('budget'),
+                        'budget_used' => (float) (clone $projectsQuery)->sum('budget_used'),
                         'tasks_total' => $totalTasks,
                         'tasks_completed' => $completedTasks,
                         'tasks_overdue' => $overdueTasks,

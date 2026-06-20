@@ -3,11 +3,13 @@ import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import { Plus, X, GitMerge, CheckSquare } from 'lucide-react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 
 interface SprintTask { id: string; story_points: number; task: { id: string; title: string; status: string } | null; }
 interface Sprint {
     id: string; name: string; goal: string | null; status: string;
     start_date: string | null; end_date: string | null;
+    retrospective_notes: string | null;
     project: { id: string; name: string } | null;
     sprint_tasks: SprintTask[];
 }
@@ -72,8 +74,79 @@ function SprintModal({ projects, onClose }: { projects: Project[]; onClose: () =
     );
 }
 
+function SprintRetrospectiveModal({ sprint, onClose, onComplete }: { sprint: Sprint, onClose: () => void, onComplete: () => void }) {
+    const unfinishedCount = sprint.sprint_tasks.filter(t => t.task?.status !== 'done' && t.task?.status !== 'cancelled').length;
+    const form = useForm({ unfinished_action: 'backlog', new_sprint_name: '', retrospective_notes: '' });
+
+    return (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-[15px] font-bold text-gray-900">Complete Sprint</h2>
+                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                </div>
+                
+                {unfinishedCount > 0 ? (
+                    <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-lg text-sm">
+                        There are <strong>{unfinishedCount} open tasks</strong> in this sprint. What would you like to do with them?
+                    </div>
+                ) : (
+                    <p className="text-sm text-gray-600">All tasks are completed. Great job!</p>
+                )}
+
+                <form onSubmit={e => { e.preventDefault(); form.post(`/sprints/${sprint.id}/complete`, { onSuccess: onComplete }); }} className="space-y-4 pt-2">
+                    {unfinishedCount > 0 && (
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="unfinished_action" value="backlog"
+                                    checked={form.data.unfinished_action === 'backlog'}
+                                    onChange={() => form.setData('unfinished_action', 'backlog')}
+                                    className="text-indigo-600 focus:ring-indigo-500" />
+                                <span className="text-sm text-gray-700">Move open tasks to Backlog</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="unfinished_action" value="new_sprint"
+                                    checked={form.data.unfinished_action === 'new_sprint'}
+                                    onChange={() => form.setData('unfinished_action', 'new_sprint')}
+                                    className="text-indigo-600 focus:ring-indigo-500" />
+                                <span className="text-sm text-gray-700">Carry over to a New Sprint</span>
+                            </label>
+                        </div>
+                    )}
+
+                    {form.data.unfinished_action === 'new_sprint' && unfinishedCount > 0 && (
+                        <div className="pl-6">
+                            <label className="text-xs text-gray-500 font-medium">New Sprint Name *</label>
+                            <input type="text" value={form.data.new_sprint_name} onChange={e => form.setData('new_sprint_name', e.target.value)}
+                                placeholder="e.g. Sprint 2"
+                                required
+                                className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
+                        </div>
+                    )}
+
+                    <div>
+                        <label className="text-xs text-gray-500 font-medium">Retrospective Notes</label>
+                        <textarea value={form.data.retrospective_notes} onChange={e => form.setData('retrospective_notes', e.target.value)} rows={3}
+                            placeholder="What went well? What could be improved?"
+                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
+                        <button type="submit" disabled={form.processing || (form.data.unfinished_action === 'new_sprint' && !form.data.new_sprint_name && unfinishedCount > 0)}
+                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                            {form.processing ? 'Completing…' : 'Complete Sprint'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
 export default function SprintsIndex({ sprints, projects }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
+    const [completingSprint, setCompletingSprint] = useState<Sprint | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
     const active = sprints.filter(s => s.status === 'active');
@@ -97,7 +170,13 @@ export default function SprintsIndex({ sprints, projects }: Props) {
                             {sprint.status}
                         </span>
                         <select value={sprint.status}
-                            onChange={e => router.patch(`/sprints/${sprint.id}`, { status: e.target.value })}
+                            onChange={e => {
+                                if (e.target.value === 'completed') {
+                                    setCompletingSprint(sprint);
+                                } else {
+                                    router.patch(`/sprints/${sprint.id}`, { status: e.target.value });
+                                }
+                            }}
                             className="text-xs border border-gray-200 rounded px-1.5 py-0.5 text-gray-500 bg-white focus:ring-1 focus:ring-indigo-500">
                             <option value="planning">Planning</option>
                             <option value="active">Active</option>
@@ -114,6 +193,13 @@ export default function SprintsIndex({ sprints, projects }: Props) {
                     <div className="bg-indigo-500 h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
                 </div>
                 <p className="text-xs text-gray-500 mt-1">{doneCount}/{sprint.sprint_tasks.length} done ({progress}%)</p>
+
+                {sprint.status === 'completed' && sprint.retrospective_notes && (
+                    <div className="mt-3 p-3 bg-gray-50 border border-gray-100 rounded-lg">
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Retrospective</p>
+                        <p className="text-xs text-gray-700 whitespace-pre-wrap">{sprint.retrospective_notes}</p>
+                    </div>
+                )}
 
                 <button onClick={() => setExpandedId(expandedId === sprint.id ? null : sprint.id)}
                     className="mt-2 text-xs text-indigo-600 font-medium">
@@ -141,6 +227,11 @@ export default function SprintsIndex({ sprints, projects }: Props) {
         <AppLayout title="Sprints">
             <Head title="Sprints" />
             <div className="max-w-4xl space-y-5">
+                <div className="mb-2">
+                    <Breadcrumbs items={[
+                        { label: 'Sprints' }
+                    ]} />
+                </div>
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">Sprint Planner</h1>
                     <button onClick={() => setModalOpen(true)}
@@ -186,6 +277,13 @@ export default function SprintsIndex({ sprints, projects }: Props) {
                 )}
             </div>
             {modalOpen && <SprintModal projects={projects} onClose={() => setModalOpen(false)} />}
+            {completingSprint && (
+                <SprintRetrospectiveModal 
+                    sprint={completingSprint} 
+                    onClose={() => setCompletingSprint(null)} 
+                    onComplete={() => setCompletingSprint(null)} 
+                />
+            )}
         </AppLayout>
     );
 }

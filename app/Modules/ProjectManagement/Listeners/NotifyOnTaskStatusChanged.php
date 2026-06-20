@@ -33,13 +33,22 @@ class NotifyOnTaskStatusChanged implements ShouldQueue
             try {
                 $assignee = \App\Modules\Auth\Models\User::find($task->assigned_to);
                 if ($assignee) {
+                    $project = \App\Modules\ProjectManagement\Models\Project::find($task->project_id);
+                    $projectName = $project ? $project->name : 'Unknown Project';
+
                     $this->notificationService->sendNotification(
                         $assignee,
-                        'task_status_changed',
+                        'system',
                         'in_app',
                         'Task updated: ' . $task->title,
                         "{$event->actor->name} changed status from {$event->oldStatus} to {$event->newStatus}.",
-                        ['task_id' => $task->id]
+                        [
+                            'task_id' => $task->id,
+                            'project_id' => $task->project_id,
+                            'group_key' => 'project_status_changed_' . $task->project_id,
+                            'group_title' => '{count} updates in ' . $projectName,
+                            'group_body' => 'There are {count} task updates in ' . $projectName,
+                        ]
                     );
                 }
             } catch (\Exception $e) {

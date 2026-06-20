@@ -13,8 +13,10 @@
         "laravel/horizon": "^5.47",
         "laravel/octane": "^2.17",
         "laravel/sanctum": "^4.3",
+        "laravel/scout": "^11.3",
         "laravel/tinker": "^3.0",
         "league/flysystem-aws-s3-v3": "^3.34",
+        "meilisearch/meilisearch-php": "^1.16",
         "pragmarx/google2fa-laravel": "^3.0",
         "sentry/sentry-laravel": "^4.26",
         "spatie/browsershot": "^5.3"

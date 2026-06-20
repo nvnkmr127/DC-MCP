@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { cn } from '@/lib/utils';
 import type { Project, Client } from '@/types';
 import { ArrowLeft, Save } from 'lucide-react';
@@ -28,6 +29,8 @@ export default function ProjectEdit({ project, clients, members }: Props) {
         type:               project.type ?? 'seo',
         tags:               (project.tags ?? []).join(', '),
     });
+
+    useUnsavedChanges(form.isDirty);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();

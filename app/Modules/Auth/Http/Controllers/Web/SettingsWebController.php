@@ -12,27 +12,67 @@ use Inertia\Inertia;
 use App\Modules\Auth\Models\User;
 use App\Modules\Auth\Models\Organization;
 use App\Modules\Auth\Models\Role;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class SettingsWebController extends Controller
 {
     public function profile(Request $request)
     {
+        $user = $request->user();
+        
+        $sessions = DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->orderBy('last_activity', 'desc')
+            ->get()
+            ->map(fn($s) => [
+                'id' => $s->id,
+                'ip_address' => $s->ip_address,
+                'user_agent' => $s->user_agent,
+                'last_activity' => \Carbon\Carbon::createFromTimestamp($s->last_activity)->diffForHumans(),
+                'is_current' => $s->id === $request->session()->getId(),
+            ]);
+
+        $tokens = $user->tokens->map(fn($t) => [
+            'id' => $t->id,
+            'name' => $t->name,
+            'last_used_at' => $t->last_used_at?->diffForHumans(),
+            'created_at' => $t->created_at->toIso8601String(),
+        ]);
+
         return Inertia::render('Settings/Profile', [
-            'user' => $request->user()->only('id', 'name', 'email', 'timezone', 'avatar_url', 'preferences'),
+            'user' => $user->only('id', 'name', 'display_name', 'email', 'timezone', 'avatar_url', 'phone', 'created_at', 'preferences'),
+            'sessions' => $sessions,
+            'tokens' => $tokens,
+            'connectedAccounts' => $user->connectedAccounts,
         ]);
     }
 
     public function updateProfile(Request $request)
     {
         $data = $request->validate([
-            'name'     => 'required|string|max:120',
-            'email'    => 'required|email|unique:users,email,' . $request->user()->id,
-            'timezone' => 'nullable|string|timezone',
-            'date_format' => 'nullable|string',
-            'currency' => 'nullable|string|max:3',
+            'name'         => 'required|string|max:120',
+            'display_name' => 'nullable|string|max:120',
+            'phone'        => 'nullable|string|max:20',
+            'email'        => 'required|email|unique:users,email,' . $request->user()->id,
+            'timezone'     => 'nullable|string|timezone',
+            'date_format'  => 'nullable|string',
+            'currency'     => 'nullable|string|max:3',
+            'avatar'       => 'nullable|image|max:2048',
         ]);
 
-        $request->user()->update($data);
+        $user = $request->user();
+
+        if ($request->hasFile('avatar')) {
+            // Store the avatar in the public disk, under an "avatars" directory
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $data['avatar_url'] = '/storage/' . $path;
+        }
+        
+        // Remove 'avatar' from $data so we don't try to save the UploadedFile object
+        unset($data['avatar']);
+
+        $user->update($data);
         return back()->with('success', 'Profile updated.');
     }
 
@@ -172,5 +212,51 @@ class SettingsWebController extends Controller
         $user->roles()->sync([$role->id]);
 
         return back()->with('success', 'User role updated successfully.');
+    }
+
+    public function destroySession(Request $request, string $id)
+    {
+        DB::table('sessions')->where('id', $id)->where('user_id', $request->user()->id)->delete();
+        return back()->with('success', 'Session terminated.');
+    }
+
+    public function createToken(Request $request)
+    {
+        $request->validate(['token_name' => 'required|string|max:255']);
+        $token = $request->user()->createToken($request->token_name);
+        
+        return back()->with('new_token', $token->plainTextToken);
+    }
+
+    public function revokeToken(Request $request, string $id)
+    {
+        $request->user()->tokens()->where('id', $id)->delete();
+        return back()->with('success', 'API token revoked.');
+    }
+
+    public function exportData(Request $request)
+    {
+        $user = $request->user()->load('connectedAccounts');
+        $data = [
+            'profile' => $user->toArray(),
+            'export_date' => now()->toIso8601String(),
+        ];
+
+        return response()->streamDownload(function () use ($data) {
+            echo json_encode($data, JSON_PRETTY_PRINT);
+        }, 'user-data-export.json');
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $user = $request->user();
+        
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        $user->delete(); // Soft delete
+
+        return redirect('/')->with('success', 'Your account has been deleted.');
     }
 }

@@ -18,6 +18,7 @@ Route::prefix('v1')->group(function () {
     Route::post('reports/{report}/generate', [ReportApiController::class, 'generate']);
     Route::get('reports/{report}/download', [ReportApiController::class, 'download']);
     Route::post('reports/{report}/send', [ReportApiController::class, 'send']);
+    Route::patch('reports/{report}/share', [ReportApiController::class, 'share']);
     
     // Scheduled Report routes
     Route::get('report-schedules', [ReportScheduleApiController::class, 'index']);

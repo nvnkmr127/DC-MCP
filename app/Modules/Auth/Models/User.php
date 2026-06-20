@@ -10,10 +10,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Scout\Searchable;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, Searchable;
 
     /**
      * Indicates if the IDs are auto-incrementing.
@@ -37,6 +38,7 @@ class User extends Authenticatable
     protected $fillable = [
         'organization_id',
         'name',
+        'display_name',
         'email',
         'password',
         'avatar_url',
@@ -96,6 +98,14 @@ class User extends Authenticatable
     public function organization(): BelongsTo
     {
         return $this->belongsTo(Organization::class);
+    }
+
+    /**
+     * Get the user's connected accounts (OAuth providers).
+     */
+    public function connectedAccounts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ConnectedAccount::class);
     }
 
     /**
@@ -167,5 +177,15 @@ class User extends Authenticatable
     public function getRoleAttribute(): ?string
     {
         return $this->roles->first()?->slug;
+    }
+
+    public function toSearchableArray()
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email,
+            'organization_id' => $this->organization_id,
+        ];
     }
 }

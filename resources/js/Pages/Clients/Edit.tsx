@@ -1,6 +1,7 @@
 import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { cn } from '@/lib/utils';
 import type { Client } from '@/types';
 import { ArrowLeft, Save } from 'lucide-react';
@@ -24,6 +25,8 @@ export default function ClientEdit({ client }: Props) {
         status:   client.status,
         notes:    client.notes    ?? '',
     });
+
+    useUnsavedChanges(form.isDirty);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();

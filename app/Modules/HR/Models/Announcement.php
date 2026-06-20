@@ -2,13 +2,15 @@
 
 namespace App\Modules\HR\Models;
 
+use Laravel\Scout\Searchable;
+
 use App\Shared\Models\BaseModel;
 use App\Shared\Traits\HasOrganization;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Announcement extends BaseModel
 {
-    use HasOrganization;
+    use HasOrganization, Searchable;
 
     protected $table = 'announcements';
 

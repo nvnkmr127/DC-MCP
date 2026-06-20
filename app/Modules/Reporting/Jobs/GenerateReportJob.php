@@ -38,8 +38,13 @@ class GenerateReportJob implements ShouldQueue
         try {
             $reportService->generateReport($this->report);
 
+            if (!empty($this->report->recipients)) {
+                $reportService->sendReport($this->report, $this->report->recipients);
+            }
+
             Log::info('Report generation completed', [
                 'report_id' => $this->report->id,
+                'sent' => !empty($this->report->recipients),
             ]);
         } catch (\Exception $e) {
             Log::error('Report generation failed', [
