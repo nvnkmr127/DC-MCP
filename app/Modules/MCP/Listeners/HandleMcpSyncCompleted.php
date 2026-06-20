@@ -11,6 +11,14 @@ class HandleMcpSyncCompleted
     {
         $event->connection->markSynced();
 
+        \App\Modules\MCP\Models\McpSyncLog::create([
+            'mcp_connection_id' => $event->connection->id,
+            'status'            => 'success',
+            'duration_ms'       => $event->result->durationMs,
+            'records_processed' => $event->result->processedCount ?? 0,
+            'bytes_transferred' => $event->result->bytesTransferred ?? 0,
+        ]);
+
         $user = User::where('organization_id', $event->connection->organization_id)->first();
         if ($user) {
             $providerLabel = ucwords(str_replace('_', ' ', $event->connection->provider));

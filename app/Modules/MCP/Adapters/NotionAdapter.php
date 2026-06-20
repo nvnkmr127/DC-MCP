@@ -689,4 +689,128 @@ class NotionAdapter extends BaseAdapter
                 return null;
         }
     }
+
+    public function getCapabilities(): array
+    {
+        return [
+            'read_databases',
+            'read_pages',
+            'create_pages',
+            'update_pages',
+            'search'
+        ];
+    }
+
+    public function getApiVersion(): string
+    {
+        return '2022-06-28';
+    }
+
+    public function getCatalogueMetadata(): array
+    {
+        $metadata = parent::getCatalogueMetadata();
+        $metadata['display_name'] = 'Notion';
+        $metadata['description'] = 'Connect your workspace to read and write pages and databases.';
+        $metadata['logo_url'] = 'https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png';
+        $metadata['setup_guide_url'] = 'https://developers.notion.com/docs/getting-started';
+        return $metadata;
+    }
+
+    public function getRateLimitStatus(array $credentials): ?array
+    {
+        try {
+            $this->setupNotionClient($credentials);
+            // Make a lightweight call just to get headers
+            $response = $this->client->get('users/me');
+            
+            // Notion doesn't return remaining limit dynamically unless you hit it, 
+            // but we can return the standard limits or any headers they do provide.
+            return [
+                'limit' => 3, // Notion's default is 3 requests per second
+                'unit' => 'requests_per_second',
+                'remaining' => 'unknown', // Dynamic tracking would require caching
+                'reset_at' => time() + 1,
+            ];
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public function getExternalStatus(): ?array
+    {
+        try {
+            // Notion status page API
+            $client = new \GuzzleHttp\Client(['timeout' => 5]);
+            $response = $client->get('https://status.notion.so/api/v2/status.json');
+            $data = json_decode((string)$response->getBody(), true);
+            
+            return [
+                'status' => $data['status']['indicator'] === 'none' ? 'operational' : 'degraded',
+                'description' => $data['status']['description'] ?? 'All systems operational',
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 'unknown',
+                'description' => 'Unable to fetch Notion status. Check https://status.notion.so'
+            ];
+        }
+    }
+
+    public function getDataPermissions(): array
+    {
+        return [
+            'read' => ['pages', 'databases', 'users'],
+            'write' => ['pages', 'databases']
+        ];
+    }
+
+    /**
+     * Preview what data will be synced without actually syncing it.
+     */
+    public function syncPreview(array $credentials, array $options = []): array
+    {
+        try {
+            $this->setupNotionClient($credentials);
+            $settings = $credentials['_settings'] ?? [];
+            $databaseIds = $settings['database_ids'] ?? [];
+
+            $totalEstimatedRecords = 0;
+            $databasesCount = count($databaseIds);
+
+            if ($databasesCount === 0) {
+                return [
+                    'supported' => true,
+                    'records_to_process' => 0,
+                    'summary' => 'No databases configured for sync.'
+                ];
+            }
+
+            // For preview, we just fetch 1 page from each database to check connectivity
+            // and estimate if there are records. A full count is too expensive.
+            foreach ($databaseIds as $databaseId => $entityType) {
+                $response = $this->client->post("databases/{$databaseId}/query", [
+                    'json' => ['page_size' => 1]
+                ]);
+                $data = json_decode($response->getBody()->getContents(), true);
+                
+                // If it has results, we estimate at least 1, maybe more
+                if (!empty($data['results'])) {
+                    $totalEstimatedRecords += 1; // It's just a lightweight test
+                }
+            }
+
+            return [
+                'supported' => true,
+                'records_to_process' => $totalEstimatedRecords,
+                'summary' => "Ready to sync from {$databasesCount} configured database(s). The preview successfully connected and verified data access.",
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'supported' => true,
+                'records_to_process' => 0,
+                'summary' => "Preview failed: " . $e->getMessage()
+            ];
+        }
+    }
 }

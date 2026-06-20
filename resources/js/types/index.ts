@@ -152,8 +152,8 @@ export interface McpConnection {
     id: string;
     provider: string;
     name: string;
-    // DB enum: active | disconnected | error | pending  (NOT 'inactive')
-    status: 'pending' | 'active' | 'disconnected' | 'error';
+    // DB enum: active | disconnected | error | pending | pending_verification | token_expired | rate_limited | partially_active | suspended | quota_exceeded | pending_reauth | degraded
+    status: 'pending' | 'active' | 'disconnected' | 'error' | 'pending_verification' | 'token_expired' | 'rate_limited' | 'partially_active' | 'suspended' | 'quota_exceeded' | 'pending_reauth' | 'degraded';
     last_synced_at: string | null;
     sync_error: string | null;
     // Computed server-side from credentials.expires_in + credentials.created

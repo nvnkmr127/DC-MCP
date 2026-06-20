@@ -224,4 +224,162 @@ abstract class BaseAdapter implements MCPAdapter
             };
         };
     }
+
+    /**
+     * Default credential format validation (noop).
+     *
+     * @param array $credentials
+     * @return void
+     */
+    public function validateCredentialsFormat(array $credentials): void
+    {
+        // Override in specific adapters
+    }
+
+    /**
+     * Get the OAuth authorization URL for the provider.
+     *
+     * @param string $redirectUri
+     * @param array $scopes
+     * @param string $state
+     * @param string $codeVerifier
+     * @return string
+     */
+    public function getOAuthUrl(string $redirectUri, array $scopes = [], string $state = '', string $codeVerifier = ''): string
+    {
+        return '';
+    }
+
+    /**
+     * Exchange OAuth code for credentials.
+     *
+     * @param string $code
+     * @param string $codeVerifier
+     * @param string $redirectUri
+     * @return array
+     * @throws \Exception
+     */
+    public function exchangeAuthCode(string $code, string $codeVerifier, string $redirectUri): array
+    {
+        throw new \Exception('OAuth exchange is not supported for this provider.');
+    }
+
+    /**
+     * Revoke the provider credentials if supported.
+     *
+     * @param array $credentials
+     * @return void
+     */
+    public function revokeCredentials(array $credentials): void
+    {
+        // NOOP by default
+    }
+
+    /**
+     * Test individual scopes for the connection.
+     *
+     * @param array $credentials
+     * @param array $scopes
+     * @return array
+     */
+    public function testScopes(array $credentials, array $scopes): array
+    {
+        $results = [];
+        foreach ($scopes as $scope) {
+            $results[$scope] = true; // Assume true if not explicitly tested
+        }
+        return $results;
+    }
+
+    /**
+     * Get external provider status if supported.
+     *
+     * @return array|null
+     */
+    public function getExternalStatus(): ?array
+    {
+        return [
+            'status' => 'unknown',
+            'description' => 'Real-time status tracking is not supported for this provider.'
+        ];
+    }
+
+    /**
+     * Get the API capabilities supported by this adapter.
+     *
+     * @return array
+     */
+    public function getCapabilities(): array
+    {
+        return [];
+    }
+
+    /**
+     * Get the active API version this adapter targets.
+     *
+     * @return string
+     */
+    public function getApiVersion(): string
+    {
+        return '1.0';
+    }
+
+    /**
+     * Get rich metadata for the provider catalogue UI.
+     *
+     * @return array
+     */
+    public function getCatalogueMetadata(): array
+    {
+        $providerName = $this->getProviderName();
+        return [
+            'display_name'    => ucwords(str_replace('_', ' ', $providerName)),
+            'description'     => 'Connects to ' . ucwords(str_replace('_', ' ', $providerName)) . ' API.',
+            'logo_url'        => null,
+            'setup_guide_url' => null,
+            'is_deprecated'   => false,
+            'deprecation_message' => null,
+            'required_scopes' => method_exists($this, 'getAvailableScopes') ? $this->getAvailableScopes() : [],
+            'supports_sandbox' => false,
+        ];
+    }
+
+    /**
+     * Get real-time rate limit visibility for this connection.
+     *
+     * @param array $credentials
+     * @return array|null
+     */
+    public function getRateLimitStatus(array $credentials): ?array
+    {
+        return null;
+    }
+
+    /**
+     * Get human-readable list of data types the provider reads or writes.
+     *
+     * @return array
+     */
+    public function getDataPermissions(): array
+    {
+        return [
+            'read' => [],
+            'write' => []
+        ];
+    }
+
+    /**
+     * Preview what data will be synced without actually syncing it.
+     *
+     * @param array $credentials
+     * @param array $options
+     * @return array
+     */
+    public function syncPreview(array $credentials, array $options = []): array
+    {
+        return [
+            'supported' => false,
+            'message' => 'Sync preview is not supported for this provider.'
+        ];
+    }
 }

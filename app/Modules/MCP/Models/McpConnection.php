@@ -6,6 +6,7 @@ use App\Shared\Models\BaseModel;
 use App\Shared\Traits\HasOrganization;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Modules\MCP\Enums\ConnectionStatus;
 
 class McpConnection extends BaseModel
 {
@@ -50,7 +51,89 @@ class McpConnection extends BaseModel
         'is_active' => 'boolean',
         'last_synced_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'status' => ConnectionStatus::class,
     ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'troubleshooting_guide',
+        'last_error_message',
+        'consecutive_failure_count',
+        'uptime_percentage',
+        'health_score',
+    ];
+
+    public function getLastErrorMessageAttribute(): ?string
+    {
+        return $this->sync_error;
+    }
+
+    public function getConsecutiveFailureCountAttribute(): int
+    {
+        return $this->settings['consecutive_failures'] ?? 0;
+    }
+
+    public function getUptimePercentageAttribute(): float
+    {
+        $total = $this->settings['total_syncs'] ?? 0;
+        $success = $this->settings['successful_syncs'] ?? 0;
+        if ($total === 0) return 100.0;
+        return round(($success / $total) * 100, 2);
+    }
+
+    public function getHealthScoreAttribute(): int
+    {
+        if ($this->status === ConnectionStatus::ACTIVE) {
+            return 100;
+        }
+        if ($this->status === ConnectionStatus::DEGRADED || $this->status === ConnectionStatus::RATE_LIMITED) {
+            return max(0, 70 - ($this->getConsecutiveFailureCountAttribute() * 10));
+        }
+        return 0;
+    }
+
+    /**
+     * Get troubleshooting guide based on current status.
+     *
+     * @return array
+     */
+    public function getTroubleshootingGuideAttribute(): array
+    {
+        return match ($this->status) {
+            ConnectionStatus::TOKEN_EXPIRED => [
+                'Your authentication token has expired.',
+                'Click the "Reconnect" button to log in with the provider again.',
+                'Ensure you grant all requested permissions during the OAuth flow.'
+            ],
+            ConnectionStatus::RATE_LIMITED => [
+                'We are hitting the provider\'s rate limit.',
+                'Syncing has been automatically slowed down.',
+                'If this persists, check your provider tier or contact their support.'
+            ],
+            ConnectionStatus::QUOTA_EXCEEDED => [
+                'Your account has exceeded its API quota.',
+                'Please upgrade your plan with the provider or wait until your quota resets.'
+            ],
+            ConnectionStatus::SUSPENDED => [
+                'Your access has been suspended by the provider.',
+                'Log into your provider dashboard to resolve any account warnings.',
+            ],
+            ConnectionStatus::DEGRADED => [
+                'The provider\'s API is currently experiencing downtime or timeouts.',
+                'No action is required. We will automatically recover when the service returns.'
+            ],
+            ConnectionStatus::ERROR => [
+                'An error occurred during sync: ' . ($this->sync_error ?? 'Unknown'),
+                'Verify your credentials and network settings.',
+                'Try deleting and recreating the connection if the issue persists.'
+            ],
+            default => [],
+        };
+    }
 
     /**
      * Get the user that set up this connection.
@@ -70,24 +153,140 @@ class McpConnection extends BaseModel
     public function markSynced(): void
     {
         $this->update([
-            'status' => 'active',
+            'status' => ConnectionStatus::ACTIVE,
             'last_synced_at' => now(),
             'sync_error' => null,
         ]);
     }
 
     /**
-     * Mark the connection with an error status and log the error message.
+     * Mark the connection with an error status based on a raw message.
      *
      * @param string $message
      * @return void
      */
     public function markError(string $message): void
     {
+        $specificErrorStatuses = [
+            ConnectionStatus::TOKEN_EXPIRED,
+            ConnectionStatus::RATE_LIMITED,
+            ConnectionStatus::SUSPENDED,
+            ConnectionStatus::QUOTA_EXCEEDED,
+            ConnectionStatus::DEGRADED,
+            ConnectionStatus::PENDING_REAUTH,
+        ];
+
+        $statusToSet = in_array($this->status, $specificErrorStatuses) 
+            ? $this->status 
+            : ConnectionStatus::ERROR;
+
+        // Handle transient grace period
+        $settings = $this->settings ?? [];
+        $settings['total_syncs'] = ($settings['total_syncs'] ?? 0) + 1;
+
+        if (in_array($statusToSet, [ConnectionStatus::ERROR, ConnectionStatus::DEGRADED, ConnectionStatus::RATE_LIMITED])) {
+            $failures = ($settings['consecutive_failures'] ?? 0) + 1;
+            $settings['consecutive_failures'] = $failures;
+            
+            if ($failures < 3) {
+                $statusToSet = ConnectionStatus::DEGRADED;
+            }
+        }
+
         $this->update([
-            'status' => 'error',
-            'sync_error' => $message,
+            'status' => $statusToSet,
+            'sync_error' => substr($message, 0, 500),
+            'settings' => $settings,
         ]);
+    }
+
+    /**
+     * Parse an exception and set the granular connection status.
+     *
+     * @param \Throwable $e
+     * @return void
+     */
+    public function handleException(\Throwable $e): void
+    {
+        $status = ConnectionStatus::ERROR;
+        $message = $e->getMessage();
+
+        if ($e instanceof \GuzzleHttp\Exception\RequestException && $e->hasResponse()) {
+            $statusCode = $e->getResponse()->getStatusCode();
+
+            $status = match ($statusCode) {
+                401 => ConnectionStatus::TOKEN_EXPIRED,
+                403 => ConnectionStatus::SUSPENDED,
+                429 => ConnectionStatus::RATE_LIMITED,
+                502, 503, 504 => ConnectionStatus::DEGRADED,
+                default => ConnectionStatus::ERROR,
+            };
+
+            // Heuristic for Quota Exceeded
+            if ($statusCode === 403 || $statusCode === 429) {
+                $body = (string) $e->getResponse()->getBody();
+                if (stripos($body, 'quota') !== false || stripos($body, 'limit') !== false) {
+                    $status = ConnectionStatus::QUOTA_EXCEEDED;
+                }
+            }
+        }
+
+        $settings = $this->settings ?? [];
+        $settings['total_syncs'] = ($settings['total_syncs'] ?? 0) + 1;
+
+        // Handle transient grace period
+        if (in_array($status, [ConnectionStatus::ERROR, ConnectionStatus::DEGRADED, ConnectionStatus::RATE_LIMITED])) {
+            $failures = ($settings['consecutive_failures'] ?? 0) + 1;
+            $settings['consecutive_failures'] = $failures;
+            
+            if ($failures < 3) {
+                $status = ConnectionStatus::DEGRADED;
+            }
+        }
+
+        $this->update([
+            'status' => $status,
+            'sync_error' => substr($message, 0, 500),
+            'settings' => $settings,
+        ]);
+        
+        if ($status === ConnectionStatus::TOKEN_EXPIRED) {
+            event(new \App\Modules\MCP\Events\ConnectionTokenExpiredEvent($this));
+        } elseif (in_array($status, [ConnectionStatus::DEGRADED, ConnectionStatus::RATE_LIMITED, ConnectionStatus::QUOTA_EXCEEDED])) {
+            event(new \App\Modules\MCP\Events\ConnectionHealthDegradedEvent($this));
+        }
+    }
+
+    /**
+     * Clear errors and transition back to active status if applicable.
+     *
+     * @param int $latencyMs Time taken for sync in milliseconds
+     * @return void
+     */
+    public function markSuccess(int $latencyMs = 0): void
+    {
+        $updateData = ['last_synced_at' => now(), 'sync_error' => null];
+        
+        $settings = $this->settings ?? [];
+        $settings['total_syncs'] = ($settings['total_syncs'] ?? 0) + 1;
+        $settings['successful_syncs'] = ($settings['successful_syncs'] ?? 0) + 1;
+
+        if ($latencyMs > 0) {
+            $settings['last_latency_ms'] = $latencyMs;
+            $avg = $settings['avg_latency_ms'] ?? $latencyMs;
+            $settings['avg_latency_ms'] = round(($avg * 0.9) + ($latencyMs * 0.1));
+        }
+
+        if (isset($settings['consecutive_failures'])) {
+            unset($settings['consecutive_failures']);
+        }
+        $updateData['settings'] = $settings;
+
+        if (in_array($this->status, [ConnectionStatus::ERROR, ConnectionStatus::DEGRADED, ConnectionStatus::RATE_LIMITED])) {
+            $updateData['status'] = ConnectionStatus::ACTIVE;
+        }
+
+        $this->update($updateData);
     }
 
     /**

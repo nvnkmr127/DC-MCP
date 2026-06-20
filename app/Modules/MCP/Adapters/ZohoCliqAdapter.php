@@ -27,6 +27,23 @@ class ZohoCliqAdapter extends BaseAdapter
     }
 
     /**
+     * Pre-save credential format validation.
+     *
+     * @param array $credentials
+     * @return void
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function validateCredentialsFormat(array $credentials): void
+    {
+        $token = $credentials['access_token'] ?? '';
+        if (!empty($token) && !str_starts_with($token, '1000.')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'credentials.access_token' => 'Zoho Cliq token must start with 1000.'
+            ]);
+        }
+    }
+
+    /**
      * Set up the Guzzle client for Zoho Cliq API.
      *
      * @param array $credentials
@@ -254,7 +271,7 @@ class ZohoCliqAdapter extends BaseAdapter
 
         } catch (\Exception $e) {
             $durationMs = (int) ((microtime(true) - $startTime) * 1000);
-            $connection->markError($e->getMessage());
+            $connection->handleException($e);
             return SyncResult::failure($e->getMessage(), 0, 1, ['duration_ms' => $durationMs]);
         }
     }
@@ -617,6 +634,39 @@ class ZohoCliqAdapter extends BaseAdapter
             'ZohoCliq.Chats.CREATE',
             'ZohoCliq.Messages.CREATE',
             'ZohoCliq.Messages.READ'
+        ];
+    }
+
+    public function getCapabilities(): array
+    {
+        return [
+            'read_messages',
+            'send_messages',
+            'read_channels',
+            'webhook_support'
+        ];
+    }
+
+    public function getApiVersion(): string
+    {
+        return 'v1';
+    }
+
+    public function getCatalogueMetadata(): array
+    {
+        $metadata = parent::getCatalogueMetadata();
+        $metadata['display_name'] = 'Zoho Cliq';
+        $metadata['description'] = 'Integrate chat, send alerts, and listen to channels.';
+        $metadata['logo_url'] = 'https://www.zoho.com/cliq/favicon.ico';
+        $metadata['setup_guide_url'] = 'https://www.zoho.com/cliq/help/restapi/v2/';
+        return $metadata;
+    }
+
+    public function getDataPermissions(): array
+    {
+        return [
+            'read' => ['channels', 'messages', 'users'],
+            'write' => ['messages', 'channels']
         ];
     }
 }

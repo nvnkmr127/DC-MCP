@@ -26,6 +26,23 @@ class MakeAdapter extends BaseAdapter
     }
 
     /**
+     * Pre-save credential format validation.
+     *
+     * @param array $credentials
+     * @return void
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function validateCredentialsFormat(array $credentials): void
+    {
+        $token = $credentials['api_key'] ?? '';
+        if (!empty($token) && strlen($token) < 10) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'credentials.api_key' => 'Make API key must be at least 10 characters long'
+            ]);
+        }
+    }
+
+    /**
      * Set up Guzzle client for Make.com REST API.
      *
      * @param array $credentials
@@ -115,7 +132,7 @@ class MakeAdapter extends BaseAdapter
 
         } catch (\Exception $e) {
             $durationMs = (int) ((microtime(true) - $startTime) * 1000);
-            $connection->markError($e->getMessage());
+            $connection->handleException($e);
             return SyncResult::failure($e->getMessage(), 0, 1, ['duration_ms' => $durationMs]);
         }
     }
@@ -706,5 +723,57 @@ class MakeAdapter extends BaseAdapter
     protected function getWebhookClient(): \GuzzleHttp\Client
     {
         return $this->client ?? new \GuzzleHttp\Client();
+    }
+
+    /**
+     * Get external provider status.
+     *
+     * @return array|null
+     */
+    public function getExternalStatus(): ?array
+    {
+        try {
+            $client = new \GuzzleHttp\Client(['timeout' => 5]);
+            $response = $client->get('https://status.make.com/api/v2/status.json');
+            $data = json_decode((string)$response->getBody(), true);
+            
+            return [
+                'status' => $data['status']['indicator'] === 'none' ? 'operational' : 'degraded',
+                'description' => $data['status']['description'] ?? 'All systems operational',
+            ];
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public function getCapabilities(): array
+    {
+        return [
+            'trigger_scenario',
+            'webhook_support'
+        ];
+    }
+
+    public function getApiVersion(): string
+    {
+        return 'v1';
+    }
+
+    public function getCatalogueMetadata(): array
+    {
+        $metadata = parent::getCatalogueMetadata();
+        $metadata['display_name'] = 'Make (Integromat)';
+        $metadata['description'] = 'Trigger visual automation scenarios via webhooks.';
+        $metadata['logo_url'] = 'https://www.make.com/en/favicon.ico';
+        $metadata['setup_guide_url'] = 'https://www.make.com/en/api-documentation';
+        return $metadata;
+    }
+
+    public function getDataPermissions(): array
+    {
+        return [
+            'read' => ['scenarios', 'organizations', 'teams', 'connections'],
+            'write' => ['scenarios', 'webhooks']
+        ];
     }
 }

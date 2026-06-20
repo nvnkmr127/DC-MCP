@@ -52,5 +52,11 @@ class MCPServiceProvider extends ModuleServiceProvider
 
         Event::listen(McpSyncCompleted::class, HandleMcpSyncCompleted::class);
         Event::listen(McpSyncFailed::class, HandleMcpSyncFailed::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \App\Modules\MCP\Console\Commands\CheckProviderUpdatesCommand::class,
+            ]);
+        }
     }
 }

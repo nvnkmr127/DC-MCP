@@ -4,9 +4,21 @@ use Illuminate\Support\Facades\Route;
 use App\Modules\MCP\Http\Controllers\Api\V1\McpConnectionApiController;
 
 Route::prefix('v1')->group(function () {
+    Route::get('mcp/providers/catalogue', [McpConnectionApiController::class, 'getCatalogue']);
     Route::get('mcp/providers', [McpConnectionApiController::class, 'providers']);
+    Route::get('mcp/providers/{provider}/oauth-url', [McpConnectionApiController::class, 'getOAuthUrl']);
+    Route::post('mcp/providers/{provider}/oauth-exchange', [McpConnectionApiController::class, 'oauthExchange']);
+    Route::get('mcp/providers/{provider}/status', [McpConnectionApiController::class, 'getProviderStatus']);
+    Route::get('mcp/providers/{provider}/diagnostics', [McpConnectionApiController::class, 'getDiagnostics']);
     Route::post('mcp/connections/{mcpConnection}/sync', [McpConnectionApiController::class, 'sync']);
+    Route::get('mcp/connections/{mcpConnection}/sync-preview', [McpConnectionApiController::class, 'syncPreview']);
     Route::post('mcp/connections/{mcpConnection}/test', [McpConnectionApiController::class, 'test']);
+    Route::post('mcp/connections/{mcpConnection}/test-scopes', [McpConnectionApiController::class, 'testScopes']);
+    Route::get('mcp/connections/{mcpConnection}/rate-limits', [McpConnectionApiController::class, 'getRateLimits']);
+    Route::post('mcp/connections/{mcpConnection}/clone', [McpConnectionApiController::class, 'clone']);
+    Route::get('mcp/connections/export', [McpConnectionApiController::class, 'export']);
+    Route::post('mcp/connections/import', [McpConnectionApiController::class, 'import']);
+    
     Route::apiResource('mcp/connections', McpConnectionApiController::class)
         ->parameters(['connections' => 'mcpConnection']);
     

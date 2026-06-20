@@ -23,6 +23,23 @@ class MetaAdsAdapter extends BaseAdapter
     }
 
     /**
+     * Pre-save credential format validation.
+     *
+     * @param array $credentials
+     * @return void
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function validateCredentialsFormat(array $credentials): void
+    {
+        $token = $credentials['access_token'] ?? '';
+        if (!empty($token) && !str_starts_with($token, 'EA')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'credentials.access_token' => 'Meta Ads token must start with EA'
+            ]);
+        }
+    }
+
+    /**
      * Setup Guzzle client config for Meta Marketing API.
      *
      * @param array $credentials
@@ -31,7 +48,12 @@ class MetaAdsAdapter extends BaseAdapter
     protected function setupMetaClient(array $credentials): void
     {
         $accessToken = $credentials['access_token'] ?? '';
-        $this->setupClient('https://graph.facebook.com/v20.0/', [
+        $settings = $credentials['_settings'] ?? [];
+        $isSandbox = $settings['is_sandbox'] ?? false;
+        
+        $baseUrl = $isSandbox ? 'https://graph.sandbox.facebook.com/v20.0/' : 'https://graph.facebook.com/v20.0/';
+
+        $this->setupClient($baseUrl, [
             'Authorization' => 'Bearer ' . $accessToken,
             'Content-Type' => 'application/json',
         ]);
@@ -209,7 +231,7 @@ class MetaAdsAdapter extends BaseAdapter
 
         } catch (\Exception $e) {
             $durationMs = (int) ((microtime(true) - $startTime) * 1000);
-            $connection->markError($e->getMessage());
+            $connection->handleException($e);
             return SyncResult::failure($e->getMessage(), 0, 1, ['duration_ms' => $durationMs]);
         }
     }
@@ -337,5 +359,87 @@ class MetaAdsAdapter extends BaseAdapter
         ]);
 
         return $id;
+    }
+
+    public function getCapabilities(): array
+    {
+        return [
+            'read_insights',
+            'read_campaigns',
+            'webhook_support'
+        ];
+    }
+
+    public function getApiVersion(): string
+    {
+        return 'v20.0';
+    }
+
+    public function getCatalogueMetadata(): array
+    {
+        $metadata = parent::getCatalogueMetadata();
+        $metadata['display_name'] = 'Meta Ads';
+        $metadata['description'] = 'Sync campaign performance and metrics.';
+        $metadata['logo_url'] = 'https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg';
+        $metadata['setup_guide_url'] = 'https://developers.facebook.com/docs/marketing-api/';
+        $metadata['supports_sandbox'] = true;
+        return $metadata;
+    }
+
+    public function getDataPermissions(): array
+    {
+        return [
+            'read' => ['ad accounts', 'campaigns', 'insights', 'business details'],
+            'write' => ['campaigns', 'ad sets', 'ads', 'custom audiences']
+        ];
+    }
+
+    /**
+     * Preview what data will be synced without actually syncing it.
+     */
+    public function syncPreview(array $credentials, array $options = []): array
+    {
+        try {
+            $this->setupMetaClient($credentials);
+            $settings = $credentials['_settings'] ?? [];
+            $adAccountIds = $settings['ad_account_ids'] ?? [];
+
+            $totalEstimatedRecords = 0;
+            $accountsCount = count($adAccountIds);
+
+            if ($accountsCount === 0) {
+                return [
+                    'supported' => true,
+                    'records_to_process' => 0,
+                    'summary' => 'No ad accounts configured for sync.'
+                ];
+            }
+
+            foreach ($adAccountIds as $adAccountId) {
+                $formattedId = str_starts_with($adAccountId, 'act_') ? $adAccountId : 'act_' . $adAccountId;
+                // Just fetch 1 campaign to check connectivity
+                $response = $this->client->get("{$formattedId}/campaigns", [
+                    'query' => ['limit' => 1]
+                ]);
+                
+                $data = json_decode($response->getBody()->getContents(), true);
+                if (!empty($data['data'])) {
+                    $totalEstimatedRecords += 1;
+                }
+            }
+
+            return [
+                'supported' => true,
+                'records_to_process' => $totalEstimatedRecords,
+                'summary' => "Ready to sync from {$accountsCount} ad account(s). The preview successfully connected and verified data access.",
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'supported' => true,
+                'records_to_process' => 0,
+                'summary' => "Preview failed: " . $e->getMessage()
+            ];
+        }
     }
 }

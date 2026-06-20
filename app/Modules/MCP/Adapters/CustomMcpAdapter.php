@@ -278,4 +278,28 @@ class CustomMcpAdapter extends BaseAdapter
 
         return $headers;
     }
+
+    public function getCapabilities(): array
+    {
+        return [
+            'custom_sync',
+            'custom_push',
+            'webhook_support'
+        ];
+    }
+
+    public function getApiVersion(): string
+    {
+        return 'custom';
+    }
+
+    public function getCatalogueMetadata(): array
+    {
+        $metadata = parent::getCatalogueMetadata();
+        $metadata['display_name'] = 'Custom Webhook / API';
+        $metadata['description'] = 'Connect any generic REST API or webhook source.';
+        $metadata['logo_url'] = null;
+        $metadata['setup_guide_url'] = null;
+        return $metadata;
+    }
 }

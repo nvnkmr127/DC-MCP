@@ -31,6 +31,23 @@ class GmailAdapter extends BaseAdapter
     }
 
     /**
+     * Pre-save credential format validation.
+     *
+     * @param array $credentials
+     * @return void
+     * @throws \Illuminate\Validation\ValidationException
+     */
+    public function validateCredentialsFormat(array $credentials): void
+    {
+        $token = $credentials['access_token'] ?? '';
+        if (!empty($token) && !str_starts_with($token, 'ya29.')) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'credentials.access_token' => 'Google access token must start with ya29.'
+            ]);
+        }
+    }
+
+    /**
      * Authenticate or prepare credentials for the external API.
      *
      * @param array $credentials
@@ -47,6 +64,115 @@ class GmailAdapter extends BaseAdapter
     }
 
     /**
+     * Get the OAuth authorization URL for the provider.
+     */
+    public function getOAuthUrl(string $redirectUri, array $scopes = [], string $state = '', string $codeVerifier = ''): string
+    {
+        $client = new Google_Client();
+        $client->setClientId(config('services.google.client_id'));
+        $client->setClientSecret(config('services.google.client_secret'));
+        $client->setRedirectUri($redirectUri);
+        $client->addScope($scopes ?: $this->getAvailableScopes());
+        $client->setAccessType('offline');
+        $client->setPrompt('consent');
+        
+        if (!empty($state)) {
+            $client->setState($state);
+        }
+        
+        $url = $client->createAuthUrl();
+
+        if (!empty($codeVerifier)) {
+            $codeChallenge = rtrim(strtr(base64_encode(hash('sha256', $codeVerifier, true)), '+/', '-_'), '=');
+            $url .= '&code_challenge=' . $codeChallenge . '&code_challenge_method=S256';
+        }
+        
+        return $url;
+    }
+
+    /**
+     * Exchange OAuth code for credentials.
+     *
+     * @param string $code
+     * @param string $codeVerifier
+     * @param string $redirectUri
+     * @return array
+     * @throws \Exception
+     */
+    public function exchangeAuthCode(string $code, string $codeVerifier, string $redirectUri): array
+    {
+        $client = new Google_Client();
+        $response = $client->getHttpClient()->post('https://oauth2.googleapis.com/token', [
+            'form_params' => [
+                'client_id' => config('services.google.client_id'),
+                'client_secret' => config('services.google.client_secret'),
+                'code' => $code,
+                'code_verifier' => $codeVerifier,
+                'grant_type' => 'authorization_code',
+                'redirect_uri' => $redirectUri,
+            ]
+        ]);
+
+        $data = json_decode((string)$response->getBody(), true);
+        
+        if (isset($data['error'])) {
+            throw new \Exception('OAuth exchange failed: ' . ($data['error_description'] ?? $data['error']));
+        }
+        
+        return [
+            'access_token' => $data['access_token'] ?? null,
+            'refresh_token' => $data['refresh_token'] ?? null,
+            'expires_in' => $data['expires_in'] ?? 3600,
+            'created' => time(),
+        ];
+    }
+
+    /**
+     * Revoke the provider credentials if supported.
+     */
+    public function revokeCredentials(array $credentials): void
+    {
+        try {
+            $client = $this->getGoogleClient($credentials);
+            $client->revokeToken();
+        } catch (\Exception $e) {
+            // Ignore failure to revoke
+        }
+    }
+
+    /**
+     * Test individual scopes for the connection.
+     */
+    public function testScopes(array $credentials, array $scopes): array
+    {
+        $results = [];
+        try {
+            $client = $this->getGoogleClient($credentials);
+            $guzzle = $client->getHttpClient();
+            $token = $client->getAccessToken();
+            $accessToken = is_array($token) ? ($token['access_token'] ?? '') : '';
+            
+            if (empty($accessToken)) {
+                throw new \Exception('No access token');
+            }
+
+            $response = $guzzle->get('https://oauth2.googleapis.com/tokeninfo?access_token=' . $accessToken);
+            $info = json_decode((string)$response->getBody(), true);
+            $grantedScopes = explode(' ', $info['scope'] ?? '');
+            
+            foreach ($scopes as $scope) {
+                $results[$scope] = in_array($scope, $grantedScopes);
+            }
+        } catch (\Exception $e) {
+            foreach ($scopes as $scope) {
+                $results[$scope] = false;
+            }
+        }
+        
+        return $results;
+    }
+
+    /**
      * Get Google API Client instance.
      *
      * @param array $credentials
@@ -56,6 +182,19 @@ class GmailAdapter extends BaseAdapter
     protected function getGoogleClient(array $credentials, ?McpConnection $connection = null): Google_Client
     {
         $client = new Google_Client();
+        
+        $settings = $credentials['_settings'] ?? ($connection->settings ?? []);
+        $authType = $settings['auth_type'] ?? 'oauth_user';
+        
+        if ($authType === 'service_account') {
+            if (empty($credentials['service_account_json'])) {
+                throw new \RuntimeException('Service account JSON is missing.');
+            }
+            $client->setAuthConfig(json_decode($credentials['service_account_json'], true));
+            $client->addScope($this->getAvailableScopes());
+            return $client;
+        }
+
         $clientId     = config('services.google.client_id');
         $clientSecret = config('services.google.client_secret');
 
@@ -85,6 +224,8 @@ class GmailAdapter extends BaseAdapter
                     $credentials['expires_in'] = $newAccessToken['expires_in'] ?? 3600;
 
                     if ($connection) {
+                        // Avoid overwriting nested environments blindly here.
+                        // We'll just encrypt the raw credentials for now as a fallback.
                         $connection->credentials = $this->encryptCredentials($credentials);
                         $connection->save();
                     }
@@ -234,7 +375,7 @@ class GmailAdapter extends BaseAdapter
 
         } catch (\Exception $e) {
             $durationMs = (int) ((microtime(true) - $startTime) * 1000);
-            $connection->markError($e->getMessage());
+            $connection->handleException($e);
             return SyncResult::failure($e->getMessage(), 0, 1, ['duration_ms' => $durationMs]);
         }
     }
@@ -511,12 +652,39 @@ class GmailAdapter extends BaseAdapter
     {
         try {
             $client = $this->getGoogleClient($credentials);
-            $service = $this->getGmailService($client);
-            $service->users->getProfile('me');
+            $settings = $credentials['_settings'] ?? [];
+            $authType = $settings['auth_type'] ?? 'oauth_user';
+
+            if ($authType === 'service_account') {
+                $service = $this->getGmailService($client);
+                $service->users->getProfile('me');
+
+                return ConnectionTestResult::success([
+                    'provider' => 'gmail',
+                    'connected_at' => now()->toIso8601String(),
+                ]);
+            }
+
+            $guzzle = $client->getHttpClient();
+            $token = $client->getAccessToken();
+            $accessToken = is_array($token) ? ($token['access_token'] ?? '') : '';
+
+            if (empty($accessToken)) {
+                throw new \Exception('No access token available for introspection.');
+            }
+
+            // Introspect the token instead of calling the Gmail API
+            $response = $guzzle->get('https://oauth2.googleapis.com/tokeninfo?access_token=' . $accessToken);
+            $info = json_decode((string)$response->getBody(), true);
+
+            if (isset($info['error'])) {
+                throw new \Exception($info['error_description'] ?? 'Token introspection failed.');
+            }
 
             return ConnectionTestResult::success([
                 'provider' => 'gmail',
-                'connected_at' => now()->toIso8601String()
+                'connected_at' => now()->toIso8601String(),
+                'expires_in' => $info['expires_in'] ?? null,
             ]);
         } catch (\Exception $e) {
             return ConnectionTestResult::failure($e->getMessage());
@@ -544,6 +712,39 @@ class GmailAdapter extends BaseAdapter
         return [
             Google_Service_Gmail::GMAIL_MODIFY,
             Google_Service_Gmail::GMAIL_SEND,
+        ];
+    }
+
+    public function getCapabilities(): array
+    {
+        return [
+            'read_emails',
+            'send_emails',
+            'modify_labels',
+            'watch_push_notifications'
+        ];
+    }
+
+    public function getApiVersion(): string
+    {
+        return 'v1';
+    }
+
+    public function getCatalogueMetadata(): array
+    {
+        $metadata = parent::getCatalogueMetadata();
+        $metadata['display_name'] = 'Gmail';
+        $metadata['description'] = 'Read, send, and manage your Gmail messages and threads.';
+        $metadata['logo_url'] = 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg';
+        $metadata['setup_guide_url'] = 'https://developers.google.com/gmail/api/guides';
+        return $metadata;
+    }
+
+    public function getDataPermissions(): array
+    {
+        return [
+            'read' => ['emails', 'labels', 'threads', 'profile'],
+            'write' => ['emails', 'labels', 'drafts']
         ];
     }
 }
