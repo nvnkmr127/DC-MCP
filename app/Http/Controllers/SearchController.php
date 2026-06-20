@@ -105,14 +105,21 @@ class SearchController extends BaseController
         $organizationId = session('current_organization_id', $request->user()?->organization_id);
         $results = [];
 
+        $isAdmin = $request->user() && $request->user()->hasRoles(['ceo', 'admin']);
+
         foreach ($this->searchables as $config) {
             try {
                 $modelClass = $config['model'];
-                $items = $modelClass::search($query)
-                    ->where('organization_id', $organizationId)
-                    ->take(5)
+                $builder = $modelClass::search($query)->where('organization_id', $organizationId);
+
+                $usesSoftDeletes = in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses_recursive($modelClass));
+                if ($isAdmin && $usesSoftDeletes) {
+                    $builder->withTrashed();
+                }
+
+                $items = $builder->take(5)
                     ->get()
-                    ->map(function ($item) use ($config) {
+                    ->map(function ($item) use ($config, $usesSoftDeletes) {
                         $titleField = $config['title'];
                         $subtitleField = $config['subtitle'];
                         
@@ -123,15 +130,18 @@ class SearchController extends BaseController
                         
                         $url = str_replace('{id}', $item->id ?? '', $config['url']);
 
+                        $title = $item->$titleField ?? 'Unknown';
+                        if ($usesSoftDeletes && $item->trashed()) {
+                            $title .= ' [Deleted]';
+                        }
+
                         return [
                             'id'       => $item->id,
-                            'title'    => $item->$titleField ?? 'Unknown',
+                            'title'    => $title,
                             'subtitle' => is_string($subtitle) || is_numeric($subtitle) ? (string) $subtitle : '',
                             'url'      => $url,
                         ];
-                    });
-
-                if ($items->isNotEmpty()) {
+                    });                if ($items->isNotEmpty()) {
                     $results[] = [
                         'group' => $config['group'],
                         'items' => $items,

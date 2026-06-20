@@ -70,7 +70,23 @@ class ReportWebController extends Controller
                 'hours'   => (float) $e->total_hours,
             ]);
 
-        // Project health — paginated to prevent memory exhaustion on large datasets
+        // Utilization: Billable vs Non-Billable (scoped to org)
+        $utilization = TimeEntry::where('organization_id', $orgId)
+            ->whereBetween('logged_date', [$from->toDateString(), $to->toDateString()])
+            ->selectRaw('is_billable, sum(hours) as total_hours')
+            ->groupBy('is_billable')
+            ->pluck('total_hours', 'is_billable')
+            ->toArray();
+        
+        $billableHours = (float) ($utilization[1] ?? 0);
+        $nonBillableHours = (float) ($utilization[0] ?? 0);
+        $totalHours = $billableHours + $nonBillableHours;
+        $utilizationData = [
+            'billable' => $billableHours,
+            'non_billable' => $nonBillableHours,
+            'total' => $totalHours,
+            'billable_percentage' => $totalHours > 0 ? round(($billableHours / $totalHours) * 100, 1) : 0,
+        ];        // Project health — paginated to prevent memory exhaustion on large datasets
         $projects = Project::where('organization_id', $orgId)
             ->where('status', 'active')
             ->withCount([
@@ -106,6 +122,7 @@ class ReportWebController extends Controller
                 'tasks_by_priority' => $tasksByPriority,
                 'time_by_user'      => $timeByUser,
                 'time_by_project'   => $timeByProject,
+                'utilization'       => $utilizationData,
                 'projects'          => $projects,
             ],
             'filters' => [

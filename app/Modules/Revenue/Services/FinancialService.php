@@ -138,7 +138,9 @@ class FinancialService
             ->where('status', 'active')
             ->sum('monthly_value') ?? '0');
 
-        $monthlyPayroll = (string) (User::where('organization_id', $orgId)
+        $pipeline = (string) (\App\Modules\Revenue\Models\Proposal::where('organization_id', $orgId)
+            ->whereIn('status', ['draft', 'sent'])
+            ->sum('total_value') ?? '0');        $monthlyPayroll = (string) (User::where('organization_id', $orgId)
             ->where('is_active', true)
             ->whereNotNull('monthly_salary')
             ->sum('monthly_salary') ?? '0');
@@ -154,14 +156,18 @@ class FinancialService
 
         $monthlyCosts = bcadd(bcadd($monthlyPayroll, $monthlyVendors, 2), $avgMonthlyExpenses, 2);
 
+        $projectedIn = bcadd($mrr, $pipeline, 2);
+
         for ($i = 1; $i <= $months; $i++) {
             $date     = now()->addMonths($i);
             $forecast[] = [
                 'month'         => $date->format('Y-m'),
                 'label'         => $date->format('M Y'),
-                'projected_in'  => (float) $mrr,
+                'mrr'           => (float) $mrr,
+                'pipeline'      => (float) $pipeline,
+                'projected_in'  => (float) $projectedIn,
                 'projected_out' => (float) $monthlyCosts,
-                'net'           => (float) bcsub($mrr, $monthlyCosts, 2),
+                'net'           => (float) bcsub($projectedIn, $monthlyCosts, 2),
             ];
         }
 

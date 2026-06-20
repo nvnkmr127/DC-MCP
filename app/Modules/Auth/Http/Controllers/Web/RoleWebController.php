@@ -29,16 +29,15 @@ class RoleWebController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:100',
             'description' => 'nullable|string|max:255',
+            'permissions' => 'nullable|array',
         ]);
 
         $data['slug'] = strtolower(str_replace(' ', '_', $data['name']));
         $data['organization_id'] = $request->user()->organization_id;
         $data['is_system'] = false;
-        $data['permissions'] = [];
+        $data['permissions'] = $data['permissions'] ?? [];
 
-        Role::create($data);
-
-        return back()->with('success', 'Role created successfully.');
+        Role::create($data);        return back()->with('success', 'Role created successfully.');
     }
 
     public function update(Request $request, Role $role)

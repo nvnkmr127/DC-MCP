@@ -57,8 +57,8 @@ class HandleInertiaRequests extends Middleware
                     'timezone'        => $user->timezone ?? 'Asia/Kolkata',
                     'preferences'     => $user->preferences ?? [],
                     'roles'           => $roles,
-                ] : null,
-                'permissions' => $permissions,
+                    'is_impersonating' => $request->session()->has('impersonated_by'),
+                ] : null,                'permissions' => $permissions,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

@@ -16,8 +16,7 @@ trait Exportable
      * @param int $chunkSize
      * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function exportCsv(Builder $query, string $filename, array $headers, int $chunkSize = 1000)
-    {
+    public function exportCsv($query, string $filename, array $headers, int $chunkSize = 1000)    {
         $headersLine = array_values($headers);
         $attributes = array_keys($headers);
 

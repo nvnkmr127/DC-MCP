@@ -18,8 +18,7 @@ interface ClientProfit {
     profit: number; margin: number; hours_logged: number; health_status: string | null;
 }
 interface TrendPoint { month: string; label: string; revenue: number; costs: number; net_profit: number; }
-interface CashForecast { month: string; label: string; projected_in: number; projected_out: number; net: number; }
-interface Expense { id: string; title: string; category: string; amount: number; expense_date: string; vendor: string | null; is_recurring: boolean; }
+interface CashForecast { month: string; label: string; mrr: number; pipeline: number; projected_in: number; projected_out: number; net: number; }interface Expense { id: string; title: string; category: string; amount: number; expense_date: string; vendor: string | null; is_recurring: boolean; }
 interface Vendor { id: string; name: string; type: string; monthly_cost: number; status: string; }
 interface Props {
     pnl: PnlData; clientProfit: ClientProfit[]; cashForecast: CashForecast[];
@@ -184,10 +183,10 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
                                     <div key={f.month} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
                                         <span className="text-sm font-medium text-gray-700">{f.label}</span>
                                         <div className="text-right">
-                                            <p className="text-xs text-gray-400">In: {fmt(f.projected_in)} · Out: {fmt(f.projected_out)}</p>
-                                            <p className={cn('text-sm font-bold', f.net >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
+                                            <div className={`text-sm font-bold ${f.net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                 {f.net >= 0 ? '+' : ''}{fmt(f.net)}
-                                            </p>
+                                            </div>
+                                            <p className="text-xs text-gray-400">MRR: {fmt(f.mrr)} · Pipeline: {fmt(f.pipeline)} · Out: {fmt(f.projected_out)}</p>
                                         </div>
                                     </div>
                                 ))}

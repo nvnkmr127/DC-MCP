@@ -36,8 +36,12 @@ class TrashController extends Controller
 
         $items = $tasks->concat($projects)->sortByDesc('deleted_at')->values();
 
+        $org = \App\Modules\Auth\Models\Organization::find($orgId);
+        $retentionDays = $org->settings['trash_retention_days'] ?? 30;
+
         return Inertia::render('Settings/Trash', [
-            'items' => $items
+            'items' => $items,
+            'retentionDays' => (int) $retentionDays,
         ]);
     }
 
@@ -56,5 +60,28 @@ class TrashController extends Controller
         $model->restore();
 
         return redirect()->back()->with('success', ucfirst($type) . ' restored successfully.');
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $orgId = session('current_organization_id');
+        $items = $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|uuid',
+            'items.*.type' => 'required|in:task,project',
+        ])['items'];
+
+        $taskIds = collect($items)->where('type', 'task')->pluck('id')->toArray();
+        $projectIds = collect($items)->where('type', 'project')->pluck('id')->toArray();
+
+        if (count($taskIds) > 0) {
+            Task::onlyTrashed()->where('organization_id', $orgId)->whereIn('id', $taskIds)->forceDelete();
+        }
+
+        if (count($projectIds) > 0) {
+            Project::onlyTrashed()->where('organization_id', $orgId)->whereIn('id', $projectIds)->forceDelete();
+        }
+
+        return redirect()->back()->with('success', 'Selected items permanently deleted.');
     }
 }

@@ -122,7 +122,7 @@ export default function Roles({ roles }: { roles: Role[] }) {
         accessorKey: "users_count",
         header: "Active Users",
         cell: ({ row }) => (
-          <Badge variant="secondary">{row.original.users_count} users</Badge>
+          <Badge variant="gray">{row.original.users_count} users</Badge>
         ),
       },
       {

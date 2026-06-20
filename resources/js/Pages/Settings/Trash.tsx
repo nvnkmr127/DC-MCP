@@ -12,9 +12,10 @@ interface TrashItem {
 
 interface Props {
     items: TrashItem[];
+    retentionDays: number;
 }
 
-export default function Trash({ items }: Props) {
+export default function Trash({ items, retentionDays }: Props) {
     const handleRestore = (item: TrashItem) => {
         router.post(`/settings/trash/${item.type}/${item.id}/restore`);
     };
@@ -23,9 +24,11 @@ export default function Trash({ items }: Props) {
         <AppLayout title="Trash & Recovery">
             <Head title="Trash" />
 
-            <div className="mb-6">
-                <h2 className="text-lg font-bold text-gray-900">Trash Bin</h2>
-                <p className="text-sm text-gray-500 mt-1">Recover recently deleted items. Items are permanently deleted after 30 days.</p>
+            <div className="mb-6 flex items-center justify-between">
+                <div>
+                    <h2 className="text-lg font-bold text-gray-900">Trash Bin</h2>
+                    <p className="text-sm text-gray-500 mt-1">Recover recently deleted items. Items are permanently deleted after {retentionDays} days.</p>
+                </div>
             </div>
 
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
@@ -41,10 +44,10 @@ export default function Trash({ items }: Props) {
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-200">
-                                <th className="text-left px-4 py-3 font-semibold text-gray-500">Item</th>
-                                <th className="text-left px-4 py-3 font-semibold text-gray-500">Type</th>
-                                <th className="text-left px-4 py-3 font-semibold text-gray-500">Deleted</th>
-                                <th className="text-right px-4 py-3 font-semibold text-gray-500">Action</th>
+                                <th className="px-4 py-3 text-left font-semibold text-gray-900">Item</th>
+                                <th className="px-4 py-3 text-left font-semibold text-gray-900">Type</th>
+                                <th className="px-4 py-3 text-left font-semibold text-gray-900">Deleted</th>
+                                <th className="px-4 py-3 text-right font-semibold text-gray-900">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">

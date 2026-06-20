@@ -58,13 +58,21 @@ class AuthWebController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+
+        if (!$user->is_active) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            throw ValidationException::withMessages([
+                'email' => 'Your account has been deactivated. Please contact support.',
+            ]);
+        }
+
         Log::info('User web login', [
             'user_id'         => $user->id,
             'organization_id' => $user->organization_id,
             'ip'              => $request->ip(),
-        ]);
-
-        return redirect()->intended('/dashboard');
+        ]);        return redirect()->intended('/dashboard');
     }
 
     /**

@@ -77,10 +77,8 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Freelancers',     href: '/freelancers',   icon: Users2,         section: 'hr', roles: ['ceo', 'project_manager'] },
     { label: 'Knowledge Base',  href: '/knowledge-base', icon: BookOpen,      section: 'hr' },
     // Manage
-    { label: 'Team',           href: '/settings/team', icon: Users,           section: 'manage', roles: ['ceo', 'project_manager'] },
-    { label: 'Client Portal',  href: '/settings/client-portal', icon: Globe,   section: 'manage', roles: ['ceo'] },
-    { label: 'Workflows',      href: '/workflows',              icon: Workflow, section: 'manage', roles: ['ceo', 'project_manager'] },
-    { label: 'Settings',       href: '/settings',               icon: Settings, section: 'manage' },
+    { label: 'System Health',  href: '/settings/health', icon: Activity,      section: 'manage', roles: ['ceo'] },
+    { label: 'Client Portal',  href: '/settings/client-portal', icon: Globe,   section: 'manage', roles: ['ceo'] },    { label: 'Settings',       href: '/settings',               icon: Settings, section: 'manage' },
     { label: 'Trash',          href: '/settings/trash',         icon: Trash2,   section: 'manage' },
     // MCP
     { label: 'Integrations',   href: '/settings/mcp',           icon: Plug,    section: 'mcp', roles: ['ceo', 'project_manager'] },
@@ -376,9 +374,21 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
             {/* ──────────── MAIN ──────────── */}
             <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
+                {/* Impersonation Banner */}
+                {(user as any).is_impersonating && (
+                    <div className="bg-amber-100 border-b border-amber-200 text-amber-800 px-6 py-2.5 text-xs font-semibold flex items-center justify-between z-20">
+                        <span className="flex items-center gap-2">
+                            <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            You are currently impersonating {user.name}.
+                        </span>
+                        <Link href="/settings/stop-impersonating" method="post" as="button" className="bg-amber-200 hover:bg-amber-300 px-3 py-1 rounded transition-colors">
+                            Stop Impersonating
+                        </Link>
+                    </div>
+                )}
+
                 {/* Topbar */}
-                <header
-                    className="h-[56px] bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center px-6 gap-3 z-10 flex-shrink-0 shadow-[0_1px_10px_rgba(0,0,0,0.01)]"
+                <header                    className="h-[56px] bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center px-6 gap-3 z-10 flex-shrink-0 shadow-[0_1px_10px_rgba(0,0,0,0.01)]"
                 >
                     <div className="flex-1 min-w-0">
                         {title && (

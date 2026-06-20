@@ -1,6 +1,5 @@
 import React from 'react';
-import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import { Head, useForm, router } from '@inertiajs/react';import AppLayout from '@/Layouts/AppLayout';
 
 interface OrgData {
     id: string;

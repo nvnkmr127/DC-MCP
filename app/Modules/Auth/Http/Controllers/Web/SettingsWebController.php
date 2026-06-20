@@ -14,7 +14,7 @@ use App\Modules\Auth\Models\Organization;
 use App\Modules\Auth\Models\Role;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Artisan;
 class SettingsWebController extends Controller
 {
     public function profile(Request $request)
@@ -130,9 +130,8 @@ class SettingsWebController extends Controller
         $org = Organization::find($request->user()->organization_id);
 
         return Inertia::render('Settings/Organization', [
-            'organization' => $org->only('id', 'name', 'slug', 'timezone', 'currency', 'settings'),
-        ]);
-    }
+            'organization' => $org->only(['id', 'name', 'slug', 'timezone', 'currency', 'settings']),            'is_maintenance' => app()->isDownForMaintenance(),
+        ]);    }
 
     public function updateOrganization(Request $request)
     {
@@ -140,16 +139,38 @@ class SettingsWebController extends Controller
             'name'     => 'required|string|max:200',
             'timezone' => 'nullable|string',
             'currency' => 'nullable|string|max:3',
+            'settings' => 'nullable|array',
+            'settings.trash_retention_days' => 'nullable|integer|min:1|max:365',
         ]);
 
         $org = Organization::find($request->user()->organization_id);
+        
+        if (isset($data['settings'])) {
+            $currentSettings = $org->settings ?? [];
+            $data['settings'] = array_merge($currentSettings, $data['settings']);
+        }
+
         $org->update($data);
 
         return back()->with('success', 'Organization updated.');
     }
 
+    public function toggleMaintenance(Request $request)
+    {
+        if (app()->isDownForMaintenance()) {
+            Artisan::call('up');
+            return back()->with('success', 'Maintenance mode disabled.');
+        } else {
+            $secret = Str::random(16);
+            Artisan::call('down', ['--secret' => $secret]);
+            return Inertia::location('/' . $secret);
+        }
+    }
+
     public function team(Request $request)
     {
+        $startOfWeek = now()->startOfWeek();
+
         $members = User::where('organization_id', $request->user()->organization_id)
             ->with('roles:id,name,slug')
             ->orderBy('name')
@@ -159,9 +180,10 @@ class SettingsWebController extends Controller
                 'name'   => $u->name,
                 'email'  => $u->email,
                 'roles'  => $u->roles->map(fn($r) => ['id' => $r->id, 'name' => $r->name, 'slug' => $r->slug]),
-                'is_active' => !$u->deleted_at,
+                'is_active' => $u->is_active,
+                'hours_this_week' => (float) \App\Modules\ProjectManagement\Models\TimeEntry::where('user_id', $u->id)                    ->where('logged_date', '>=', $startOfWeek)
+                    ->sum('hours'),
             ]);
-
         $roles = Role::where('organization_id', $request->user()->organization_id)
             ->get(['id', 'name', 'slug']);
 
@@ -194,6 +216,53 @@ class SettingsWebController extends Controller
         return back()->with('success', "Invite sent to {$data['email']}. Temp password: {$tempPassword}");
     }
 
+    public function bulkInvite(Request $request)
+    {
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+            'role_id'  => 'required|uuid|exists:roles,id',
+        ]);
+
+        $file = $request->file('csv_file');
+        $csvData = file_get_contents($file->getRealPath());
+        $lines = explode(PHP_EOL, $csvData);
+        $imported = 0;
+        $skipped = 0;
+        $orgId = $request->user()->organization_id;
+
+        foreach ($lines as $line) {
+            $row = str_getcsv($line);
+            if (count($row) === 0 || empty(trim($line))) continue;
+
+            $email = trim($row[1] ?? $row[0]);
+            $name = count($row) > 1 ? trim($row[0]) : explode('@', $email)[0];
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $skipped++;
+                continue;
+            }
+
+            $existing = User::where('email', $email)->first();
+            if ($existing) {
+                $skipped++;
+                continue;
+            }
+
+            $tempPassword = Str::random(12);
+            $user = User::create([
+                'name'            => $name ?: 'Invited User',
+                'email'           => $email,
+                'password'        => Hash::make($tempPassword),
+                'organization_id' => $orgId,
+            ]);
+
+            $user->roles()->attach($request->role_id);
+            // TODO: queue bulk invite email with temp password
+            $imported++;
+        }
+
+        return back()->with('success', "Bulk invite completed. Imported: {$imported}, Skipped: {$skipped}.");
+    }
     public function updateMemberRole(Request $request, User $user)
     {
         if ($user->organization_id !== $request->user()->organization_id) {
@@ -208,14 +277,122 @@ class SettingsWebController extends Controller
             ->where('organization_id', $request->user()->organization_id)
             ->firstOrFail();
 
-        // Sync the role (since we enforce a single role dropdown in UI)
-        $user->roles()->sync([$role->id]);
+        $oldRole = $user->roles->first();
 
-        return back()->with('success', 'User role updated successfully.');
+        // Sync the role (since we enforce a single role dropdown in UI)
+        $user->roles()->sync([
+            $role->id => [
+                'assigned_by' => $request->user()->id,
+                'assigned_at' => now(),
+            ]
+        ]);
+
+        if (!$oldRole || $oldRole->id !== $role->id) {
+            \App\Models\Activity::create([
+                'user_id' => $request->user()->id,
+                'subject_type' => get_class($user),
+                'subject_id' => $user->id,
+                'description' => "Role changed from " . ($oldRole ? $oldRole->name : 'None') . " to {$role->name}",
+                'changes' => [
+                    'old_role' => $oldRole ? $oldRole->name : null,
+                    'new_role' => $role->name
+                ],
+            ]);
+        }
+
+        return back()->with('success', "Updated role for {$user->name}.");
     }
 
-    public function destroySession(Request $request, string $id)
+    public function memberActivity(Request $request, User $user)
     {
+        if ($user->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
+
+        $activities = \App\Models\Activity::with('user:id,name')
+            ->where('subject_type', get_class($user))
+            ->where('subject_id', $user->id)
+            ->latest()
+            ->get()
+            ->map(fn($a) => [
+                'id' => $a->id,
+                'actor' => $a->user->name ?? 'System',
+                'description' => $a->description,
+                'created_at' => $a->created_at->diffForHumans(),
+            ]);
+
+        return response()->json($activities);
+    }        DB::table('sessions')->where('id', $id)->where('user_id', $request->user()->id)->delete();
+    public function forceLogoutUser(Request $request, User $user)
+    {
+        if ($user->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
+
+        DB::table('sessions')->where('user_id', $user->id)->delete();
+        return back()->with('success', "Force logged out {$user->name}.");
+    }
+
+    public function impersonate(Request $request, User $user)
+    {
+        if ($user->organization_id !== $request->user()->organization_id) {
+        DB::table('sessions')->where('user_id', $user->id)->delete();
+        return back()->with('success', "Force logged out {$user->name}.");
+    }
+
+    public function transferWork(Request $request, User $user)
+    {
+        $request->validate([
+            'transfer_to_user_id' => 'required|uuid|exists:users,id',
+        ]);
+
+        if ($user->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
+
+        $targetUser = User::where('organization_id', $request->user()->organization_id)
+            ->where('id', $request->transfer_to_user_id)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        \App\Modules\ProjectManagement\Models\Project::where('project_manager_id', $user->id)
+            ->update(['project_manager_id' => $targetUser->id]);
+
+        \App\Modules\ProjectManagement\Models\Task::where('assigned_to', $user->id)
+            ->update(['assigned_to' => $targetUser->id]);
+
+        return back()->with('success', "Transferred all tasks and projects from {$user->name} to {$targetUser->name}.");
+    }
+
+    public function toggleActive(Request $request, User $user)
+    public function impersonate(Request $request, User $user)        if ($user->id === $request->user()->id) {
+            return back()->with('error', 'Cannot impersonate yourself.');
+        }
+
+        $request->session()->put('impersonated_by', $request->user()->id);
+        Auth::login($user);
+
+        return redirect('/dashboard')->with('success', "You are now impersonating {$user->name}.");
+    }
+
+    public function stopImpersonating(Request $request)
+    {
+        if (!$request->session()->has('impersonated_by')) {
+            return back();
+        }
+
+        $originalUserId = $request->session()->pull('impersonated_by');
+        $originalUser = User::find($originalUserId);
+
+        if ($originalUser) {
+            Auth::login($originalUser);
+            return redirect('/settings/team')->with('success', 'Stopped impersonating.');
+        }
+
+        Auth::logout();
+        return redirect('/login');
+    }        return back()->with('success', "Force logged out {$user->name}.");
+    }    {
         DB::table('sessions')->where('id', $id)->where('user_id', $request->user()->id)->delete();
         return back()->with('success', 'Session terminated.');
     }

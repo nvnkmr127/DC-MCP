@@ -35,16 +35,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/settings/tokens',                        [SettingsWebController::class, 'createToken'])->name('web.settings.tokens.store');
     Route::delete('/settings/tokens/{id}',                 [SettingsWebController::class, 'revokeToken'])->name('web.settings.tokens.destroy');
     Route::get('/settings/export-data',                    [SettingsWebController::class, 'exportData'])->name('web.settings.export');
-    Route::delete('/settings/account',                     [SettingsWebController::class, 'deleteAccount'])->name('web.settings.account.destroy');
-
     Route::get('/settings/organization',                   [SettingsWebController::class, 'organization'])->name('web.settings.organization');
     Route::patch('/settings/organization',                 [SettingsWebController::class, 'updateOrganization'])->name('web.settings.organization.update');
-    Route::get('/settings/team',                           [SettingsWebController::class, 'team'])->name('web.settings.team');
-    Route::post('/settings/team/invite',                   [SettingsWebController::class, 'invite'])->name('web.settings.team.invite');
-    Route::patch('/settings/team/{user}/role',             [SettingsWebController::class, 'updateMemberRole'])->name('web.settings.team.role.update');
-    Route::get('/settings/roles',                          [RoleWebController::class, 'index'])->name('web.settings.roles');
-    Route::post('/settings/roles',                         [RoleWebController::class, 'store'])->name('web.settings.roles.store');
-    Route::patch('/settings/roles/{role}',                 [RoleWebController::class, 'update'])->name('web.settings.roles.update');
+    Route::post('/settings/maintenance',                   [SettingsWebController::class, 'toggleMaintenance'])->name('web.settings.maintenance.toggle');
+    Route::get('/settings/health',                         [\App\Modules\Auth\Http\Controllers\Web\HealthWebController::class, 'index'])->name('web.settings.health');
+    Route::get('/settings/audit-export',                   [SettingsWebController::class, 'exportAuditLog'])->name('web.settings.audit-export');
+    Route::get('/settings/team',                           [SettingsWebController::class, 'team'])->name('web.settings.team');    Route::post('/settings/team/bulk-invite',              [SettingsWebController::class, 'bulkInvite'])->name('web.settings.team.bulk-invite');
+    Route::post('/settings/team/bulk-invite',              [SettingsWebController::class, 'bulkInvite'])->name('web.settings.team.bulk-invite');
+    Route::get('/settings/team/{user}/activity',           [SettingsWebController::class, 'memberActivity'])->name('web.settings.team.activity');
+    Route::patch('/settings/team/{user}/role',             [SettingsWebController::class, 'updateMemberRole'])->name('web.settings.team.role.update');    Route::post('/settings/team/{user}/transfer-work',     [SettingsWebController::class, 'transferWork'])->name('web.settings.team.transfer-work');
+    Route::post('/settings/team/{user}/toggle-active',     [SettingsWebController::class, 'toggleActive'])->name('web.settings.team.toggle-active');    Route::patch('/settings/roles/{role}',                 [RoleWebController::class, 'update'])->name('web.settings.roles.update');
     Route::delete('/settings/roles/{role}',                [RoleWebController::class, 'destroy'])->name('web.settings.roles.destroy');
     Route::get('/settings/localization',                   [SettingsWebController::class, 'localization'])->name('web.settings.localization');
     Route::get('/settings/notifications',                  [SettingsWebController::class, 'notifications'])->name('web.settings.notifications');
@@ -58,10 +58,5 @@ Route::middleware(['auth'])->group(function () {
     // Trash / Soft Deletes
     Route::get('/settings/trash',                          [\App\Modules\Auth\Http\Controllers\Web\TrashController::class, 'index'])->name('web.settings.trash');
     Route::post('/settings/trash/{type}/{id}/restore',     [\App\Modules\Auth\Http\Controllers\Web\TrashController::class, 'restore'])->name('web.settings.trash.restore');
-});
-
-// Public API endpoints (registered in web.php to run through web middleware group but with api features)
-Route::prefix('api/v1')->middleware(['api', 'throttle:auth'])->group(function () {
-    Route::post('auth/register', [RegisterApiController::class, 'register']);
-    Route::post('auth/login', [LoginApiController::class, 'login']);
+    Route::post('/settings/trash/bulk-delete',             [\App\Modules\Auth\Http\Controllers\Web\TrashController::class, 'bulkDelete'])->name('web.settings.trash.bulk-delete');
 });
