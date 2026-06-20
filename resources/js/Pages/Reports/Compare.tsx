@@ -33,7 +33,7 @@ export default function CompareReports({ report1, report2 }: Props) {
                     </span>
                     <span className={cn(
                         "px-2 py-0.5 rounded-full text-[10px] font-bold capitalize",
-                        report.status === 'ready' ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                        report.status === 'ready' ? "bg-emerald-50 text-emerald-700" : "bg--50 text--800"
                     )}>
                         {report.status}
                     </span>

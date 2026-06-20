@@ -169,6 +169,9 @@ export default function DashboardIndex({ stats, briefing, setup_checklist }: Pro
     const dashboardConfig = activeDb ? { ...activeDb, layout: localLayout } : null;
     const resolvedWidgetsData = localWidgetsData;
 
+    const totalTasks = Object.values(stats.tasks_by_status).reduce((a, b) => a + b, 0);
+    const isCompletelyEmpty = stats.active_projects === 0 && totalTasks === 0;
+
     return (
         <AppLayout title={`${greeting()}, Team 👋`}>
             <Head title="Dashboard" />
@@ -299,6 +302,41 @@ export default function DashboardIndex({ stats, briefing, setup_checklist }: Pro
                         </div>
                     ))}
                 </div>
+            ) : isCompletelyEmpty ? (
+                <div className="flex flex-col items-center justify-center bg-white rounded-[2rem] border border-gray-100/80 shadow-sm p-16 mt-6 relative overflow-hidden min-h-[500px]">
+                    <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                        <div className="absolute -top-[30%] -left-[10%] w-[60%] h-[60%] bg-indigo-500/5 blur-[100px] rounded-full"></div>
+                        <div className="absolute top-[50%] -right-[20%] w-[50%] h-[70%] bg-violet-500/5 blur-[100px] rounded-full"></div>
+                    </div>
+                    
+                    <div className="w-28 h-28 mb-8 rounded-[2rem] bg-gradient-to-tr from-indigo-500 via-purple-500 to-violet-500 flex items-center justify-center shadow-[0_8px_30px_rgba(99,102,241,0.3)] text-white transform -rotate-6 transition-transform hover:rotate-0 duration-500">
+                        <FolderKanban size={48} className="transform rotate-6 hover:rotate-0 transition-transform duration-500" />
+                    </div>
+                    
+                    <h2 className="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight z-10 text-center">
+                        Welcome to your workspace
+                    </h2>
+                    <p className="text-gray-500 max-w-lg text-center mb-10 z-10 leading-relaxed text-sm md:text-base">
+                        You don't have any projects or tasks set up yet. Start by creating a fresh project, or save time by importing your data from tools like Jira, Trello, or FreshBooks.
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row items-center gap-4 z-10">
+                        <Link 
+                            href="/projects/create" 
+                            className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5 w-full sm:w-auto"
+                        >
+                            <Plus size={18} />
+                            Create Project
+                        </Link>
+                        <Link 
+                            href="/settings/import" 
+                            className="flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-200 px-8 py-3.5 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm hover:shadow-md w-full sm:w-auto hover:-translate-y-0.5"
+                        >
+                            <RefreshCw size={18} className="text-gray-400" />
+                            Import Data
+                        </Link>
+                    </div>
+                </div>
             ) : dashboardConfig && dashboardConfig.layout && dashboardConfig.layout.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-6 mb-6">
                     {dashboardConfig.layout.map((widget: any) => {
@@ -317,7 +355,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist }: Pro
                                 {editMode && (
                                     <button
                                         onClick={() => handleRemoveWidget(widget.id)}
-                                        className="absolute top-3 right-3 p-1 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                        className="absolute top-3 right-3 p-1 rounded-lg bg--50 text--700 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                                     >
                                         <X size={12} />
                                     </button>

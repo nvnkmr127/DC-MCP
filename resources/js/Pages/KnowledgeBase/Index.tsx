@@ -123,7 +123,7 @@ export default function KnowledgeBaseIndex({ articles, categories, filters }: Pr
                             {a.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
                                     {a.tags.map(tag => (
-                                        <span key={tag} className="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-[9px]">{tag}</span>
+                                        <span key={tag} className="px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded text-[9px]">{tag}</span>
                                     ))}
                                 </div>
                             )}

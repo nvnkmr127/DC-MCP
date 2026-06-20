@@ -6,7 +6,7 @@ import { cn, formatDate, timeAgo, formatHours } from '@/lib/utils';
 import type { Task, Attachment, TimeEntry } from '@/types';
 import {
     MessageSquare, Paperclip, Clock,
-    Upload, Trash2, Edit,
+    Upload, Trash2, Edit, RefreshCw, XCircle,
     GitFork, AlertCircle, Activity,
 } from 'lucide-react';
 import { CommentsSection } from './Partials/CommentsSection';
@@ -33,14 +33,52 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
 
     const confirm = useConfirm();
 
-    function uploadFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const [pendingFile, setPendingFile] = useState<File | null>(null);
+
+    function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
         if (!file) return;
+        setPendingFile(file);
+        setUploadError(null);
+        performUpload(file);
+    }
+
+    function performUpload(file: File) {
         const form = new FormData();
         form.append('file', file);
         form.append('attachable_type', 'task');
         form.append('attachable_id', task.id);
-        router.post('/attachments', form, { preserveScroll: true });
+
+        setUploading(true);
+        setUploadError(null);
+
+        router.post('/attachments', form, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setPendingFile(null);
+                setUploading(false);
+                if (fileRef.current) fileRef.current.value = '';
+            },
+            onError: (errors) => {
+                setUploading(false);
+                setUploadError(errors.file || 'Failed to upload file to S3. Please try again.');
+            },
+            onFinish: () => {
+                setUploading(false);
+            }
+        });
+    }
+
+    function retryUpload() {
+        if (pendingFile) performUpload(pendingFile);
+    }
+
+    function cancelUpload() {
+        setPendingFile(null);
+        setUploadError(null);
+        if (fileRef.current) fileRef.current.value = '';
     }
 
     const [skipTimeCheck, setSkipTimeCheck] = useState(false);
@@ -142,7 +180,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                 <StatusBadge type="task-status" value={task.status} />
                                 <StatusBadge type="task-priority" value={task.priority} />
                                 {task.tags?.map((tag) => (
-                                    <span key={tag} className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">#{tag}</span>
+                                    <span key={tag} className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs">#{tag}</span>
                                 ))}
                             </div>
                         </div>
@@ -170,7 +208,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                     >
                                         <Icon size={15} /> {label}
                                         {count !== null && count > 0 && (
-                                            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">{count}</span>
+                                            <span className="px-1.5 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full">{count}</span>
                                         )}
                                     </button>
                                 ))}
@@ -187,15 +225,51 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
 
                                 {activeTab === 'attachments' && (
                                     <div className="space-y-3">
-                                        <input ref={fileRef} type="file" className="hidden" onChange={uploadFile} />
-                                        <button
-                                            type="button"
-                                            onClick={() => fileRef.current?.click()}
-                                            className="flex items-center gap-2 w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
-                                        >
-                                            <Upload size={16} /> Click to upload a file
-                                        </button>
-                                        {task.attachments.length === 0 && (
+                                        <input ref={fileRef} type="file" className="hidden" onChange={handleFileChange} />
+                                        
+                                        {!pendingFile && (
+                                            <button
+                                                type="button"
+                                                onClick={() => fileRef.current?.click()}
+                                                className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
+                                            >
+                                                <Upload size={16} /> Click to upload a file
+                                            </button>
+                                        )}
+
+                                        {pendingFile && (
+                                            <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                                <Paperclip size={16} className="text-gray-400 shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium text-gray-900 truncate">{pendingFile.name}</p>
+                                                    {uploading && <p className="text-xs text-indigo-600 mt-0.5">Uploading to S3...</p>}
+                                                    {uploadError && <p className="text-xs text-red-600 mt-0.5">{uploadError}</p>}
+                                                </div>
+                                                
+                                                {uploading && <RefreshCw size={16} className="animate-spin text-indigo-600 shrink-0" />}
+                                                
+                                                {uploadError && (
+                                                    <div className="flex items-center gap-1">
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={retryUpload}
+                                                            className="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded"
+                                                        >
+                                                            Retry
+                                                        </button>
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={cancelUpload}
+                                                            className="p-1 text-gray-400 hover:text-gray-600"
+                                                        >
+                                                            <XCircle size={16} />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {task.attachments.length === 0 && !pendingFile && (
                                             <p className="text-sm text-gray-500 text-center py-2">No files attached.</p>
                                         )}
                                         {task.attachments.map((att) => (

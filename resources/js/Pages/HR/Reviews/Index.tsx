@@ -16,8 +16,8 @@ interface Review {
 interface Props { written: Review[]; received: Review[]; users: { id: string; name: string }[]; }
 
 const STATUS_STYLES: Record<string, string> = {
-    draft:        'bg-gray-100 text-gray-600',
-    submitted:    'bg-amber-100 text-amber-700',
+    draft:        'bg-gray-100 text-gray-700',
+    submitted:    'bg--100 text--800',
     acknowledged: 'bg-emerald-100 text-emerald-700',
 };
 

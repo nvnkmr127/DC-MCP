@@ -55,6 +55,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/settings/security/two-factor/confirm',   [TwoFactorWebController::class, 'confirm'])->name('web.settings.two-factor.confirm');
     Route::get('/settings/security/two-factor/disable',   [TwoFactorWebController::class, 'disable'])->name('web.settings.two-factor.disable');
     
+    // Data Import
+    Route::get('/settings/import',                         [\App\Modules\Auth\Http\Controllers\Web\DataImportController::class, 'index'])->name('web.settings.import');
+    Route::get('/settings/import/template',                [\App\Modules\Auth\Http\Controllers\Web\DataImportController::class, 'downloadTemplate'])->name('web.settings.import.template');
+    Route::post('/settings/import/upload',                 [\App\Modules\Auth\Http\Controllers\Web\DataImportController::class, 'upload'])->name('web.settings.import.upload');
+
     // Trash / Soft Deletes
     Route::get('/settings/trash',                          [\App\Modules\Auth\Http\Controllers\Web\TrashController::class, 'index'])->name('web.settings.trash');
     Route::post('/settings/trash/{type}/{id}/restore',     [\App\Modules\Auth\Http\Controllers\Web\TrashController::class, 'restore'])->name('web.settings.trash.restore');

@@ -42,7 +42,7 @@ export default function TaskCreate({ projects, members, defaults }: Props) {
 
             <div className="max-w-2xl mx-auto">
                 <div className="flex items-center gap-3 mb-6">
-                    <Link href="/tasks" className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+                    <Link href="/tasks" className="p-2 rounded-lg hover:bg-gray-100 text-gray-700">
                         <ArrowLeft size={18} />
                     </Link>
                     <h1 className="text-lg font-bold text-gray-900">New Task</h1>

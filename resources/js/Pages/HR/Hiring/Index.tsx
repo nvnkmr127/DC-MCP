@@ -22,13 +22,13 @@ const STAGE_LABELS: Record<string, string> = {
     interview_2: 'Interview 2', offer: 'Offer', hired: 'Hired', rejected: 'Rejected',
 };
 const STAGE_COLORS: Record<string, string> = {
-    applied: 'bg-gray-100 text-gray-600', screening: 'bg-blue-100 text-blue-700',
+    applied: 'bg-gray-100 text-gray-700', screening: 'bg-blue-100 text-blue-700',
     interview_1: 'bg-indigo-100 text-indigo-700', interview_2: 'bg-violet-100 text-violet-700',
-    offer: 'bg-amber-100 text-amber-700', hired: 'bg-emerald-100 text-emerald-700',
-    rejected: 'bg-rose-100 text-rose-600',
+    offer: 'bg--100 text--800', hired: 'bg-emerald-100 text-emerald-700',
+    rejected: 'bg--100 text--700',
 };
 const STATUS_COLORS: Record<string, string> = {
-    open: 'bg-emerald-100 text-emerald-700', on_hold: 'bg-amber-100 text-amber-700', closed: 'bg-gray-100 text-gray-500',
+    open: 'bg-emerald-100 text-emerald-700', on_hold: 'bg--100 text--800', closed: 'bg-gray-100 text-gray-700',
 };
 
 function OpeningModal({ onClose }: { onClose: () => void }) {
@@ -216,7 +216,7 @@ export default function HiringIndex({ openings }: Props) {
                                                     className="bg-white rounded-xl border border-gray-200 p-3 cursor-pointer hover:border-indigo-200 transition-all"
                                                     onClick={() => setExpandedCandidate(expandedCandidate === c.id ? null : c.id)}>
                                                     <p className="text-xs font-semibold text-gray-900">{c.name}</p>
-                                                    <span className={cn('inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-medium', STAGE_COLORS[c.source] ?? 'bg-gray-100 text-gray-600')}>
+                                                    <span className={cn('inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-medium', STAGE_COLORS[c.source] ?? 'bg-gray-100 text-gray-700')}>
                                                         {c.source}
                                                     </span>
                                                     {c.rating && (

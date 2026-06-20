@@ -18,9 +18,10 @@ interface Props { payslips: Payslip[]; monthYear: string; totalPayroll: number; 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
 
 const STATUS_STYLES: Record<string, string> = {
-    draft:   'bg-gray-100 text-gray-600',
-    pending: 'bg-amber-100 text-amber-700',
-    paid:    'bg-emerald-100 text-emerald-700',
+    draft:      'bg-gray-100 text-gray-700',
+    processing: 'bg-indigo-100 text-indigo-700',
+    paid:       'bg-emerald-100 text-emerald-700',
+    failed:     'bg-rose-100 text-rose-700',
 };
 
 function MonthNav({ monthYear, onChange }: { monthYear: string; onChange: (m: string) => void }) {

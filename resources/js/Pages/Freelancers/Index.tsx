@@ -9,7 +9,7 @@ interface Freelancer { id: string; name: string; email: string | null; phone: st
 interface Project { id: string; name: string; }
 interface Props { freelancers: Freelancer[]; projects: Project[]; }
 
-const STATUS_STYLES: Record<string, string> = { active: 'bg-emerald-100 text-emerald-700', inactive: 'bg-gray-100 text-gray-500', blacklisted: 'bg-rose-100 text-rose-600' };
+const STATUS_STYLES: Record<string, string> = { active: 'bg-emerald-100 text-emerald-700', inactive: 'bg-gray-100 text-gray-700', blacklisted: 'bg-rose-100 text-rose-700' };
 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
 
@@ -187,7 +187,7 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
                                                     <div className="flex items-center gap-3 text-gray-500">
                                                         <span>{a.hours_worked}h worked</span>
                                                         <span>{fmt(a.total_paid)} paid</span>
-                                                        <span className={cn('px-1.5 py-0.5 rounded capitalize', a.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600')}>
+                                                        <span className={cn('px-1.5 py-0.5 rounded capitalize', a.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700')}>
                                                             {a.status}
                                                         </span>
                                                     </div>

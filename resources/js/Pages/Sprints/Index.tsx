@@ -4,6 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import { Plus, X, GitMerge, CheckSquare } from 'lucide-react';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
+import { toast } from 'sonner';
 
 interface SprintTask { id: string; story_points: number; task: { id: string; title: string; status: string } | null; }
 interface Sprint {
@@ -17,7 +18,7 @@ interface Project { id: string; name: string; }
 interface Props { sprints: Sprint[]; projects: Project[]; }
 
 const STATUS_STYLES: Record<string, string> = {
-    planning: 'bg-gray-100 text-gray-600', active: 'bg-emerald-100 text-emerald-700', completed: 'bg-blue-100 text-blue-700',
+    planning: 'bg-gray-100 text-gray-700', active: 'bg-emerald-100 text-emerald-700', completed: 'bg-blue-100 text-blue-700',
 };
 
 function SprintModal({ projects, onClose }: { projects: Project[]; onClose: () => void }) {
@@ -94,7 +95,15 @@ function SprintRetrospectiveModal({ sprint, onClose, onComplete }: { sprint: Spr
                     <p className="text-sm text-gray-600">All tasks are completed. Great job!</p>
                 )}
 
-                <form onSubmit={e => { e.preventDefault(); form.post(`/sprints/${sprint.id}/complete`, { onSuccess: onComplete }); }} className="space-y-4 pt-2">
+                <form onSubmit={e => { 
+                    e.preventDefault(); 
+                    form.post(`/sprints/${sprint.id}/complete`, { 
+                        onSuccess: () => {
+                            toast.success('🎉 Sprint completed! Great job team!');
+                            onComplete();
+                        }
+                    }); 
+                }} className="space-y-4 pt-2">
                     {unfinishedCount > 0 && (
                         <div className="space-y-2">
                             <label className="flex items-center gap-2 cursor-pointer">
@@ -174,7 +183,16 @@ export default function SprintsIndex({ sprints, projects }: Props) {
                                 if (e.target.value === 'completed') {
                                     setCompletingSprint(sprint);
                                 } else {
-                                    router.patch(`/sprints/${sprint.id}`, { status: e.target.value });
+                                    const newStatus = e.target.value;
+                                    router.patch(`/sprints/${sprint.id}`, { status: newStatus }, {
+                                        onSuccess: () => {
+                                            if (newStatus === 'active') {
+                                                toast.success('🚀 Sprint started! Time to crush it!');
+                                            } else {
+                                                toast.success(`Sprint status updated to ${newStatus}.`);
+                                            }
+                                        }
+                                    });
                                 }
                             }}
                             className="text-xs border border-gray-200 rounded px-1.5 py-0.5 text-gray-500 bg-white focus:ring-1 focus:ring-indigo-500">

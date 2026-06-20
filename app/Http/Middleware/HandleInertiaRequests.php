@@ -46,6 +46,19 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        $mcpErrors = [];
+        if ($user && $user->organization_id) {
+            $mcpErrors = \App\Modules\MCP\Models\McpConnection::where('organization_id', $user->organization_id)
+                ->where('status', 'error')
+                ->get()
+                ->map(fn ($c) => [
+                    'id' => $c->id,
+                    'provider' => $c->provider,
+                    'label' => $c->label,
+                ])
+                ->toArray();
+        }
+
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $user ? [
@@ -60,6 +73,7 @@ class HandleInertiaRequests extends Middleware
                     'is_impersonating' => $request->session()->has('impersonated_by'),
                 ] : null,                'permissions' => $permissions,
             ],
+            'mcp_errors' => $mcpErrors,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error'   => fn () => $request->session()->get('error'),

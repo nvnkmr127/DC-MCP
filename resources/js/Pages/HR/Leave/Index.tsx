@@ -22,7 +22,7 @@ interface Props {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-    pending:  'bg-amber-100 text-amber-700',
+    pending:  'bg--100 text--800',
     approved: 'bg-emerald-100 text-emerald-700',
     rejected: 'bg-rose-100 text-rose-700',
 };

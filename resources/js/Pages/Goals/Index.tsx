@@ -9,10 +9,10 @@ const PERIODS = ['q1', 'q2', 'q3', 'q4', 'annual'] as const;
 const PERIOD_LABELS: Record<string, string> = { q1: 'Q1', q2: 'Q2', q3: 'Q3', q4: 'Q4', annual: 'Annual' };
 
 const STATUS_STYLES: Record<string, string> = {
-    draft:     'bg-gray-100 text-gray-600',
+    draft:     'bg-gray-100 text-gray-700',
     active:    'bg-indigo-100 text-indigo-700',
     completed: 'bg-emerald-100 text-emerald-700',
-    cancelled: 'bg-rose-100 text-rose-600',
+    cancelled: 'bg--100 text--700',
 };
 
 interface KeyResult { id: string; title: string; target: number; current: number; unit: string; }

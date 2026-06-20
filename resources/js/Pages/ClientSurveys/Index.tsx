@@ -16,7 +16,7 @@ interface Props { surveys: Survey[]; clients: Client[]; npsStats: NpsStats; }
 
 const scoreColor = (n: number) => n >= 9 ? 'text-emerald-600 bg-emerald-50' : n >= 7 ? 'text-amber-600 bg-amber-50' : 'text-rose-600 bg-rose-50';
 const STATUS_STYLES: Record<string, string> = {
-    sent: 'bg-blue-100 text-blue-700', responded: 'bg-emerald-100 text-emerald-700', expired: 'bg-gray-100 text-gray-500',
+    sent: 'bg-blue-100 text-blue-700', responded: 'bg-emerald-100 text-emerald-700', expired: 'bg-gray-100 text-gray-700',
 };
 
 function SendModal({ clients, onClose }: { clients: Client[]; onClose: () => void }) {

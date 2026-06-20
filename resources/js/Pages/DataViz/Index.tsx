@@ -178,7 +178,7 @@ export default function DataVizIndex() {
                                 <div key={w.id} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col relative group">
                                     <button
                                         onClick={() => handleRemoveWidget(w.id)}
-                                        className="absolute top-3 right-3 p-1 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute top-3 right-3 p-1 rounded-lg bg--50 text--700 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
                                         <Trash2 size={12} />
                                     </button>

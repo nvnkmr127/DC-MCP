@@ -23,12 +23,12 @@ interface Props {
 const PRIORITY_COLORS: Record<string, string> = {
     critical: 'bg-rose-100 text-rose-700',
     urgent: 'bg-rose-100 text-rose-700',
-    high:   'bg-orange-100 text-orange-700',
+    high:   'bg--100 text--800',
     medium: 'bg-blue-100 text-blue-700',
-    low:    'bg-gray-100 text-gray-600',
+    low:    'bg-gray-100 text-gray-700',
 };
 const STATUS_COLORS: Record<string, string> = {
-    todo:       'bg-gray-100 text-gray-600',
+    todo:       'bg-gray-100 text-gray-700',
     in_progress:'bg-blue-100 text-blue-700',
     in_review:  'bg-violet-100 text-violet-700',
 };
@@ -149,10 +149,10 @@ export default function CapacityIndex({ team, activeTasks, stats }: Props) {
                                     <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
-                                    <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', PRIORITY_COLORS[task.priority] ?? 'bg-gray-100 text-gray-600')}>
+                                    <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', PRIORITY_COLORS[task.priority] ?? 'bg-gray-100 text-gray-700')}>
                                         {task.priority}
                                     </span>
-                                    <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_COLORS[task.status] ?? 'bg-gray-100 text-gray-600')}>
+                                    <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_COLORS[task.status] ?? 'bg-gray-100 text-gray-700')}>
                                         {task.status.replace('_', ' ')}
                                     </span>
                                     {task.due_date && (

@@ -23,7 +23,7 @@ const ACTION_LABELS: Record<string, string> = {
 const TRIGGER_STYLES: Record<string, string> = {
     task_completed: 'bg-emerald-100 text-emerald-700', invoice_sent: 'bg-blue-100 text-blue-700',
     project_created: 'bg-indigo-100 text-indigo-700', client_added: 'bg-violet-100 text-violet-700',
-    retainer_renewed: 'bg-amber-100 text-amber-700', proposal_accepted: 'bg-green-100 text-green-700',
+    retainer_renewed: 'bg--100 text--800', proposal_accepted: 'bg-green-100 text-green-700',
 };
 
 function WorkflowModal({ onClose }: { onClose: () => void }) {
@@ -107,10 +107,10 @@ export default function WorkflowsIndex({ workflows }: Props) {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                     <p className="text-sm font-semibold text-gray-900">{w.name}</p>
-                                    <span className={cn('px-1.5 py-0.5 rounded text-[10px] font-medium', TRIGGER_STYLES[w.trigger_event] ?? 'bg-gray-100 text-gray-600')}>
+                                    <span className={cn('px-1.5 py-0.5 rounded text-[10px] font-medium', TRIGGER_STYLES[w.trigger_event] ?? 'bg-gray-100 text-gray-700')}>
                                         {TRIGGER_LABELS[w.trigger_event] ?? w.trigger_event}
                                     </span>
-                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600">
+                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700">
                                         → {ACTION_LABELS[w.action_type] ?? w.action_type}
                                     </span>
                                 </div>

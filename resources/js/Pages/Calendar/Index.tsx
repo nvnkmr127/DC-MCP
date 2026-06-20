@@ -103,7 +103,7 @@ export default function CalendarIndex({ events, year, month }: Props) {
                     <div className="flex bg-white rounded-xl border border-gray-200/80 p-0.5 shadow-sm">
                         <button 
                             onClick={() => navigate(-1)} 
-                            className="p-2 rounded-lg hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-colors"
+                            className="p-2 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-gray-900 transition-colors"
                         >
                             <ChevronLeft size={16} />
                         </button>
@@ -112,7 +112,7 @@ export default function CalendarIndex({ events, year, month }: Props) {
                         </div>
                         <button 
                             onClick={() => navigate(1)} 
-                            className="p-2 rounded-lg hover:bg-gray-50 text-gray-500 hover:text-gray-900 transition-colors"
+                            className="p-2 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-gray-900 transition-colors"
                         >
                             <ChevronRight size={16} />
                         </button>
@@ -120,7 +120,7 @@ export default function CalendarIndex({ events, year, month }: Props) {
 
                     <button
                         onClick={() => router.get('/calendar', { year: today.getFullYear(), month: today.getMonth() + 1 })}
-                        className="px-3.5 py-2 text-xs font-semibold bg-white border border-gray-200/80 rounded-xl hover:bg-gray-50 text-gray-600 transition-colors shadow-sm"
+                        className="px-3.5 py-2 text-xs font-semibold bg-white border border-gray-200/80 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors shadow-sm"
                     >
                         Today
                     </button>

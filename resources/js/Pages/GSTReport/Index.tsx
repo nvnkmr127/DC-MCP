@@ -65,11 +65,11 @@ export default function GSTReportIndex({ invoices, month }: Props) {
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1">
-                            <button onClick={() => navigate(prevMonth(month))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+                            <button onClick={() => navigate(prevMonth(month))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700">
                                 <ChevronLeft size={15} />
                             </button>
                             <span className="px-3 text-sm font-semibold text-gray-800 min-w-[150px] text-center">{monthLabel(month)}</span>
-                            <button onClick={() => navigate(nextMonth(month))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+                            <button onClick={() => navigate(nextMonth(month))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700">
                                 <ChevronRight size={15} />
                             </button>
                         </div>

@@ -57,7 +57,7 @@ export default function KnowledgeBaseShow({ article }: Props) {
                     {article.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-4 pt-4 border-t border-gray-100">
                             {article.tags.map(tag => (
-                                <span key={tag} className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">{tag}</span>
+                                <span key={tag} className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">{tag}</span>
                             ))}
                         </div>
                     )}

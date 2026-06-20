@@ -16,9 +16,10 @@ interface Invoice { id: string; invoice_number: string; client_id: string; }
 interface Props { creditNotes: CreditNote[]; clients: Client[]; invoices: Invoice[]; }
 
 const STATUS_STYLES: Record<string, string> = {
-    draft:   'bg-gray-100 text-gray-600',
-    issued:  'bg-blue-100 text-blue-700',
+    draft:   'bg-gray-100 text-gray-700',
+    issued:  'bg-indigo-100 text-indigo-700',
     applied: 'bg-emerald-100 text-emerald-700',
+    voided:  'bg-rose-100 text-rose-700',
 };
 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);

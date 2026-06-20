@@ -14,7 +14,7 @@ interface Report {
 interface Client { id: string; name: string; }
 interface Props { reports: Report[]; clients: Client[]; }
 
-const STATUS_STYLES: Record<string, string> = { draft: 'bg-amber-100 text-amber-700', sent: 'bg-emerald-100 text-emerald-700' };
+const STATUS_STYLES: Record<string, string> = { draft: 'bg--100 text--800', sent: 'bg-emerald-100 text-emerald-700' };
 
 function ReportModal({ clients, onClose }: { clients: Client[]; onClose: () => void }) {
     const form = useForm({ client_id: '', month_year: new Date().toISOString().slice(0, 7), highlights: '', challenges: '' });

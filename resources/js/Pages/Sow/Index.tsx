@@ -32,7 +32,7 @@ interface Props { sows: Sow[]; clients: Client[]; retainers: Retainer[]; canRevi
 const SUBMISSION_CONFIG: Record<string, { label: string; badge: string; icon: React.ReactNode }> = {
     submitted:          { label: 'Submitted',         badge: 'bg-blue-100 text-blue-700',   icon: <Clock className="w-3 h-3" /> },
     approved:           { label: 'Approved',          badge: 'bg-emerald-100 text-emerald-700', icon: <CheckCircle2 className="w-3 h-3" /> },
-    revision_requested: { label: 'Revision Needed',   badge: 'bg-amber-100 text-amber-700', icon: <RotateCcw className="w-3 h-3" /> },
+    revision_requested: { label: 'Revision Needed',   badge: 'bg--100 text--800', icon: <RotateCcw className="w-3 h-3" /> },
 };
 
 function SubmitDeliverableModal({ deliverable, onClose }: { deliverable: Deliverable; onClose: () => void }) {
@@ -81,9 +81,9 @@ function SubmitDeliverableModal({ deliverable, onClose }: { deliverable: Deliver
 }
 
 const STATUS_STYLES: Record<string, string> = {
-    draft:   'bg-gray-100 text-gray-600',
+    draft:   'bg-gray-100 text-gray-700',
     active:  'bg-emerald-100 text-emerald-700',
-    expired: 'bg-amber-100 text-amber-700',
+    expired: 'bg--100 text--800',
 };
 
 const SERVICE_LABELS: Record<string, string> = {
@@ -96,10 +96,10 @@ const SERVICE_COLORS: Record<string, string> = {
     ads:     'bg-violet-100 text-violet-700',
     social:  'bg-pink-100 text-pink-700',
     content: 'bg-teal-100 text-teal-700',
-    design:  'bg-orange-100 text-orange-700',
+    design:  'bg--100 text--800',
     dev:     'bg-indigo-100 text-indigo-700',
     email:   'bg-cyan-100 text-cyan-700',
-    other:   'bg-gray-100 text-gray-600',
+    other:   'bg-gray-100 text-gray-700',
 };
 
 type DeliverableForm = { title: string; service_type: string; frequency: string; quantity_per_period: string; notes: string };
@@ -131,7 +131,7 @@ function SowCard({ sow, canReview }: { sow: Sow; canReview?: boolean }) {
                     <span className="text-xs text-gray-400">{sow.deliverables.length} deliverable{sow.deliverables.length !== 1 ? 's' : ''}</span>
                     <button
                         onClick={() => setExpanded(!expanded)}
-                        className="p-1 rounded hover:bg-gray-100 text-gray-500"
+                        className="p-1 rounded hover:bg-gray-100 text-gray-700"
                     >
                         {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </button>

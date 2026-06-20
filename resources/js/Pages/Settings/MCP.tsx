@@ -32,14 +32,15 @@ const PROVIDER_ICONS: Record<string, string> = {
 
 const STATUS_STYLES: Record<string, string> = {
     active:   'bg-green-100 text-green-700',
-    error:    'bg-red-100 text-red-600',
-    inactive: 'bg-gray-100 text-gray-500',
-    syncing:  'bg-blue-100 text-blue-600',
+    error:    'bg--100 text--700',
+    inactive: 'bg-gray-100 text-gray-700',
+    syncing:  'bg--100 text--700',
 };
 
 export default function MCPSettings({ connections, builtin_providers }: Props) {
     const [showForm, setShowForm] = useState(false);
     const [isCustom, setIsCustom] = useState(false);
+    const [syncingId, setSyncingId] = useState<string | null>(null);
     const confirm = useConfirm();
 
     const form = useForm({
@@ -80,7 +81,11 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
     }
 
     function sync(id: string) {
-        router.post(`/settings/mcp/${id}/sync`, {}, { preserveScroll: true });
+        router.post(`/settings/mcp/${id}/sync`, {}, { 
+            preserveScroll: true,
+            onStart: () => setSyncingId(id),
+            onFinish: () => setSyncingId(null)
+        });
     }
 
     function toggleActive(conn: McpConnection) {
@@ -310,9 +315,10 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
                             <div className="flex items-center gap-2 mt-3">
                                 <button
                                     onClick={() => sync(conn.id)}
-                                    className="flex items-center gap-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600"
+                                    disabled={syncingId === conn.id}
+                                    className="flex items-center gap-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 disabled:opacity-50"
                                 >
-                                    <RefreshCw size={12} /> Sync
+                                    <RefreshCw size={12} className={cn(syncingId === conn.id && "animate-spin")} /> {syncingId === conn.id ? 'Syncing...' : 'Sync'}
                                 </button>
                                 <button
                                     onClick={() => toggleActive(conn)}

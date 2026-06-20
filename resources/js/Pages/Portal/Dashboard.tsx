@@ -30,8 +30,8 @@ interface Props {
 
 const STATUS_COLORS: Record<string, string> = {
     active:    'bg-emerald-100 text-emerald-700',
-    on_hold:   'bg-yellow-100 text-yellow-700',
-    completed: 'bg-gray-100 text-gray-500',
+    on_hold:   'bg--100 text--800',
+    completed: 'bg-gray-100 text-gray-700',
     draft:     'bg-blue-100 text-blue-700',
 };
 
@@ -144,7 +144,7 @@ export default function PortalDashboard({ portalUser, clientName, projects, shar
                                     <div key={p.id} className="bg-white rounded-xl border border-gray-200 p-4">
                                         <div className="flex items-start justify-between mb-3">
                                             <p className="font-semibold text-gray-900 text-sm">{p.name}</p>
-                                            <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-600')}>
+                                            <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', STATUS_COLORS[p.status] ?? 'bg-gray-100 text-gray-700')}>
                                                 {p.status.replace('_', ' ')}
                                             </span>
                                         </div>
@@ -229,7 +229,7 @@ export default function PortalDashboard({ portalUser, clientName, projects, shar
                                                 'text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0',
                                                 r.status === 'open' ? 'bg-blue-100 text-blue-700' :
                                                 r.status === 'actioned' ? 'bg-emerald-100 text-emerald-700' :
-                                                'bg-gray-100 text-gray-500',
+                                                'bg-gray-100 text-gray-700',
                                             )}>
                                                 {r.status}
                                             </span>

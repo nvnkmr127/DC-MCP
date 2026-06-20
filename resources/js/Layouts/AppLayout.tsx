@@ -20,7 +20,7 @@ import {
     ListChecks, Star, ReceiptText, Package, Percent,
     FileCheck, MessageSquare, UserPlus, BookOpen, Smile,
     BarChart2, Workflow, ShoppingCart, FileX, Trophy, Send,
-    Megaphone, Trash2, CheckCheck
+    Megaphone, Trash2, CheckCheck, UploadCloud
 } from 'lucide-react';
 
 interface NavItem {
@@ -80,6 +80,7 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'System Health',  href: '/settings/health', icon: Activity,      section: 'manage', roles: ['ceo'] },
     { label: 'Client Portal',  href: '/settings/client-portal', icon: Globe,   section: 'manage', roles: ['ceo'] },    { label: 'Settings',       href: '/settings',               icon: Settings, section: 'manage' },
     { label: 'Trash',          href: '/settings/trash',         icon: Trash2,   section: 'manage' },
+    { label: 'Data Import',    href: '/settings/import',        icon: UploadCloud, section: 'manage' },
     // MCP
     { label: 'Integrations',   href: '/settings/mcp',           icon: Plug,    section: 'mcp', roles: ['ceo', 'project_manager'] },
 ];
@@ -94,7 +95,7 @@ const NAV_SECTIONS = [
 ];
 
 export default function AppLayout({ children, title }: { children: React.ReactNode; title?: string }) {
-    const { auth, app, flash } = usePage<PageProps>().props;
+    const { auth, app, flash, mcp_errors } = usePage<PageProps & { mcp_errors?: any[] }>().props;
     const { hasRole } = usePermissions();
     const [collapsed, setCollapsed] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -160,6 +161,25 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
         window.addEventListener('keydown', handleKey);
         return () => window.removeEventListener('keydown', handleKey);
     }, []);
+
+    // Listen for real-time notifications via Reverb/Echo
+    useEffect(() => {
+        const echo = (window as any).Echo;
+        if (echo && user) {
+            echo.private(`user.${user.id}`)
+                .listen('.notification.created', (e: any) => {
+                    toast.success(e.title, {
+                        description: e.body,
+                    });
+                    refetch(); // Update the notification badge
+                });
+        }
+        return () => {
+            if (echo && user) {
+                echo.leave(`user.${user.id}`);
+            }
+        };
+    }, [user.id, refetch]);
 
     useEffect(() => {
         function handleClick(e: MouseEvent) {
@@ -374,6 +394,19 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
             {/* ──────────── MAIN ──────────── */}
             <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
+                {/* MCP Connection Errors Banner */}
+                {mcp_errors && mcp_errors.length > 0 && (
+                    <div className="bg-red-50 border-b border-red-100 text-red-700 px-6 py-2.5 text-xs font-semibold flex items-center justify-between z-20 shadow-sm">
+                        <span className="flex items-center gap-2">
+                            <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                            Your {mcp_errors.map(e => e.label || e.provider.replace('_', ' ')).join(', ')} integration{mcp_errors.length > 1 ? 's are' : ' is'} disconnected or failing. Please reconnect.
+                        </span>
+                        <Link href="/settings/mcp" className="bg-red-100 hover:bg-red-200 px-3 py-1 rounded transition-colors text-red-800">
+                            Fix Connections
+                        </Link>
+                    </div>
+                )}
+
                 {/* Impersonation Banner */}
                 {(user as any).is_impersonating && (
                     <div className="bg-amber-100 border-b border-amber-200 text-amber-800 px-6 py-2.5 text-xs font-semibold flex items-center justify-between z-20">
@@ -411,7 +444,7 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                         {permission === 'default' && (
                             <button
                                 onClick={requestNotificationPermission}
-                                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 text-xs font-semibold rounded-lg transition-colors shadow-sm"
+                                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg--100 text--700 border border-blue-200 text-xs font-semibold rounded-lg transition-colors shadow-sm"
                             >
                                 <Bell size={13} /> Enable Alerts
                             </button>

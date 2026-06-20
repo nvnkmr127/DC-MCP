@@ -44,9 +44,9 @@ interface Props {
 }
 
 const STATUS_STYLES: Record<Status, string> = {
-    idea:        'bg-gray-100 text-gray-600',
+    idea:        'bg-gray-100 text-gray-700',
     in_progress: 'bg-blue-100 text-blue-700',
-    in_review:   'bg-yellow-100 text-yellow-700',
+    in_review:   'bg--100 text--800',
     approved:    'bg-emerald-100 text-emerald-700',
     scheduled:   'bg-purple-100 text-purple-700',
     published:   'bg-green-100 text-green-700',
@@ -265,7 +265,7 @@ function ContentCard({ item }: { item: ContentItem }) {
                             </button>
                         )}
                         {item.task_id && (
-                            <a href={`/tasks/${item.task_id}`} className="flex items-center gap-1 text-xs px-2.5 py-1 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
+                            <a href={`/tasks/${item.task_id}`} className="flex items-center gap-1 text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
                                 <Eye className="w-3 h-3" /> View Task
                             </a>
                         )}

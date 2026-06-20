@@ -158,7 +158,7 @@ export default function ClientPortalSettings({ clients, pendingRequests }: Props
         new_request: 'bg-blue-100 text-blue-700',
         feedback:    'bg-purple-100 text-purple-700',
         bug:         'bg-red-100 text-red-700',
-        question:    'bg-gray-100 text-gray-600',
+        question:    'bg-gray-100 text-gray-700',
     };
 
     return (
@@ -197,7 +197,7 @@ export default function ClientPortalSettings({ clients, pendingRequests }: Props
                         <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                             <MessageSquare className="w-4 h-4 text-gray-400" /> Pending Requests
                             {pendingRequests.length > 0 && (
-                                <span className="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                                <span className="bg--100 text--800 text-xs font-bold px-2 py-0.5 rounded-full">
                                     {pendingRequests.length}
                                 </span>
                             )}

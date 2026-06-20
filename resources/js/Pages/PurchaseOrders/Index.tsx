@@ -10,8 +10,11 @@ interface Vendor { id: string; vendor_name: string; }
 interface Props { purchaseOrders: PO[]; vendors: Vendor[]; }
 
 const STATUS_STYLES: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-600', sent: 'bg-blue-100 text-blue-700',
-    acknowledged: 'bg-indigo-100 text-indigo-700', received: 'bg-emerald-100 text-emerald-700', cancelled: 'bg-rose-100 text-rose-600',
+    draft: 'bg-gray-100 text-gray-700',
+    sent: 'bg-blue-100 text-blue-700',
+    acknowledged: 'bg-indigo-100 text-indigo-700',
+    received: 'bg-emerald-100 text-emerald-700',
+    cancelled: 'bg-rose-100 text-rose-700',
 };
 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);

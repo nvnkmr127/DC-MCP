@@ -84,6 +84,28 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
     const [scheduleConfig, setScheduleConfig] = useState<{ selected_projects: string[], selected_tasks: string[] }>({ selected_projects: [], selected_tasks: [] });
     const [availableItems, setAvailableItems] = useState<any[]>([]);
     const [fetchingItems, setFetchingItems] = useState(false);
+    const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+    const handleDownload = async (id: string, title: string) => {
+        setDownloadingId(id);
+        try {
+            const response = await axios.get(`/api/v1/reports/${id}/download`, {
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${title}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            toast.error('Failed to download PDF.');
+        } finally {
+            setDownloadingId(null);
+        }
+    };
 
     function applyRange() {
         router.get('/reports', { from, to }, { preserveState: true });
@@ -329,7 +351,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                             <td className="px-5 py-4">
                                                 <span className={cn(
                                                     "px-2 py-0.5 rounded-full text-[10px] font-bold capitalize",
-                                                    rep.status === 'ready' ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                                                    rep.status === 'ready' ? "bg-emerald-50 text-emerald-700" : "bg--50 text--800"
                                                 )}>
                                                     {rep.status}
                                                 </span>
@@ -338,18 +360,20 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                 <td className="px-5 py-4 text-right space-x-2">
                                                     <Link
                                                         href={`/reports/${rep.id}`}
-                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg font-bold"
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg font-bold"
                                                     >
                                                         View
                                                     </Link>
                                                     {rep.status === 'ready' && (
                                                         <>
-                                                            <a
-                                                                href={`/api/v1/reports/${rep.id}/download`}
-                                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-55 text-indigo-600 hover:bg-indigo-50 rounded-lg font-bold"
+                                                            <button
+                                                                onClick={() => handleDownload(rep.id, rep.title)}
+                                                                disabled={downloadingId === rep.id}
+                                                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg font-bold disabled:opacity-50"
                                                             >
-                                                                <Download size={12} /> Download
-                                                            </a>
+                                                                {downloadingId === rep.id ? <RefreshCw className="animate-spin" size={12} /> : <Download size={12} />}
+                                                                {downloadingId === rep.id ? 'Preparing...' : 'Download'}
+                                                            </button>
                                                             <button
                                                                 onClick={() => setEmailModalReport(rep)}
                                                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-sm"
@@ -427,7 +451,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                         "px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-colors border",
                                                         sched.is_active 
                                                             ? "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100" 
-                                                            : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
+                                                            : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
                                                     )}
                                                 >
                                                     {sched.is_active ? 'Active' : 'Paused'}
@@ -456,7 +480,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                                 setAvailableItems([]);
                                                             }
                                                         }}
-                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg font-bold"
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg font-bold"
                                                     >
                                                         Edit Scope
                                                     </button>
@@ -470,7 +494,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                                     });
                                                             }
                                                         }}
-                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg font-bold"
+                                                        className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-red-50 hover:bg--100 text--700 rounded-lg font-bold"
                                                     >
                                                         Delete
                                                     </button>

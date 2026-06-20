@@ -16,9 +16,9 @@ const COMM_TYPE_STYLES: Record<string, string> = {
     call:     'bg-blue-100 text-blue-700',
     email:    'bg-violet-100 text-violet-700',
     whatsapp: 'bg-green-100 text-green-700',
-    meeting:  'bg-amber-100 text-amber-700',
+    meeting:  'bg--100 text--800',
     linkedin: 'bg-sky-100 text-sky-700',
-    other:    'bg-gray-100 text-gray-600',
+    other:    'bg-gray-100 text-gray-700',
 };
 
 interface Props {
@@ -30,24 +30,24 @@ interface Props {
 }
 
 const TIER_CONFIG: Record<string, { label: string; cls: string }> = {
-    standard:   { label: 'Standard',   cls: 'bg-gray-100 text-gray-600' },
-    premium:    { label: 'Premium',    cls: 'bg-amber-50 text-amber-700' },
+    standard:   { label: 'Standard',   cls: 'bg-gray-100 text-gray-700' },
+    premium:    { label: 'Premium',    cls: 'bg--50 text--800' },
     enterprise: { label: 'Enterprise', cls: 'bg-violet-50 text-violet-700' },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string; dot: string }> = {
     active:   { label: 'Active',   cls: 'bg-emerald-50 text-emerald-700', dot: 'bg-emerald-400' },
     prospect: { label: 'Prospect', cls: 'bg-blue-50 text-blue-700',       dot: 'bg-blue-400' },
-    inactive: { label: 'Inactive', cls: 'bg-gray-100 text-gray-500',      dot: 'bg-gray-300' },
-    churned:  { label: 'Churned',  cls: 'bg-red-50 text-red-600',         dot: 'bg-red-400' },
+    inactive: { label: 'Inactive', cls: 'bg-gray-100 text-gray-700',      dot: 'bg-gray-300' },
+    churned:  { label: 'Churned',  cls: 'bg--50 text--700',         dot: 'bg-red-400' },
 };
 
 const PROJECT_STATUS_STYLES: Record<string, string> = {
-    planning:  'bg-gray-100 text-gray-600',
+    planning:  'bg-gray-100 text-gray-700',
     active:    'bg-emerald-50 text-emerald-700',
-    on_hold:   'bg-yellow-50 text-yellow-700',
+    on_hold:   'bg--50 text--800',
     completed: 'bg-blue-50 text-blue-700',
-    cancelled: 'bg-red-50 text-red-600',
+    cancelled: 'bg--50 text--700',
 };
 
 function AddCommModal({ clientId, onClose }: { clientId: string; onClose: () => void }) {
@@ -333,7 +333,7 @@ export default function ClientShow({ client, communications }: Props) {
                                             </p>
                                         </div>
                                         <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize',
-                                            PROJECT_STATUS_STYLES[project.status] ?? 'bg-gray-100 text-gray-500')}>
+                                            PROJECT_STATUS_STYLES[project.status] ?? 'bg-gray-100 text-gray-700')}>
                                             {project.status.replace(/_/g, ' ')}
                                         </span>
                                     </Link>

@@ -15,8 +15,8 @@ interface User { id: string; name: string; }
 interface Props { checklists: Checklist[]; clients: Client[]; users: User[]; filters: Record<string, string>; }
 
 const TYPE_STYLES: Record<string, string> = {
-    seo: 'bg-green-100 text-green-700', social: 'bg-pink-100 text-pink-700', ads: 'bg-orange-100 text-orange-700',
-    content: 'bg-blue-100 text-blue-700', website: 'bg-violet-100 text-violet-700', general: 'bg-gray-100 text-gray-600',
+    seo: 'bg-green-100 text-green-700', social: 'bg-pink-100 text-pink-700', ads: 'bg--100 text--800',
+    content: 'bg-blue-100 text-blue-700', website: 'bg-violet-100 text-violet-700', general: 'bg-gray-100 text-gray-700',
 };
 
 function ChecklistModal({ clients, users, onClose }: { clients: Client[]; users: User[]; onClose: () => void }) {

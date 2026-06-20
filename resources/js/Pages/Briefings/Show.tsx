@@ -28,7 +28,7 @@ export default function BriefingShow({ briefing }: Props) {
 
             <div className="max-w-3xl mx-auto">
                 <div className="flex items-center gap-3 mb-6">
-                    <Link href="/briefings" className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 transition-colors">
+                    <Link href="/briefings" className="p-2 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
                         <ArrowLeft size={16} />
                     </Link>
                     <div className="flex items-center gap-2">
@@ -40,8 +40,8 @@ export default function BriefingShow({ briefing }: Props) {
                     <span className={cn(
                         'ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize',
                         briefing.status === 'ready' || briefing.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' :
-                        briefing.status === 'generating' ? 'bg-amber-50 text-amber-700' :
-                        briefing.status === 'failed' ? 'bg-rose-50 text-rose-700' : 'bg-gray-50 text-gray-500'
+                        briefing.status === 'generating' ? 'bg--50 text--800' :
+                        briefing.status === 'failed' ? 'bg-rose-50 text-rose-700' : 'bg-gray-50 text-gray-700'
                     )}>
                         {briefing.status}
                     </span>

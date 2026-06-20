@@ -15,8 +15,8 @@ interface Client { id: string; name: string; }
 interface Props { approvals: Approval[]; clients: Client[]; filters: Record<string, string>; }
 
 const STATUS_STYLES: Record<string, string> = {
-    pending: 'bg-blue-100 text-blue-700', approved: 'bg-emerald-100 text-emerald-700',
-    revision_requested: 'bg-amber-100 text-amber-700', rejected: 'bg-rose-100 text-rose-600',
+    pending: 'bg-amber-100 text-amber-800', approved: 'bg-emerald-100 text-emerald-700',
+    revision_requested: 'bg-blue-100 text-blue-700', rejected: 'bg-rose-100 text-rose-700',
 };
 const TYPE_LABELS: Record<string, string> = {
     social_post: 'Social Post', ad_creative: 'Ad Creative', blog: 'Blog', video: 'Video', email: 'Email', other: 'Other',

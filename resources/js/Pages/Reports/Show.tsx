@@ -30,6 +30,7 @@ interface Props {
 
 export default function ReportsShow({ report }: Props) {
     const [sending, setSending] = useState(false);
+    const [downloading, setDownloading] = useState(false);
     const [recipientInput, setRecipientInput] = useState('');
 
     const handleRegenerate = () => {
@@ -62,6 +63,27 @@ export default function ReportsShow({ report }: Props) {
         });
     };
 
+    const handleDownload = async () => {
+        setDownloading(true);
+        try {
+            const response = await axios.get(`/api/v1/reports/${report.id}/download`, {
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${report.title}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            toast.error('Failed to download PDF.');
+        } finally {
+            setDownloading(false);
+        }
+    };
+
     return (
         <AppLayout title={report.title}>
             <Head title={report.title} />
@@ -78,17 +100,19 @@ export default function ReportsShow({ report }: Props) {
                 <div className="flex gap-2">
                     <button
                         onClick={handleRegenerate}
-                        className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600 text-xs font-semibold"
+                        className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700 text-xs font-semibold"
                     >
                         <RefreshCw size={12} /> Regenerate
                     </button>
                     {report.status === 'ready' && (
-                        <a
-                            href={`/api/v1/reports/${report.id}/download`}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
+                        <button
+                            onClick={handleDownload}
+                            disabled={downloading}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md disabled:bg-indigo-400 disabled:cursor-not-allowed"
                         >
-                            <Download size={12} /> Download PDF
-                        </a>
+                            {downloading ? <RefreshCw className="animate-spin" size={12} /> : <Download size={12} />} 
+                            {downloading ? 'Preparing...' : 'Download PDF'}
+                        </button>
                     )}
                 </div>
             </div>
@@ -104,7 +128,7 @@ export default function ReportsShow({ report }: Props) {
                         </span>
                         <span className={cn(
                             "px-2 py-0.5 rounded-full text-[10px] font-bold capitalize",
-                            report.status === 'ready' ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700 animate-pulse"
+                            report.status === 'ready' ? "bg-emerald-50 text-emerald-700" : "bg--50 text--800 animate-pulse"
                         )}>
                             {report.status}
                         </span>

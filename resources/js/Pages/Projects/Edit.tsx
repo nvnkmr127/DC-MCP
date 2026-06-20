@@ -50,7 +50,7 @@ export default function ProjectEdit({ project, clients, members }: Props) {
                 <div className="flex items-center gap-3 mb-6">
                     <Link
                         href={`/projects/${project.id}`}
-                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
                     >
                         <ArrowLeft size={17} />
                     </Link>

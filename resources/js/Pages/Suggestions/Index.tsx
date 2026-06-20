@@ -40,9 +40,9 @@ interface Props {
 const PRIORITY_STYLES: Record<string, string> = {
     critical: 'bg-red-100 text-red-700 border border-red-200',
     urgent: 'bg-red-100 text-red-700 border border-red-200',
-    high:   'bg-orange-100 text-orange-700 border border-orange-200',
+    high:   'bg--100 text--800 border border-orange-200',
     medium: 'bg-blue-100 text-blue-700 border border-blue-200',
-    low:    'bg-gray-100 text-gray-600 border border-gray-200',
+    low:    'bg-gray-100 text-gray-700 border border-gray-200',
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -134,7 +134,7 @@ function SuggestionCard({
                                 </span>
                             )}
                             {suggestion.project && (
-                                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
                                     {suggestion.project.name}
                                 </span>
                             )}

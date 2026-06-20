@@ -19,9 +19,9 @@ interface Props { connection: McpConnection; }
 
 const STATUS_STYLES: Record<string, string> = {
     active:   'bg-green-100 text-green-700',
-    error:    'bg-red-100 text-red-600',
-    inactive: 'bg-gray-100 text-gray-500',
-    syncing:  'bg-blue-100 text-blue-600',
+    error:    'bg--100 text--700',
+    inactive: 'bg-gray-100 text-gray-700',
+    syncing:  'bg--100 text--700',
 };
 
 const PROVIDER_ICONS: Record<string, string> = {
@@ -35,6 +35,7 @@ const PROVIDER_ICONS: Record<string, string> = {
 
 export default function MCPDetail({ connection }: Props) {
     const [editing, setEditing] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
     const confirm = useConfirm();
     const form = useForm({
         label:        connection.label ?? '',
@@ -80,9 +81,14 @@ export default function MCPDetail({ connection }: Props) {
                     )}
 
                     <div className="flex items-center gap-2 mt-4">
-                        <button onClick={() => router.post(`/settings/mcp/${connection.id}/sync`, {}, { preserveScroll: true })}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600">
-                            <RefreshCw size={12} /> Sync Now
+                        <button onClick={() => router.post(`/settings/mcp/${connection.id}/sync`, {}, { 
+                                preserveScroll: true,
+                                onStart: () => setIsSyncing(true),
+                                onFinish: () => setIsSyncing(false)
+                            })}
+                            disabled={isSyncing}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 disabled:opacity-50">
+                            <RefreshCw size={12} className={cn(isSyncing && "animate-spin")} /> {isSyncing ? 'Syncing...' : 'Sync Now'}
                         </button>
                         <button onClick={() => router.post(`/settings/mcp/${connection.id}/test`, {}, { preserveScroll: true })}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-indigo-200 rounded-lg hover:bg-indigo-50 text-indigo-600">

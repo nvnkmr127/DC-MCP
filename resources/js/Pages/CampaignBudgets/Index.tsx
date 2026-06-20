@@ -223,13 +223,13 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
                     <div className="flex items-center gap-2">
                         {/* Month Selector */}
                         <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
-                            <button onClick={() => navigate(prevMonth(monthYear))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+                            <button onClick={() => navigate(prevMonth(monthYear))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
                                 <ChevronLeft size={15} />
                             </button>
                             <span className="px-3 text-sm font-semibold text-gray-800 min-w-[140px] text-center">
                                 {monthLabel(monthYear)}
                             </span>
-                            <button onClick={() => navigate(nextMonth(monthYear))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+                            <button onClick={() => navigate(nextMonth(monthYear))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
                                 <ChevronRight size={15} />
                             </button>
                         </div>
@@ -279,10 +279,28 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
 
                 {/* ── Budgets Table ─────────────────────────────────────────── */}
                 {budgets.length === 0 ? (
-                    <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center">
-                        <PieChart size={32} className="text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500 text-sm font-medium">No campaign budgets for {monthLabel(monthYear)}.</p>
-                        <p className="text-gray-400 text-xs mt-1">Click "Add Budget" to create one.</p>
+                    <div className="flex flex-col items-center justify-center p-20 text-center relative overflow-hidden bg-white rounded-[2rem] border border-gray-100 shadow-sm min-h-[450px]">
+                        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                            <div className="absolute top-[-30%] left-[-10%] w-[50%] h-[80%] bg-indigo-500/5 blur-[80px] rounded-full"></div>
+                            <div className="absolute bottom-[-30%] right-[-10%] w-[50%] h-[80%] bg-purple-500/5 blur-[80px] rounded-full"></div>
+                        </div>
+
+                        <div className="w-24 h-24 mb-6 rounded-[2rem] bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-[0_8px_30px_rgba(99,102,241,0.25)] text-white transform rotate-3 hover:rotate-0 transition-transform duration-500 z-10">
+                            <PieChart size={40} className="transform -rotate-3 hover:rotate-0 transition-transform duration-500" />
+                        </div>
+                        
+                        <h3 className="text-2xl font-extrabold text-gray-900 mb-3 tracking-tight z-10">No campaigns tracked yet.</h3>
+                        <p className="text-[13px] md:text-sm text-gray-500 max-w-md mx-auto mb-8 z-10 leading-relaxed">
+                            You don't have any campaign budgets set up for {monthLabel(monthYear)}. Track your ad spend across different channels and clients by adding your first budget.
+                        </p>
+                        
+                        <button
+                            onClick={() => setShowModal(true)}
+                            className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5 z-10 relative"
+                        >
+                            <Plus size={18} />
+                            Add Budget
+                        </button>
                     </div>
                 ) : (
                     <div className="space-y-4">

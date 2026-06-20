@@ -64,6 +64,10 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['message' => 'Forbidden.'], 403);
             }
+
+            return \Inertia\Inertia::render('Errors/403', [
+                'message' => $e->getMessage() !== 'This action is unauthorized.' ? $e->getMessage() : null,
+            ])->toResponse($request)->setStatusCode(403);
         });
 
         $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, $request) {

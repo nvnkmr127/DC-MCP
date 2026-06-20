@@ -28,7 +28,7 @@ const fmt = (n: number) =>
 
 const HEALTH_COLORS: Record<string, string> = {
     green:  'bg-emerald-100 text-emerald-700 border-emerald-200',
-    yellow: 'bg-amber-100 text-amber-700 border-amber-200',
+    yellow: 'bg--100 text--800 border-amber-200',
     red:    'bg-rose-100 text-rose-700 border-rose-200',
 };
 

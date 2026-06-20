@@ -16,12 +16,14 @@ interface User { id: string; name: string; }
 interface Props { issues: Issue[]; clients: Client[]; users: User[]; filters: Record<string, string>; }
 
 const PRIORITY_STYLES: Record<string, string> = {
-    low: 'bg-gray-100 text-gray-600', medium: 'bg-amber-100 text-amber-700',
-    high: 'bg-orange-100 text-orange-700', critical: 'bg-rose-100 text-rose-700',
+    low: 'bg-gray-100 text-gray-700', medium: 'bg--100 text--800',
+    high: 'bg--100 text--800', critical: 'bg-rose-100 text-rose-700',
 };
 const STATUS_STYLES: Record<string, string> = {
-    open: 'bg-blue-100 text-blue-700', in_progress: 'bg-indigo-100 text-indigo-700',
-    resolved: 'bg-emerald-100 text-emerald-700', closed: 'bg-gray-100 text-gray-500',
+    open:        'bg-amber-100 text-amber-800',
+    in_progress: 'bg-indigo-100 text-indigo-700',
+    resolved:    'bg-emerald-100 text-emerald-700',
+    closed:      'bg-gray-100 text-gray-700',
 };
 const TYPE_ICONS: Record<string, React.ReactNode> = {
     bug: <Bug size={13} className="text-rose-500" />, enhancement: <Zap size={13} className="text-blue-500" />,

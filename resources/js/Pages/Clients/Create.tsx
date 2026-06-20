@@ -34,7 +34,7 @@ export default function ClientCreate() {
 
             <div className="max-w-2xl mx-auto">
                 <div className="flex items-center gap-3 mb-6">
-                    <Link href="/clients" className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+                    <Link href="/clients" className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
                         <ArrowLeft size={17} />
                     </Link>
                     <h1 className="text-[15px] font-bold text-gray-900">New Client</h1>

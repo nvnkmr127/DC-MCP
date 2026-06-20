@@ -29,9 +29,9 @@ const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFract
 
 const CATEGORY_COLORS: Record<string, string> = {
     tools: 'bg-blue-100 text-blue-700', freelancer: 'bg-violet-100 text-violet-700',
-    office: 'bg-teal-100 text-teal-700', ads: 'bg-orange-100 text-orange-700',
+    office: 'bg-teal-100 text-teal-700', ads: 'bg--100 text--800',
     travel: 'bg-sky-100 text-sky-700', hardware: 'bg-indigo-100 text-indigo-700',
-    other: 'bg-gray-100 text-gray-600',
+    other: 'bg-gray-100 text-gray-700',
 };
 
 const HEALTH_DOT: Record<string, string> = {

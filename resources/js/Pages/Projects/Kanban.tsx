@@ -60,9 +60,9 @@ function TaskCard({ task, isDragging = false }: { task: Task; isDragging?: boole
                 {task.due_date && (
                     <span className={cn(
                         'flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium',
-                        due.variant === 'destructive' ? 'bg-red-50 text-red-600' :
-                        due.variant === 'warning'     ? 'bg-yellow-50 text-yellow-600' :
-                                                        'bg-gray-50 text-gray-500',
+                        due.variant === 'destructive' ? 'bg--50 text--700' :
+                        due.variant === 'warning'     ? 'bg--50 text--800' :
+                                                        'bg-gray-50 text-gray-700',
                     )}>
                         <Clock size={9} /> {formatDate(task.due_date)}
                     </span>

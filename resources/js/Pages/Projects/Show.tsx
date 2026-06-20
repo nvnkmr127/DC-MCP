@@ -4,7 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
 import { cn, formatDate, formatCurrency, TASK_STATUS_COLORS, PRIORITY_COLORS } from '@/lib/utils';
 import type { Project, Task } from '@/types';
-import { Kanban, Plus, BarChart, Edit, ArrowLeft, Trash2, Activity } from 'lucide-react';
+import { Kanban, Plus, BarChart, Edit, ArrowLeft, Trash2, Activity, AlertTriangle } from 'lucide-react';
 import { ActivityLog } from '@/Components/Shared/ActivityLog';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 
@@ -24,7 +24,7 @@ interface Props {
 const STATUS_STYLES: Record<string, string> = {
     planning:  'bg-gray-100 text-gray-700',
     active:    'bg-green-100 text-green-700',
-    on_hold:   'bg-yellow-100 text-yellow-700',
+    on_hold:   'bg--100 text--800',
     completed: 'bg-blue-100 text-blue-700',
     cancelled: 'bg-red-100 text-red-700',
 };
@@ -43,6 +43,19 @@ export default function ProjectShow({ project }: Props) {
                         { label: project.name }
                     ]} />
                 </div>
+
+                {/* Budget Burn Rate Alert */}
+                {project.budget > 0 && (project.budget_used / project.budget) >= 0.9 && (
+                    <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 mb-4 flex items-start gap-3">
+                        <AlertTriangle size={18} className="text-rose-600 shrink-0 mt-0.5" />
+                        <div>
+                            <h3 className="text-sm font-semibold text-rose-800">High Budget Utilization Alert</h3>
+                            <p className="text-sm text-rose-600 mt-0.5">
+                                This project has consumed {Math.round((project.budget_used / project.budget) * 100)}% of its allocated budget ({formatCurrency(project.budget_used)} of {formatCurrency(project.budget)}). Please review the remaining scope.
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Header */}
                 <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
@@ -75,9 +88,14 @@ export default function ProjectShow({ project }: Props) {
                             </Link>
                             <button
                                 onClick={async () => {
+                                    const openTasks = (project.total_tasks ?? 0) - (project.completed_tasks ?? 0);
+                                    const description = openTasks > 0
+                                        ? `This project has ${openTasks} open task${openTasks === 1 ? '' : 's'}. Are you sure? All tasks will be deleted and this cannot be undone.`
+                                        : 'All tasks will also be deleted. This cannot be undone.';
+
                                     const ok = await confirm({
                                         title: 'Delete this project?',
-                                        description: 'All tasks will also be deleted. This cannot be undone.',
+                                        description,
                                         confirmText: 'Delete',
                                         variant: 'destructive',
                                     });

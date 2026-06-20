@@ -13,9 +13,9 @@ const FREQ_STYLES: Record<string, string> = {
 };
 
 const PRIORITY_STYLES: Record<string, string> = {
-    low:      'bg-gray-100 text-gray-600',
-    medium:   'bg-yellow-100 text-yellow-700',
-    high:     'bg-orange-100 text-orange-700',
+    low:      'bg-gray-100 text-gray-700',
+    medium:   'bg--100 text--800',
+    high:     'bg--100 text--800',
     critical: 'bg-rose-100 text-rose-700',
 };
 

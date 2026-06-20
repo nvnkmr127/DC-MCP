@@ -17,10 +17,10 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
                     
                     // Variants
                     variant === 'default' && 'bg-gray-150 text-gray-700',
-                    variant === 'gray' && 'bg-gray-100 text-gray-600',
+                    variant === 'gray' && 'bg-gray-100 text-gray-700',
                     variant === 'indigo' && 'bg-indigo-50 text-indigo-700 border border-indigo-100/50',
                     variant === 'emerald' && 'bg-emerald-50 text-emerald-700 border border-emerald-100/50',
-                    variant === 'amber' && 'bg-yellow-50 text-yellow-700 border border-yellow-100/50',
+                    variant === 'amber' && 'bg--50 text--800 border border-yellow-100/50',
                     variant === 'rose' && 'bg-rose-50 text-rose-700 border border-rose-100/50',
                     variant === 'sky' && 'bg-sky-50 text-sky-700 border border-sky-100/50',
                     variant === 'violet' && 'bg-violet-50 text-violet-700 border border-violet-100/50',

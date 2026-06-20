@@ -62,12 +62,20 @@ export default function NotificationsIndex({ notifications, unread_count }: Prop
             {/* ── List ── */}
             <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                 {notifications.data.length === 0 ? (
-                    <div className="p-16 text-center">
-                        <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mx-auto mb-3">
-                            <Bell size={20} className="text-gray-300" />
+                    <div className="flex flex-col items-center justify-center p-20 text-center relative overflow-hidden bg-white min-h-[400px]">
+                        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                            <div className="absolute top-[-50%] left-[-10%] w-[50%] h-[100%] bg-blue-500/5 blur-[80px] rounded-full"></div>
+                            <div className="absolute bottom-[-50%] right-[-10%] w-[50%] h-[100%] bg-emerald-500/5 blur-[80px] rounded-full"></div>
                         </div>
-                        <p className="text-[13px] font-medium text-gray-600 mb-1">You're all caught up</p>
-                        <p className="text-[12px] text-gray-400">No notifications at the moment</p>
+
+                        <div className="w-24 h-24 mb-6 rounded-[2rem] bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center shadow-[0_8px_30px_rgba(16,185,129,0.25)] text-white transform rotate-3 hover:rotate-0 transition-transform duration-500 z-10">
+                            <CheckCheck size={40} className="transform -rotate-3 hover:rotate-0 transition-transform duration-500" />
+                        </div>
+                        
+                        <h3 className="text-2xl font-extrabold text-gray-900 mb-3 tracking-tight z-10">You're all caught up!</h3>
+                        <p className="text-[13px] md:text-sm text-gray-500 max-w-sm mx-auto z-10 leading-relaxed">
+                            There are no new notifications at the moment. Take a deep breath and enjoy the zero-inbox serenity, or get back to crushing your tasks.
+                        </p>
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-50">

@@ -89,5 +89,14 @@ class GenerateDailyBriefingJob implements ShouldQueue
             'date'      => $this->date,
             'exception' => $exception->getMessage(),
         ]);
+
+        $date = \Carbon\Carbon::parse($this->date ?? now()->toDateString());
+        $briefing = \App\Modules\DailyBriefing\Models\DailyBriefing::where('user_id', $this->user->id)
+            ->where('date', $date->toDateString())
+            ->first();
+
+        if ($briefing) {
+            $briefing->update(['status' => 'failed']);
+        }
     }
 }
