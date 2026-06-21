@@ -115,7 +115,8 @@ abstract class BaseAdapter implements MCPAdapter
         ?array $payload = null,
         ?string $errorMessage = null,
         int $durationMs = 0,
-        ?string $userId = null
+        ?string $userId = null,
+        ?string $idempotencyKey = null
     ): void {
         \App\Jobs\LogMcpConnectionEvent::dispatch(
             $connectionId,
@@ -128,7 +129,8 @@ abstract class BaseAdapter implements MCPAdapter
             $payload,
             $errorMessage,
             $durationMs,
-            $userId
+            $userId,
+            $idempotencyKey
         );
     }
 
@@ -381,12 +383,27 @@ abstract class BaseAdapter implements MCPAdapter
     public final function push(string $connectionId, array $data, array $options = []): SyncResult
     {
         $userId = $options['user_id'] ?? auth()->id();
+        $idempotencyKey = $options['idempotency_key'] ?? null;
+
+        // 0. Idempotency Check
+        if ($idempotencyKey) {
+            $existing = \Illuminate\Support\Facades\DB::table('mcp_sync_logs')
+                ->where('mcp_connection_id', $connectionId)
+                ->where('idempotency_key', $idempotencyKey)
+                ->where('status', 'success')
+                ->first();
+                
+            if ($existing) {
+                return SyncResult::success(1, ['reason' => 'Skipped due to idempotency key match']);
+            }
+        }
+
         $rateLimitKey = "mcp_outbound_push:{$connectionId}";
         
         // 1. Rate Limiting: max 60 requests per minute
         if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($rateLimitKey, 60)) {
             $msg = 'Rate limit exceeded for outbound operation.';
-            $this->logSync($connectionId, 'outbound', $data['entity_type'] ?? 'unknown', $data['entity_id'] ?? null, 'failed', 0, 1, $data, $msg, 0, $userId);
+            $this->logSync($connectionId, 'outbound', $data['entity_type'] ?? 'unknown', $data['entity_id'] ?? null, 'failed', 0, 1, $data, $msg, 0, $userId, $idempotencyKey);
             
             if ($userId) {
                 app(\App\Modules\Notifications\Services\NotificationService::class)->sendNotification(
@@ -420,7 +437,7 @@ abstract class BaseAdapter implements MCPAdapter
             }
             return $result;
         } catch (\Exception $e) {
-            $this->logSync($connectionId, 'outbound', $data['entity_type'] ?? 'unknown', $data['entity_id'] ?? null, 'failed', 0, 1, $data, $e->getMessage(), 0, $userId);
+            $this->logSync($connectionId, 'outbound', $data['entity_type'] ?? 'unknown', $data['entity_id'] ?? null, 'failed', 0, 1, $data, $e->getMessage(), 0, $userId, $idempotencyKey);
             
             if ($userId) {
                 app(\App\Modules\Notifications\Services\NotificationService::class)->sendNotification(
@@ -435,16 +452,59 @@ abstract class BaseAdapter implements MCPAdapter
         }
     }
 
+    abstract protected function performPush(string $connectionId, array $data, array $options = []): SyncResult;
+
     /**
-     * Internal implementation of pushing data to the provider.
-     * To be implemented by specific adapters.
+     * Revert a previously successful outbound action.
      *
      * @param string $connectionId
-     * @param array $data
+     * @param string $logId
      * @param array $options
      * @return SyncResult
      */
-    abstract protected function performPush(string $connectionId, array $data, array $options = []): SyncResult;
+    public final function revert(string $connectionId, string $logId, array $options = []): SyncResult
+    {
+        $log = \Illuminate\Support\Facades\DB::table('mcp_sync_logs')
+            ->where('id', $logId)
+            ->where('mcp_connection_id', $connectionId)
+            ->first();
+
+        if (!$log) {
+            return SyncResult::failure('Log record not found.');
+        }
+
+        $metadata = json_decode($log->metadata, true);
+        if (($metadata['direction'] ?? '') !== 'outbound') {
+            return SyncResult::failure('Only outbound actions can be reverted.');
+        }
+        
+        if ($log->status !== 'success' && $log->status !== 'partial_success') {
+            return SyncResult::failure('Only successful actions can be reverted.');
+        }
+
+        $payload = $metadata['payload'] ?? [];
+        
+        try {
+            return $this->performRevert($connectionId, $payload, $metadata, $options);
+        } catch (\Exception $e) {
+            return SyncResult::failure('Revert failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Internal implementation of reverting data in the provider.
+     * Default returns not supported.
+     *
+     * @param string $connectionId
+     * @param array $data The original payload
+     * @param array $logMetadata The metadata from the original successful log (might contain external_ids)
+     * @param array $options
+     * @return SyncResult
+     */
+    protected function performRevert(string $connectionId, array $data, array $logMetadata, array $options = []): SyncResult
+    {
+        return SyncResult::failure('Revert mechanism is not supported or implemented for this provider.');
+    }
 
     /**
      * Preview what data will be synced without actually syncing it.

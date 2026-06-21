@@ -3,10 +3,8 @@
 namespace App\Modules\ProjectManagement\Listeners;
 
 use App\Modules\ProjectManagement\Events\ProjectCreated;
-use App\Modules\MCP\Adapters\NotionAdapter;
-use App\Modules\MCP\Adapters\GoogleCalendarAdapter;
-use App\Modules\MCP\Adapters\ZohoCliqAdapter;
 use App\Modules\MCP\Models\McpConnection;
+use App\Jobs\PushMcpOutboundActionJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 
@@ -37,14 +35,16 @@ class NotifyOnProjectCreated implements ShouldQueue
 
             if (!$conn) return;
 
-            app(NotionAdapter::class)->push($conn->id, [
+            PushMcpOutboundActionJob::dispatch($conn->id, [
                 'entity_type' => 'project',
                 'entity_id'   => $project->id,
                 'title'       => $project->name,
                 'status'      => $project->status,
                 'description' => $project->description ?? '',
                 'due_date'    => optional($project->end_date)->toDateString(),
-            ]);
+            ], [
+                'idempotency_key' => 'project_created_notion_' . $project->id
+            ])->onQueue('high');
         } catch (\Exception $e) {
             Log::warning("Notion push failed for project {$project->id}: " . $e->getMessage());
         }
@@ -62,12 +62,14 @@ class NotifyOnProjectCreated implements ShouldQueue
 
             if (!$conn) return;
 
-            app(GoogleCalendarAdapter::class)->push($conn->id, [
+            PushMcpOutboundActionJob::dispatch($conn->id, [
                 'entity_type' => 'deadline',
                 'title'       => 'Project Deadline: ' . $project->name,
                 'date'        => $project->end_date->toDateString(),
                 'description' => "Project {$project->name} deadline.",
-            ]);
+            ], [
+                'idempotency_key' => 'project_created_gcal_' . $project->id
+            ])->onQueue('high');
         } catch (\Exception $e) {
             Log::warning("Calendar push failed for project {$project->id}: " . $e->getMessage());
         }
@@ -83,11 +85,13 @@ class NotifyOnProjectCreated implements ShouldQueue
 
             if (!$conn) return;
 
-            app(ZohoCliqAdapter::class)->push($conn->id, [
+            PushMcpOutboundActionJob::dispatch($conn->id, [
                 'entity_type' => 'channel_message',
                 'channel'     => 'projects',
                 'message'     => "New project created: *{$project->name}*\nStatus: {$project->status}",
-            ]);
+            ], [
+                'idempotency_key' => 'project_created_zoho_' . $project->id
+            ])->onQueue('high');
         } catch (\Exception $e) {
             Log::warning("Zoho Cliq push failed for project {$project->id}: " . $e->getMessage());
         }

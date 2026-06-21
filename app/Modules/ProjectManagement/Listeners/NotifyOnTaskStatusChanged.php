@@ -3,10 +3,9 @@
 namespace App\Modules\ProjectManagement\Listeners;
 
 use App\Modules\ProjectManagement\Events\TaskStatusChanged;
-use App\Modules\MCP\Adapters\NotionAdapter;
-use App\Modules\MCP\Adapters\ZohoCliqAdapter;
 use App\Modules\MCP\Models\McpConnection;
 use App\Modules\Notifications\Services\NotificationService;
+use App\Jobs\PushMcpOutboundActionJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 
@@ -67,12 +66,14 @@ class NotifyOnTaskStatusChanged implements ShouldQueue
 
             if (!$conn) return;
 
-            app(NotionAdapter::class)->push($conn->id, [
+            PushMcpOutboundActionJob::dispatch($conn->id, [
                 'entity_type' => 'task',
                 'entity_id'   => $task->id,
                 'title'       => $task->title,
                 'status'      => $task->status,
-            ]);
+            ], [
+                'idempotency_key' => 'task_status_notion_' . $task->id . '_' . $task->status
+            ])->onQueue('high');
         } catch (\Exception $e) {
             Log::warning("Notion task update failed for task {$task->id}: " . $e->getMessage());
         }
@@ -95,11 +96,13 @@ class NotifyOnTaskStatusChanged implements ShouldQueue
                 default     => '🔄',
             };
 
-            app(ZohoCliqAdapter::class)->push($conn->id, [
+            PushMcpOutboundActionJob::dispatch($conn->id, [
                 'entity_type' => 'channel_message',
                 'channel'     => 'tasks',
                 'message'     => "{$emoji} Task *{$task->title}* moved from _{$oldStatus}_ to _{$newStatus}_.",
-            ]);
+            ], [
+                'idempotency_key' => 'task_status_zoho_' . $task->id . '_' . $newStatus
+            ])->onQueue('high');
         } catch (\Exception $e) {
             Log::warning("Zoho Cliq task alert failed for task {$task->id}: " . $e->getMessage());
         }

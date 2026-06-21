@@ -120,11 +120,13 @@ class NotificationService
                         ->first();
 
                     if ($connection) {
-                        $adapter->push($connection->id, [
+                        \App\Jobs\PushMcpOutboundActionJob::dispatch($connection->id, [
                             'entity_type' => 'channel_message',
                             'channel'     => 'users/' . $user->email,
                             'message'     => "{$title}\n\n{$body}",
-                        ]);
+                        ], [
+                            'idempotency_key' => 'notification_cliq_' . $user->id . '_' . md5($title . $body)
+                        ])->onQueue('high');
                     }
                 } catch (\Exception $e) {
                     Log::error('Notification Zoho Cliq delivery failed', [

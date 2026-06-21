@@ -50,13 +50,15 @@ class NotifyOnTaskAssigned implements ShouldQueue
 
             if (!$conn) return;
 
-            app(GoogleCalendarAdapter::class)->push($conn->id, [
+            \App\Jobs\PushMcpOutboundActionJob::dispatch($conn->id, [
                 'entity_type' => 'task_due',
                 'title'       => 'Due: ' . $task->title,
                 'date'        => $task->due_date->toDateString(),
                 'description' => "Task due: {$task->title}",
                 'attendee'    => $user->email,
-            ]);
+            ], [
+                'idempotency_key' => 'task_assigned_gcal_' . $task->id . '_' . $user->id
+            ])->onQueue('high');
         } catch (\Exception $e) {
             Log::warning("Calendar task event failed for task {$task->id}: " . $e->getMessage());
         }

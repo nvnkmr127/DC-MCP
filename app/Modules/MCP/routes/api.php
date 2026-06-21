@@ -30,6 +30,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/{mcpConnection}/trending', [McpConnectionApiController::class, 'getSyncTrending']);
     });
     
+    Route::post('/mcp/logs/{logId}/retry', [McpConnectionApiController::class, 'retryLog']);
     Route::post('/mcp/webhooks/{eventId}/replay', [McpConnectionApiController::class, 'replayWebhook']);
     Route::get('/mcp/webhooks/dashboard', [\App\Modules\MCP\Http\Controllers\Api\V1\McpWebhookAnalyticsController::class, 'dashboard']);
     Route::get('/mcp/webhooks/analytics', [\App\Modules\MCP\Http\Controllers\Api\V1\McpWebhookAnalyticsController::class, 'analytics']);

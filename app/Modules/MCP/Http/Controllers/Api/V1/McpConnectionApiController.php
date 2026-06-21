@@ -921,4 +921,58 @@ class McpConnectionApiController extends Controller
         // Flat credentials
         return $encryptBlock($credentials);
     }
+    public function retryLog(string $logId, Request $request): JsonResponse
+    {
+        $log = \Illuminate\Support\Facades\DB::table('mcp_sync_logs')->where('id', $logId)->first();
+        if (!$log) {
+            return ApiResponse::error('Log not found', 404);
+        }
+
+        $metadata = json_decode($log->metadata, true);
+        if (($metadata['direction'] ?? '') !== 'outbound') {
+            return ApiResponse::error('Only outbound logs can be retried.', 400);
+        }
+
+        $payload = $metadata['payload'] ?? null;
+        if (!$payload) {
+            return ApiResponse::error('No payload found to retry.', 400);
+        }
+
+        if ($request->input('only_failed') && isset($metadata['failed_records']) && is_array($metadata['failed_records'])) {
+            $payload['records'] = $metadata['failed_records'];
+        }
+
+        \App\Jobs\PushMcpOutboundActionJob::dispatch($log->mcp_connection_id, $payload, [
+            'idempotency_key' => $log->idempotency_key, // Re-use the key so idempotency handles duplicates if any
+            'user_id' => auth()->id() // The person who clicked retry
+        ])->onQueue('high');
+
+        return ApiResponse::success([
+            'message' => 'Outbound action retry has been queued.',
+        ]);
+    }
+
+    public function rollbackLog(string $logId, Request $request): JsonResponse
+    {
+        $log = \Illuminate\Support\Facades\DB::table('mcp_sync_logs')->where('id', $logId)->first();
+        if (!$log) {
+            return ApiResponse::error('Log not found', 404);
+        }
+
+        $connection = McpConnection::find($log->mcp_connection_id);
+        if (!$connection) {
+            return ApiResponse::error('Connection not found', 404);
+        }
+
+        $adapter = $this->resolveAdapter($connection->provider);
+        $result = $adapter->revert($connection->id, $logId, ['user_id' => auth()->id()]);
+
+        if ($result->isSuccess) {
+            return ApiResponse::success([
+                'message' => 'Action successfully rolled back.',
+            ]);
+        }
+
+        return ApiResponse::error('Rollback failed: ' . $result->errorMessage, 400);
+    }
 }

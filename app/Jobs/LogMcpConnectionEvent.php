@@ -22,25 +22,32 @@ class LogMcpConnectionEvent implements ShouldQueue
         public ?array $payload,
         public ?string $errorMessage,
         public int $durationMs,
-        public ?string $userId = null
+        public ?string $userId = null,
+        public ?string $idempotencyKey = null
     ) {}
 
     public function handle(): void
     {
-        DB::table('mcp_sync_logs')->insert([
-            'id' => (string) Str::uuid(),
-            'mcp_connection_id' => $this->connectionId,
-            'user_id' => $this->userId,
+        $metadata = [
             'direction' => $this->direction,
             'entity_type' => $this->entityType,
             'entity_id' => $this->entityId,
-            'status' => $this->status,
-            'records_processed' => $this->processed,
             'records_failed' => $this->failed,
-            'payload' => $this->payload ? json_encode($this->payload) : null,
-            'error_message' => $this->errorMessage,
+            'payload' => $this->payload,
+        ];
+
+        DB::table('mcp_sync_logs')->insert([
+            'mcp_connection_id' => $this->connectionId,
+            'user_id' => $this->userId,
+            'idempotency_key' => $this->idempotencyKey,
+            'status' => $this->status,
             'duration_ms' => $this->durationMs,
-            'synced_at' => now(),
+            'records_processed' => $this->processed,
+            'bytes_transferred' => 0,
+            'error_message' => $this->errorMessage,
+            'metadata' => json_encode($metadata),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 }
