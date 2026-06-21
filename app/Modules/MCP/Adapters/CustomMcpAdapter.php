@@ -41,7 +41,7 @@ class CustomMcpAdapter extends BaseAdapter
         return 'custom';
     }
 
-    public function authenticate(array $credentials): bool
+    public function authenticate(#[SensitiveParameter] array $credentials): bool
     {
         return !empty($credentials['access_token']) || !empty($credentials['api_key']);
     }
@@ -194,9 +194,27 @@ class CustomMcpAdapter extends BaseAdapter
                 }
 
                 $matched = false;
+                $timestamp = $this->extractWebhookTimestamp($request);
+                
+                // Replay Attack Prevention: Validate Timestamp if provided
+                if ($timestamp) {
+                    if (abs(time() - $timestamp) > 300) {
+                        return WebhookResult::failed('Webhook timestamp out of acceptable window. Replay attack prevented.');
+                    }
+                }
+
+                // Replay Attack Prevention: Cache the signature
+                $cacheKey = 'custom_mcp_webhook_replay_' . hash('sha256', $signature);
+                if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+                    return WebhookResult::failed('Replay attack detected. Signature already processed.');
+                }
+
                 $payload = $request->getContent();
+                // If a timestamp is provided, verify against "$timestamp.$payload"
+                $signedPayload = $timestamp ? "{$timestamp}.{$payload}" : $payload;
+
                 foreach ($secrets as $secret) {
-                    $expected = 'sha256=' . hash_hmac('sha256', $payload, $secret);
+                    $expected = 'sha256=' . hash_hmac('sha256', $signedPayload, $secret);
                     if (hash_equals($expected, $signature)) {
                         $matched = true;
                         break;
@@ -206,6 +224,9 @@ class CustomMcpAdapter extends BaseAdapter
                 if (!$matched) {
                     return WebhookResult::failed('Webhook signature mismatch.');
                 }
+
+                // Store the signature in cache for 5 minutes (300 seconds)
+                \Illuminate\Support\Facades\Cache::put($cacheKey, true, 300);
             }
         }
 
@@ -215,7 +236,7 @@ class CustomMcpAdapter extends BaseAdapter
         return WebhookResult::processed($payload);
     }
 
-    public function testConnection(array $credentials): ConnectionTestResult
+    public function testConnection(#[SensitiveParameter] array $credentials): ConnectionTestResult
     {
         // credentials here may contain 'settings' injected by the controller
         $settings = $credentials['_settings'] ?? [];
@@ -364,17 +385,59 @@ class CustomMcpAdapter extends BaseAdapter
     }
 
     /**
+     * Override getGuzzleHandlerStack to inject SSRF protection middleware.
+     */
+    protected function getGuzzleHandlerStack(): \GuzzleHttp\HandlerStack
+    {
+        $stack = parent::getGuzzleHandlerStack();
+        
+        $stack->push(function (callable $handler) {
+            return function (\Psr\Http\Message\RequestInterface $request, array $options) use ($handler) {
+                $host = $request->getUri()->getHost();
+                
+                if (!$host) {
+                    throw new \Exception("Invalid URL provided.");
+                }
+
+                // Resolve hostname to IP to validate and prevent DNS rebinding
+                $ip = gethostbyname($host);
+                if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
+                    throw new \Exception("Could not resolve host: {$host}");
+                }
+
+                if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    throw new \Exception("URL resolves to a restricted internal IP address ({$ip}). SSRF protection blocked the request.");
+                }
+
+                // Force cURL to use the validated IP, preventing Time-of-Check to Time-of-Use (DNS Rebinding) attacks
+                $port = $request->getUri()->getPort() ?: ($request->getUri()->getScheme() === 'https' ? 443 : 80);
+                
+                if (!isset($options['curl'])) {
+                    $options['curl'] = [];
+                }
+                
+                $options['curl'][\CURLOPT_RESOLVE] = ["{$host}:{$port}:{$ip}"];
+
+                return $handler($request, $options);
+            };
+        }, 'ssrf_protection');
+
+        return $stack;
+    }
+
+    /**
      * Prevents SSRF attacks by ensuring the provided URL does not resolve 
      * to a private, loopback, or reserved IP address.
      */
     private function validateUrlForSsrf(string $url): void
     {
+        // Initial URL validation before Guzzle configuration.
+        // The robust validation happens in the Guzzle SSRF middleware which handles redirects and DNS rebinding.
         $host = parse_url($url, PHP_URL_HOST);
         if (!$host) {
             throw new \Exception("Invalid URL provided.");
         }
 
-        // Resolves the hostname to an IPv4 address.
         $ip = gethostbyname($host);
         if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
             throw new \Exception("Could not resolve host: {$host}");

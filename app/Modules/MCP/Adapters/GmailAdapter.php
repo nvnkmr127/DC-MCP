@@ -37,7 +37,7 @@ class GmailAdapter extends BaseAdapter
      * @return void
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function validateCredentialsFormat(array $credentials): void
+    public function validateCredentialsFormat(#[SensitiveParameter] array $credentials): void
     {
         $token = $credentials['access_token'] ?? '';
         if (!empty($token) && !str_starts_with($token, 'ya29.')) {
@@ -53,7 +53,7 @@ class GmailAdapter extends BaseAdapter
      * @param array $credentials
      * @return bool
      */
-    public function authenticate(array $credentials): bool
+    public function authenticate(#[SensitiveParameter] array $credentials): bool
     {
         try {
             $client = $this->getGoogleClient($credentials);
@@ -130,7 +130,7 @@ class GmailAdapter extends BaseAdapter
     /**
      * Revoke the provider credentials if supported.
      */
-    public function revokeCredentials(array $credentials): void
+    public function revokeCredentials(#[SensitiveParameter] array $credentials): void
     {
         try {
             $client = $this->getGoogleClient($credentials);
@@ -143,7 +143,7 @@ class GmailAdapter extends BaseAdapter
     /**
      * Test individual scopes for the connection.
      */
-    public function testScopes(array $credentials, array $scopes): array
+    public function testScopes(#[SensitiveParameter] array $credentials, array $scopes): array
     {
         $results = [];
         try {
@@ -179,9 +179,14 @@ class GmailAdapter extends BaseAdapter
      * @param McpConnection|null $connection
      * @return Google_Client
      */
-    protected function getGoogleClient(array $credentials, ?McpConnection $connection = null): Google_Client
+    protected function getGoogleClient(#[SensitiveParameter] array $credentials, ?McpConnection $connection = null): Google_Client
     {
         $client = new Google_Client();
+        
+        $guzzleClient = new \GuzzleHttp\Client([
+            'handler' => $this->getGuzzleHandlerStack(),
+        ]);
+        $client->setHttpClient($guzzleClient);
         
         $settings = $credentials['_settings'] ?? ($connection->settings ?? []);
         $authType = $settings['auth_type'] ?? 'oauth_user';
@@ -312,11 +317,41 @@ class GmailAdapter extends BaseAdapter
                 $lastMessageId = null;
 
                 if ($messages) {
+                    $this->client->setUseBatch(true);
+                    $batch = $service->createBatch();
                     foreach ($messages as $msgSummary) {
+                        $req = $service->users_messages->get('me', $msgSummary->getId(), ['format' => 'full']);
+                        $batch->add($req, $msgSummary->getId());
+                    }
+                    
+                    $batchResults = $batch->execute();
+                    $this->client->setUseBatch(false);
+
+                    $threadIds = [];
+                    foreach ($batchResults as $messageId => $message) {
+                        if ($message instanceof \Google_Service_Exception) continue;
+                        if (!empty($message->getThreadId())) {
+                            $threadIds[] = $message->getThreadId();
+                        }
+                    }
+
+                    $existingTasks = collect();
+                    if ($autoCreateTasks && $projectId && !empty($threadIds)) {
+                        $existingTasks = Task::where('project_id', $projectId)
+                            ->whereIn('meta->gmail_thread_id', $threadIds)
+                            ->get()
+                            ->keyBy(fn($t) => $t->meta['gmail_thread_id'] ?? '');
+                    }
+
+                    $tasksToUpsert = [];
+
+                    foreach ($batchResults as $messageId => $message) {
+                        if ($message instanceof \Google_Service_Exception) {
+                            $failedCount++;
+                            continue;
+                        }
+                        
                         try {
-                            $messageId = $msgSummary->getId();
-                            $message = $service->users_messages->get('me', $messageId, ['format' => 'full']);
-                            
                             $payload = $message->getPayload();
                             $headers = $payload->getHeaders();
                             
@@ -360,17 +395,17 @@ class GmailAdapter extends BaseAdapter
 
                                 if ($autoCreateTasks && $projectId) {
                                     // Handle threading - search for existing task linked to thread_id
-                                    $task = Task::where('project_id', $projectId)
-                                        ->where('meta->gmail_thread_id', $threadId)
-                                        ->first();
+                                    $task = clone ($existingTasks->get($threadId) ?? new Task());
+                                    $isNewTask = !$task->exists;
 
-                                    if (!$task) {
-                                        $task = new Task();
+                                    if ($isNewTask) {
+                                        $task->id = (string) Str::uuid();
                                         $task->organization_id = $connection->organization_id;
                                         $task->project_id = $projectId;
                                         $task->type = 'review';
                                         $task->status = 'backlog';
                                         $task->priority = 'medium';
+                                        $task->role_required = 'project_manager';
                                         $task->role_required = 'project_manager';
                                         $task->due_date = now()->addDay()->toDateString();
                                         
@@ -412,7 +447,11 @@ class GmailAdapter extends BaseAdapter
                                             $meta['last_sync_session_id'] = $options['sync_session_id'];
                                         }
                                         $task->meta = $meta;
-                                        $task->save();
+                                        $task->updated_at = now();
+                                        if ($isNewTask) {
+                                            $task->created_at = now();
+                                        }
+                                        $tasksToUpsert[] = $task->getAttributes();
                                     } else {
                                         // Reconcile and/or update tombstone session
                                         $needsUpdate = false;
@@ -430,7 +469,8 @@ class GmailAdapter extends BaseAdapter
                                         }
                                         
                                         if ($needsUpdate) {
-                                            $task->save();
+                                            $task->updated_at = now();
+                                            $tasksToUpsert[] = $task->getAttributes();
                                         }
                                     }
                                 }
@@ -442,15 +482,15 @@ class GmailAdapter extends BaseAdapter
                             }
 
                             $processedCount++;
+                            $this->reportSyncProgress($connection, $processedCount, max($expectedCount, $processedCount));
                             $lastMessageId = $messageId;
                         } catch (\Exception $e) {
                             $failedCount++;
-                            if (empty($options['dry_run'])) {
                                 $this->logSync(
                                     $connectionId,
                                     'inbound',
                                     'gmail_message',
-                                    $msgSummary->getId(),
+                                    $messageId,
                                     'failed',
                                     0,
                                     1,
@@ -460,12 +500,21 @@ class GmailAdapter extends BaseAdapter
                             }
                         }
                     }
+
+                    if (!empty($tasksToUpsert)) {
+                        Task::upsert($tasksToUpsert, ['id'], ['title', 'description', 'due_date', 'priority', 'status', 'meta', 'updated_at']);
+                    }
                 }
 
                 $nextPageToken = $messagesResponse->getNextPageToken();
                 if ($nextPageToken && empty($options['dry_run'])) {
                     $connection->setCursor('messages_page_token', $nextPageToken);
                     $params['pageToken'] = $nextPageToken;
+
+                    if ($this->shouldYieldExecution($startTime)) {
+                        $hasMore = true;
+                        break;
+                    }
                 } else {
                     if (empty($options['dry_run'])) {
                         $connection->setCursor('messages_page_token', null);
@@ -511,7 +560,7 @@ class GmailAdapter extends BaseAdapter
         }
     }
 
-    public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, array $credentials, array $proposedMappings): array
+    public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, #[\SensitiveParameter] array $credentials, array $proposedMappings): array
     {
         $decrypted = $this->decryptCredentials($credentials);
         $client = $this->getGoogleClient($decrypted, $connection);
@@ -891,7 +940,7 @@ class GmailAdapter extends BaseAdapter
      * @param array $credentials
      * @return ConnectionTestResult
      */
-    public function testConnection(array $credentials): ConnectionTestResult
+    public function testConnection(#[SensitiveParameter] array $credentials): ConnectionTestResult
     {
         try {
             $client = $this->getGoogleClient($credentials);

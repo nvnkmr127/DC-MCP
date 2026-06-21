@@ -31,6 +31,20 @@ abstract class BaseAdapter implements MCPAdapter
     abstract protected function getProviderName(): string;
 
     /**
+     * Get the standardized Guzzle HandlerStack with all resilience middlewares.
+     *
+     * @return HandlerStack
+     */
+    protected function getGuzzleHandlerStack(): HandlerStack
+    {
+        $stack = HandlerStack::create();
+        $stack->push($this->createCircuitBreakerMiddleware(), 'circuit_breaker');
+        $stack->push($this->createRetryMiddleware(), 'retry');
+        $stack->push($this->createRateLimitThrottlingMiddleware(), 'rate_limit_throttle');
+        return $stack;
+    }
+
+    /**
      * Initialize Guzzle client with credentials/base URI/headers.
      *
      * @param string $baseUri
@@ -40,14 +54,10 @@ abstract class BaseAdapter implements MCPAdapter
      */
     protected function setupClient(string $baseUri, array $headers = [], array $clientConfig = []): void
     {
-        $stack = HandlerStack::create();
-        $stack->push($this->createCircuitBreakerMiddleware(), 'circuit_breaker');
-        $stack->push($this->createRetryMiddleware(), 'retry');
-
         $config = array_merge([
             'base_uri' => $baseUri,
             'headers'  => $headers,
-            'handler'  => $stack,
+            'handler'  => $this->getGuzzleHandlerStack(),
             'timeout'  => 30.0,
         ], $clientConfig);
 
@@ -60,17 +70,39 @@ abstract class BaseAdapter implements MCPAdapter
      * @param array $credentials
      * @return array
      */
-    protected function decryptCredentials(array $credentials): array
+    protected function decryptCredentials(#[\SensitiveParameter] array $credentials): array
     {
         $decrypted = [];
+        $decryptedKeys = [];
+
         foreach ($credentials as $key => $value) {
             try {
                 $decrypted[$key] = Crypt::decryptString($value);
+                $decryptedKeys[] = $key;
             } catch (\Exception $e) {
                 // If it fails to decrypt, assume it's either not encrypted or treat as plain
                 $decrypted[$key] = $value;
             }
         }
+
+        // Audit log the decryption event
+        if (!empty($decryptedKeys)) {
+            // Attempt to trace the caller to provide better context
+            $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+            $caller = $trace[2]['function'] ?? ($trace[1]['function'] ?? 'unknown');
+            $class  = $trace[2]['class'] ?? ($trace[1]['class'] ?? 'unknown');
+
+            \Illuminate\Support\Facades\Log::channel('audit')->info('Credentials decrypted', [
+                'provider'       => method_exists($this, 'getProviderName') ? $this->getProviderName() : 'unknown',
+                'caller_class'   => $class,
+                'caller_method'  => $caller,
+                'decrypted_keys' => $decryptedKeys,
+                'user_id'        => auth()->check() ? auth()->id() : 'system',
+                'ip_address'     => request()->ip() ?? 'cli',
+                'timestamp'      => now()->toIso8601String(),
+            ]);
+        }
+
         return $decrypted;
     }
 
@@ -80,7 +112,7 @@ abstract class BaseAdapter implements MCPAdapter
      * @param array $credentials
      * @return array
      */
-    protected function encryptCredentials(array $credentials): array
+    protected function encryptCredentials(#[SensitiveParameter] array $credentials): array
     {
         $encrypted = [];
         foreach ($credentials as $key => $value) {
@@ -191,6 +223,59 @@ abstract class BaseAdapter implements MCPAdapter
     }
 
     /**
+     * Create rate limit throttling middleware.
+     * Proactively delays the next request if we are close to the provider's rate limit.
+     *
+     * @return callable
+     */
+    protected function createRateLimitThrottlingMiddleware(): callable
+    {
+        return function (callable $handler) {
+            return function (RequestInterface $request, array $options) use ($handler) {
+                $provider = $this->getProviderName();
+                $cacheKey = "mcp_rate_limit_throttle_{$provider}";
+                
+                // 1. BEFORE request: check if we need to throttle based on the previous response
+                $throttleUntil = \Illuminate\Support\Facades\Cache::get($cacheKey);
+                if ($throttleUntil && $throttleUntil > microtime(true)) {
+                    $sleepTime = $throttleUntil - microtime(true);
+                    if ($sleepTime > 0) {
+                        usleep((int) ($sleepTime * 1000000));
+                    }
+                }
+
+                // 2. Perform request
+                return $handler($request, $options)->then(
+                    function (ResponseInterface $response) use ($cacheKey) {
+                        // 3. AFTER request: parse rate limit headers to dictate the next request's delay
+                        if ($response->hasHeader('Retry-After')) {
+                            $retryAfter = $response->getHeaderLine('Retry-After');
+                            $delaySeconds = is_numeric($retryAfter) ? (float) $retryAfter : max(0, strtotime($retryAfter) - time());
+                            if ($delaySeconds > 0) {
+                                \Illuminate\Support\Facades\Cache::put($cacheKey, microtime(true) + $delaySeconds, ceil($delaySeconds));
+                            }
+                        } elseif ($response->hasHeader('X-RateLimit-Remaining')) {
+                            $remaining = (int) $response->getHeaderLine('X-RateLimit-Remaining');
+                            $reset = $response->hasHeader('X-RateLimit-Reset') ? (int) $response->getHeaderLine('X-RateLimit-Reset') : null;
+                            
+                            if ($remaining < 5 && $reset) {
+                                // Close to limit, sleep until reset
+                                $delaySeconds = max(0, $reset - time());
+                                \Illuminate\Support\Facades\Cache::put($cacheKey, microtime(true) + $delaySeconds, ceil($delaySeconds));
+                            } elseif ($remaining < 5) {
+                                // Close to limit but no reset header, apply a default 2s backoff for the next request
+                                \Illuminate\Support\Facades\Cache::put($cacheKey, microtime(true) + 2, 2);
+                            }
+                        }
+
+                        return $response;
+                    }
+                );
+            };
+        };
+    }
+
+    /**
      * Create circuit breaker middleware.
      *
      * @return callable
@@ -248,7 +333,7 @@ abstract class BaseAdapter implements MCPAdapter
      * @param array $credentials
      * @return void
      */
-    public function validateCredentialsFormat(array $credentials): void
+    public function validateCredentialsFormat(#[SensitiveParameter] array $credentials): void
     {
         // Override in specific adapters
     }
@@ -287,7 +372,7 @@ abstract class BaseAdapter implements MCPAdapter
      * @param array $credentials
      * @return void
      */
-    public function revokeCredentials(array $credentials): void
+    public function revokeCredentials(#[SensitiveParameter] array $credentials): void
     {
         // NOOP by default
     }
@@ -299,7 +384,7 @@ abstract class BaseAdapter implements MCPAdapter
      * @param array $scopes
      * @return array
      */
-    public function testScopes(array $credentials, array $scopes): array
+    public function testScopes(#[SensitiveParameter] array $credentials, array $scopes): array
     {
         $results = [];
         foreach ($scopes as $scope) {
@@ -367,7 +452,7 @@ abstract class BaseAdapter implements MCPAdapter
      * @param array $credentials
      * @return array|null
      */
-    public function getRateLimitStatus(array $credentials): ?array
+    public function getRateLimitStatus(#[SensitiveParameter] array $credentials): ?array
     {
         return null;
     }
@@ -526,7 +611,7 @@ abstract class BaseAdapter implements MCPAdapter
      * @param array $options
      * @return array
      */
-    public function syncPreview(array $credentials, array $options = []): array
+    public function syncPreview(#[SensitiveParameter] array $credentials, array $options = []): array
     {
         return [
             'supported' => false,
@@ -566,7 +651,7 @@ abstract class BaseAdapter implements MCPAdapter
      * @param array $proposedMappings
      * @return array Returns raw payload and transformed payload
      */
-    public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, array $credentials, array $proposedMappings): array
+    public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, #[\SensitiveParameter] array $credentials, array $proposedMappings): array
     {
         throw new \Exception("Mapping preview is not implemented for this adapter.");
     }
@@ -620,5 +705,50 @@ abstract class BaseAdapter implements MCPAdapter
     public function previewOutboundAction(string $connectionId, string $actionId, array $data): array
     {
         throw new \Exception("Outbound action preview is not supported for this provider.");
+    }
+
+    /**
+     * Check if the sync job should yield execution to prevent a hard timeout.
+     * Leaves a 15-second buffer (e.g. timeout=120s, yields at 105s).
+     *
+     * @param float $startTime
+     * @param int $timeoutSeconds
+     * @return bool
+     */
+    protected function shouldYieldExecution(float $startTime, int $timeoutSeconds = 120): bool
+    {
+        $buffer = 15; 
+        $elapsed = microtime(true) - $startTime;
+        return $elapsed >= ($timeoutSeconds - $buffer);
+    }
+
+    /**
+     * Periodically update the sync progress on the McpConnection to provide UI feedback.
+     *
+     * @param \App\Modules\MCP\Models\McpConnection $connection
+     * @param int $processed
+     * @param int $total
+     */
+    protected function reportSyncProgress(\App\Modules\MCP\Models\McpConnection $connection, int $processed, int $total = 0): void
+    {
+        if ($processed % 25 !== 0 && $processed !== $total) {
+            return; // Throttle cache updates
+        }
+
+        // Periodically check if the sync has been cancelled by the user
+        if ($connection->isSyncCancelled()) {
+            throw new \App\Modules\MCP\Exceptions\SyncCancelledException("Sync job was cancelled by the user.");
+        }
+
+        if ($total <= 0) {
+            // Indeterminate progress: asymptotically approach 99% based on items processed
+            // e.g. at 100 items -> 63%, 300 items -> 95%, 500 items -> 99%
+            $percentage = (int) (99 * (1 - exp(-$processed / 100)));
+            $connection->updateSyncProgress(max(1, $percentage));
+            return;
+        }
+
+        $percentage = (int) round(($processed / max(1, $total)) * 100);
+        $connection->updateSyncProgress(min(100, $percentage));
     }
 }

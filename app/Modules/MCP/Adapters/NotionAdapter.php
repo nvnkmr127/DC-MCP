@@ -31,7 +31,7 @@ class NotionAdapter extends BaseAdapter
      * @param array $credentials
      * @return void
      */
-    protected function setupNotionClient(array $credentials): void
+    protected function setupNotionClient(#[SensitiveParameter] array $credentials): void
     {
         $token = $credentials['token'] ?? '';
         $this->setupClient('https://api.notion.com/v1/', [
@@ -47,7 +47,7 @@ class NotionAdapter extends BaseAdapter
      * @param array $credentials
      * @return bool
      */
-    public function authenticate(array $credentials): bool
+    public function authenticate(#[SensitiveParameter] array $credentials): bool
     {
         try {
             $this->setupNotionClient($credentials);
@@ -93,7 +93,7 @@ class NotionAdapter extends BaseAdapter
                 }
 
                 $hasMore = true;
-                $startCursor = null;
+                $startCursor = $connection->getCursor("notion_cursor_{$databaseId}");
 
                 while ($hasMore) {
                     // Respect Notion API rate limit (3 req/sec)
@@ -113,6 +113,41 @@ class NotionAdapter extends BaseAdapter
                         $results = $data['results'] ?? [];
                         $hasMore = $data['has_more'] ?? false;
                         $startCursor = $data['next_cursor'] ?? null;
+                        
+                        if ($startCursor) {
+                            $connection->setCursor("notion_cursor_{$databaseId}", $startCursor);
+                        } else {
+                            $connection->setCursor("notion_cursor_{$databaseId}", null);
+                        }
+
+                        $pageIds = array_column($results, 'id');
+                        $existingTasks = collect();
+                        $existingProjects = collect();
+                        $existingUsers = collect();
+
+                        if ($entityType === 'tasks' && $projectId) {
+                            $existingTasks = Task::where('project_id', $projectId)
+                                ->whereIn('meta->notion_page_id', $pageIds)
+                                ->get()
+                                ->keyBy(fn($t) => $t->meta['notion_page_id'] ?? '');
+
+                            $existingUsers = User::where('organization_id', $connection->organization_id)
+                                ->get()
+                                ->keyBy('email');
+                        } elseif ($entityType === 'projects') {
+                            $existingProjects = Project::where('organization_id', $connection->organization_id)
+                                ->where(function($query) use ($pageIds) {
+                                    foreach ($pageIds as $id) {
+                                        $query->orWhere('settings->notion_page_id', $id)
+                                              ->orWhere('settings->notion_id', $id);
+                                    }
+                                })
+                                ->get()
+                                ->keyBy(fn($p) => $p->settings['notion_page_id'] ?? $p->settings['notion_id'] ?? '');
+                        }
+
+                        $tasksToUpsert = [];
+                        $projectsToUpsert = [];
 
                         foreach ($results as $page) {
                             $pageId = $page['id'];
@@ -182,12 +217,11 @@ class NotionAdapter extends BaseAdapter
                                     continue;
                                 }
 
-                                $task = Task::where('project_id', $projectId)
-                                    ->where('meta->notion_page_id', $pageId)
-                                    ->first();
+                                $task = clone ($existingTasks->get($pageId) ?? new Task());
+                                $isNewTask = !$task->exists;
 
-                                if (!$task) {
-                                    $task = new Task();
+                                if ($isNewTask) {
+                                    $task->id = (string) Str::uuid();
                                     $task->organization_id = $connection->organization_id;
                                     $task->project_id = $projectId;
                                     $task->status = 'backlog';
@@ -248,9 +282,7 @@ class NotionAdapter extends BaseAdapter
                                 if ($assigneeEmail) {
                                     $email = is_array($assigneeEmail) ? ($assigneeEmail[0] ?? null) : $assigneeEmail;
                                     if ($email) {
-                                        $user = User::where('organization_id', $connection->organization_id)
-                                            ->where('email', $email)
-                                            ->first();
+                                        $user = $existingUsers->get($email);
                                         if ($user) {
                                             $task->assigned_to = $user->id;
                                         }
@@ -261,8 +293,13 @@ class NotionAdapter extends BaseAdapter
                                     $task->tags = is_array($tags) ? $tags : array_map('trim', explode(',', $tags));
                                 }
 
-                                $task->save();
+                                $task->updated_at = now();
+                                if ($isNewTask) {
+                                    $task->created_at = now();
+                                }
+                                $tasksToUpsert[] = $task->getAttributes();
                                 $processedCount++;
+                                $this->reportSyncProgress($connection, $processedCount);
 
                             } elseif ($entityType === 'sops') {
                                 $attachment = DB::table('attachments')
@@ -287,23 +324,25 @@ class NotionAdapter extends BaseAdapter
                                     ]);
                                 }
                                 $processedCount++;
+                                $this->reportSyncProgress($connection, $processedCount);
 
                             } elseif ($entityType === 'projects') {
-                                $project = Project::where('organization_id', $connection->organization_id)
-                                    ->where(function($query) use ($pageId) {
-                                        $query->where('settings->notion_page_id', $pageId)
-                                              ->orWhere('settings->notion_id', $pageId);
-                                    })
-                                    ->first();
+                                $project = clone ($existingProjects->get($pageId) ?? new Project());
+                                $isNewProject = !$project->exists;
 
-                                if (!$project && $title) {
-                                    $project = Project::where('organization_id', $connection->organization_id)
+                                if ($isNewProject && $title) {
+                                    // Memory lookup for name fallback to avoid query inside loop if possible
+                                    $projectByName = Project::where('organization_id', $connection->organization_id)
                                         ->where('name', $title)
                                         ->first();
+                                    if ($projectByName) {
+                                        $project = clone $projectByName;
+                                        $isNewProject = false;
+                                    }
                                 }
 
-                                if (!$project) {
-                                    $project = new Project();
+                                if ($isNewProject) {
+                                    $project->id = (string) Str::uuid();
                                     $project->organization_id = $connection->organization_id;
                                     $project->client_id = $this->getOrCreateClientId($connection->organization_id);
                                     $project->status = 'draft';
@@ -337,10 +376,31 @@ class NotionAdapter extends BaseAdapter
                                     }
                                 }
 
-                                $project->save();
+                                $project->updated_at = now();
+                                if ($isNewProject) {
+                                    $project->created_at = now();
+                                }
+                                $projectsToUpsert[] = $project->getAttributes();
                                 $processedCount++;
+                                $this->reportSyncProgress($connection, $processedCount);
                             }
                         }
+
+                        // Bulk Upserts for Database Efficiency
+                        if (!empty($tasksToUpsert)) {
+                            Task::upsert($tasksToUpsert, ['id'], ['title', 'description', 'due_date', 'priority', 'status', 'completed_at', 'assigned_to', 'tags', 'meta', 'updated_at']);
+                        }
+                        if (!empty($projectsToUpsert)) {
+                            Project::upsert($projectsToUpsert, ['id'], ['name', 'slug', 'settings', 'status', 'priority', 'updated_at']);
+                        }
+
+                        if ($this->shouldYieldExecution($startTime)) {
+                            return SyncResult::success($processedCount, [
+                                'has_more' => true,
+                                'schema_drift_warnings' => array_slice(array_unique($schemaDriftWarnings), 0, 50)
+                            ], (int)((microtime(true) - $startTime) * 1000));
+                        }
+
                     } catch (\Exception $e) {
                         $failedCount++;
                         $this->logSync(
@@ -377,7 +437,7 @@ class NotionAdapter extends BaseAdapter
         }
     }
 
-    public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, array $credentials, array $proposedMappings): array
+    public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, #[\SensitiveParameter] array $credentials, array $proposedMappings): array
     {
         $this->setupNotionClient($credentials);
         $settings = $credentials['_settings'] ?? [];
@@ -767,7 +827,7 @@ class NotionAdapter extends BaseAdapter
      * @param array $credentials
      * @return ConnectionTestResult
      */
-    public function testConnection(array $credentials): ConnectionTestResult
+    public function testConnection(#[SensitiveParameter] array $credentials): ConnectionTestResult
     {
         try {
             $this->setupNotionClient($credentials);
@@ -929,7 +989,7 @@ class NotionAdapter extends BaseAdapter
         return $metadata;
     }
 
-    public function getRateLimitStatus(array $credentials): ?array
+    public function getRateLimitStatus(#[SensitiveParameter] array $credentials): ?array
     {
         try {
             $this->setupNotionClient($credentials);
@@ -980,7 +1040,7 @@ class NotionAdapter extends BaseAdapter
     /**
      * Preview what data will be synced without actually syncing it.
      */
-    public function syncPreview(array $credentials, array $options = []): array
+    public function syncPreview(#[SensitiveParameter] array $credentials, array $options = []): array
     {
         try {
             $this->setupNotionClient($credentials);

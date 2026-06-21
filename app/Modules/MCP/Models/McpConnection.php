@@ -105,6 +105,27 @@ class McpConnection extends BaseModel
         return !empty($settings['sync_paused']);
     }
 
+    public function cancelSync(): void
+    {
+        $settings = $this->settings ?? [];
+        $settings['sync_cancelled'] = true;
+        $this->update(['settings' => $settings]);
+    }
+
+    public function isSyncCancelled(): bool
+    {
+        $fresh = static::where('id', $this->id)->value('settings');
+        $settings = is_string($fresh) ? json_decode($fresh, true) : $fresh;
+        return !empty($settings['sync_cancelled']);
+    }
+
+    public function resetSyncCancellation(): void
+    {
+        $settings = $this->settings ?? [];
+        unset($settings['sync_cancelled']);
+        $this->update(['settings' => $settings]);
+    }
+
     public function setLastSyncedRecordReference(string $recordId): void
     {
         $settings = $this->settings ?? [];

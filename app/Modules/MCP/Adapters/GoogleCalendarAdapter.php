@@ -33,7 +33,7 @@ class GoogleCalendarAdapter extends BaseAdapter
      * @return void
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function validateCredentialsFormat(array $credentials): void
+    public function validateCredentialsFormat(#[SensitiveParameter] array $credentials): void
     {
         $token = $credentials['access_token'] ?? '';
         if (!empty($token) && !str_starts_with($token, 'ya29.')) {
@@ -49,7 +49,7 @@ class GoogleCalendarAdapter extends BaseAdapter
      * @param array $credentials
      * @return bool
      */
-    public function authenticate(array $credentials): bool
+    public function authenticate(#[SensitiveParameter] array $credentials): bool
     {
         try {
             $client = $this->getGoogleClient($credentials);
@@ -126,7 +126,7 @@ class GoogleCalendarAdapter extends BaseAdapter
     /**
      * Revoke the provider credentials if supported.
      */
-    public function revokeCredentials(array $credentials): void
+    public function revokeCredentials(#[SensitiveParameter] array $credentials): void
     {
         try {
             $client = $this->getGoogleClient($credentials);
@@ -139,7 +139,7 @@ class GoogleCalendarAdapter extends BaseAdapter
     /**
      * Test individual scopes for the connection.
      */
-    public function testScopes(array $credentials, array $scopes): array
+    public function testScopes(#[SensitiveParameter] array $credentials, array $scopes): array
     {
         $results = [];
         try {
@@ -175,9 +175,14 @@ class GoogleCalendarAdapter extends BaseAdapter
      * @param McpConnection|null $connection
      * @return Google_Client
      */
-    protected function getGoogleClient(array $credentials, ?McpConnection $connection = null): Google_Client
+    protected function getGoogleClient(#[SensitiveParameter] array $credentials, ?McpConnection $connection = null): Google_Client
     {
         $client = new Google_Client();
+        
+        $guzzleClient = new \GuzzleHttp\Client([
+            'handler' => $this->getGuzzleHandlerStack(),
+        ]);
+        $client->setHttpClient($guzzleClient);
         
         $settings = $credentials['_settings'] ?? ($connection->settings ?? []);
         $authType = $settings['auth_type'] ?? 'oauth_user';
@@ -314,10 +319,35 @@ class GoogleCalendarAdapter extends BaseAdapter
                     continue;
                 }
 
+                $pageToken = $connection->getCursor("calendar_page_{$calendarId}");
+                if ($pageToken) {
+                    $optParams['pageToken'] = $pageToken;
+                }
+
                 try {
-                    $events = $service->events->listEvents($calendarId, $optParams);
-                    
-                    foreach ($events->getItems() as $event) {
+                    do {
+                        $events = $service->events->listEvents($calendarId, $optParams);
+                        
+                        $milestonesByName = Milestone::where('project_id', $projectId)
+                            ->get()
+                            ->keyBy('name');
+
+                        $eventIds = [];
+                        foreach ($events->getItems() as $event) {
+                            if (str_contains(strtoupper($event->getSummary() ?? ''), '[TASK]')) {
+                                $eventIds[] = $event->getId();
+                            }
+                        }
+
+                        $existingTasks = Task::where('project_id', $projectId)
+                            ->whereIn('meta->google_event_id', $eventIds)
+                            ->get()
+                            ->keyBy(fn($t) => $t->meta['google_event_id'] ?? '');
+
+                        $tasksToUpsert = [];
+                        $milestonesToUpsert = [];
+
+                        foreach ($events->getItems() as $event) {
                         $summary = $event->getSummary() ?? '';
                         $description = $event->getDescription() ?? '';
                         $start = $event->getStart();
@@ -341,14 +371,14 @@ class GoogleCalendarAdapter extends BaseAdapter
                         );
 
                         // Match milestone by name
-                        $milestone = Milestone::where('project_id', $projectId)
-                            ->where('name', $summary)
-                            ->first();
+                        $milestone = clone ($milestonesByName->get($summary));
 
                         if ($milestone && $dueDate) {
                             $milestone->due_date = $dueDate;
-                            $milestone->save();
+                            $milestone->updated_at = now();
+                            $milestonesToUpsert[] = $milestone->getAttributes();
                             $processedCount++;
+                            $this->reportSyncProgress($connection, $processedCount);
                             continue;
                         }
 
@@ -356,12 +386,11 @@ class GoogleCalendarAdapter extends BaseAdapter
                         if (str_contains(strtoupper($summary), '[TASK]')) {
                             $cleanTitle = trim(str_ireplace('[TASK]', '', $summary));
                             
-                            $task = Task::where('project_id', $projectId)
-                                ->where('meta->google_event_id', $event->getId())
-                                ->first();
+                            $task = clone ($existingTasks->get($event->getId()) ?? new Task());
+                            $isNewTask = !$task->exists;
 
-                            if (!$task) {
-                                $task = new Task();
+                            if ($isNewTask) {
+                                $task->id = (string) Str::uuid();
                                 $task->organization_id = $connection->organization_id;
                                 $task->project_id = $projectId;
                                 $task->status = 'backlog';
@@ -374,10 +403,50 @@ class GoogleCalendarAdapter extends BaseAdapter
                             if ($dueDate) {
                                 $task->due_date = $dueDate;
                             }
-                            $task->save();
+                            $task->updated_at = now();
+                            if ($isNewTask) {
+                                $task->created_at = now();
+                            }
+                            $tasksToUpsert[] = $task->getAttributes();
                             $processedCount++;
+                            $this->reportSyncProgress($connection, $processedCount);
+                        }
+
+                        if ($this->shouldYieldExecution($startTime)) {
+                            // Bulk Upserts before yield
+                            if (!empty($tasksToUpsert)) {
+                                Task::upsert($tasksToUpsert, ['id'], ['title', 'description', 'due_date', 'priority', 'status', 'meta', 'updated_at']);
+                            }
+                            if (!empty($milestonesToUpsert)) {
+                                Milestone::upsert($milestonesToUpsert, ['id'], ['due_date', 'updated_at']);
+                            }
+
+                            // Save current page token to resume later
+                            if (isset($optParams['pageToken'])) {
+                                $connection->setCursor("calendar_page_{$calendarId}", $optParams['pageToken']);
+                            }
+                            return SyncResult::success($processedCount, [
+                                'has_more' => true,
+                            ], (int)((microtime(true) - $startTime) * 1000));
                         }
                     }
+
+                    // Bulk Upserts at end of page
+                    if (!empty($tasksToUpsert)) {
+                        Task::upsert($tasksToUpsert, ['id'], ['title', 'description', 'due_date', 'priority', 'status', 'meta', 'updated_at']);
+                    }
+                    if (!empty($milestonesToUpsert)) {
+                        Milestone::upsert($milestonesToUpsert, ['id'], ['due_date', 'updated_at']);
+                    }
+
+                    $optParams['pageToken'] = $events->getNextPageToken();
+                    if ($optParams['pageToken']) {
+                        $connection->setCursor("calendar_page_{$calendarId}", $optParams['pageToken']);
+                    } else {
+                        $connection->setCursor("calendar_page_{$calendarId}", null);
+                    }
+
+                } while ($optParams['pageToken']);
                 } catch (\Exception $e) {
                     $failedCount++;
                     $this->logSync(
@@ -546,7 +615,7 @@ class GoogleCalendarAdapter extends BaseAdapter
      * @param array $credentials
      * @return ConnectionTestResult
      */
-    public function testConnection(array $credentials): ConnectionTestResult
+    public function testConnection(#[SensitiveParameter] array $credentials): ConnectionTestResult
     {
         try {
             $client = $this->getGoogleClient($credentials);

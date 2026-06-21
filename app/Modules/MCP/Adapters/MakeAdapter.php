@@ -32,7 +32,7 @@ class MakeAdapter extends BaseAdapter
      * @return void
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function validateCredentialsFormat(array $credentials): void
+    public function validateCredentialsFormat(#[SensitiveParameter] array $credentials): void
     {
         $token = $credentials['api_key'] ?? '';
         if (!empty($token) && strlen($token) < 10) {
@@ -48,7 +48,7 @@ class MakeAdapter extends BaseAdapter
      * @param array $credentials
      * @return void
      */
-    protected function setupMakeClient(array $credentials): void
+    protected function setupMakeClient(#[SensitiveParameter] array $credentials): void
     {
         $apiKey = $credentials['api_key'] ?? '';
         $this->setupClient('https://api.make.com/v2/', [
@@ -63,7 +63,7 @@ class MakeAdapter extends BaseAdapter
      * @param array $credentials
      * @return bool
      */
-    public function authenticate(array $credentials): bool
+    public function authenticate(#[SensitiveParameter] array $credentials): bool
     {
         try {
             $this->setupMakeClient($credentials);
@@ -389,7 +389,7 @@ class MakeAdapter extends BaseAdapter
      * @param array $credentials
      * @return ConnectionTestResult
      */
-    public function testConnection(array $credentials): ConnectionTestResult
+    public function testConnection(#[SensitiveParameter] array $credentials): ConnectionTestResult
     {
         try {
             $this->setupMakeClient($credentials);

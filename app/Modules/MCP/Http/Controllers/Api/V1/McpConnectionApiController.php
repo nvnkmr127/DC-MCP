@@ -463,8 +463,9 @@ class McpConnectionApiController extends Controller
             
             $state = \Illuminate\Support\Str::random(40);
             $codeVerifier = \Illuminate\Support\Str::random(128);
+            $userId = $request->user()->id;
             
-            \Illuminate\Support\Facades\Cache::put("oauth_state_{$state}", $codeVerifier, now()->addMinutes(15));
+            \Illuminate\Support\Facades\Cache::put("oauth_state_{$userId}_{$state}", $codeVerifier, now()->addMinutes(15));
             
             $url = $adapter->getOAuthUrl($redirectUri, $scopesArray, $state, $codeVerifier);
 
@@ -482,7 +483,8 @@ class McpConnectionApiController extends Controller
             'redirect_uri' => ['required', 'string'],
         ]);
 
-        $codeVerifier = \Illuminate\Support\Facades\Cache::pull("oauth_state_{$data['state']}");
+        $userId = $request->user()->id;
+        $codeVerifier = \Illuminate\Support\Facades\Cache::pull("oauth_state_{$userId}_{$data['state']}");
 
         if (!$codeVerifier) {
             return ApiResponse::error('Invalid or expired state parameter (CSRF mismatch).', [], 403);

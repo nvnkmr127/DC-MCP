@@ -33,7 +33,7 @@ class ZohoCliqAdapter extends BaseAdapter
      * @return void
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function validateCredentialsFormat(array $credentials): void
+    public function validateCredentialsFormat(#[SensitiveParameter] array $credentials): void
     {
         $token = $credentials['access_token'] ?? '';
         if (!empty($token) && !str_starts_with($token, '1000.')) {
@@ -50,7 +50,7 @@ class ZohoCliqAdapter extends BaseAdapter
      * @param McpConnection|null $connection
      * @return void
      */
-    protected function setupCliqClient(array $credentials, ?McpConnection $connection = null): void
+    protected function setupCliqClient(#[SensitiveParameter] array $credentials, ?McpConnection $connection = null): void
     {
         $accessToken = $credentials['access_token'] ?? '';
         
@@ -72,7 +72,7 @@ class ZohoCliqAdapter extends BaseAdapter
     /**
      * Check if the token is expired.
      */
-    protected function isTokenExpired(array $credentials): bool
+    protected function isTokenExpired(#[SensitiveParameter] array $credentials): bool
     {
         if (!isset($credentials['expires_in']) || !isset($credentials['created'])) {
             return true;
@@ -84,7 +84,7 @@ class ZohoCliqAdapter extends BaseAdapter
     /**
      * Refresh the OAuth2 access token.
      */
-    protected function refreshOAuthToken(array $credentials, McpConnection $connection): bool
+    protected function refreshOAuthToken(#[SensitiveParameter] array $credentials, McpConnection $connection): bool
     {
         $refreshToken = $credentials['refresh_token'] ?? null;
         if (!$refreshToken) {
@@ -133,7 +133,7 @@ class ZohoCliqAdapter extends BaseAdapter
      * @param array $credentials
      * @return bool
      */
-    public function authenticate(array $credentials): bool
+    public function authenticate(#[SensitiveParameter] array $credentials): bool
     {
         try {
             $this->setupCliqClient($credentials);
@@ -229,6 +229,7 @@ class ZohoCliqAdapter extends BaseAdapter
                                     $task->save();
 
                                     $processedCount++;
+                                    $this->reportSyncProgress($connection, $processedCount);
                                 }
                             }
                         }
@@ -599,7 +600,7 @@ class ZohoCliqAdapter extends BaseAdapter
      * @param array $credentials
      * @return ConnectionTestResult
      */
-    public function testConnection(array $credentials): ConnectionTestResult
+    public function testConnection(#[SensitiveParameter] array $credentials): ConnectionTestResult
     {
         try {
             $this->setupCliqClient($credentials);

@@ -53,7 +53,7 @@ return [
         'supervisor-default' => [
             // Horizon requires Redis. Set HORIZON_CONNECTION=redis and QUEUE_CONNECTION=redis in production.
             'connection'          => env('HORIZON_CONNECTION', 'redis'),
-            'queue'               => ['default'],
+            'queue'               => ['high', 'default'],
             'balance'             => 'auto',
             'autoScalingStrategy' => 'time',
             'maxProcesses'        => 2,

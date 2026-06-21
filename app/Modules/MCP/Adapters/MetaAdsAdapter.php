@@ -29,7 +29,7 @@ class MetaAdsAdapter extends BaseAdapter
      * @return void
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function validateCredentialsFormat(array $credentials): void
+    public function validateCredentialsFormat(#[SensitiveParameter] array $credentials): void
     {
         $token = $credentials['access_token'] ?? '';
         if (!empty($token) && !str_starts_with($token, 'EA')) {
@@ -45,7 +45,7 @@ class MetaAdsAdapter extends BaseAdapter
      * @param array $credentials
      * @return void
      */
-    protected function setupMetaClient(array $credentials): void
+    protected function setupMetaClient(#[SensitiveParameter] array $credentials): void
     {
         $accessToken = $credentials['access_token'] ?? '';
         $settings = $credentials['_settings'] ?? [];
@@ -65,7 +65,7 @@ class MetaAdsAdapter extends BaseAdapter
      * @param array $credentials
      * @return bool
      */
-    public function authenticate(array $credentials): bool
+    public function authenticate(#[SensitiveParameter] array $credentials): bool
     {
         try {
             $this->setupMetaClient($credentials);
@@ -203,6 +203,7 @@ class MetaAdsAdapter extends BaseAdapter
                                 ]);
                             }
                             $processedCount++;
+                            $this->reportSyncProgress($connection, $processedCount);
                         }
                     }
                 } catch (\Exception $e) {
@@ -297,7 +298,7 @@ class MetaAdsAdapter extends BaseAdapter
      * @param array $credentials
      * @return ConnectionTestResult
      */
-    public function testConnection(array $credentials): ConnectionTestResult
+    public function testConnection(#[SensitiveParameter] array $credentials): ConnectionTestResult
     {
         try {
             $this->setupMetaClient($credentials);
@@ -397,7 +398,7 @@ class MetaAdsAdapter extends BaseAdapter
     /**
      * Preview what data will be synced without actually syncing it.
      */
-    public function syncPreview(array $credentials, array $options = []): array
+    public function syncPreview(#[SensitiveParameter] array $credentials, array $options = []): array
     {
         try {
             $this->setupMetaClient($credentials);
