@@ -4,6 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
 import { cn, timeAgo } from '@/lib/utils';
 import { ArrowLeft, RefreshCw, Trash2, CheckCircle, XCircle, Save, Zap } from 'lucide-react';
+import axios from 'axios';
 
 interface McpConnection {
     id: string;

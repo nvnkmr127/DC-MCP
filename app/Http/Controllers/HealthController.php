@@ -10,6 +10,20 @@ use Illuminate\Support\Facades\DB;
 class HealthController extends Controller
 {
     /**
+     * Canary health check — lightweight check for deployment verification.
+     * Accessible unauthenticated.
+     */
+    public function canary(): JsonResponse
+    {
+        try {
+            DB::connection()->getPdo();
+            return response()->json(['status' => 'ok', 'canary' => true], 200);
+        } catch (\Throwable $e) {
+            return response()->json(['status' => 'error', 'message' => 'Database connection failed'], 503);
+        }
+    }
+
+    /**
      * Detailed health check — returns status of every subsystem.
      * Route is IP-restricted in routes/web.php.
      */

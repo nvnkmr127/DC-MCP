@@ -15,6 +15,8 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+Schedule::command('pulse:record-db-connections')->everyMinute();
+
 // Horizon metrics snapshots every 5 minutes — powers the throughput/wait-time graphs
 if (class_exists(\Laravel\Horizon\Horizon::class)) {
     Schedule::command('horizon:snapshot')->everyFiveMinutes();
@@ -25,6 +27,15 @@ Schedule::command('tasks:check-slas')->everyThirtyMinutes();
 
 // Campaign budget burn alerts — check hourly for 70%/90% threshold breaches
 Schedule::command('budgets:check-burn')->hourly()->name('budget-burn-alerts')->withoutOverlapping();
+
+// Check MCP failure thresholds every hour
+Schedule::command('mcp:check-failure-threshold')->hourly();
+
+// Monitor system health (queue backlog, latency degradation) every 5 minutes
+Schedule::command('monitor:system-health')->everyFiveMinutes();
+
+// Monitor host infrastructure (disk space, memory, SSL expiry) daily
+Schedule::command('monitor:infrastructure')->daily();
 
 // Spawn recurring tasks daily at 7:00 AM IST (01:30 UTC) — after briefings are generated
 Schedule::command('tasks:spawn-recurring')->dailyAt('01:30')->timezone('UTC')->name('spawn-recurring-tasks')->withoutOverlapping();

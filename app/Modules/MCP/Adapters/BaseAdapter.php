@@ -216,6 +216,19 @@ abstract class BaseAdapter implements MCPAdapter
                             \Illuminate\Support\Facades\Cache::add($cacheKey, 0, now()->addMinutes(5));
                             \Illuminate\Support\Facades\Cache::increment($cacheKey);
                         }
+                        
+                        // Check provider quotas
+                        if ($response->hasHeader('X-RateLimit-Remaining') && $response->hasHeader('X-RateLimit-Limit')) {
+                            $remaining = (int) $response->getHeaderLine('X-RateLimit-Remaining');
+                            $limit = (int) $response->getHeaderLine('X-RateLimit-Limit');
+                            
+                            if ($limit > 0 && ($remaining / $limit) <= 0.10) {
+                                \Illuminate\Support\Facades\Log::warning(
+                                    "Provider API quota approaching alert: Only {$remaining} requests remaining out of {$limit} for provider."
+                                );
+                            }
+                        }
+
                         return $response;
                     },
                     function (\Exception $reason) use ($cacheKey) {

@@ -15,7 +15,7 @@ use Illuminate\Queue\Middleware\WithoutOverlapping;
 
 class SyncMcpProviderJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, \App\Shared\Traits\RateLimitsTenantJobs;
 
     public int $tries = 3;
     public int $timeout = 120;

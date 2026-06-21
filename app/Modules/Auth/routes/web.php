@@ -37,6 +37,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/settings/export-data',                    [SettingsWebController::class, 'exportData'])->name('web.settings.export');
     Route::get('/settings/organization',                   [SettingsWebController::class, 'organization'])->name('web.settings.organization');
     Route::patch('/settings/organization',                 [SettingsWebController::class, 'updateOrganization'])->name('web.settings.organization.update');
+    Route::post('/settings/organization/purge',            [SettingsWebController::class, 'purgeOrganization'])->name('web.settings.organization.purge');
+    Route::post('/settings/organization/export',           [SettingsWebController::class, 'exportOrganizationData'])->name('web.settings.organization.export');
+    Route::get('/settings/organization/export/download/{filename}', [SettingsWebController::class, 'downloadOrganizationExport'])->name('web.settings.organization.export.download');
     Route::post('/settings/maintenance',                   [SettingsWebController::class, 'toggleMaintenance'])->name('web.settings.maintenance.toggle');
     Route::get('/settings/health',                         [\App\Modules\Auth\Http\Controllers\Web\HealthWebController::class, 'index'])->name('web.settings.health');
     Route::get('/settings/audit-export',                   [SettingsWebController::class, 'exportAuditLog'])->name('web.settings.audit-export');

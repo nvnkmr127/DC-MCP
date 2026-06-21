@@ -832,4 +832,4 @@ class ZohoCliqAdapter extends BaseAdapter
             ]
         ];
     }
-
+}

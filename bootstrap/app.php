@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->api(append: [
             \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
+            \App\Http\Middleware\TenantIsolationMiddleware::class,
         ]);
 
         $middleware->alias([
@@ -34,14 +35,43 @@ return Application::configure(basePath: dirname(__DIR__))
         // Attach a correlation ID to every request for log tracing
         $middleware->append(\App\Http\Middleware\RequestId::class);
 
+        // Track API endpoint hit rates in Pulse
+        $middleware->append(\App\Http\Middleware\RecordEndpointHitRate::class);
+
         // Register Inertia HandleInertiaRequests for web routes
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
+            \App\Http\Middleware\TenantIsolationMiddleware::class,
             \App\Http\Middleware\EnsureOrganizationIsOnboarded::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         \Sentry\Laravel\Integration::handles($exceptions);
+
+        $exceptions->context(function (\Throwable $e) {
+            $baseRunbookUrl = 'https://docs.mycompany.com/runbooks/';
+
+            // Map common exceptions to specific runbooks
+            $runbookMapping = [
+                \Illuminate\Database\QueryException::class => 'database-query-failures',
+                \GuzzleHttp\Exception\RequestException::class => 'third-party-api-failures',
+                \Illuminate\Auth\AuthenticationException::class => 'auth-failures',
+                \RedisException::class => 'redis-connection-failures',
+                \App\Modules\MCP\Exceptions\McpSyncException::class => 'mcp-sync-failures',
+            ];
+
+            $runbookLink = $baseRunbookUrl . 'general-troubleshooting';
+            foreach ($runbookMapping as $exceptionClass => $slug) {
+                if ($e instanceof $exceptionClass) {
+                    $runbookLink = $baseRunbookUrl . $slug;
+                    break;
+                }
+            }
+
+            return [
+                'runbook_url' => $runbookLink,
+            ];
+        });
 
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
             Log::warning('Unauthenticated request', [

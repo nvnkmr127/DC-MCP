@@ -14,8 +14,9 @@ class RequestId
     {
         $requestId = $request->header('X-Request-ID') ?: (string) Str::uuid();
 
-        // Share the ID with all log calls made during this request
-        Log::withContext(['request_id' => $requestId]);
+        // Use Laravel 11's Context to automatically share this with all logs 
+        // AND automatically propagate it into all queued jobs spawned during this request!
+        \Illuminate\Support\Facades\Context::add('trace_id', $requestId);
 
         $response = $next($request);
 

@@ -367,9 +367,9 @@ class NotionAdapter extends BaseAdapter
 
             return SyncResult::success($processedCount, [
                 'has_more' => $hasMore,
-                'next_cursor' => $nextCursor,
+                'next_cursor' => $startCursor,
                 'schema_drift_warnings' => array_slice($schemaDriftWarnings, 0, 50)
-            ], $durationMs, $bytesTransferred);
+            ], $durationMs);
 
         } catch (\Exception $e) {
             $connection->markSyncFailed($e->getMessage());

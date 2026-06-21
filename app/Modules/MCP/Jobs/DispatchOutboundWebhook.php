@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class DispatchOutboundWebhook implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, \App\Shared\Traits\RateLimitsTenantJobs;
 
     public $tries = 3;
     public $backoff = [10, 60, 300]; // exponential backoff on retries

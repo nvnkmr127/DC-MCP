@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 class GenerateDailyBriefingJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, \App\Shared\Traits\RateLimitsTenantJobs;
 
     public int $tries = 2;
     public int $timeout = 180; // LLM generation can be slow on large orgs

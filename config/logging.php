@@ -52,6 +52,8 @@ return [
             'path'                 => storage_path('logs/laravel.log'),
             'level'                => env('LOG_LEVEL', 'warning'),
             'replace_placeholders' => true,
+            'formatter'            => \Monolog\Formatter\JsonFormatter::class,
+            'tap'                  => [\App\Logging\ApplyProcessors::class],
         ],
 
         'daily' => [
@@ -60,6 +62,8 @@ return [
             'level'                => env('LOG_LEVEL', 'warning'),
             'days'                 => env('LOG_DAILY_DAYS', 30),
             'replace_placeholders' => true,
+            'formatter'            => \Monolog\Formatter\JsonFormatter::class,
+            'tap'                  => [\App\Logging\ApplyProcessors::class],
         ],
 
         // Dedicated channel for security and financial audit events.
@@ -70,6 +74,8 @@ return [
             'level'                => 'info',
             'days'                 => env('LOG_AUDIT_DAYS', 90),
             'replace_placeholders' => true,
+            'formatter'            => \Monolog\Formatter\JsonFormatter::class,
+            'tap'                  => [\App\Logging\ApplyProcessors::class],
         ],
 
         'slack' => [
@@ -124,6 +130,24 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        // High-volume event sampling channel
+        'sampled' => [
+            'driver' => 'custom',
+            'via' => \App\Logging\CreateSampledLogger::class,
+            'factor' => env('LOG_SAMPLE_FACTOR', 10), // Default: Log 1 out of 10 messages
+            'path' => storage_path('logs/sampled.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+        ],
+
+        // Centralized Log Aggregation (ELK, Logstash, Fluentd)
+        'logstash' => [
+            'driver' => 'custom',
+            'via' => \App\Logging\CreateLogstashLogger::class,
+            'host' => env('LOGSTASH_HOST', '127.0.0.1'),
+            'port' => env('LOGSTASH_PORT', 5000),
+            'level' => env('LOG_LEVEL', 'debug'),
         ],
 
     ],

@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health/detailed', HealthController::class)
     ->middleware(\App\Http\Middleware\AllowedHealthIps::class);
 
+// Lightweight canary deployment health check (accessible to ELB/K8s probes)
+Route::get('/health/canary', [HealthController::class, 'canary']);
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes — Inertia SPA
@@ -30,4 +33,10 @@ Route::middleware(['auth'])->group(function () {
     
     // Help page
     Route::get('/help', fn() => \Inertia\Inertia::render('Help/Index'))->name('web.help');
+
+    // Admin Diagnostics
+    Route::middleware(['role:super_admin'])->group(function () {
+        Route::get('/admin/diagnostics', [\App\Http\Controllers\Admin\DiagnosticController::class, 'index'])
+            ->name('admin.diagnostics');
+    });
 });

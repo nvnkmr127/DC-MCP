@@ -4,12 +4,16 @@ namespace App\Jobs;
 
 use App\Modules\MCP\Models\McpConnection;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\SerializesModels;
+use App\Shared\Traits\RateLimitsTenantJobs;
 use Illuminate\Support\Facades\Log;
 
 class PushMcpOutboundActionJob implements ShouldQueue
 {
-    use Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, RateLimitsTenantJobs;
 
     public $queue = 'high';
     public $tries = 3;

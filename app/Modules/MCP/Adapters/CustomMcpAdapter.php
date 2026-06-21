@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Laravel\Pulse\Facades\Pulse;
 
 /**
  * Generic adapter for any custom MCP provider.
@@ -59,6 +60,12 @@ class CustomMcpAdapter extends BaseAdapter
             return SyncResult::failure('base_url is required in connection settings.');
         }
 
+        try {
+            $this->validateUrlForSsrf($baseUrl);
+        } catch (\Exception $e) {
+            return SyncResult::failure($e->getMessage());
+        }
+
         $start = microtime(true);
 
         try {
@@ -83,6 +90,8 @@ class CustomMcpAdapter extends BaseAdapter
                     (int) ((microtime(true) - $start) * 1000)
                 );
 
+                Pulse::record('sync_throughput', $connection->provider, $processed);
+
                 // Store raw response in metric_snapshots so DataViz can display it
                 DB::table('metric_snapshots')->insert([
                     'id'              => (string) Str::uuid(),
@@ -101,11 +110,13 @@ class CustomMcpAdapter extends BaseAdapter
             $this->logSync($connectionId, 'inbound', 'custom_sync', null, 'failed', 0, 0, null, $err,
                 (int) ((microtime(true) - $start) * 1000));
 
+            Pulse::record('provider_errors', $connection->provider, 1);
             return SyncResult::failure($err);
         } catch (\Exception $e) {
             $this->logSync($connectionId, 'inbound', 'custom_sync', null, 'failed', 0, 0, null,
                 $e->getMessage(), (int) ((microtime(true) - $start) * 1000));
 
+            Pulse::record('provider_errors', $connection->provider, 1);
             return SyncResult::failure($e->getMessage());
         }
     }
@@ -122,6 +133,12 @@ class CustomMcpAdapter extends BaseAdapter
 
         if (!$baseUrl) {
             return SyncResult::failure('base_url is required in connection settings.');
+        }
+
+        try {
+            $this->validateUrlForSsrf($baseUrl);
+        } catch (\Exception $e) {
+            return SyncResult::failure($e->getMessage());
         }
 
         $start = microtime(true);
@@ -144,10 +161,12 @@ class CustomMcpAdapter extends BaseAdapter
 
             $err = "HTTP {$status} from {$baseUrl}{$endpoint}";
             $this->logSync($connectionId, 'outbound', 'custom_push', null, 'failed', 0, 1, $data, $err, $durationMs);
+            Pulse::record('provider_errors', $connection->provider, 1);
             return SyncResult::failure($err);
         } catch (\Exception $e) {
             $this->logSync($connectionId, 'outbound', 'custom_push', null, 'failed', 0, 1, $data,
                 $e->getMessage(), (int) ((microtime(true) - $start) * 1000));
+            Pulse::record('provider_errors', $connection->provider, 1);
             return SyncResult::failure($e->getMessage());
         }
     }
@@ -204,6 +223,12 @@ class CustomMcpAdapter extends BaseAdapter
 
         if (!$baseUrl) {
             return ConnectionTestResult::failure('base_url is required in settings.');
+        }
+
+        try {
+            $this->validateUrlForSsrf($baseUrl);
+        } catch (\Exception $e) {
+            return ConnectionTestResult::failure($e->getMessage());
         }
 
         try {
@@ -336,5 +361,27 @@ class CustomMcpAdapter extends BaseAdapter
                $request->header('X-Request-ID') ?? 
                $request->input('idempotency_key') ?? 
                $request->input('event_id');
+    }
+
+    /**
+     * Prevents SSRF attacks by ensuring the provided URL does not resolve 
+     * to a private, loopback, or reserved IP address.
+     */
+    private function validateUrlForSsrf(string $url): void
+    {
+        $host = parse_url($url, PHP_URL_HOST);
+        if (!$host) {
+            throw new \Exception("Invalid URL provided.");
+        }
+
+        // Resolves the hostname to an IPv4 address.
+        $ip = gethostbyname($host);
+        if ($ip === $host && !filter_var($host, FILTER_VALIDATE_IP)) {
+            throw new \Exception("Could not resolve host: {$host}");
+        }
+
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            throw new \Exception("URL resolves to a restricted internal IP address ({$ip}). SSRF protection blocked the request.");
+        }
     }
 }

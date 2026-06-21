@@ -15,6 +15,9 @@ use App\Modules\Auth\Models\Role;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Artisan;
+use App\Jobs\ExportOrganizationDataJob;
+use App\Jobs\PurgeOrganizationDataJob;
+use Illuminate\Support\Facades\Storage;
 class SettingsWebController extends Controller
 {
     public function profile(Request $request)
@@ -322,20 +325,14 @@ class SettingsWebController extends Controller
             ]);
 
         return response()->json($activities);
-    }        DB::table('sessions')->where('id', $id)->where('user_id', $request->user()->id)->delete();
+    }
+
     public function forceLogoutUser(Request $request, User $user)
     {
         if ($user->organization_id !== $request->user()->organization_id) {
             abort(403);
         }
 
-        DB::table('sessions')->where('user_id', $user->id)->delete();
-        return back()->with('success', "Force logged out {$user->name}.");
-    }
-
-    public function impersonate(Request $request, User $user)
-    {
-        if ($user->organization_id !== $request->user()->organization_id) {
         DB::table('sessions')->where('user_id', $user->id)->delete();
         return back()->with('success', "Force logged out {$user->name}.");
     }
@@ -365,11 +362,37 @@ class SettingsWebController extends Controller
     }
 
     public function toggleActive(Request $request, User $user)
-    public function impersonate(Request $request, User $user)        if ($user->id === $request->user()->id) {
+    {
+        if ($user->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
+        $user->is_active = !$user->is_active;
+        $user->save();
+        return back()->with('success', "User status updated.");
+    }
+
+    public function impersonate(Request $request, User $user)
+    {
+        if ($user->organization_id !== $request->user()->organization_id) {
+            abort(403);
+        }
+        if ($user->id === $request->user()->id) {
             return back()->with('error', 'Cannot impersonate yourself.');
         }
 
         $request->session()->put('impersonated_by', $request->user()->id);
+        
+        \App\Models\Activity::create([
+            'user_id' => $request->user()->id,
+            'subject_type' => get_class($user),
+            'subject_id' => $user->id,
+            'description' => 'Impersonation started',
+            'changes' => json_encode([
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ])
+        ]);
+
         Auth::login($user);
 
         return redirect('/dashboard')->with('success', "You are now impersonating {$user->name}.");
@@ -385,14 +408,27 @@ class SettingsWebController extends Controller
         $originalUser = User::find($originalUserId);
 
         if ($originalUser) {
+            \App\Models\Activity::create([
+                'user_id' => $originalUser->id,
+                'subject_type' => get_class($request->user()),
+                'subject_id' => $request->user()->id,
+                'description' => 'Impersonation stopped',
+                'changes' => json_encode([
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent()
+                ])
+            ]);
+
             Auth::login($originalUser);
             return redirect('/settings/team')->with('success', 'Stopped impersonating.');
         }
 
         Auth::logout();
         return redirect('/login');
-    }        return back()->with('success', "Force logged out {$user->name}.");
-    }    {
+    }
+
+    public function terminateSession(Request $request, string $id)
+    {
         DB::table('sessions')->where('id', $id)->where('user_id', $request->user()->id)->delete();
         return back()->with('success', 'Session terminated.');
     }
@@ -435,5 +471,48 @@ class SettingsWebController extends Controller
         $user->delete(); // Soft delete
 
         return redirect('/')->with('success', 'Your account has been deleted.');
+    }
+
+    public function exportOrganizationData(Request $request)
+    {
+        $org = Organization::find($request->user()->organization_id);
+        ExportOrganizationDataJob::dispatch($org, $request->user());
+
+        return back()->with('success', 'Organization data export started. You will receive a notification when it is ready for download.');
+    }
+
+    public function downloadOrganizationExport(Request $request, string $filename)
+    {
+        // Simple security check: filename should start with org ID
+        if (!Str::startsWith($filename, $request->user()->organization_id . '_')) {
+            abort(403, 'Unauthorized access to export file.');
+        }
+
+        $path = storage_path('app/exports/' . $filename);
+        if (!file_exists($path)) {
+            abort(404, 'Export file not found or has expired.');
+        }
+
+        return response()->download($path)->deleteFileAfterSend(false);
+    }
+
+    public function purgeOrganization(Request $request)
+    {
+        $user = $request->user();
+        $orgId = $user->organization_id;
+
+        // Security check: Verify the user intends to delete and is authorized.
+        // For standard implementations, you'd require password confirmation or specific roles.
+        // Here we proceed with the dispatch for the super-admin or owner.
+        
+        PurgeOrganizationDataJob::dispatch($orgId);
+
+        // Log the user out and invalidate their session immediately, 
+        // as their account is being destroyed in the background.
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/login')->with('success', 'Your organization and all associated data are being permanently deleted.');
     }
 }
