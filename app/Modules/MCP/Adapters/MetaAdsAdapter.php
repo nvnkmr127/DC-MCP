@@ -243,7 +243,7 @@ class MetaAdsAdapter extends BaseAdapter
      * @param array $data
      * @return SyncResult
      */
-    public function push(string $connectionId, array $data, array $options = []): SyncResult
+    protected function performPush(string $connectionId, array $data, array $options = []): SyncResult
     {
         return SyncResult::success(0, ['reason' => 'Meta Ads adapter does not support push operations']);
     }

@@ -114,7 +114,8 @@ abstract class BaseAdapter implements MCPAdapter
         int $failed = 0,
         ?array $payload = null,
         ?string $errorMessage = null,
-        int $durationMs = 0
+        int $durationMs = 0,
+        ?string $userId = null
     ): void {
         \App\Jobs\LogMcpConnectionEvent::dispatch(
             $connectionId,
@@ -126,7 +127,8 @@ abstract class BaseAdapter implements MCPAdapter
             $failed,
             $payload,
             $errorMessage,
-            $durationMs
+            $durationMs,
+            $userId
         );
     }
 
@@ -369,6 +371,82 @@ abstract class BaseAdapter implements MCPAdapter
     }
 
     /**
+     * Push data to the provider with central controls (Rate Limiting, Auditing, Notifications).
+     *
+     * @param string $connectionId
+     * @param array $data
+     * @param array $options
+     * @return SyncResult
+     */
+    public final function push(string $connectionId, array $data, array $options = []): SyncResult
+    {
+        $userId = $options['user_id'] ?? auth()->id();
+        $rateLimitKey = "mcp_outbound_push:{$connectionId}";
+        
+        // 1. Rate Limiting: max 60 requests per minute
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($rateLimitKey, 60)) {
+            $msg = 'Rate limit exceeded for outbound operation.';
+            $this->logSync($connectionId, 'outbound', $data['entity_type'] ?? 'unknown', $data['entity_id'] ?? null, 'failed', 0, 1, $data, $msg, 0, $userId);
+            
+            if ($userId) {
+                app(\App\Modules\Notifications\Services\NotificationService::class)->sendNotification(
+                    \App\Modules\Auth\Models\User::find($userId),
+                    'outbound_action_failed',
+                    'in_app',
+                    'Outbound Action Failed',
+                    $msg
+                );
+            }
+            return SyncResult::failure($msg);
+        }
+        
+        \Illuminate\Support\Facades\RateLimiter::hit($rateLimitKey, 60);
+
+        try {
+            // 2. Perform actual push
+            $result = $this->performPush($connectionId, $data, $options);
+            
+            // 3. Audit Log per record for failures handled inside performPush or generic
+            if (!$result->success && $result->message) {
+                if ($userId) {
+                    app(\App\Modules\Notifications\Services\NotificationService::class)->sendNotification(
+                        \App\Modules\Auth\Models\User::find($userId),
+                        'outbound_action_failed',
+                        'in_app',
+                        'Outbound Action Failed',
+                        $result->message
+                    );
+                }
+            }
+            return $result;
+        } catch (\Exception $e) {
+            $this->logSync($connectionId, 'outbound', $data['entity_type'] ?? 'unknown', $data['entity_id'] ?? null, 'failed', 0, 1, $data, $e->getMessage(), 0, $userId);
+            
+            if ($userId) {
+                app(\App\Modules\Notifications\Services\NotificationService::class)->sendNotification(
+                    \App\Modules\Auth\Models\User::find($userId),
+                    'outbound_action_failed',
+                    'in_app',
+                    'Outbound Action Failed',
+                    $e->getMessage()
+                );
+            }
+            return SyncResult::failure($e->getMessage());
+        }
+    }
+
+    /**
+     * Internal implementation of pushing data to the provider.
+     * To be implemented by specific adapters.
+     *
+     * @param string $connectionId
+     * @param array $data
+     * @param array $options
+     * @return SyncResult
+     */
+    abstract protected function performPush(string $connectionId, array $data, array $options = []): SyncResult;
+
+    /**
      * Preview what data will be synced without actually syncing it.
      *
      * @param array $credentials
@@ -418,5 +496,56 @@ abstract class BaseAdapter implements MCPAdapter
     public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, array $credentials, array $proposedMappings): array
     {
         throw new \Exception("Mapping preview is not implemented for this adapter.");
+    }
+
+    /**
+     * Get available outbound actions (push operations) supported by this adapter.
+     *
+     * @return array
+     */
+    public function getOutboundActions(): array
+    {
+        return [];
+    }
+
+    /**
+     * Validate an outbound payload against the action's defined schema.
+     *
+     * @param string $actionId
+     * @param array $data
+     * @return void
+     * @throws \Illuminate\Validation\ValidationException
+     * @throws \Exception
+     */
+    protected function validateOutboundPayload(string $actionId, array $data): void
+    {
+        $actions = $this->getOutboundActions();
+        $action = collect($actions)->firstWhere('id', $actionId);
+        
+        if (!$action) {
+            throw new \Exception("Action [{$actionId}] is not supported by this provider.");
+        }
+        
+        $rules = $action['schema']['rules'] ?? [];
+        if (!empty($rules)) {
+            $validator = \Illuminate\Support\Facades\Validator::make($data, $rules);
+            if ($validator->fails()) {
+                throw new \Illuminate\Validation\ValidationException($validator);
+            }
+        }
+    }
+
+    /**
+     * Preview an outbound action payload without sending it.
+     *
+     * @param string $connectionId
+     * @param string $actionId
+     * @param array $data
+     * @return array
+     * @throws \Exception
+     */
+    public function previewOutboundAction(string $connectionId, string $actionId, array $data): array
+    {
+        throw new \Exception("Outbound action preview is not supported for this provider.");
     }
 }

@@ -75,6 +75,9 @@ class McpWebController extends Controller
 
     public function show(McpConnection $connection)
     {
+        $adapter = $this->resolveAdapter($connection->provider);
+        $outboundActions = method_exists($adapter, 'getOutboundActions') ? $adapter->getOutboundActions() : [];
+
         return Inertia::render('Settings/MCPDetail', [
             'connection' => [
                 'id'          => $connection->id,
@@ -85,6 +88,7 @@ class McpWebController extends Controller
                 'settings'    => $connection->settings ?? [],
                 'last_synced_at' => $connection->last_synced_at?->toISOString(),
             ],
+            'outboundActions' => $outboundActions,
         ]);
     }
 
@@ -134,4 +138,18 @@ class McpWebController extends Controller
         SyncMcpProviderJob::dispatch($connection);
         return back()->with('success', 'Sync started.');
     }
+
+    private function resolveAdapter(string $provider): mixed
+    {
+        return match ($provider) {
+            'gmail'           => app(\App\Modules\MCP\Adapters\GmailAdapter::class),
+            'google_calendar' => app(\App\Modules\MCP\Adapters\GoogleCalendarAdapter::class),
+            'notion'          => app(\App\Modules\MCP\Adapters\NotionAdapter::class),
+            'zoho_cliq'       => app(\App\Modules\MCP\Adapters\ZohoCliqAdapter::class),
+            'meta_ads'        => app(\App\Modules\MCP\Adapters\MetaAdsAdapter::class),
+            'make'            => app(\App\Modules\MCP\Adapters\MakeAdapter::class),
+            default           => app(\App\Modules\MCP\Adapters\CustomMcpAdapter::class),
+        };
+    }
 }
+

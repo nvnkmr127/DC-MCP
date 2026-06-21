@@ -516,7 +516,7 @@ class NotionAdapter extends BaseAdapter
      * @param array $data
      * @return SyncResult
      */
-    public function push(string $connectionId, array $data, array $options = []): SyncResult
+    protected function performPush(string $connectionId, array $data, array $options = []): SyncResult
     {
         $connection = McpConnection::findOrFail($connectionId);
         $settings = $connection->settings ?? [];

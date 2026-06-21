@@ -110,7 +110,7 @@ class CustomMcpAdapter extends BaseAdapter
         }
     }
 
-    public function push(string $connectionId, array $data, array $options = []): SyncResult
+    protected function performPush(string $connectionId, array $data, array $options = []): SyncResult
     {
         $connection = McpConnection::find($connectionId);
         if (!$connection) {

@@ -283,9 +283,12 @@ class ZohoCliqAdapter extends BaseAdapter
      * @param array $data
      * @return SyncResult
      */
-    public function push(string $connectionId, array $data, array $options = []): SyncResult
+    protected function performPush(string $connectionId, array $data, array $options = []): SyncResult
     {
         $connection = McpConnection::findOrFail($connectionId);
+        $settings = $connection->settings ?? [];
+        $enabledActions = $settings['enabled_outbound_actions'] ?? [];
+
         $entityType = $data['entity_type'] ?? null;
         $entityId = $data['entity_id'] ?? null;
         $alertType = $data['alert_type'] ?? '';
@@ -299,21 +302,40 @@ class ZohoCliqAdapter extends BaseAdapter
             $success = false;
 
             if ($entityType === 'briefing') {
+                $this->validateOutboundPayload('send_briefing', $data);
+                if (isset($enabledActions['send_briefing']) && $enabledActions['send_briefing'] === false) {
+                    return SyncResult::failure('Action send_briefing is disabled for this connection.');
+                }
                 $briefing = DailyBriefing::findOrFail($entityId);
                 $user = User::findOrFail($data['user_id']);
                 $success = $this->sendDailyBriefingWithConnection($connection, $user, $briefing);
             } elseif ($entityType === 'task') {
+                $this->validateOutboundPayload('send_task_alert', $data);
+                if (isset($enabledActions['send_task_alert']) && $enabledActions['send_task_alert'] === false) {
+                    return SyncResult::failure('Action send_task_alert is disabled for this connection.');
+                }
                 $task = Task::findOrFail($entityId);
                 $success = $this->sendTaskAlertWithConnection($connection, $task, $alertType);
             } elseif ($entityType === 'project') {
+                $this->validateOutboundPayload('send_project_alert', $data);
+                if (isset($enabledActions['send_project_alert']) && $enabledActions['send_project_alert'] === false) {
+                    return SyncResult::failure('Action send_project_alert is disabled for this connection.');
+                }
                 $project = Project::findOrFail($entityId);
                 $success = $this->sendProjectAlertWithConnection($connection, $project, $messageText);
             } elseif ($entityType === 'channel_message') {
+                $this->validateOutboundPayload('send_channel_message', $data);
+                if (isset($enabledActions['send_channel_message']) && $enabledActions['send_channel_message'] === false) {
+                    return SyncResult::failure('Action send_channel_message is disabled for this connection.');
+                }
                 $success = $this->sendChannelMessageWithConnection($connection, $channelName, $messageText, $data['card'] ?? []);
             }
 
             return $success ? SyncResult::success(1) : SyncResult::failure('Zoho Cliq post failed');
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = collect($e->errors())->flatten()->implode(' ');
+            return SyncResult::failure("Validation failed: " . $errors);
         } catch (\Exception $e) {
             return SyncResult::failure($e->getMessage());
         }
@@ -345,10 +367,7 @@ class ZohoCliqAdapter extends BaseAdapter
             return false;
         }
 
-        $dateStr = $briefing->date ? $briefing->date->format('Y-m-d') : now()->format('Y-m-d');
-        $rawText = $briefing->digest_text ?? 'Daily Briefing digest';
-
-        // Extract key sections or list summaries from briefing digest
+        $briefingCard = $this->buildDailyBriefingCard($briefing);
         $briefingCard = [
             'text' => "📊 Daily Briefing — {$dateStr}",
             'card' => [
@@ -435,29 +454,7 @@ class ZohoCliqAdapter extends BaseAdapter
             return false;
         }
 
-        $url = url("/tasks/{$task->id}");
-        $messageText = "";
-        
-        switch ($alertType) {
-            case 'assigned':
-                $messageText = "📋 New task assigned: {$task->title}\nProject: {$task->project?->name}\nDue: {$task->due_date?->format('Y-m-d')}\n[View Task]({$url})";
-                break;
-            case 'sla_warning':
-                $messageText = "⚠️ SLA Warning: Task '{$task->title}' is approaching its SLA deadline!\n[View Task]({$url})";
-                break;
-            case 'sla_breached':
-                $messageText = "🚨 SLA BREACHED: Task '{$task->title}' has breached its SLA!\n[View Task]({$url})";
-                break;
-            case 'completed':
-                $messageText = "✅ Task Completed: '{$task->title}'\n[View Task]({$url})";
-                break;
-            default:
-                $messageText = "Task Update: '{$task->title}' [status: {$task->status}]\n[View Task]({$url})";
-        }
-
-        $payload = [
-            'text' => $messageText
-        ];
+        $payload = $this->buildTaskAlertCard($task, $alertType);
 
         try {
             $this->setupCliqClient($this->decryptCredentials($connection->credentials ?? []), $connection);
@@ -669,4 +666,170 @@ class ZohoCliqAdapter extends BaseAdapter
             'write' => ['messages', 'channels']
         ];
     }
-}
+
+    public function getOutboundActions(): array
+    {
+        return [
+            [
+                'id' => 'send_briefing',
+                'name' => 'Send Daily Briefing',
+                'description' => 'Send the daily briefing digest to a specific channel.',
+                'entity_type' => 'briefing',
+                'schema' => [
+                    'rules' => [
+                        'entity_id' => 'required|integer',
+                        'user_id' => 'required|integer',
+                    ]
+                ]
+            ],
+            [
+                'id' => 'send_task_alert',
+                'name' => 'Send Task Alert',
+                'description' => 'Send direct messages to users when tasks are assigned, completed, or breach SLA.',
+                'entity_type' => 'task',
+                'schema' => [
+                    'rules' => [
+                        'entity_id' => 'required|integer',
+                        'alert_type' => 'required|string|in:assigned,sla_warning,sla_breached,completed,updated',
+                    ]
+                ]
+            ],
+            [
+                'id' => 'send_project_alert',
+                'name' => 'Send Project Alert',
+                'description' => 'Send alerts to a channel about project updates.',
+                'entity_type' => 'project',
+                'schema' => [
+                    'rules' => [
+                        'entity_id' => 'required|integer',
+                        'message' => 'required|string',
+                    ]
+                ]
+            ],
+            [
+                'id' => 'send_channel_message',
+                'name' => 'Send Channel Message',
+                'description' => 'Send a custom message to a specified channel.',
+                'entity_type' => 'channel_message',
+                'schema' => [
+                    'rules' => [
+                        'channel' => 'required|string',
+                        'message' => 'required|string',
+                        'card' => 'nullable|array',
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    public function previewOutboundAction(string $connectionId, string $actionId, array $data): array
+    {
+        $this->validateOutboundPayload($actionId, $data);
+
+        switch ($actionId) {
+            case 'send_briefing':
+                $briefing = DailyBriefing::findOrFail($data['entity_id']);
+                return $this->buildDailyBriefingCard($briefing);
+
+            case 'send_task_alert':
+                $task = Task::findOrFail($data['entity_id']);
+                return $this->buildTaskAlertCard($task, $data['alert_type'] ?? 'updated');
+
+            case 'send_project_alert':
+                $project = Project::findOrFail($data['entity_id']);
+                return $this->buildProjectAlertCard($project, $data['message']);
+
+            case 'send_channel_message':
+                return [
+                    'text' => $data['message'],
+                    'card' => $data['card'] ?? []
+                ];
+
+            default:
+                throw new \Exception("Unsupported action [{$actionId}] for preview.");
+        }
+    }
+
+    protected function buildDailyBriefingCard(DailyBriefing $briefing): array
+    {
+        $dateStr = $briefing->date ? $briefing->date->format('Y-m-d') : now()->format('Y-m-d');
+        $rawText = $briefing->digest_text ?? 'Daily Briefing digest';
+
+        return [
+            'text' => "📊 Daily Briefing — {$dateStr}",
+            'card' => [
+                'title' => "📊 Daily Briefing — {$dateStr}",
+                'theme' => 'modern-light',
+                'sections' => [
+                    [
+                        'title' => 'Summary',
+                        'description' => Str::limit($rawText, 500, '...')
+                    ]
+                ],
+                'actions' => [
+                    [
+                        'label' => 'View Full Briefing',
+                        'type' => 'open_url',
+                        'url' => url("/briefings/{$briefing->id}")
+                    ],
+                    [
+                        'label' => 'Open Dashboard',
+                        'type' => 'open_url',
+                        'url' => url('/dashboard')
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    protected function buildTaskAlertCard(Task $task, string $alertType): array
+    {
+        $url = url("/tasks/{$task->id}");
+        $messageText = "";
+        
+        switch ($alertType) {
+            case 'assigned':
+                $messageText = "📋 New task assigned: {$task->title}\nProject: {$task->project?->name}\nDue: {$task->due_date?->format('Y-m-d')}\n[View Task]({$url})";
+                break;
+            case 'sla_warning':
+                $messageText = "⚠️ SLA Warning: Task '{$task->title}' is approaching its SLA deadline!\n[View Task]({$url})";
+                break;
+            case 'sla_breached':
+                $messageText = "🚨 SLA BREACHED: Task '{$task->title}' has breached its SLA!\n[View Task]({$url})";
+                break;
+            case 'completed':
+                $messageText = "✅ Task Completed: '{$task->title}'\n[View Task]({$url})";
+                break;
+            default:
+                $messageText = "Task Update: '{$task->title}' [status: {$task->status}]\n[View Task]({$url})";
+        }
+
+        return [
+            'text' => $messageText
+        ];
+    }
+
+    protected function buildProjectAlertCard(Project $project, string $messageText): array
+    {
+        $url = url("/projects/{$project->id}");
+        return [
+            'text' => "📢 Project Update: {$project->name}",
+            'card' => [
+                'title' => $project->name,
+                'theme' => 'modern-inline',
+                'sections' => [
+                    [
+                        'description' => $messageText
+                    ]
+                ],
+                'actions' => [
+                    [
+                        'label' => 'View Project',
+                        'type' => 'open_url',
+                        'url' => $url
+                    ]
+                ]
+            ]
+        ];
+    }
+

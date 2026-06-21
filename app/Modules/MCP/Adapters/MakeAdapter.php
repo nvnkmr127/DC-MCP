@@ -144,7 +144,7 @@ class MakeAdapter extends BaseAdapter
      * @param array $data
      * @return SyncResult
      */
-    public function push(string $connectionId, array $data, array $options = []): SyncResult
+    protected function performPush(string $connectionId, array $data, array $options = []): SyncResult
     {
         $eventType = $data['event_type'] ?? null;
         $payload = $data['payload'] ?? $data;

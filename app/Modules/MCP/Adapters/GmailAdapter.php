@@ -614,20 +614,36 @@ class GmailAdapter extends BaseAdapter
      * @param array $data
      * @return SyncResult
      */
-    public function push(string $connectionId, array $data, array $options = []): SyncResult
+    protected function performPush(string $connectionId, array $data, array $options = []): SyncResult
     {
         $connection = McpConnection::findOrFail($connectionId);
+        $settings = $connection->settings ?? [];
+        $enabledActions = $settings['enabled_outbound_actions'] ?? [];
+
         $entityType = $data['entity_type'] ?? null;
         $entityId = $data['entity_id'] ?? null;
         $userId = $data['user_id'] ?? null;
 
-        if ($entityType === 'briefing') {
-            $user = User::findOrFail($userId);
-            $briefing = DailyBriefing::findOrFail($entityId);
+        try {
+            if ($entityType === 'briefing') {
+                $this->validateOutboundPayload('send_briefing', $data);
 
-            $sent = $this->sendBriefingEmailWithConnection($connection, $user, $briefing);
+                if (isset($enabledActions['send_briefing']) && $enabledActions['send_briefing'] === false) {
+                    return SyncResult::failure('Action send_briefing is disabled for this connection.');
+                }
 
-            return $sent ? SyncResult::success(1) : SyncResult::failure('Failed to send email briefing');
+                $user = User::findOrFail($userId);
+                $briefing = DailyBriefing::findOrFail($entityId);
+
+                $sent = $this->sendBriefingEmailWithConnection($connection, $user, $briefing);
+
+                return $sent ? SyncResult::success(1) : SyncResult::failure('Failed to send email briefing');
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = collect($e->errors())->flatten()->implode(' ');
+            return SyncResult::failure("Validation failed: " . $errors);
+        } catch (\Exception $e) {
+            return SyncResult::failure($e->getMessage());
         }
 
         return SyncResult::success(0, ['reason' => 'Unsupported entity type']);
@@ -970,8 +986,47 @@ class GmailAdapter extends BaseAdapter
     public function getDataPermissions(): array
     {
         return [
-            'read' => ['emails', 'labels', 'threads', 'profile'],
-            'write' => ['emails', 'labels', 'drafts']
+            'read' => ['emails', 'labels', 'threads'],
+            'write' => ['emails', 'drafts', 'labels']
         ];
     }
+
+    public function getOutboundActions(): array
+    {
+        return [
+            [
+                'id' => 'send_briefing',
+                'name' => 'Send Daily Briefing',
+                'description' => 'Send the daily briefing digest to users via email.',
+                'entity_type' => 'briefing',
+                'schema' => [
+                    'rules' => [
+                        'entity_id' => 'required|integer',
+                        'user_id' => 'required|integer',
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    public function previewOutboundAction(string $connectionId, string $actionId, array $data): array
+    {
+        $this->validateOutboundPayload($actionId, $data);
+
+        if ($actionId === 'send_briefing') {
+            $user = User::findOrFail($data['user_id']);
+            $briefing = DailyBriefing::findOrFail($data['entity_id']);
+
+            $view = view('emails.briefing', ['briefing' => $briefing])->render();
+            
+            return [
+                'to' => $user->email,
+                'subject' => "Daily Briefing: {$briefing->title}",
+                'html_body' => $view,
+            ];
+        }
+
+        throw new \Exception("Unsupported action [{$actionId}] for preview.");
+    }
 }
+

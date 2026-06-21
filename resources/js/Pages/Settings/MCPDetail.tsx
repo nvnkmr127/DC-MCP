@@ -15,7 +15,17 @@ interface McpConnection {
     last_synced_at: string | null;
 }
 
-interface Props { connection: McpConnection; }
+interface OutboundAction {
+    id: string;
+    name: string;
+    description: string;
+    entity_type: string;
+}
+
+interface Props { 
+    connection: McpConnection; 
+    outboundActions?: OutboundAction[];
+}
 
 const STATUS_STYLES: Record<string, string> = {
     active:               'bg-green-100 text-green-700',
@@ -66,12 +76,15 @@ const MAPPING_TEMPLATES: Record<string, { label: string, mappings: Record<string
     ]
 };
 
-export default function MCPDetail({ connection }: Props) {
+export default function MCPDetail({ connection, outboundActions = [] }: Props) {
     const [editing, setEditing] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const [isPreviewing, setIsPreviewing] = useState(false);
     const [previewResult, setPreviewResult] = useState<{ raw: any, mapped: any, warnings: string[] } | null>(null);
     const [previewError, setPreviewError] = useState('');
+    const [outboundPreview, setOutboundPreview] = useState<{ isOpen: boolean, action: OutboundAction | null, payloadStr: string, result: any, error: string, isLoading: boolean }>({
+        isOpen: false, action: null, payloadStr: '{\n  "entity_id": 1,\n  "user_id": 1\n}', result: null, error: '', isLoading: false
+    });
     const confirm = useConfirm();
     const form = useForm({
         label:        connection.label ?? '',
@@ -107,9 +120,34 @@ export default function MCPDetail({ connection }: Props) {
                 setPreviewError(data.message || data.error || 'Failed to preview');
             }
         } catch (e: any) {
-            setPreviewError(e.message);
+            setPreviewError(e.response?.data?.message || e.message);
         } finally {
             setIsPreviewing(false);
+        }
+    }
+
+    async function handleOutboundPreview() {
+        if (!outboundPreview.action) return;
+        
+        let payload = {};
+        try {
+            payload = JSON.parse(outboundPreview.payloadStr);
+        } catch (e) {
+            setOutboundPreview(prev => ({ ...prev, error: 'Invalid JSON payload format.', result: null }));
+            return;
+        }
+
+        setOutboundPreview(prev => ({ ...prev, isLoading: true, error: '', result: null }));
+        try {
+            const res = await axios.post(`/api/v1/mcp/connections/${connection.id}/outbound-preview`, {
+                action_id: outboundPreview.action.id,
+                payload
+            });
+            setOutboundPreview(prev => ({ ...prev, result: res.data.data }));
+        } catch (e: any) {
+            setOutboundPreview(prev => ({ ...prev, error: e.response?.data?.message || e.message }));
+        } finally {
+            setOutboundPreview(prev => ({ ...prev, isLoading: false }));
         }
     }
 
@@ -317,6 +355,48 @@ export default function MCPDetail({ connection }: Props) {
                                 </div>
                             </div>
 
+                            <div className="pt-4 border-t border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-900 mb-2">Outbound Operations</h3>
+                                <p className="text-xs text-gray-500 mb-3">Configure which outbound actions are permitted for this integration.</p>
+                                
+                                {outboundActions && outboundActions.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {outboundActions.map(action => (
+                                            <div key={action.id} className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50">
+                                                <label className="flex items-start gap-3 flex-1 cursor-pointer">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        className="mt-1 w-4 h-4 accent-indigo-600 rounded" 
+                                                        checked={form.data.settings?.enabled_outbound_actions?.[action.id] !== false}
+                                                        onChange={e => {
+                                                            const newActions = { ...(form.data.settings?.enabled_outbound_actions || {}) };
+                                                            newActions[action.id] = e.target.checked;
+                                                            form.setData('settings', { ...form.data.settings, enabled_outbound_actions: newActions });
+                                                        }}
+                                                    />
+                                                    <div>
+                                                        <div className="text-sm font-medium text-gray-900">{action.name}</div>
+                                                        <div className="text-xs text-gray-500 mt-0.5">{action.description}</div>
+                                                        <div className="text-[10px] mt-1 bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded w-fit capitalize">{action.entity_type}</div>
+                                                    </div>
+                                                </label>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setOutboundPreview(prev => ({ ...prev, isOpen: true, action, result: null, error: '' }))}
+                                                    className="shrink-0 text-xs text-indigo-600 font-medium px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
+                                                >
+                                                    Test / Preview
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                        No outbound operations are available for this provider.
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="flex gap-2 pt-1 border-t border-gray-200 pt-4">
                                 <button type="submit" disabled={form.processing}
                                     className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
@@ -345,6 +425,58 @@ export default function MCPDetail({ connection }: Props) {
                     </div>
                 )}
             </div>
+
+            {/* Outbound Preview Modal */}
+            {outboundPreview.isOpen && outboundPreview.action && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
+                    <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
+                        <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 rounded-t-2xl">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">Preview: {outboundPreview.action.name}</h3>
+                                <p className="text-xs text-gray-500 mt-0.5">Test payload rendering without sending data.</p>
+                            </div>
+                            <button onClick={() => setOutboundPreview(prev => ({ ...prev, isOpen: false }))} className="text-gray-400 hover:text-gray-600 p-2">
+                                <XCircle size={20} />
+                            </button>
+                        </div>
+                        
+                        <div className="p-5 overflow-y-auto flex-1 space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-700 mb-2">Test Payload (JSON)</label>
+                                <textarea
+                                    className="w-full h-32 p-3 text-sm font-mono border-gray-200 rounded-lg shadow-inner bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500"
+                                    value={outboundPreview.payloadStr}
+                                    onChange={e => setOutboundPreview(prev => ({ ...prev, payloadStr: e.target.value }))}
+                                    placeholder='{"entity_id": 1}'
+                                />
+                            </div>
+
+                            <button
+                                onClick={handleOutboundPreview}
+                                disabled={outboundPreview.isLoading}
+                                className="w-full py-2 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                            >
+                                {outboundPreview.isLoading ? 'Generating...' : 'Run Preview'}
+                            </button>
+
+                            {outboundPreview.error && (
+                                <div className="p-3 bg-red-50 text-red-700 border border-red-100 rounded-lg text-sm">
+                                    {outboundPreview.error}
+                                </div>
+                            )}
+
+                            {outboundPreview.result && (
+                                <div>
+                                    <label className="block text-xs font-semibold text-indigo-900 mb-2 mt-2 uppercase tracking-wide">Generated Provider Payload</label>
+                                    <pre className="text-xs bg-gray-900 text-green-400 border border-gray-800 rounded-lg p-4 overflow-auto max-h-80 shadow-inner">
+                                        {JSON.stringify(outboundPreview.result, null, 2)}
+                                    </pre>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </AppLayout>
     );
 }

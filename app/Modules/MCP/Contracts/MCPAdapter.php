@@ -164,4 +164,21 @@ interface MCPAdapter
      * @return array Returns raw payload and transformed payload
      */
     public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, array $credentials, array $proposedMappings): array;
+
+    /**
+     * Get available outbound actions (push operations) supported by this adapter.
+     *
+     * @return array Returns an array of action definitions, e.g. [['id' => 'send_briefing', 'name' => 'Send Daily Briefing', 'description' => '...', 'entity_type' => 'briefing']]
+     */
+    public function getOutboundActions(): array;
+
+    /**
+     * Preview an outbound action payload without sending it.
+     *
+     * @param string $connectionId
+     * @param string $actionId
+     * @param array $data
+     * @return array The payload that would be sent to the external provider
+     */
+    public function previewOutboundAction(string $connectionId, string $actionId, array $data): array;
 }

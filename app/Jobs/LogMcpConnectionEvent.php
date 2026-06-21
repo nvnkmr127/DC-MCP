@@ -21,7 +21,8 @@ class LogMcpConnectionEvent implements ShouldQueue
         public int $failed,
         public ?array $payload,
         public ?string $errorMessage,
-        public int $durationMs
+        public int $durationMs,
+        public ?string $userId = null
     ) {}
 
     public function handle(): void
@@ -29,6 +30,7 @@ class LogMcpConnectionEvent implements ShouldQueue
         DB::table('mcp_sync_logs')->insert([
             'id' => (string) Str::uuid(),
             'mcp_connection_id' => $this->connectionId,
+            'user_id' => $this->userId,
             'direction' => $this->direction,
             'entity_type' => $this->entityType,
             'entity_id' => $this->entityId,

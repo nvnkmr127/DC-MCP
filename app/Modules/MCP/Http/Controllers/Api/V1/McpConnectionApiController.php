@@ -358,10 +358,10 @@ class McpConnectionApiController extends Controller
     public function mappingPreview(Request $request, McpConnection $mcpConnection): JsonResponse
     {
         $request->validate([
-            'field_mappings' => 'required|array'
+            'field_mappings' => ['required', 'array'],
         ]);
 
-        if (in_array($mcpConnection->provider, self::BUILTIN_PROVIDERS) === false) {
+        if (!in_array($mcpConnection->provider, self::BUILTIN_PROVIDERS) === false) {
             return ApiResponse::error('Mapping preview is not supported for custom providers.', 400);
         }
 
@@ -374,6 +374,25 @@ class McpConnectionApiController extends Controller
             return ApiResponse::success($preview);
         } catch (\Exception $e) {
             return ApiResponse::error('Failed to generate mapping preview: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function previewOutboundAction(Request $request, McpConnection $mcpConnection): JsonResponse
+    {
+        $data = $request->validate([
+            'action_id' => 'required|string',
+            'payload' => 'required|array'
+        ]);
+        
+        $adapter = $this->resolveAdapter($mcpConnection->provider);
+        try {
+            $preview = $adapter->previewOutboundAction($mcpConnection->id, $data['action_id'], $data['payload']);
+            return ApiResponse::success($preview);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = collect($e->errors())->flatten()->implode(' ');
+            return ApiResponse::error("Validation failed: " . $errors, $e->errors(), 422);
+        } catch (\Exception $e) {
+            return ApiResponse::error('Failed to preview outbound action: ' . $e->getMessage(), 500);
         }
     }
 

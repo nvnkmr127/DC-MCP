@@ -416,7 +416,7 @@ class GoogleCalendarAdapter extends BaseAdapter
      * @param array $data
      * @return SyncResult
      */
-    public function push(string $connectionId, array $data, array $options = []): SyncResult
+    protected function performPush(string $connectionId, array $data, array $options = []): SyncResult
     {
         $startTime = microtime(true);
         $connection = McpConnection::findOrFail($connectionId);
