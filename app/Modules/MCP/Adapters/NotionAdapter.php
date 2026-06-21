@@ -76,7 +76,7 @@ class NotionAdapter extends BaseAdapter
 
             $settings = $connection->settings ?? [];
             $databaseIds = $settings['database_ids'] ?? [];
-
+            $schemaDriftWarnings = [];
             $processedCount = 0;
             $failedCount = 0;
 
@@ -119,21 +119,51 @@ class NotionAdapter extends BaseAdapter
                             $pageUrl = $page['url'] ?? '';
                             $properties = $page['properties'] ?? [];
 
-                            // Find and parse common properties
-                            $titleProp = $this->findProperty($properties, ['Name', 'Title', 'title']);
-                            $title = $this->parsePropertyValue($titleProp);
+                            // Get custom mappings or fall back to defaults
+                            $mappings = $settings['field_mappings'] ?? [];
+                            
+                            $computeValue = function($key, $defaultKeys) use ($mappings, $properties, &$schemaDriftWarnings, $pageId) {
+                                if (empty($mappings[$key])) {
+                                    $propName = $defaultKeys[0] ?? $key;
+                                    $prop = $this->findProperty($properties, $defaultKeys);
+                                    if (!$prop && in_array($key, ['title', 'Name'])) {
+                                        $schemaDriftWarnings[] = "Missing fallback field '$key' for page $pageId";
+                                    }
+                                    return $this->parsePropertyValue($prop, $schemaDriftWarnings, $propName);
+                                }
+                                
+                                $pattern = $mappings[$key];
+                                
+                                // If it uses brackets, it's a computed formula/concat field (e.g. "{First Name} {Last Name}")
+                                if (str_contains($pattern, '{')) {
+                                    $computed = preg_replace_callback('/\{([^}]+)\}/', function($matches) use ($properties, &$schemaDriftWarnings, $pageId) {
+                                        $propName = trim($matches[1]);
+                                        $prop = $this->findProperty($properties, [$propName]);
+                                        if (!$prop) {
+                                            $schemaDriftWarnings[] = "Missing mapped property '$propName' in computed field for page $pageId";
+                                        }
+                                        $val = $this->parsePropertyValue($prop, $schemaDriftWarnings, $propName);
+                                        return is_array($val) ? implode(', ', $val) : ($val ?? '');
+                                    }, $pattern);
+                                    return trim($computed);
+                                }
+                                
+                                // Otherwise, standard comma-separated fallback list of property names
+                                $possibleKeys = array_map('trim', explode(',', $pattern));
+                                $prop = $this->findProperty($properties, $possibleKeys);
+                                if (!$prop) {
+                                    $schemaDriftWarnings[] = "Missing mapped property '$pattern' for key '$key' for page $pageId";
+                                }
+                                return $this->parsePropertyValue($prop, $schemaDriftWarnings, $possibleKeys[0] ?? $key);
+                            };
 
-                            $statusProp = $this->findProperty($properties, ['Status', 'status']);
-                            $status = $this->parsePropertyValue($statusProp);
-
-                            $priorityProp = $this->findProperty($properties, ['Priority', 'priority']);
-                            $priority = $this->parsePropertyValue($priorityProp);
-
-                            $dueProp = $this->findProperty($properties, ['Due', 'due', 'Due Date']);
-                            $dueDate = $this->parsePropertyValue($dueProp);
-
-                            $assigneeProp = $this->findProperty($properties, ['Assignee', 'assignee', 'Owner']);
-                            $assigneeEmail = $this->parsePropertyValue($assigneeProp);
+                            // Parse properties using computed mappings or fallbacks
+                            $title = $computeValue('title', ['Name', 'Title', 'title']);
+                            $status = $computeValue('status', ['Status', 'status']);
+                            $priority = $computeValue('priority', ['Priority', 'priority']);
+                            $dueDate = $computeValue('due_date', ['Due', 'due', 'Due Date']);
+                            $assigneeEmail = $computeValue('assignee', ['Assignee', 'assignee', 'Owner']);
+                            $tags = $computeValue('tags', ['Tags', 'tags', 'Labels']);
 
                             // Log sync attempt
                             $this->logSync(
@@ -169,13 +199,20 @@ class NotionAdapter extends BaseAdapter
                                 $task->description = 'Synced from Notion page: ' . $pageUrl;
                                 
                                 if ($dueDate) {
-                                    $task->due_date = date('Y-m-d', strtotime($dueDate));
+                                    $timestamp = strtotime($dueDate);
+                                    if ($timestamp === false) {
+                                        $schemaDriftWarnings[] = "Invalid date format '$dueDate' for page $pageId (coercion failed)";
+                                    } else {
+                                        $task->due_date = date('Y-m-d', $timestamp);
+                                    }
                                 }
 
                                 if ($priority) {
                                     $mappedPriority = strtolower($priority);
                                     if (in_array($mappedPriority, ['low', 'medium', 'high', 'critical'])) {
                                         $task->priority = $mappedPriority;
+                                    } else {
+                                        $schemaDriftWarnings[] = "Unrecognized priority '$priority' for page $pageId, defaulting to 'medium'";
                                     }
                                 }
 
@@ -188,18 +225,40 @@ class NotionAdapter extends BaseAdapter
                                         'blocked' => 'blocked',
                                         'done', 'completed' => 'done',
                                         'cancelled' => 'cancelled',
-                                        default => 'todo',
+                                        default => null,
                                     };
-                                    $task->status = $mappedStatus;
+                                    
+                                    if ($mappedStatus) {
+                                        $task->status = $mappedStatus;
+                                    } else {
+                                        $task->status = 'todo';
+                                        $schemaDriftWarnings[] = "Unrecognized status '$status' for page $pageId, coercing to 'todo'";
+                                    }
+                                    
+                                    // Conditional mapping: automatically update completed_at based on status
+                                    if ($task->status === 'done') {
+                                        if (!$task->completed_at) {
+                                            $task->completed_at = now();
+                                        }
+                                    } else {
+                                        $task->completed_at = null;
+                                    }
                                 }
 
                                 if ($assigneeEmail) {
-                                    $user = User::where('organization_id', $connection->organization_id)
-                                        ->where('email', $assigneeEmail)
-                                        ->first();
-                                    if ($user) {
-                                        $task->assigned_to = $user->id;
+                                    $email = is_array($assigneeEmail) ? ($assigneeEmail[0] ?? null) : $assigneeEmail;
+                                    if ($email) {
+                                        $user = User::where('organization_id', $connection->organization_id)
+                                            ->where('email', $email)
+                                            ->first();
+                                        if ($user) {
+                                            $task->assigned_to = $user->id;
+                                        }
                                     }
+                                }
+                                
+                                if ($tags) {
+                                    $task->tags = is_array($tags) ? $tags : array_map('trim', explode(',', $tags));
                                 }
 
                                 $task->save();
@@ -303,15 +362,150 @@ class NotionAdapter extends BaseAdapter
             $durationMs = (int) ((microtime(true) - $startTime) * 1000);
             $connection->markSynced();
 
+            // Deduplicate warnings
+            $schemaDriftWarnings = array_unique($schemaDriftWarnings);
+
             return SyncResult::success($processedCount, [
-                'duration_ms' => $durationMs,
-                'failed_count' => $failedCount
-            ]);
+                'has_more' => $hasMore,
+                'next_cursor' => $nextCursor,
+                'schema_drift_warnings' => array_slice($schemaDriftWarnings, 0, 50)
+            ], $durationMs, $bytesTransferred);
 
         } catch (\Exception $e) {
-            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
-            $connection->markError($e->getMessage());
-            return SyncResult::failure($e->getMessage(), 0, 1, ['duration_ms' => $durationMs]);
+            $connection->markSyncFailed($e->getMessage());
+            return SyncResult::failure('Failed to sync from Notion: ' . $e->getMessage());
+        }
+    }
+
+    public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, array $credentials, array $proposedMappings): array
+    {
+        $this->setupNotionClient($credentials);
+        $settings = $credentials['_settings'] ?? [];
+        $databaseIds = $settings['database_ids'] ?? [];
+
+        if (empty($databaseIds)) {
+            return ['error' => 'No databases configured.'];
+        }
+
+        $databaseId = array_key_first($databaseIds);
+
+        try {
+            $response = $this->client->post("databases/{$databaseId}/query", [
+                'json' => ['page_size' => 1]
+            ]);
+
+            $data = json_decode($response->getBody()->getContents(), true);
+            $results = $data['results'] ?? [];
+
+            if (empty($results)) {
+                return ['error' => 'No pages found in the external database.'];
+            }
+
+            $page = $results[0];
+            $properties = $page['properties'] ?? [];
+            $pageId = $page['id'];
+            
+            $schemaDriftWarnings = [];
+            $mappings = $proposedMappings;
+
+            $computeValue = function($key, $defaultKeys) use ($mappings, $properties, &$schemaDriftWarnings, $pageId) {
+                if (empty($mappings[$key])) {
+                    $propName = $defaultKeys[0] ?? $key;
+                    $prop = $this->findProperty($properties, $defaultKeys);
+                    if (!$prop && in_array($key, ['title', 'Name'])) {
+                        $schemaDriftWarnings[] = "Missing fallback field '$key' for page $pageId";
+                    }
+                    return $this->parsePropertyValue($prop, $schemaDriftWarnings, $propName);
+                }
+                
+                $pattern = $mappings[$key];
+                
+                if (str_contains($pattern, '{')) {
+                    $computed = preg_replace_callback('/\{([^}]+)\}/', function($matches) use ($properties, &$schemaDriftWarnings, $pageId) {
+                        $propName = trim($matches[1]);
+                        $prop = $this->findProperty($properties, [$propName]);
+                        if (!$prop) {
+                            $schemaDriftWarnings[] = "Missing mapped property '$propName' in computed field for page $pageId";
+                        }
+                        $val = $this->parsePropertyValue($prop, $schemaDriftWarnings, $propName);
+                        return is_array($val) ? implode(', ', $val) : ($val ?? '');
+                    }, $pattern);
+                    return trim($computed);
+                }
+                
+                $possibleKeys = array_map('trim', explode(',', $pattern));
+                $prop = $this->findProperty($properties, $possibleKeys);
+                if (!$prop) {
+                    $schemaDriftWarnings[] = "Missing mapped property '$pattern' for key '$key' for page $pageId";
+                }
+                return $this->parsePropertyValue($prop, $schemaDriftWarnings, $possibleKeys[0] ?? $key);
+            };
+
+            $title = $computeValue('title', ['Name', 'Title', 'title']);
+            $status = $computeValue('status', ['Status', 'status']);
+            $priority = $computeValue('priority', ['Priority', 'priority']);
+            $dueDate = $computeValue('due_date', ['Due', 'due', 'Due Date']);
+            $assigneeEmail = $computeValue('assignee', ['Assignee', 'assignee', 'Owner']);
+            $tags = $computeValue('tags', ['Tags', 'tags', 'Labels']);
+
+            $mappedData = [
+                'title' => $title ?: 'Notion Task',
+                'status' => 'todo',
+                'priority' => 'medium',
+                'due_date' => null,
+                'completed_at' => null,
+                'assignee_email' => is_array($assigneeEmail) ? ($assigneeEmail[0] ?? null) : $assigneeEmail,
+                'tags' => is_array($tags) ? $tags : ($tags ? array_map('trim', explode(',', $tags)) : null),
+            ];
+
+            if ($dueDate) {
+                $timestamp = strtotime($dueDate);
+                if ($timestamp === false) {
+                    $schemaDriftWarnings[] = "Invalid date format '$dueDate' for page $pageId (coercion failed)";
+                } else {
+                    $mappedData['due_date'] = date('Y-m-d', $timestamp);
+                }
+            }
+
+            if ($priority) {
+                $mappedPriority = strtolower($priority);
+                if (in_array($mappedPriority, ['low', 'medium', 'high', 'critical'])) {
+                    $mappedData['priority'] = $mappedPriority;
+                } else {
+                    $schemaDriftWarnings[] = "Unrecognized priority '$priority' for page $pageId, defaulting to 'medium'";
+                }
+            }
+
+            if ($status) {
+                $mappedStatus = match (strtolower(str_replace(' ', '_', $status))) {
+                    'backlog' => 'backlog',
+                    'to_do', 'todo' => 'todo',
+                    'in_progress' => 'in_progress',
+                    'in_review' => 'in_review',
+                    'blocked' => 'blocked',
+                    'done', 'completed' => 'done',
+                    'cancelled' => 'cancelled',
+                    default => null,
+                };
+                
+                if ($mappedStatus) {
+                    $mappedData['status'] = $mappedStatus;
+                } else {
+                    $schemaDriftWarnings[] = "Unrecognized status '$status' for page $pageId, coercing to 'todo'";
+                }
+                
+                if ($mappedData['status'] === 'done') {
+                    $mappedData['completed_at'] = now()->toDateTimeString();
+                }
+            }
+
+            return [
+                'raw' => $properties,
+                'mapped' => $mappedData,
+                'warnings' => array_unique($schemaDriftWarnings),
+            ];
+        } catch (\Exception $e) {
+            return ['error' => 'Failed to fetch preview record from Notion: ' . $e->getMessage()];
         }
     }
 
@@ -662,7 +856,7 @@ class NotionAdapter extends BaseAdapter
     /**
      * Extract plain value from a Notion property structure.
      */
-    protected function parsePropertyValue(?array $prop)
+    protected function parsePropertyValue(?array $prop, array &$warnings = [], string $propName = 'unknown')
     {
         if (!$prop) {
             return null;
@@ -684,8 +878,27 @@ class NotionAdapter extends BaseAdapter
             case 'email':
                 return $prop['email'] ?? null;
             case 'people':
-                return $prop['people'][0]['person']['email'] ?? $prop['people'][0]['email'] ?? null;
+                $emails = [];
+                foreach ($prop['people'] ?? [] as $person) {
+                    if (isset($person['person']['email'])) {
+                        $emails[] = $person['person']['email'];
+                    } elseif (isset($person['email'])) {
+                        $emails[] = $person['email'];
+                    }
+                }
+                return empty($emails) ? null : $emails;
+            case 'number':
+                return (string) ($prop['number'] ?? '');
+            case 'checkbox':
+                return $prop['checkbox'] ? 'true' : 'false';
+            case 'url':
+                return $prop['url'] ?? null;
+            case 'phone_number':
+                return $prop['phone_number'] ?? null;
+            case 'multi_select':
+                return array_column($prop['multi_select'] ?? [], 'name');
             default:
+                $warnings[] = "Unsupported data type '$type' encountered for property '$propName' during coercion.";
                 return null;
         }
     }

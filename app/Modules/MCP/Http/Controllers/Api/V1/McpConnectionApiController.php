@@ -70,6 +70,8 @@ class McpConnectionApiController extends Controller
             'name'     => ['required', 'string', 'max:255'],
             'scopes'   => ['nullable', 'array'],
             'settings' => ['nullable', 'array'],
+            'settings.field_mappings' => ['nullable', 'array'],
+            'settings.field_mappings.*' => ['string', 'max:500'],
 
             // Credentials — all optional at the top level; specific providers
             // may require certain keys, validated via the test-connection flow.
@@ -181,6 +183,8 @@ class McpConnectionApiController extends Controller
             'name'     => ['sometimes', 'string', 'max:255'],
             'scopes'   => ['sometimes', 'array'],
             'settings' => ['sometimes', 'array'],
+            'settings.field_mappings' => ['sometimes', 'array'],
+            'settings.field_mappings.*' => ['string', 'max:500'],
             'status'   => ['sometimes', 'string', \Illuminate\Validation\Rule::enum(\App\Modules\MCP\Enums\ConnectionStatus::class)],
             'user_id'  => ['sometimes', 'integer'],
             'credentials'               => ['sometimes', 'array'],
@@ -348,6 +352,28 @@ class McpConnectionApiController extends Controller
             return ApiResponse::success($preview);
         } catch (\Exception $e) {
             return ApiResponse::error('Failed to generate sync preview: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function mappingPreview(Request $request, McpConnection $mcpConnection): JsonResponse
+    {
+        $request->validate([
+            'field_mappings' => 'required|array'
+        ]);
+
+        if (in_array($mcpConnection->provider, self::BUILTIN_PROVIDERS) === false) {
+            return ApiResponse::error('Mapping preview is not supported for custom providers.', 400);
+        }
+
+        try {
+            $adapter = $this->resolveAdapter($mcpConnection->provider);
+            $environment = $request->query('environment', 'production');
+            $credentials = $this->decryptConnectionCredentials($mcpConnection, $environment);
+            
+            $preview = $adapter->previewMapping($mcpConnection, $credentials, $request->input('field_mappings'));
+            return ApiResponse::success($preview);
+        } catch (\Exception $e) {
+            return ApiResponse::error('Failed to generate mapping preview: ' . $e->getMessage(), 500);
         }
     }
 

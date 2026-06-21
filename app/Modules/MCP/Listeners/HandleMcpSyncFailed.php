@@ -15,6 +15,9 @@ class HandleMcpSyncFailed
             'mcp_connection_id' => $event->connection->id,
             'status'            => 'failed',
             'error_message'     => $event->errorMessage,
+            'metadata'          => [
+                'field_mappings' => $event->connection->settings['field_mappings'] ?? []
+            ],
         ]);
 
         $user = User::where('organization_id', $event->connection->organization_id)->first();

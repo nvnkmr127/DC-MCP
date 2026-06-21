@@ -17,6 +17,9 @@ class HandleMcpSyncCompleted
             'duration_ms'       => $event->result->durationMs,
             'records_processed' => $event->result->processedCount ?? 0,
             'bytes_transferred' => $event->result->bytesTransferred ?? 0,
+            'metadata'          => [
+                'field_mappings' => $event->connection->settings['field_mappings'] ?? []
+            ],
         ]);
 
         $user = User::where('organization_id', $event->connection->organization_id)->first();

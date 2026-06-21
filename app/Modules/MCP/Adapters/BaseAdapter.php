@@ -406,4 +406,17 @@ abstract class BaseAdapter implements MCPAdapter
         // To be overridden by specific adapters
         return null;
     }
+
+    /**
+     * Fetch a sample record from the provider and test it against the proposed mappings.
+     *
+     * @param \App\Modules\MCP\Models\McpConnection $connection
+     * @param array $credentials
+     * @param array $proposedMappings
+     * @return array Returns raw payload and transformed payload
+     */
+    public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, array $credentials, array $proposedMappings): array
+    {
+        throw new \Exception("Mapping preview is not implemented for this adapter.");
+    }
 }

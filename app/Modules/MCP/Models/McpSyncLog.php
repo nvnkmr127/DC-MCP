@@ -14,6 +14,11 @@ class McpSyncLog extends Model
         'records_processed',
         'bytes_transferred',
         'error_message',
+        'metadata',
+    ];
+
+    protected $casts = [
+        'metadata' => 'array',
     ];
 
     public function connection(): BelongsTo

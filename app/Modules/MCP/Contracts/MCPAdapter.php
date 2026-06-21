@@ -154,4 +154,14 @@ interface MCPAdapter
      * @return array ['supported' => true, 'records_to_process' => int, 'summary' => string]
      */
     public function syncPreview(array $credentials, array $options = []): array;
+
+    /**
+     * Fetch a sample record from the provider and test it against the proposed mappings.
+     *
+     * @param \App\Modules\MCP\Models\McpConnection $connection
+     * @param array $credentials
+     * @param array $proposedMappings
+     * @return array Returns raw payload and transformed payload
+     */
+    public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, array $credentials, array $proposedMappings): array;
 }

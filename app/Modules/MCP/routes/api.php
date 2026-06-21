@@ -12,6 +12,7 @@ Route::prefix('v1')->group(function () {
     Route::get('mcp/providers/{provider}/diagnostics', [McpConnectionApiController::class, 'getDiagnostics']);
     Route::post('mcp/connections/{mcpConnection}/sync', [McpConnectionApiController::class, 'sync']);
     Route::get('mcp/connections/{mcpConnection}/sync-preview', [McpConnectionApiController::class, 'syncPreview']);
+    Route::post('mcp/connections/{mcpConnection}/mapping-preview', [McpConnectionApiController::class, 'mappingPreview']);
     Route::post('mcp/connections/{mcpConnection}/test', [McpConnectionApiController::class, 'test']);
     Route::post('mcp/connections/{mcpConnection}/test-scopes', [McpConnectionApiController::class, 'testScopes']);
     Route::get('mcp/connections/{mcpConnection}/rate-limits', [McpConnectionApiController::class, 'getRateLimits']);

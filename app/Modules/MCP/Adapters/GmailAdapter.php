@@ -261,6 +261,7 @@ class GmailAdapter extends BaseAdapter
 
             $processedCount = 0;
             $failedCount = 0;
+            $schemaDriftWarnings = [];
 
             if (!empty($options['full_resync'])) {
                 $connection->setCursor('messages_page_token', null);
@@ -373,8 +374,38 @@ class GmailAdapter extends BaseAdapter
                                         $task->role_required = 'project_manager';
                                         $task->due_date = now()->addDay()->toDateString();
                                         
-                                        $task->title = $subject ?: 'Review Email';
-                                        $task->description = "Email from: {$sender}\n\nSnippet: {$snippet}";
+                                        $mappings = $settings['field_mappings'] ?? [];
+                                        $getMappedValue = function($key, $default) use ($mappings, $subject, $snippet, $sender, $dateStr, &$schemaDriftWarnings, $messageId) {
+                                            if (empty($mappings[$key])) {
+                                                return $default;
+                                            }
+                                            $val = $mappings[$key];
+                                            if (str_contains($val, '{')) {
+                                                $val = str_ireplace('{subject}', $subject, $val);
+                                                $val = str_ireplace('{snippet}', $snippet, $val);
+                                                $val = str_ireplace('{sender}', $sender, $val);
+                                                $val = str_ireplace('{date}', $dateStr, $val);
+                                                if (trim($val) === '') {
+                                                    $schemaDriftWarnings[] = "Mapped field '$key' resulted in empty string for email $messageId (missing required values)";
+                                                }
+                                                return $val;
+                                            }
+                                            // Fallback if they just typed 'subject' instead of '{subject}'
+                                            $res = match(strtolower($val)) {
+                                                'subject' => $subject,
+                                                'snippet' => $snippet,
+                                                'sender' => $sender,
+                                                'date' => $dateStr,
+                                                default => $val
+                                            };
+                                            if (trim($res) === '') {
+                                                $schemaDriftWarnings[] = "Mapped field '$key' resulted in empty string for email $messageId (missing required values)";
+                                            }
+                                            return $res;
+                                        };
+
+                                        $task->title = $getMappedValue('title', $subject ?: 'Review Email');
+                                        $task->description = $getMappedValue('description', "Email from: {$sender}\n\nSnippet: {$snippet}");
                                         
                                         $meta = ['gmail_thread_id' => $threadId];
                                         if (!empty($options['sync_session_id'])) {
@@ -386,8 +417,8 @@ class GmailAdapter extends BaseAdapter
                                         // Reconcile and/or update tombstone session
                                         $needsUpdate = false;
                                         if (!empty($options['reconcile'])) {
-                                            $task->title = $subject ?: 'Review Email';
-                                            $task->description = "Email from: {$sender}\n\nSnippet: {$snippet}";
+                                            $task->title = $getMappedValue('title', $subject ?: 'Review Email');
+                                            $task->description = $getMappedValue('description', "Email from: {$sender}\n\nSnippet: {$snippet}");
                                             $needsUpdate = true;
                                         }
                                         
@@ -465,15 +496,114 @@ class GmailAdapter extends BaseAdapter
                 $connection->markSynced();
             }
 
+            $schemaDriftWarnings = array_unique($schemaDriftWarnings);
+
             return SyncResult::success($processedCount, [
-                'duration_ms' => $durationMs,
-                'failed_count' => $failedCount
+                'has_more' => !empty($params['pageToken']),
+                'next_cursor' => $params['pageToken'] ?? null,
+                'schema_drift_warnings' => array_slice($schemaDriftWarnings, 0, 50)
             ], $durationMs, 0, $expectedCount);
 
         } catch (\Exception $e) {
             $durationMs = (int) ((microtime(true) - $startTime) * 1000);
             $connection->handleException($e);
             return SyncResult::failure($e->getMessage(), 0, 1, ['duration_ms' => $durationMs]);
+        }
+    }
+
+    public function previewMapping(\App\Modules\MCP\Models\McpConnection $connection, array $credentials, array $proposedMappings): array
+    {
+        $decrypted = $this->decryptCredentials($credentials);
+        $client = $this->getGoogleClient($decrypted, $connection);
+        $service = $this->getGmailService($client);
+
+        try {
+            $messagesResponse = $service->users_messages->listUsersMessages('me', ['maxResults' => 1]);
+            $messages = $messagesResponse->getMessages();
+
+            if (empty($messages)) {
+                return ['error' => 'No emails found to preview.'];
+            }
+
+            $messageId = $messages[0]->getId();
+            $msg = $service->users_messages->get('me', $messageId, ['format' => 'full']);
+            $payload = $msg->getPayload();
+            $headers = $payload->getHeaders();
+
+            $subject = '';
+            $sender = '';
+            $dateStr = '';
+
+            foreach ($headers as $header) {
+                if ($header->getName() === 'Subject') {
+                    $subject = $header->getValue();
+                }
+                if ($header->getName() === 'From') {
+                    $sender = $header->getValue();
+                }
+                if ($header->getName() === 'Date') {
+                    $dateStr = $header->getValue();
+                }
+            }
+
+            $snippet = $msg->getSnippet();
+            $schemaDriftWarnings = [];
+            $mappings = $proposedMappings;
+
+            $getMappedValue = function($key, $default) use ($mappings, $subject, $snippet, $sender, $dateStr, &$schemaDriftWarnings, $messageId) {
+                if (empty($mappings[$key])) {
+                    return $default;
+                }
+                $val = $mappings[$key];
+                if (str_contains($val, '{')) {
+                    $val = str_ireplace('{subject}', $subject, $val);
+                    $val = str_ireplace('{snippet}', $snippet, $val);
+                    $val = str_ireplace('{sender}', $sender, $val);
+                    $val = str_ireplace('{date}', $dateStr, $val);
+                    if (trim($val) === '') {
+                        $schemaDriftWarnings[] = "Mapped field '$key' resulted in empty string for email $messageId (missing required values)";
+                    }
+                    return $val;
+                }
+                
+                $res = match(strtolower($val)) {
+                    'subject' => $subject,
+                    'snippet' => $snippet,
+                    'sender' => $sender,
+                    'date' => $dateStr,
+                    default => $val
+                };
+                if (trim($res) === '') {
+                    $schemaDriftWarnings[] = "Mapped field '$key' resulted in empty string for email $messageId (missing required values)";
+                }
+                return $res;
+            };
+
+            $title = $getMappedValue('title', $subject ?: 'Review Email');
+            $description = $getMappedValue('description', $snippet);
+            
+            $mappedData = [
+                'title' => $title,
+                'description' => $description,
+                'type' => 'review',
+                'status' => 'backlog',
+                'priority' => 'medium',
+                'due_date' => now()->addDay()->toDateString(),
+            ];
+
+            return [
+                'raw' => [
+                    'subject' => $subject,
+                    'snippet' => $snippet,
+                    'sender' => $sender,
+                    'date' => $dateStr
+                ],
+                'mapped' => $mappedData,
+                'warnings' => array_unique($schemaDriftWarnings)
+            ];
+
+        } catch (\Exception $e) {
+            return ['error' => 'Failed to fetch preview from Gmail: ' . $e->getMessage()];
         }
     }
 

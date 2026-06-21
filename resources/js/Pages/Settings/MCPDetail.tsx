@@ -43,9 +43,35 @@ const PROVIDER_ICONS: Record<string, string> = {
     make:            '⚙️',
 };
 
+const MAPPING_TEMPLATES: Record<string, { label: string, mappings: Record<string, string> }[]> = {
+    notion: [
+        {
+            label: "Standard Project Tasks",
+            mappings: { title: "Name", status: "Status", priority: "Priority", due_date: "Due Date", assignee: "Assignee" }
+        },
+        {
+            label: "Content Calendar",
+            mappings: { title: "Article Title", status: "Publish Status", due_date: "Publish Date", assignee: "Author" }
+        }
+    ],
+    gmail: [
+        {
+            label: "Standard Task",
+            mappings: { title: "{subject}", description: "From: {sender}\n\n{snippet}" }
+        },
+        {
+            label: "Detailed Review",
+            mappings: { title: "[Review] {subject}", description: "Date: {date}\nFrom: {sender}\n\n{snippet}" }
+        }
+    ]
+};
+
 export default function MCPDetail({ connection }: Props) {
     const [editing, setEditing] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [isPreviewing, setIsPreviewing] = useState(false);
+    const [previewResult, setPreviewResult] = useState<{ raw: any, mapped: any, warnings: string[] } | null>(null);
+    const [previewError, setPreviewError] = useState('');
     const confirm = useConfirm();
     const form = useForm({
         label:        connection.label ?? '',
@@ -58,6 +84,33 @@ export default function MCPDetail({ connection }: Props) {
     function save(e: React.FormEvent) {
         e.preventDefault();
         form.patch(`/settings/mcp/${connection.id}`, { onSuccess: () => setEditing(false) });
+    }
+
+    async function handlePreview() {
+        setIsPreviewing(true);
+        setPreviewError('');
+        setPreviewResult(null);
+        try {
+            const res = await fetch(`/api/v1/mcp/connections/${connection.id}/mapping-preview`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ field_mappings: form.data.settings?.field_mappings || {} })
+            });
+            const data = await res.json();
+            if (res.ok && data.success !== false) {
+                // Determine structure based on wrapper API response format
+                setPreviewResult(data.data || data);
+            } else {
+                setPreviewError(data.message || data.error || 'Failed to preview');
+            }
+        } catch (e: any) {
+            setPreviewError(e.message);
+        } finally {
+            setIsPreviewing(false);
+        }
     }
 
     return (
@@ -155,7 +208,116 @@ export default function MCPDetail({ connection }: Props) {
                                     <span className="text-sm text-gray-700">Active</span>
                                 </label>
                             </div>
-                            <div className="flex gap-2 pt-1">
+                            <div className="pt-4 border-t border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-900 mb-2">Field Mappings & Computed Fields</h3>
+                                <p className="text-xs text-gray-500 mb-3">Map internal fields to external ones. Support computed fields by wrapping external field names in brackets (e.g. <code>{'{First Name} {Last Name}'}</code>).</p>
+                                
+                                <div className="space-y-2">
+                                    {Object.entries(form.data.settings?.field_mappings || {}).map(([internalKey, externalKey], idx) => (
+                                        <div key={idx} className="flex gap-2 items-center">
+                                            <input type="text" value={internalKey}
+                                                onChange={e => {
+                                                    const newMappings = { ...form.data.settings?.field_mappings };
+                                                    const val = newMappings[internalKey];
+                                                    delete newMappings[internalKey];
+                                                    newMappings[e.target.value] = val;
+                                                    form.setData('settings', { ...form.data.settings, field_mappings: newMappings });
+                                                }}
+                                                placeholder="Internal (e.g. title)"
+                                                className="w-1/3 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono" />
+                                            <span className="text-gray-400">→</span>
+                                            <input type="text" value={externalKey as string}
+                                                onChange={e => {
+                                                    const newMappings = { ...form.data.settings?.field_mappings };
+                                                    newMappings[internalKey] = e.target.value;
+                                                    form.setData('settings', { ...form.data.settings, field_mappings: newMappings });
+                                                }}
+                                                placeholder="External (e.g. Name, Title)"
+                                                className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono" />
+                                            <button type="button" onClick={() => {
+                                                const newMappings = { ...form.data.settings?.field_mappings };
+                                                delete newMappings[internalKey];
+                                                form.setData('settings', { ...form.data.settings, field_mappings: newMappings });
+                                            }} className="p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-red-50">
+                                                <XCircle size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    
+                                    <div className="flex items-center gap-3 pt-2">
+                                        <button type="button" onClick={() => {
+                                            const newMappings = { ...form.data.settings?.field_mappings };
+                                            newMappings['new_field_' + Object.keys(newMappings).length] = '';
+                                            form.setData('settings', { ...form.data.settings, field_mappings: newMappings });
+                                        }} className="text-xs font-medium text-indigo-600 hover:text-indigo-800">
+                                            + Add Mapping
+                                        </button>
+                                        {MAPPING_TEMPLATES[connection.provider] && (
+                                            <select
+                                                className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-600"
+                                                onChange={(e) => {
+                                                    if (!e.target.value) return;
+                                                    const template = MAPPING_TEMPLATES[connection.provider][parseInt(e.target.value)];
+                                                    if (template) {
+                                                        form.setData('settings', { ...form.data.settings, field_mappings: { ...template.mappings } });
+                                                    }
+                                                    e.target.value = ""; // Reset
+                                                }}
+                                            >
+                                                <option value="">Load template...</option>
+                                                {MAPPING_TEMPLATES[connection.provider].map((tpl, i) => (
+                                                    <option key={i} value={i}>{tpl.label}</option>
+                                                ))}
+                                            </select>
+                                        )}
+                                        <div className="ml-auto">
+                                            <button type="button" onClick={handlePreview} disabled={isPreviewing}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-indigo-50 text-indigo-700 font-medium rounded-lg hover:bg-indigo-100 disabled:opacity-50 transition-colors">
+                                                <Zap size={13} /> {isPreviewing ? 'Running Preview...' : 'Test Mapping Preview'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    {previewError && <div className="mt-3 text-xs text-red-600 bg-red-50 p-3 rounded-lg border border-red-100">{previewError}</div>}
+                                    
+                                    {previewResult && (
+                                        <div className="mt-4 border border-indigo-200 bg-indigo-50/30 rounded-xl overflow-hidden shadow-sm">
+                                            <div className="bg-indigo-50 border-b border-indigo-100 px-4 py-2 flex justify-between items-center">
+                                                <h4 className="text-xs font-semibold text-indigo-900">Live Mapping Preview (1 Record)</h4>
+                                                <button type="button" onClick={() => setPreviewResult(null)} className="text-indigo-400 hover:text-indigo-600 transition-colors">
+                                                    <XCircle size={14} />
+                                                </button>
+                                            </div>
+                                            <div className="p-4 grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <h5 className="text-[10px] uppercase font-bold text-gray-500 mb-2 tracking-wider">Raw External Payload</h5>
+                                                    <pre className="text-[10px] bg-white border border-gray-200 rounded-lg p-3 overflow-auto max-h-64 text-gray-700 shadow-inner">
+                                                        {JSON.stringify(previewResult.raw, null, 2)}
+                                                    </pre>
+                                                </div>
+                                                <div>
+                                                    <h5 className="text-[10px] uppercase font-bold text-indigo-500 mb-2 tracking-wider">Computed Internal Mapping</h5>
+                                                    <pre className="text-[10px] bg-white border border-indigo-200 rounded-lg p-3 overflow-auto max-h-64 text-indigo-900 shadow-inner">
+                                                        {JSON.stringify(previewResult.mapped, null, 2)}
+                                                    </pre>
+                                                </div>
+                                            </div>
+                                            {previewResult.warnings && previewResult.warnings.length > 0 && (
+                                                <div className="px-4 pb-4">
+                                                    <div className="bg-orange-50 border border-orange-100 rounded-lg p-3">
+                                                        <h5 className="text-[10px] uppercase font-bold text-orange-600 mb-1 tracking-wider">Coercion / Drift Warnings</h5>
+                                                        <ul className="list-disc pl-4 text-xs text-orange-700 space-y-1">
+                                                            {previewResult.warnings.map((w, i) => <li key={i}>{w}</li>)}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2 pt-1 border-t border-gray-200 pt-4">
                                 <button type="submit" disabled={form.processing}
                                     className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
                                     <Save size={13} /> {form.processing ? 'Saving…' : 'Save Changes'}
