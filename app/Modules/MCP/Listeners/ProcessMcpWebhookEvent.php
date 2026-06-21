@@ -32,6 +32,8 @@ class ProcessMcpWebhookEvent implements ShouldQueue
      */
     public function handle(McpWebhookReceived $event): void
     {
+        $start = microtime(true);
+
         if ($event->eventId) {
             DB::table('mcp_webhook_events')
                 ->where('id', $event->eventId)
@@ -45,12 +47,14 @@ class ProcessMcpWebhookEvent implements ShouldQueue
             Log::info('Webhook processed sequentially for connection: ' . $event->connection->id);
 
             if ($event->eventId) {
+                $durationMs = (int) ((microtime(true) - $start) * 1000);
                 DB::table('mcp_webhook_events')
                     ->where('id', $event->eventId)
                     ->update([
                         'status' => 'processed',
                         'processed_at' => now(),
-                        'updated_at' => now()
+                        'updated_at' => now(),
+                        'duration_ms' => $durationMs
                     ]);
             }
         } catch (\Exception $e) {
@@ -60,10 +64,23 @@ class ProcessMcpWebhookEvent implements ShouldQueue
             ]);
 
             if ($event->eventId) {
+                $durationMs = (int) ((microtime(true) - $start) * 1000);
                 DB::table('mcp_webhook_events')
                     ->where('id', $event->eventId)
-                    ->update(['status' => 'failed', 'updated_at' => now()]);
+                    ->update([
+                        'status' => 'failed',
+                        'updated_at' => now(),
+                        'duration_ms' => $durationMs
+                    ]);
             }
+
+            \Illuminate\Support\Facades\Notification::route('mail', config('mail.from.address', 'admin@example.com'))
+                ->notify(new \App\Notifications\WebhookFailedNotification(
+                    'Inbound Webhook',
+                    $event->connection->provider,
+                    $e->getMessage(),
+                    $event->payload
+                ));
 
             // Re-throw so the queue catches the failure and retries
             throw $e;

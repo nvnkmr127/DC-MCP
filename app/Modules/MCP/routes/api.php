@@ -29,5 +29,9 @@ Route::prefix('v1')->group(function () {
     });
     
     Route::post('/mcp/webhooks/{eventId}/replay', [McpConnectionApiController::class, 'replayWebhook']);
+    Route::get('/mcp/webhooks/dashboard', [\App\Modules\MCP\Http\Controllers\Api\V1\McpWebhookAnalyticsController::class, 'dashboard']);
+    Route::get('/mcp/webhooks/analytics', [\App\Modules\MCP\Http\Controllers\Api\V1\McpWebhookAnalyticsController::class, 'analytics']);
     
+    Route::apiResource('mcp/webhook-subscriptions', \App\Modules\MCP\Http\Controllers\Api\V1\McpWebhookSubscriptionController::class);
+    Route::get('mcp/webhook-subscriptions/{subscription}/logs', [\App\Modules\MCP\Http\Controllers\Api\V1\McpWebhookSubscriptionController::class, 'logs']);
 });

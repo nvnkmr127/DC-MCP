@@ -55,6 +55,8 @@ class MCPServiceProvider extends ModuleServiceProvider
         Event::listen(McpSyncFailed::class, HandleMcpSyncFailed::class);
         Event::listen(\App\Modules\MCP\Events\McpWebhookReceived::class, \App\Modules\MCP\Listeners\ProcessMcpWebhookEvent::class);
 
+        Event::subscribe(\App\Modules\MCP\Listeners\OutboundWebhookEventSubscriber::class);
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \App\Modules\MCP\Console\Commands\CheckProviderUpdatesCommand::class,
