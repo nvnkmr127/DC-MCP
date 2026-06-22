@@ -14,10 +14,11 @@ use App\Modules\Auth\Models\User;
 
 class McpConnectionApiController extends Controller
 {
-    /** Built-in providers that have dedicated adapters. */
-    private const BUILTIN_PROVIDERS = [
-        'gmail', 'google_calendar', 'notion', 'zoho_cliq', 'meta_ads', 'make',
-    ];
+    /** Get active built-in providers from DB */
+    protected function getBuiltinProviders(): array
+    {
+        return \App\Modules\MCP\Models\McpProvider::where('is_active', true)->pluck('slug')->toArray();
+    }
 
     public function index(Request $request): JsonResponse
     {
@@ -25,7 +26,7 @@ class McpConnectionApiController extends Controller
             return collect($c->toArray())
                 ->except(['credentials'])
                 ->put('is_expired', $c->isExpired())
-                ->put('is_custom', !in_array($c->provider, self::BUILTIN_PROVIDERS));
+                ->put('is_custom', !in_array($c->provider, $this->getBuiltinProviders()));
         });
 
         return ApiResponse::success($connections);
@@ -34,7 +35,7 @@ class McpConnectionApiController extends Controller
     public function getCatalogue(Request $request): JsonResponse
     {
         $catalogue = [];
-        $providersToInclude = array_merge(self::BUILTIN_PROVIDERS, ['custom']);
+        $providersToInclude = array_merge($this->getBuiltinProviders(), ['custom']);
 
         foreach ($providersToInclude as $provider) {
             try {
@@ -78,7 +79,7 @@ class McpConnectionApiController extends Controller
             'credentials'               => ['nullable', 'array'],
         ]);
 
-        $isCustom = !in_array($data['provider'], self::BUILTIN_PROVIDERS);
+        $isCustom = !in_array($data['provider'], $this->getBuiltinProviders());
         
         // Duplicate connection check by Name (instead of provider)
         $existingNameQuery = McpConnection::where('organization_id', $request->user()->organization_id)
@@ -173,7 +174,7 @@ class McpConnectionApiController extends Controller
             collect($mcpConnection->toArray())
                 ->except(['credentials'])
                 ->put('is_expired', $mcpConnection->isExpired())
-                ->put('is_custom', !in_array($mcpConnection->provider, self::BUILTIN_PROVIDERS))
+                ->put('is_custom', !in_array($mcpConnection->provider, $this->getBuiltinProviders()))
         );
     }
 
@@ -220,7 +221,7 @@ class McpConnectionApiController extends Controller
             }
         }
 
-        if (isset($data['scopes']) && !in_array($mcpConnection->provider, self::BUILTIN_PROVIDERS) === false) {
+        if (isset($data['scopes']) && !in_array($mcpConnection->provider, $this->getBuiltinProviders()) === false) {
             $adapter = $this->resolveAdapter($mcpConnection->provider);
             $requiredScopes = $adapter->getAvailableScopes();
             
@@ -247,7 +248,7 @@ class McpConnectionApiController extends Controller
             $data['status'] = \App\Modules\MCP\Enums\ConnectionStatus::PENDING_VERIFICATION->value;
         }
         
-        if (!in_array($mcpConnection->provider, self::BUILTIN_PROVIDERS) === false) {
+        if (!in_array($mcpConnection->provider, $this->getBuiltinProviders()) === false) {
             $adapter = $this->resolveAdapter($mcpConnection->provider);
             $settings = $data['settings'] ?? $mcpConnection->settings ?? [];
             $settings['api_version'] = $adapter->getApiVersion();
@@ -339,7 +340,7 @@ class McpConnectionApiController extends Controller
 
     public function syncPreview(Request $request, McpConnection $mcpConnection): JsonResponse
     {
-        if (in_array($mcpConnection->provider, self::BUILTIN_PROVIDERS) === false) {
+        if (in_array($mcpConnection->provider, $this->getBuiltinProviders()) === false) {
             return ApiResponse::error('Sync preview is not supported for custom providers.', 400);
         }
 
@@ -361,7 +362,7 @@ class McpConnectionApiController extends Controller
             'field_mappings' => ['required', 'array'],
         ]);
 
-        if (!in_array($mcpConnection->provider, self::BUILTIN_PROVIDERS) === false) {
+        if (!in_array($mcpConnection->provider, $this->getBuiltinProviders()) === false) {
             return ApiResponse::error('Mapping preview is not supported for custom providers.', 400);
         }
 
@@ -417,7 +418,7 @@ class McpConnectionApiController extends Controller
 
         return ApiResponse::success(
             collect($newConnection->toArray())->except(['credentials'])
-                ->put('is_custom', !in_array($newConnection->provider, self::BUILTIN_PROVIDERS)),
+                ->put('is_custom', !in_array($newConnection->provider, $this->getBuiltinProviders())),
             'Connection cloned successfully.',
             [],
             201
@@ -648,8 +649,8 @@ class McpConnectionApiController extends Controller
             ->toArray();
 
         return ApiResponse::success([
-            'builtin' => self::BUILTIN_PROVIDERS,
-            'custom'  => array_values(array_filter($usedProviders, fn ($p) => !in_array($p, self::BUILTIN_PROVIDERS))),
+            'builtin' => $this->getBuiltinProviders(),
+            'custom'  => array_values(array_filter($usedProviders, fn ($p) => !in_array($p, $this->getBuiltinProviders()))),
         ]);
     }
 
@@ -849,15 +850,13 @@ class McpConnectionApiController extends Controller
 
     private function resolveAdapter(string $provider): \App\Modules\MCP\Contracts\MCPAdapter
     {
-        return match ($provider) {
-            'gmail'           => app(\App\Modules\MCP\Adapters\GmailAdapter::class),
-            'google_calendar' => app(\App\Modules\MCP\Adapters\GoogleCalendarAdapter::class),
-            'notion'          => app(\App\Modules\MCP\Adapters\NotionAdapter::class),
-            'zoho_cliq'       => app(\App\Modules\MCP\Adapters\ZohoCliqAdapter::class),
-            'meta_ads'        => app(\App\Modules\MCP\Adapters\MetaAdsAdapter::class),
-            'make'            => app(\App\Modules\MCP\Adapters\MakeAdapter::class),
-            default           => app(CustomMcpAdapter::class),
-        };
+        $providerModel = \App\Modules\MCP\Models\McpProvider::where('slug', $provider)->first();
+
+        if ($providerModel && $providerModel->adapter_class) {
+            return app($providerModel->adapter_class);
+        }
+
+        return app(CustomMcpAdapter::class);
     }
 
     private function decryptConnectionCredentials(McpConnection $connection, string $environment = 'production'): array

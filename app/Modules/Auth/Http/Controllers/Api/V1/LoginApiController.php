@@ -21,6 +21,8 @@ class LoginApiController extends Controller
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
             'device_name' => ['nullable', 'string'], // for API tokens
+            'scopes' => ['nullable', 'array'],
+            'expires_at' => ['nullable', 'date', 'after:today'],
         ]);
 
         if (!Auth::attempt($request->only('email', 'password'))) {
@@ -65,7 +67,12 @@ class LoginApiController extends Controller
 
         $token = null;
         if ($request->filled('device_name')) {
-            $token = $user->createToken($request->device_name)->plainTextToken;
+            $scopes = $request->input('scopes', ['*']);
+            $expiresAt = $request->input('expires_at') 
+                ? \Carbon\Carbon::parse($request->input('expires_at')) 
+                : now()->addDays(30); // Default to 30 days
+
+            $token = $user->createToken($request->device_name, $scopes, $expiresAt)->plainTextToken;
             Log::info('API token issued', [
                 'user_id'     => $user->id,
                 'device_name' => $request->device_name,

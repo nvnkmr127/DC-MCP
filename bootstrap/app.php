@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
 
+        // Apply security headers to all responses
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         $middleware->api(append: [
             \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \App\Http\Middleware\TenantIsolationMiddleware::class,

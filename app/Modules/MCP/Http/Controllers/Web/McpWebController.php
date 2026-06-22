@@ -11,9 +11,11 @@ use App\Modules\MCP\Jobs\SyncMcpProviderJob;
 
 class McpWebController extends Controller
 {
-    private const BUILTIN_PROVIDERS = [
-        'gmail', 'google_calendar', 'notion', 'zoho_cliq', 'meta_ads', 'make',
-    ];
+    /** Get active built-in providers from DB */
+    protected function getBuiltinProviders(): array
+    {
+        return \App\Modules\MCP\Models\McpProvider::where('is_active', true)->pluck('slug')->toArray();
+    }
 
     public function index(Request $request)
     {
@@ -25,20 +27,25 @@ class McpWebController extends Controller
                 'label'        => $c->label ?? $c->name ?? ucfirst(str_replace('_', ' ', $c->provider)),
                 'status'       => $c->status,
                 'is_active'    => $c->is_active,
-                'is_builtin'   => in_array($c->provider, self::BUILTIN_PROVIDERS),
+                'is_builtin'   => in_array($c->provider, $this->getBuiltinProviders()),
                 'last_synced_at' => $c->last_synced_at?->toISOString(),
+                'updated_at'   => $c->updated_at?->toISOString(),
+                'sync_progress' => $c->sync_progress,
+                'sync_error'    => $c->sync_error,
+                'troubleshooting_guide' => $c->troubleshooting_guide,
+                'last_sync_summary' => $c->settings['last_sync_summary'] ?? null,
                 'settings'     => $c->settings ? array_filter($c->settings, fn($k) => !in_array($k, ['api_key', 'password', 'access_token']), ARRAY_FILTER_USE_KEY) : [],
             ]);
 
         return Inertia::render('Settings/MCP', [
             'connections'      => $connections,
-            'builtin_providers' => self::BUILTIN_PROVIDERS,
+            'builtin_providers' => $this->getBuiltinProviders(),
         ]);
     }
 
     public function store(Request $request)
     {
-        $isBuiltin = in_array($request->provider, self::BUILTIN_PROVIDERS);
+        $isBuiltin = in_array($request->provider, $this->getBuiltinProviders());
 
         $data = $request->validate([
             'provider'          => 'required|string|max:60',
@@ -100,6 +107,8 @@ class McpWebController extends Controller
             'is_active'    => 'nullable|boolean',
             'access_token' => 'nullable|string',
             'api_key'      => 'nullable|string',
+            'username'     => 'nullable|string',
+            'password'     => 'nullable|string',
         ]);
 
         $update = array_filter([
@@ -108,13 +117,17 @@ class McpWebController extends Controller
             'is_active' => $data['is_active'] ?? null,
         ], fn($v) => $v !== null);
 
-        if (!empty($data['access_token']) || !empty($data['api_key'])) {
+        if (!empty($data['access_token']) || !empty($data['api_key']) || !empty($data['username']) || !empty($data['password'])) {
             $existing = $connection->credentials
                 ? json_decode(Crypt::decryptString($connection->credentials), true)
                 : [];
             if (!empty($data['access_token'])) $existing['access_token'] = $data['access_token'];
             if (!empty($data['api_key']))       $existing['api_key'] = $data['api_key'];
+            if (!empty($data['username']))      $existing['username'] = $data['username'];
+            if (!empty($data['password']))      $existing['password'] = $data['password'];
             $update['credentials'] = Crypt::encryptString(json_encode($existing));
+            $update['status'] = 'active';
+            $update['sync_error'] = null;
         }
 
         $connection->update($update);
@@ -141,15 +154,13 @@ class McpWebController extends Controller
 
     private function resolveAdapter(string $provider): mixed
     {
-        return match ($provider) {
-            'gmail'           => app(\App\Modules\MCP\Adapters\GmailAdapter::class),
-            'google_calendar' => app(\App\Modules\MCP\Adapters\GoogleCalendarAdapter::class),
-            'notion'          => app(\App\Modules\MCP\Adapters\NotionAdapter::class),
-            'zoho_cliq'       => app(\App\Modules\MCP\Adapters\ZohoCliqAdapter::class),
-            'meta_ads'        => app(\App\Modules\MCP\Adapters\MetaAdsAdapter::class),
-            'make'            => app(\App\Modules\MCP\Adapters\MakeAdapter::class),
-            default           => app(\App\Modules\MCP\Adapters\CustomMcpAdapter::class),
-        };
+        $providerModel = \App\Modules\MCP\Models\McpProvider::where('slug', $provider)->first();
+
+        if ($providerModel && $providerModel->adapter_class) {
+            return app($providerModel->adapter_class);
+        }
+
+        return app(\App\Modules\MCP\Adapters\CustomMcpAdapter::class);
     }
 }
 

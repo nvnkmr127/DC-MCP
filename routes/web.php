@@ -11,6 +11,14 @@ Route::get('/health/detailed', HealthController::class)
 // Lightweight canary deployment health check (accessible to ELB/K8s probes)
 Route::get('/health/canary', [HealthController::class, 'canary']);
 
+// Webhook Routes (Public, protected by their own signature/IP verification)
+Route::post('/webhooks/mcp/{provider}/{connectionId}', [\App\Modules\MCP\Http\Controllers\Api\V1\McpConnectionApiController::class, 'webhook'])
+    ->middleware([
+        'throttle:webhooks',
+        \App\Http\Middleware\McpWebhookIpAllowlist::class,
+        'webhook.signature'
+    ]);
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes — Inertia SPA
@@ -34,9 +42,37 @@ Route::middleware(['auth'])->group(function () {
     // Help page
     Route::get('/help', fn() => \Inertia\Inertia::render('Help/Index'))->name('web.help');
 
-    // Admin Diagnostics
+    // Admin Diagnostics & Hub
     Route::middleware(['role:super_admin'])->group(function () {
         Route::get('/admin/diagnostics', [\App\Http\Controllers\Admin\DiagnosticController::class, 'index'])
             ->name('admin.diagnostics');
+        Route::get('/admin/mcp', [\App\Http\Controllers\Admin\McpAdminController::class, 'index'])
+            ->name('admin.mcp');
+        Route::post('/admin/impersonate/{user}', [\App\Http\Controllers\Admin\McpAdminController::class, 'impersonate'])
+            ->name('admin.impersonate');
+        Route::get('/admin/mcp/{connection}/history', [\App\Http\Controllers\Admin\McpAdminController::class, 'history'])
+            ->name('admin.mcp.history');
+        Route::post('/admin/mcp/{connection}/migrate', [\App\Http\Controllers\Admin\McpAdminController::class, 'migrate'])
+            ->name('admin.mcp.migrate');
+        Route::get('/admin/mcp/providers', [\App\Http\Controllers\Admin\McpAdminController::class, 'providers'])
+            ->name('admin.mcp.providers');
+        Route::post('/admin/mcp/providers', [\App\Http\Controllers\Admin\McpAdminController::class, 'storeProvider'])
+            ->name('admin.mcp.providers.store');
+        Route::put('/admin/mcp/providers/{provider}', [\App\Http\Controllers\Admin\McpAdminController::class, 'updateProvider'])
+            ->name('admin.mcp.providers.update');
+        
+        // Audit Logs
+        Route::get('/admin/audit-logs', [\App\Http\Controllers\Admin\AuditLogController::class, 'index'])
+            ->name('admin.audit-logs');
+            
+        // Feature Flags
+        Route::get('/admin/feature-flags', [\App\Http\Controllers\Admin\FeatureFlagController::class, 'index'])
+            ->name('admin.feature-flags');
+        Route::post('/admin/feature-flags', [\App\Http\Controllers\Admin\FeatureFlagController::class, 'store'])
+            ->name('admin.feature-flags.store');
+        Route::post('/admin/feature-flags/{featureFlag}/toggle', [\App\Http\Controllers\Admin\FeatureFlagController::class, 'toggle'])
+            ->name('admin.feature-flags.toggle');
+        Route::delete('/admin/feature-flags/{featureFlag}', [\App\Http\Controllers\Admin\FeatureFlagController::class, 'destroy'])
+            ->name('admin.feature-flags.destroy');
     });
 });

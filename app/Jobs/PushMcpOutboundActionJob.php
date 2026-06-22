@@ -38,15 +38,12 @@ class PushMcpOutboundActionJob implements ShouldQueue
 
     private function resolveAdapter(string $provider): mixed
     {
-        return match ($provider) {
-            'gmail'           => app(\App\Modules\MCP\Adapters\GmailAdapter::class),
-            'google_calendar' => app(\App\Modules\MCP\Adapters\GoogleCalendarAdapter::class),
-            'notion'          => app(\App\Modules\MCP\Adapters\NotionAdapter::class),
-            'zoho_cliq'       => app(\App\Modules\MCP\Adapters\ZohoCliqAdapter::class),
-            'meta_ads'        => app(\App\Modules\MCP\Adapters\MetaAdsAdapter::class),
-            'make'            => app(\App\Modules\MCP\Adapters\MakeAdapter::class),
-            // Any custom provider falls back to the generic HTTP adapter
-            default           => app(\App\Modules\MCP\Adapters\CustomMcpAdapter::class),
-        };
+        $providerModel = \App\Modules\MCP\Models\McpProvider::where('slug', $provider)->first();
+
+        if ($providerModel && $providerModel->adapter_class) {
+            return app($providerModel->adapter_class);
+        }
+
+        return app(\App\Modules\MCP\Adapters\CustomMcpAdapter::class);
     }
 }

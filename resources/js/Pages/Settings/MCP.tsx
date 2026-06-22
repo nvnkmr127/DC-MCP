@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
 import { cn, timeAgo } from '@/lib/utils';
-import { Plus, Trash2, RefreshCw, CheckCircle, XCircle, Settings, Globe, Key } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/Components/ui/Tooltip';
+import { Plus, Trash2, RefreshCw, CheckCircle, XCircle, Settings, Globe, Key, AlertTriangle, HelpCircle, ExternalLink, PlayCircle } from 'lucide-react';
 
 interface McpConnection {
     id: string;
@@ -13,6 +14,11 @@ interface McpConnection {
     is_active: boolean;
     is_builtin: boolean;
     last_synced_at: string | null;
+    updated_at?: string;
+    sync_progress?: number | null;
+    sync_error?: string | null;
+    troubleshooting_guide?: string[];
+    last_sync_summary?: string | null;
     settings: Record<string, any>;
 }
 
@@ -28,6 +34,39 @@ const PROVIDER_ICONS: Record<string, string> = {
     zoho_cliq:       '💬',
     meta_ads:        '📢',
     make:            '⚙️',
+};
+
+const PROVIDER_DETAILS: Record<string, { desc: string; scopes: string[]; synced_data: string[] }> = {
+    gmail: { 
+        desc: 'Connect to Gmail to read, sync, and send emails.',
+        scopes: ['Read incoming emails and metadata', 'Send emails on your behalf', 'Manage email labels and threads'],
+        synced_data: ['Email Subjects & Snippets', 'Sender Details', 'Timestamps', 'Attachments (if configured)']
+    },
+    google_calendar: { 
+        desc: 'Connect to Google Calendar to manage events and availability.',
+        scopes: ['View your calendars', 'Create, edit, and delete events', 'Check availability'],
+        synced_data: ['Event Titles & Descriptions', 'Start/End Times', 'Attendees', 'Meeting Links']
+    },
+    notion: { 
+        desc: 'Connect to Notion to sync databases, pages, and tasks.',
+        scopes: ['Read content from selected pages/databases', 'Insert new pages and blocks', 'Update properties on existing pages'],
+        synced_data: ['Database Items (Tasks, Notes)', 'Page Properties', 'Content Blocks']
+    },
+    zoho_cliq: { 
+        desc: 'Connect to Zoho Cliq for messaging and notifications.',
+        scopes: ['Send messages to channels and users', 'Read messages in channels', 'Manage bots'],
+        synced_data: ['Channel Messages', 'User Mentions', 'Files Shared in Monitored Channels']
+    },
+    meta_ads: { 
+        desc: 'Connect to Meta Ads to sync campaign data and metrics.',
+        scopes: ['Read ad campaigns and ad sets', 'Read ad performance insights', 'Manage ad campaigns'],
+        synced_data: ['Campaign Budgets & Status', 'Ad Impressions & Clicks', 'Spend Metrics']
+    },
+    make: { 
+        desc: 'Connect to Make.com to trigger automation scenarios.',
+        scopes: ['Trigger specified webhooks', 'Read scenario status'],
+        synced_data: ['Webhook Execution Results', 'Scenario Status Updates']
+    },
 };
 
 const STATUS_STYLES: Record<string, string> = {
@@ -47,10 +86,19 @@ const STATUS_STYLES: Record<string, string> = {
     degraded:             'bg-yellow-100 text-yellow-700',
 };
 
+const getFreshnessColor = (dateStr: string) => {
+    const diffHours = (Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60);
+    if (diffHours > 24) return 'bg-red-400';
+    if (diffHours > 1) return 'bg-yellow-400';
+    return 'bg-green-400';
+};
+
 export default function MCPSettings({ connections, builtin_providers }: Props) {
     const [showForm, setShowForm] = useState(false);
     const [isCustom, setIsCustom] = useState(false);
-    const [syncingId, setSyncingId] = useState<string | null>(null);
+    const [wizardStep, setWizardStep] = useState(1);
+    const [syncingMap, setSyncingMap] = useState<Record<string, number>>({});
+    const [editingId, setEditingId] = useState<string | null>(null);
     const confirm = useConfirm();
 
     const form = useForm({
@@ -69,14 +117,61 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
         },
     });
 
+    const isValidCredentials = () => {
+        if (isCustom) {
+            if (!form.data.provider || !form.data.settings.base_url) return false;
+        }
+        const authType = form.data.settings.auth_type;
+        if (authType === 'basic') return form.data.username.length >= 3 && form.data.password.length >= 3;
+        if (authType === 'api_key') return form.data.api_key.length > 5;
+        if (authType === 'bearer') return form.data.access_token.length > 10;
+        return true;
+    };
+
     function submit(e: React.FormEvent) {
         e.preventDefault();
-        form.post('/settings/mcp', {
-            onSuccess: () => {
-                form.reset();
-                setShowForm(false);
+        if (editingId) {
+            form.patch(`/settings/mcp/${editingId}`, {
+                onSuccess: () => {
+                    form.reset();
+                    setShowForm(false);
+                    setWizardStep(1);
+                    setEditingId(null);
+                },
+            });
+        } else {
+            form.post('/settings/mcp', {
+                onSuccess: () => {
+                    form.reset();
+                    setShowForm(false);
+                    setWizardStep(1);
+                },
+            });
+        }
+    }
+
+    function handleReauthorize(conn: McpConnection) {
+        setEditingId(conn.id);
+        setIsCustom(!conn.is_builtin);
+        form.setData({
+            provider: conn.provider,
+            label: conn.label || '',
+            access_token: '',
+            api_key: '',
+            username: '',
+            password: '',
+            settings: {
+                base_url: '',
+                auth_type: 'bearer',
+                sync_endpoint: '',
+                test_endpoint: '',
+                webhook_secret: '',
+                ...((conn.settings as any) || {}),
             },
         });
+        setWizardStep(3);
+        setShowForm(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     async function remove(id: string) {
@@ -91,12 +186,37 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
     }
 
     function sync(id: string) {
-        router.post(`/settings/mcp/${id}/sync`, {}, { 
-            preserveScroll: true,
-            onStart: () => setSyncingId(id),
-            onFinish: () => setSyncingId(null)
-        });
+        setSyncingMap(prev => ({ ...prev, [id]: Date.now() }));
+        router.post(`/settings/mcp/${id}/sync`, {}, { preserveScroll: true });
     }
+
+    useEffect(() => {
+        let interval: ReturnType<typeof setInterval>;
+        const activeSyncs = Object.keys(syncingMap);
+        if (activeSyncs.length > 0) {
+            interval = setInterval(() => {
+                router.reload({ 
+                    only: ['connections'], 
+                    onSuccess: (page) => {
+                        const conns = page.props.connections as McpConnection[];
+                        setSyncingMap(prev => {
+                            const next = { ...prev };
+                            let changed = false;
+                            for (const id of Object.keys(next)) {
+                                const conn = conns.find(c => c.id === id);
+                                if (conn && conn.updated_at && new Date(conn.updated_at).getTime() > next[id]) {
+                                    delete next[id];
+                                    changed = true;
+                                }
+                            }
+                            return changed ? next : prev;
+                        });
+                    }
+                });
+            }, 2500);
+        }
+        return () => clearInterval(interval);
+    }, [syncingMap]);
 
     function toggleActive(conn: McpConnection) {
         router.patch(`/settings/mcp/${conn.id}`, { is_active: !conn.is_active }, { preserveScroll: true });
@@ -105,6 +225,7 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
     return (
         <AppLayout title="Integrations & MCP">
             <Head title="Integrations & MCP" />
+            <TooltipProvider delayDuration={200}>
 
             <div className="flex items-center justify-between mb-6">
                 <div>
@@ -112,7 +233,10 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
                     <p className="text-sm text-gray-500 mt-0.5">Connect external services via MCP</p>
                 </div>
                 <button
-                    onClick={() => setShowForm(!showForm)}
+                    onClick={() => {
+                        if (!showForm) setWizardStep(1);
+                        setShowForm(!showForm);
+                    }}
                     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
                 >
                     <Plus size={15} /> Add Connection
@@ -122,46 +246,145 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
             {/* Add Connection Form */}
             {showForm && (
                 <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">New Connection</h3>
-
-                    {/* Toggle builtin vs custom */}
-                    <div className="flex gap-2 mb-4">
-                        <button
-                            type="button"
-                            onClick={() => setIsCustom(false)}
-                            className={cn('px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors', !isCustom ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200')}
-                        >
-                            Built-in Provider
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setIsCustom(true)}
-                            className={cn('flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors', isCustom ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200')}
-                        >
-                            <Globe size={12} /> Custom HTTP Provider
-                        </button>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-semibold text-gray-900">New Connection Setup</h3>
+                        <div className="flex items-center gap-1.5">
+                            {[1, 2, 3].map(step => (
+                                <div key={step} className={cn("h-2 rounded-full transition-all", wizardStep >= step ? "w-6 bg-indigo-600" : "w-2 bg-gray-200")} />
+                            ))}
+                        </div>
                     </div>
 
-                    <form onSubmit={submit} className="space-y-4">
-                        {!isCustom ? (
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">Provider</label>
-                                <select
-                                    value={form.data.provider}
-                                    onChange={e => form.setData('provider', e.target.value)}
-                                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    required
+                    {wizardStep === 1 && (
+                        <div>
+                            <h4 className="text-sm font-medium text-gray-700 mb-3">Select a Provider</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                                {builtin_providers.map(p => (
+                                    <button
+                                        key={p}
+                                        type="button"
+                                        onClick={() => {
+                                            form.setData('provider', p);
+                                            setIsCustom(false);
+                                            setWizardStep(2);
+                                        }}
+                                        className={cn(
+                                            "flex flex-col items-center justify-center p-4 border rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition-colors",
+                                            form.data.provider === p && !isCustom ? "border-indigo-600 bg-indigo-50" : "border-gray-200 bg-white"
+                                        )}
+                                    >
+                                        <span className="text-3xl mb-2">{PROVIDER_ICONS[p] ?? '🔌'}</span>
+                                        <span className="text-xs font-semibold capitalize text-gray-700">{p.replace('_', ' ')}</span>
+                                    </button>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        form.setData('provider', '');
+                                        setIsCustom(true);
+                                        setWizardStep(2);
+                                    }}
+                                    className={cn(
+                                        "flex flex-col items-center justify-center p-4 border rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition-colors",
+                                        isCustom ? "border-indigo-600 bg-indigo-50" : "border-gray-200 bg-white"
+                                    )}
                                 >
-                                    <option value="">Select provider…</option>
-                                    {builtin_providers.map(p => (
-                                        <option key={p} value={p}>{PROVIDER_ICONS[p] ?? '🔌'} {p.replace('_', ' ')}</option>
-                                    ))}
-                                </select>
-                                {form.errors.provider && <p className="text-red-500 text-xs mt-1">{form.errors.provider}</p>}
+                                    <Globe size={30} className="mb-2 text-gray-400" />
+                                    <span className="text-xs font-semibold text-gray-700">Custom HTTP</span>
+                                </button>
                             </div>
-                        ) : (
-                            <>
-                                <div className="grid grid-cols-2 gap-3">
+                            <div className="flex justify-end pt-2 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowForm(false)}
+                                    className="px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {wizardStep === 2 && (
+                        <div>
+                            <div className="mb-5 flex items-start gap-4 p-5 bg-gray-50 border border-gray-100 rounded-xl">
+                                <div className="text-4xl shrink-0 mt-1">
+                                    {isCustom ? <Globe size={40} className="text-gray-400" /> : (PROVIDER_ICONS[form.data.provider] ?? '🔌')}
+                                </div>
+                                <div>
+                                    <h4 className="text-base font-bold text-gray-900 capitalize mb-1">
+                                        {isCustom ? 'Custom HTTP Provider' : form.data.provider.replace('_', ' ')}
+                                    </h4>
+                                    <p className="text-sm text-gray-600 mb-4">
+                                        {isCustom 
+                                            ? 'Connect to any external system using standard HTTP/REST APIs. You will need to provide endpoints and credentials.' 
+                                            : (PROVIDER_DETAILS[form.data.provider]?.desc || 'Connect this provider to sync data.')}
+                                    </p>
+                                    {!isCustom && PROVIDER_DETAILS[form.data.provider]?.scopes && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="bg-white border border-gray-200 rounded-lg p-3">
+                                                <h5 className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-1.5"><Key size={13} className="text-indigo-600" /> Required Permissions:</h5>
+                                                <ul className="text-xs text-gray-600 list-disc pl-4 space-y-1">
+                                                    {PROVIDER_DETAILS[form.data.provider].scopes.map((scope, idx) => (
+                                                        <li key={idx}>{scope}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                            <div className="bg-white border border-gray-200 rounded-lg p-3">
+                                                <h5 className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-1.5"><RefreshCw size={13} className="text-blue-500" /> What will be synced:</h5>
+                                                <ul className="text-xs text-gray-600 list-disc pl-4 space-y-1">
+                                                    {PROVIDER_DETAILS[form.data.provider].synced_data?.map((data, idx) => (
+                                                        <li key={idx}>{data}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 justify-between pt-2 mt-4 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setWizardStep(1)}
+                                    className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+                                >
+                                    Back
+                                </button>
+                                <div className="flex gap-2">
+                                    <a
+                                        href={`https://docs.example.com/integrations/${form.data.provider}`}
+                                        target="_blank" rel="noopener noreferrer"
+                                        className="px-4 py-2 text-sm text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg font-medium flex items-center gap-1.5 transition-colors hidden sm:flex"
+                                    >
+                                        <ExternalLink size={14} /> Setup Guide
+                                    </a>
+                                    <button
+                                        type="button"
+                                        onClick={() => setWizardStep(3)}
+                                        className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
+                                    >
+                                        Continue to Credentials
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {wizardStep === 3 && (
+                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                            <form onSubmit={submit} className="space-y-4 lg:col-span-3">
+                            {!isCustom && (
+                                <div className="mb-4 bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 flex items-center gap-3">
+                                    <span className="text-xl">{PROVIDER_ICONS[form.data.provider] ?? '🔌'}</span>
+                                    <div>
+                                        <div className="text-sm font-semibold capitalize text-gray-900">{form.data.provider.replace('_', ' ')}</div>
+                                        <div className="text-xs text-gray-500">Provide authentication credentials to complete setup.</div>
+                                    </div>
+                                </div>
+                            )}
+                            <div className={cn("grid gap-3", isCustom ? "grid-cols-2" : "grid-cols-1")}>
+                                {isCustom && (
                                     <div>
                                         <label className="block text-xs font-medium text-gray-600 mb-1">Provider ID</label>
                                         <input
@@ -174,126 +397,223 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
                                         />
                                         {form.errors.provider && <p className="text-red-500 text-xs mt-1">{form.errors.provider}</p>}
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Display Label</label>
-                                        <input
-                                            type="text"
-                                            value={form.data.label}
-                                            onChange={e => form.setData('label', e.target.value)}
-                                            placeholder="My CRM"
-                                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        />
-                                    </div>
-                                </div>
+                                )}
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-600 mb-1">Base URL *</label>
-                                    <input
-                                        type="url"
-                                        value={form.data.settings.base_url}
-                                        onChange={e => form.setData('settings', { ...form.data.settings, base_url: e.target.value })}
-                                        placeholder="https://api.mycrm.com/v1"
-                                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        required={isCustom}
-                                    />
-                                    {form.errors['settings.base_url'] && <p className="text-red-500 text-xs mt-1">{form.errors['settings.base_url']}</p>}
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Auth Type</label>
-                                        <select
-                                            value={form.data.settings.auth_type}
-                                            onChange={e => form.setData('settings', { ...form.data.settings, auth_type: e.target.value })}
-                                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        >
-                                            <option value="bearer">Bearer Token</option>
-                                            <option value="api_key">API Key Header</option>
-                                            <option value="basic">Basic Auth</option>
-                                            <option value="none">No Auth</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-medium text-gray-600 mb-1">Sync Endpoint</label>
-                                        <input
-                                            type="text"
-                                            value={form.data.settings.sync_endpoint}
-                                            onChange={e => form.setData('settings', { ...form.data.settings, sync_endpoint: e.target.value })}
-                                            placeholder="/sync (optional)"
-                                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                        />
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                                {!isCustom || form.data.settings.auth_type === 'bearer' ? 'Access Token / OAuth Token' : form.data.settings.auth_type === 'api_key' ? 'API Key' : 'Username'}
-                            </label>
-                            {form.data.settings.auth_type === 'basic' ? (
-                                <div className="grid grid-cols-2 gap-3">
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Connection Label</label>
                                     <input
                                         type="text"
-                                        value={form.data.username}
-                                        onChange={e => form.setData('username', e.target.value)}
-                                        placeholder="Username"
+                                        value={form.data.label}
+                                        onChange={e => form.setData('label', e.target.value)}
+                                        placeholder={isCustom ? "My CRM" : `${form.data.provider.replace('_', ' ')} (e.g. Work, Personal)`}
                                         className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
+                                    {!isCustom && <p className="text-[10px] text-gray-500 mt-1">Useful to differentiate multiple connections.</p>}
+                                </div>
+                            </div>
+                            
+                            {isCustom && (
+                                <>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+                                            Base URL *
+                                            <Tooltip>
+                                                <TooltipTrigger type="button"><HelpCircle size={12} className="text-gray-400 hover:text-gray-600" /></TooltipTrigger>
+                                                <TooltipContent><p className="w-48 font-normal">The root endpoint URL for this API (e.g., https://api.example.com/v1).</p></TooltipContent>
+                                            </Tooltip>
+                                        </label>
+                                        <input
+                                            type="url"
+                                            value={form.data.settings.base_url}
+                                            onChange={e => form.setData('settings', { ...form.data.settings, base_url: e.target.value })}
+                                            placeholder="https://api.mycrm.com/v1"
+                                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            required={isCustom}
+                                        />
+                                        {form.errors['settings.base_url'] && <p className="text-red-500 text-xs mt-1">{form.errors['settings.base_url']}</p>}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+                                                Auth Type
+                                                <Tooltip>
+                                                    <TooltipTrigger type="button"><HelpCircle size={12} className="text-gray-400 hover:text-gray-600" /></TooltipTrigger>
+                                                    <TooltipContent><p className="w-48 font-normal">How this API handles authentication. Usually Bearer Token for modern REST APIs.</p></TooltipContent>
+                                                </Tooltip>
+                                            </label>
+                                            <select
+                                                value={form.data.settings.auth_type}
+                                                onChange={e => form.setData('settings', { ...form.data.settings, auth_type: e.target.value })}
+                                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            >
+                                                <option value="bearer">Bearer Token</option>
+                                                <option value="api_key">API Key Header</option>
+                                                <option value="basic">Basic Auth</option>
+                                                <option value="none">No Auth</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+                                                Sync Endpoint
+                                                <Tooltip>
+                                                    <TooltipTrigger type="button"><HelpCircle size={12} className="text-gray-400 hover:text-gray-600" /></TooltipTrigger>
+                                                    <TooltipContent><p className="w-48 font-normal">The specific path appended to the Base URL to fetch records (e.g., /sync or /users).</p></TooltipContent>
+                                                </Tooltip>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={form.data.settings.sync_endpoint}
+                                                onChange={e => form.setData('settings', { ...form.data.settings, sync_endpoint: e.target.value })}
+                                                placeholder="/sync (optional)"
+                                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                    {!isCustom || form.data.settings.auth_type === 'bearer' ? 'Access Token / OAuth Token' : form.data.settings.auth_type === 'api_key' ? 'API Key' : 'Username'}
+                                </label>
+                                {form.data.settings.auth_type === 'basic' ? (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <input
+                                            type="text"
+                                            value={form.data.username}
+                                            onChange={e => form.setData('username', e.target.value)}
+                                            placeholder="Username"
+                                            className={cn(
+                                                "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2",
+                                                form.data.username.length > 0
+                                                    ? form.data.username.length >= 3 ? "border-green-300 focus:ring-green-500 bg-green-50" : "border-red-300 focus:ring-red-500 bg-red-50"
+                                                    : "border-gray-200 focus:ring-indigo-500"
+                                            )}
+                                        />
+                                        <input
+                                            type="password"
+                                            value={form.data.password}
+                                            onChange={e => form.setData('password', e.target.value)}
+                                            placeholder="Password"
+                                            className={cn(
+                                                "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2",
+                                                form.data.password.length > 0
+                                                    ? form.data.password.length >= 3 ? "border-green-300 focus:ring-green-500 bg-green-50" : "border-red-300 focus:ring-red-500 bg-red-50"
+                                                    : "border-gray-200 focus:ring-indigo-500"
+                                            )}
+                                        />
+                                    </div>
+                                ) : (
                                     <input
                                         type="password"
-                                        value={form.data.password}
-                                        onChange={e => form.setData('password', e.target.value)}
-                                        placeholder="Password"
-                                        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        value={form.data.access_token || form.data.api_key}
+                                        onChange={e => {
+                                            if (form.data.settings.auth_type === 'api_key') {
+                                                form.setData('api_key', e.target.value);
+                                            } else {
+                                                form.setData('access_token', e.target.value);
+                                            }
+                                        }}
+                                        placeholder="••••••••"
+                                        className={cn(
+                                            "w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2",
+                                            ((form.data.settings.auth_type === 'api_key' ? form.data.api_key.length : form.data.access_token.length) > 0)
+                                                ? isValidCredentials() ? "border-green-300 focus:ring-green-500 bg-green-50" : "border-red-300 focus:ring-red-500 bg-red-50"
+                                                : "border-gray-200 focus:ring-indigo-500"
+                                        )}
                                     />
-                                </div>
-                            ) : (
-                                <input
-                                    type="password"
-                                    value={form.data.access_token || form.data.api_key}
-                                    onChange={e => {
-                                        if (form.data.settings.auth_type === 'api_key') {
-                                            form.setData('api_key', e.target.value);
-                                        } else {
-                                            form.setData('access_token', e.target.value);
-                                        }
-                                    }}
-                                    placeholder="••••••••"
-                                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
-                            )}
-                            {(form.errors.access_token || form.errors.api_key) && (
-                                <p className="text-red-500 text-xs mt-1">{form.errors.access_token || form.errors.api_key}</p>
-                            )}
-                        </div>
+                                )}
+                                {((form.data.settings.auth_type === 'api_key' ? form.data.api_key.length : form.data.settings.auth_type === 'bearer' ? form.data.access_token.length : Math.max(form.data.username.length, form.data.password.length)) > 0) && !isValidCredentials() && (
+                                    <p className="text-red-500 text-xs mt-1">Credentials seem too short or invalid.</p>
+                                )}
+                                {(form.errors.access_token || form.errors.api_key) && (
+                                    <p className="text-red-500 text-xs mt-1">{form.errors.access_token || form.errors.api_key}</p>
+                                )}
+                            </div>
 
-                        <div className="flex gap-3">
-                            <button
-                                type="submit"
-                                disabled={form.processing}
-                                className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-                            >
-                                Create Connection
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setShowForm(false)}
-                                className="px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"
-                            >
-                                Cancel
-                            </button>
+                            <div className="flex gap-3 justify-between mt-6 pt-2 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setWizardStep(2)}
+                                    className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+                                >
+                                    Back
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={form.processing || !isValidCredentials()}
+                                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                                >
+                                    Connect {isCustom ? 'Provider' : form.data.provider.replace('_', ' ')}
+                                </button>
+                            </div>
+                        </form>
+                        {!isCustom && (
+                            <div className="lg:col-span-2 bg-indigo-50/40 rounded-xl p-5 border border-indigo-100 hidden md:block">
+                                <h5 className="text-xs font-bold text-gray-800 mb-3 uppercase tracking-wider flex items-center gap-2">
+                                    <PlayCircle size={14} className="text-indigo-600" /> Connection Walkthrough
+                                </h5>
+                                <div className="aspect-video bg-gray-200 rounded-lg mb-3 relative overflow-hidden group cursor-pointer border border-gray-300 shadow-sm flex items-center justify-center">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-200/50 to-purple-200/50 opacity-80 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center z-10 group-hover:scale-110 transition-transform shadow-md">
+                                        <PlayCircle size={24} className="text-indigo-600 ml-1" />
+                                    </div>
+                                    <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded font-mono">0:45</div>
+                                </div>
+                                <p className="text-xs text-gray-600 mb-3">Not sure where to find your API key or OAuth credentials? Watch this quick 45-second guide.</p>
+                                <a href={`https://docs.example.com/integrations/${form.data.provider}#credentials`} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 font-medium hover:text-indigo-800 flex items-center gap-1">
+                                    Read detailed instructions <ExternalLink size={10} />
+                                </a>
+                            </div>
+                        )}
                         </div>
-                    </form>
+                    )}
                 </div>
             )}
 
             {/* Connections list */}
             {connections.length === 0 ? (
-                <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
-                    <Settings size={32} className="text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 text-sm mb-3">No integrations connected yet.</p>
-                    <button onClick={() => setShowForm(true)} className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
-                        Add First Connection
-                    </button>
+                <div className="bg-white rounded-xl border border-gray-200 p-8 md:p-12 mb-6">
+                    <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                        <div className="flex-1 text-center md:text-left">
+                            <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto md:mx-0 mb-6 border border-indigo-100">
+                                <Settings size={32} className="text-indigo-600" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-3">Centralize Your Data</h2>
+                            <p className="text-gray-600 mb-8 text-sm leading-relaxed">
+                                Connect your favorite external services and platforms to sync data seamlessly. The onboarding process takes just a few minutes.
+                            </p>
+                            <button onClick={() => setShowForm(true)} className="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors w-full md:w-auto flex items-center justify-center md:justify-start gap-2">
+                                <Plus size={18} /> Add First Connection
+                            </button>
+                        </div>
+                        <div className="flex-1 w-full bg-gray-50 rounded-2xl p-6 md:p-8 border border-gray-100 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100 rounded-bl-full opacity-50 -mr-16 -mt-16"></div>
+                            <h3 className="text-sm font-bold text-gray-900 mb-5 uppercase tracking-wider relative z-10">Quick Start Guide</h3>
+                            <ul className="space-y-5 relative z-10">
+                                <li className="flex gap-4 items-start">
+                                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-white border-2 border-indigo-200 text-indigo-700 flex items-center justify-center font-bold text-xs mt-0.5 shadow-sm">1</div>
+                                    <div>
+                                        <strong className="text-gray-900 text-sm">Select Provider</strong>
+                                        <p className="text-xs text-gray-600 mt-0.5">Choose from our built-in integrations or set up a custom HTTP connection.</p>
+                                    </div>
+                                </li>
+                                <li className="flex gap-4 items-start">
+                                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-white border-2 border-indigo-200 text-indigo-700 flex items-center justify-center font-bold text-xs mt-0.5 shadow-sm">2</div>
+                                    <div>
+                                        <strong className="text-gray-900 text-sm">Authorize Access</strong>
+                                        <p className="text-xs text-gray-600 mt-0.5">Securely grant permission using OAuth, API keys, or basic auth.</p>
+                                    </div>
+                                </li>
+                                <li className="flex gap-4 items-start">
+                                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-white border-2 border-indigo-200 text-indigo-700 flex items-center justify-center font-bold text-xs mt-0.5 shadow-sm">3</div>
+                                    <div>
+                                        <strong className="text-gray-900 text-sm">Data Syncs Automatically</strong>
+                                        <p className="text-xs text-gray-600 mt-0.5">Your data starts syncing immediately in the background.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -318,17 +638,106 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
                                 <p className="text-xs text-gray-400 mb-3 truncate">{conn.settings.base_url}</p>
                             )}
 
-                            {conn.last_synced_at && (
-                                <p className="text-xs text-gray-400 mb-3">Last synced {timeAgo(conn.last_synced_at)}</p>
+                            {syncingMap[conn.id] ? (
+                                <div className="mb-3">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-xs font-medium text-indigo-600 animate-pulse">Sync in progress...</span>
+                                        {conn.sync_progress !== null && conn.sync_progress !== undefined && <span className="text-xs font-semibold text-indigo-600">{conn.sync_progress}%</span>}
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden relative">
+                                        {conn.sync_progress !== null && conn.sync_progress !== undefined ? (
+                                            <div className="bg-indigo-600 h-full rounded-full transition-all duration-500" style={{ width: `${conn.sync_progress}%` }}></div>
+                                        ) : (
+                                            <div className="absolute top-0 bottom-0 left-0 bg-indigo-600 w-full animate-pulse"></div>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : (
+                                <>
+                                    {conn.last_sync_summary && (
+                                        <p className="text-xs font-medium text-emerald-600 mb-1">{conn.last_sync_summary}</p>
+                                    )}
+                                    {conn.last_synced_at ? (
+                                        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-3">
+                                            <span className={cn("w-2 h-2 rounded-full shrink-0", getFreshnessColor(conn.last_synced_at))} title="Data Freshness" />
+                                            <span>Last synced {timeAgo(conn.last_synced_at)}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-gray-500 mb-3 bg-gray-50 p-2 rounded border border-gray-100 flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-gray-300 shrink-0" />
+                                            Never synced. Click "Sync" below to fetch data.
+                                        </div>
+                                    )}
+                                </>
                             )}
+
+                            {conn.sync_error && (() => {
+                                const isPlatformIssue = ['degraded'].includes(conn.status) || (conn.status === 'error' && (!conn.troubleshooting_guide || conn.troubleshooting_guide.length === 0));
+                                return (
+                                    <div className="mt-2 mb-3 bg-red-50 border border-red-100 rounded-lg p-3">
+                                        <div className="flex gap-2">
+                                            <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <p className="text-xs font-semibold text-red-800">Sync Issue Detected</p>
+                                                    <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-semibold", isPlatformIssue ? "bg-red-200 text-red-800" : "bg-orange-200 text-orange-800")}>
+                                                        {isPlatformIssue ? 'Platform Issue' : 'User Action Required'}
+                                                    </span>
+                                                </div>
+                                                {conn.troubleshooting_guide && conn.troubleshooting_guide.length > 0 ? (
+                                                    <ul className="text-xs text-red-700 list-disc pl-3 space-y-0.5">
+                                                        {conn.troubleshooting_guide.map((tip, i) => (
+                                                            <li key={i}>{tip}</li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <p className="text-[10px] text-red-600 font-mono break-words">{conn.sync_error}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="mt-2.5 pt-2 border-t border-red-100 flex flex-wrap items-center gap-2">
+                                            {['token_expired', 'pending_reauth', 'error'].includes(conn.status) && !isPlatformIssue && (
+                                                <button
+                                                    onClick={() => handleReauthorize(conn)}
+                                                    className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-[10px] font-semibold transition-colors"
+                                                >
+                                                    Update Credentials
+                                                </button>
+                                            )}
+                                            {['rate_limited', 'quota_exceeded', 'suspended'].includes(conn.status) && conn.settings?.base_url && (
+                                                <a
+                                                    href={conn.settings.base_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-[10px] font-semibold transition-colors flex items-center gap-1"
+                                                >
+                                                    <Globe size={10} /> View Dashboard
+                                                </a>
+                                            )}
+                                            <a
+                                                href={`mailto:support@example.com?subject=${encodeURIComponent('Sync Issue with ' + conn.provider)}&body=${encodeURIComponent('Hello Support,\n\nI am experiencing an issue with my ' + conn.provider + ' integration.\n\nConnection ID: ' + conn.id + '\nStatus: ' + conn.status + '\nError Details:\n' + (conn.sync_error || 'N/A') + '\n\nPlease help me resolve this.\n')}`}
+                                                className="px-2.5 py-1 bg-white border border-red-200 text-red-700 hover:bg-red-50 rounded text-[10px] font-medium transition-colors"
+                                            >
+                                                Contact Support
+                                            </a>
+                                            <button
+                                                onClick={() => remove(conn.id)}
+                                                className="px-2.5 py-1 border border-transparent text-red-600 hover:bg-red-100 rounded text-[10px] font-medium transition-colors ml-auto"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
 
                             <div className="flex items-center gap-2 mt-3">
                                 <button
                                     onClick={() => sync(conn.id)}
-                                    disabled={syncingId === conn.id}
+                                    disabled={!!syncingMap[conn.id]}
                                     className="flex items-center gap-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 disabled:opacity-50"
                                 >
-                                    <RefreshCw size={12} className={cn(syncingId === conn.id && "animate-spin")} /> {syncingId === conn.id ? 'Syncing...' : 'Sync'}
+                                    <RefreshCw size={12} className={cn(!!syncingMap[conn.id] && "animate-spin")} /> {syncingMap[conn.id] ? 'Syncing...' : 'Sync'}
                                 </button>
                                 <button
                                     onClick={() => toggleActive(conn)}
@@ -352,6 +761,8 @@ export default function MCPSettings({ connections, builtin_providers }: Props) {
                     ))}
                 </div>
             )}
+            
+            </TooltipProvider>
         </AppLayout>
     );
 }

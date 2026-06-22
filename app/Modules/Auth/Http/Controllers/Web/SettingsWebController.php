@@ -435,8 +435,22 @@ class SettingsWebController extends Controller
 
     public function createToken(Request $request)
     {
-        $request->validate(['token_name' => 'required|string|max:255']);
-        $token = $request->user()->createToken($request->token_name);
+        $request->validate([
+            'token_name' => 'required|string|max:255',
+            'scopes'     => 'nullable|array',
+            'expires_at' => 'nullable|date|after:today',
+        ]);
+
+        $scopes = $request->input('scopes', ['*']);
+        $expiresAt = $request->input('expires_at') 
+            ? \Carbon\Carbon::parse($request->input('expires_at')) 
+            : now()->addDays(30); // Enforce a 30-day default token expiration
+
+        $token = $request->user()->createToken(
+            $request->token_name,
+            $scopes,
+            $expiresAt
+        );
         
         return back()->with('new_token', $token->plainTextToken);
     }

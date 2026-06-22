@@ -10,6 +10,16 @@ class Organization extends BaseModel
 {
     use SoftDeletes;
 
+    protected static function booted()
+    {
+        parent::booted();
+        static::saving(function ($organization) {
+            if ($organization->isDirty('settings')) {
+                $organization->settings = \App\Shared\Helpers\HtmlSanitizer::sanitize($organization->settings);
+            }
+        });
+    }
+
     /**
      * The table associated with the model.
      *

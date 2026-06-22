@@ -12,6 +12,16 @@ class McpConnection extends BaseModel
 {
     use HasOrganization, SoftDeletes;
 
+    protected static function booted()
+    {
+        parent::booted();
+        static::saving(function ($connection) {
+            if ($connection->isDirty('settings')) {
+                $connection->settings = \App\Shared\Helpers\HtmlSanitizer::sanitize($connection->settings);
+            }
+        });
+    }
+
     /**
      * The table associated with the model.
      *

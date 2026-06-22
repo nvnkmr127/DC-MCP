@@ -73,6 +73,19 @@ class Task extends BaseModel
         'role_required' => \App\Shared\Enums\RoleType::class,
     ];
 
+    protected static function booted()
+    {
+        parent::booted();
+        static::saving(function ($task) {
+            if ($task->isDirty('meta') && is_array($task->meta)) {
+                $task->meta = \App\Shared\Helpers\PiiScrubber::scrubArray($task->meta);
+            }
+            if ($task->isDirty('description') && is_string($task->description)) {
+                $task->description = \App\Shared\Helpers\PiiScrubber::scrubString($task->description);
+            }
+        });
+    }
+
     /**
      * Get the organization that owns the task.
      *

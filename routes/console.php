@@ -31,6 +31,9 @@ Schedule::command('budgets:check-burn')->hourly()->name('budget-burn-alerts')->w
 // Check MCP failure thresholds every hour
 Schedule::command('mcp:check-failure-threshold')->hourly();
 
+// Update MCP rate limits every 15 minutes
+Schedule::command('mcp:update-rate-limits')->everyFifteenMinutes()->name('mcp-rate-limits')->withoutOverlapping();
+
 // Monitor system health (queue backlog, latency degradation) every 5 minutes
 Schedule::command('monitor:system-health')->everyFiveMinutes();
 

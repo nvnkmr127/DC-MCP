@@ -91,19 +91,12 @@ class CheckProviderUpdatesCommand extends Command
 
     private function resolveAdapter(string $provider)
     {
-        $builtin = [
-            'gmail'           => \App\Modules\MCP\Adapters\GmailAdapter::class,
-            'google_calendar' => \App\Modules\MCP\Adapters\GoogleCalendarAdapter::class,
-            'notion'          => \App\Modules\MCP\Adapters\NotionAdapter::class,
-            'zoho_cliq'       => \App\Modules\MCP\Adapters\ZohoCliqAdapter::class,
-            'meta_ads'        => \App\Modules\MCP\Adapters\MetaAdsAdapter::class,
-            'make'            => \App\Modules\MCP\Adapters\MakeAdapter::class,
-        ];
+        $providerModel = \App\Modules\MCP\Models\McpProvider::where('slug', $provider)->first();
 
-        if (!isset($builtin[$provider])) {
+        if (!$providerModel || !$providerModel->adapter_class) {
             return null;
         }
 
-        return app($builtin[$provider]);
+        return app($providerModel->adapter_class);
     }
 }

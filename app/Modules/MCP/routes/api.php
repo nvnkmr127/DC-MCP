@@ -7,7 +7,8 @@ Route::prefix('v1')->group(function () {
     Route::get('mcp/providers/catalogue', [McpConnectionApiController::class, 'getCatalogue']);
     Route::get('mcp/providers', [McpConnectionApiController::class, 'providers']);
     Route::get('mcp/providers/{provider}/oauth-url', [McpConnectionApiController::class, 'getOAuthUrl']);
-    Route::post('mcp/providers/{provider}/oauth-exchange', [McpConnectionApiController::class, 'oauthExchange']);
+    Route::post('mcp/providers/{provider}/oauth-exchange', [McpConnectionApiController::class, 'oauthExchange'])
+        ->middleware('throttle:auth');
     Route::get('mcp/providers/{provider}/status', [McpConnectionApiController::class, 'getProviderStatus']);
     Route::get('mcp/providers/{provider}/diagnostics', [McpConnectionApiController::class, 'getDiagnostics']);
     Route::post('mcp/connections/{mcpConnection}/sync', [McpConnectionApiController::class, 'sync']);

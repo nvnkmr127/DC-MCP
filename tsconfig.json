@@ -10,7 +10,7 @@
         "paths": {
             "@/*": ["./resources/js/*"]
         },
-        "baseUrl": ".",
+
         "types": ["vite/client"]
     },
     "include": ["resources/js/**/*"],

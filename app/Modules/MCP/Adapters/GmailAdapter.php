@@ -499,7 +499,7 @@ class GmailAdapter extends BaseAdapter
                                 );
                             }
                         }
-                    }
+
 
                     if (!empty($tasksToUpsert)) {
                         Task::upsert($tasksToUpsert, ['id'], ['title', 'description', 'due_date', 'priority', 'status', 'meta', 'updated_at']);

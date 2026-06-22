@@ -81,8 +81,12 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Client Portal',  href: '/settings/client-portal', icon: Globe,   section: 'manage', roles: ['ceo'] },    { label: 'Settings',       href: '/settings',               icon: Settings, section: 'manage' },
     { label: 'Trash',          href: '/settings/trash',         icon: Trash2,   section: 'manage' },
     { label: 'Data Import',    href: '/settings/import',        icon: UploadCloud, section: 'manage' },
+    { label: 'Audit Logs',     href: '/admin/audit-logs',       icon: ClipboardList, section: 'manage', roles: ['super_admin'] },
+    { label: 'Feature Flags',  href: '/admin/feature-flags',    icon: Flag,          section: 'manage', roles: ['super_admin'] },
     // MCP
     { label: 'Integrations',   href: '/settings/mcp',           icon: Plug,    section: 'mcp', roles: ['ceo', 'project_manager'] },
+    { label: 'Global Hub',     href: '/admin/mcp',              icon: Plug,    section: 'mcp', roles: ['super_admin'] },
+    { label: 'Providers',      href: '/admin/mcp/providers',    icon: Settings, section: 'mcp', roles: ['super_admin'] },
 ];
 
 const NAV_SECTIONS = [

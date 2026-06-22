@@ -115,6 +115,11 @@ class AppServiceProvider extends ServiceProvider
                 : Limit::perMinute(5)->by($request->ip());
         });
 
+        // Webhooks: 30 requests per minute per IP
+        RateLimiter::for('webhooks', function (Request $request) {
+            return Limit::perMinute(30)->by($request->ip());
+        });
+
         // Background jobs: 100 per minute per organization
         RateLimiter::for('tenant-jobs', function ($job) {
             $orgId = 'global';

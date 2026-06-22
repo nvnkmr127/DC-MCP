@@ -119,6 +119,9 @@ class SyncMcpProviderJob implements ShouldQueue, ShouldBeUnique
                 
                 $settings = $this->mcpConnection->settings ?? [];
                 $settings['has_anomaly'] = $hasAnomaly;
+                $providerName = ucfirst(str_replace('_', ' ', $this->mcpConnection->provider));
+                $failedText = $result->failedCount > 0 ? ", {$result->failedCount} failed" : "";
+                $settings['last_sync_summary'] = sprintf("Synced %d items from %s%s", $result->processedCount, $providerName, $failedText);
                 $this->mcpConnection->update(['settings' => $settings]);
 
                 $this->mcpConnection->markSuccess($latencyMs);
@@ -183,15 +186,12 @@ class SyncMcpProviderJob implements ShouldQueue, ShouldBeUnique
 
     private function resolveAdapter(string $provider): mixed
     {
-        return match ($provider) {
-            'gmail'           => app(GmailAdapter::class),
-            'google_calendar' => app(GoogleCalendarAdapter::class),
-            'notion'          => app(NotionAdapter::class),
-            'zoho_cliq'       => app(ZohoCliqAdapter::class),
-            'meta_ads'        => app(MetaAdsAdapter::class),
-            'make'            => app(MakeAdapter::class),
-            // Any custom provider falls back to the generic HTTP adapter
-            default           => app(CustomMcpAdapter::class),
-        };
+        $providerModel = \App\Modules\MCP\Models\McpProvider::where('slug', $provider)->first();
+
+        if ($providerModel && $providerModel->adapter_class) {
+            return app($providerModel->adapter_class);
+        }
+
+        return app(\App\Modules\MCP\Adapters\CustomMcpAdapter::class);
     }
 }
