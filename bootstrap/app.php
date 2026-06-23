@@ -29,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Exempt auth API routes and webhook endpoints from CSRF verification.
         // These are registered in web.php with explicit 'api' middleware so they
         // don't need a CSRF token, but the outer 'web' group still runs VerifyCsrfToken.
-        $middleware->validateCsrfTokens(except: [
+        $middleware->preventRequestForgery(except: [
             'api/v1/auth/login',
             'api/v1/auth/register',
             'webhooks/mcp/*',
@@ -59,8 +59,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 \Illuminate\Database\QueryException::class => 'database-query-failures',
                 \GuzzleHttp\Exception\RequestException::class => 'third-party-api-failures',
                 \Illuminate\Auth\AuthenticationException::class => 'auth-failures',
-                \RedisException::class => 'redis-connection-failures',
-                \App\Modules\MCP\Exceptions\McpSyncException::class => 'mcp-sync-failures',
+                'RedisException' => 'redis-connection-failures',
+                'App\Modules\MCP\Exceptions\McpSyncException' => 'mcp-sync-failures',
             ];
 
             $runbookLink = $baseRunbookUrl . 'general-troubleshooting';

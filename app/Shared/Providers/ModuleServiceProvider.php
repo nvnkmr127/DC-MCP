@@ -48,7 +48,7 @@ abstract class ModuleServiceProvider extends ServiceProvider
 
         // API routes (normally prefixed with api/v1 and under auth:sanctum)
         if (file_exists($moduleDir . '/routes/api.php')) {
-            Route::prefix('api/v1')
+            Route::prefix('api')
                 ->middleware(['api', 'auth:sanctum'])
                 ->namespace($namespace . '\\Http\\Controllers')
                 ->group($moduleDir . '/routes/api.php');

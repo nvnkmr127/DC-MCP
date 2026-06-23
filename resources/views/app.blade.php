@@ -15,7 +15,7 @@
         <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700&display=swap" rel="stylesheet" />
 
         <!-- Scripts & Styles -->
-        @routes
+
         @viteReactRefresh
         @vite(['resources/js/app.tsx'])
         @inertiaHead

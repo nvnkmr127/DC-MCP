@@ -39,7 +39,7 @@ class McpAdminController extends Controller
             'degraded' => McpConnection::whereIn('status', ['degraded', 'rate_limited'])->count(),
         ];
 
-        $organizations = \App\Models\Organization::orderBy('name')->get(['id', 'name']);
+        $organizations = \App\Modules\Auth\Models\Organization::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Admin/McpConnections', [
             'connections' => $connections,

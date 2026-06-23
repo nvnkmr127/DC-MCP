@@ -305,7 +305,7 @@ class McpConnectionApiController extends Controller
             'records'     => $request->input('records'),
         ];
         
-        \App\Modules\MCP\Jobs\SyncMcpProviderJob::dispatch($mcpConnection, $options);
+        SyncMcpProviderJob::dispatch($mcpConnection, $options);
         
         return ApiResponse::success(null, 'Sync queued.', [], 202);
     }
@@ -341,7 +341,7 @@ class McpConnectionApiController extends Controller
     public function syncPreview(Request $request, McpConnection $mcpConnection): JsonResponse
     {
         if (in_array($mcpConnection->provider, $this->getBuiltinProviders()) === false) {
-            return ApiResponse::error('Sync preview is not supported for custom providers.', 400);
+            return ApiResponse::error('Sync preview is not supported for custom providers.', [], 400);
         }
 
         try {
@@ -352,7 +352,7 @@ class McpConnectionApiController extends Controller
             $preview = $adapter->syncPreview($credentials);
             return ApiResponse::success($preview);
         } catch (\Exception $e) {
-            return ApiResponse::error('Failed to generate sync preview: ' . $e->getMessage(), 500);
+            return ApiResponse::error('Failed to generate sync preview: ' . $e->getMessage(), [], 500);
         }
     }
 
@@ -363,7 +363,7 @@ class McpConnectionApiController extends Controller
         ]);
 
         if (!in_array($mcpConnection->provider, $this->getBuiltinProviders()) === false) {
-            return ApiResponse::error('Mapping preview is not supported for custom providers.', 400);
+            return ApiResponse::error('Mapping preview is not supported for custom providers.', [], 400);
         }
 
         try {
@@ -374,7 +374,7 @@ class McpConnectionApiController extends Controller
             $preview = $adapter->previewMapping($mcpConnection, $credentials, $request->input('field_mappings'));
             return ApiResponse::success($preview);
         } catch (\Exception $e) {
-            return ApiResponse::error('Failed to generate mapping preview: ' . $e->getMessage(), 500);
+            return ApiResponse::error('Failed to generate mapping preview: ' . $e->getMessage(), [], 500);
         }
     }
 
@@ -393,7 +393,7 @@ class McpConnectionApiController extends Controller
             $errors = collect($e->errors())->flatten()->implode(' ');
             return ApiResponse::error("Validation failed: " . $errors, $e->errors(), 422);
         } catch (\Exception $e) {
-            return ApiResponse::error('Failed to preview outbound action: ' . $e->getMessage(), 500);
+            return ApiResponse::error('Failed to preview outbound action: ' . $e->getMessage(), [], 500);
         }
     }
 
@@ -926,17 +926,17 @@ class McpConnectionApiController extends Controller
     {
         $log = \Illuminate\Support\Facades\DB::table('mcp_sync_logs')->where('id', $logId)->first();
         if (!$log) {
-            return ApiResponse::error('Log not found', 404);
+            return ApiResponse::error('Log not found', [], 404);
         }
 
         $metadata = json_decode($log->metadata, true);
         if (($metadata['direction'] ?? '') !== 'outbound') {
-            return ApiResponse::error('Only outbound logs can be retried.', 400);
+            return ApiResponse::error('Only outbound logs can be retried.', [], 400);
         }
 
         $payload = $metadata['payload'] ?? null;
         if (!$payload) {
-            return ApiResponse::error('No payload found to retry.', 400);
+            return ApiResponse::error('No payload found to retry.', [], 400);
         }
 
         if ($request->input('only_failed') && isset($metadata['failed_records']) && is_array($metadata['failed_records'])) {
@@ -957,12 +957,12 @@ class McpConnectionApiController extends Controller
     {
         $log = \Illuminate\Support\Facades\DB::table('mcp_sync_logs')->where('id', $logId)->first();
         if (!$log) {
-            return ApiResponse::error('Log not found', 404);
+            return ApiResponse::error('Log not found', [], 404);
         }
 
         $connection = McpConnection::find($log->mcp_connection_id);
         if (!$connection) {
-            return ApiResponse::error('Connection not found', 404);
+            return ApiResponse::error('Connection not found', [], 404);
         }
 
         $adapter = $this->resolveAdapter($connection->provider);
@@ -974,6 +974,6 @@ class McpConnectionApiController extends Controller
             ]);
         }
 
-        return ApiResponse::error('Rollback failed: ' . $result->errorMessage, 400);
+        return ApiResponse::error('Rollback failed: ' . $result->errorMessage, [], 400);
     }
 }

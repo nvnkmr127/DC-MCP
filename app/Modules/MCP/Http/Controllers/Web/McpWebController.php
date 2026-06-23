@@ -118,9 +118,10 @@ class McpWebController extends Controller
         ], fn($v) => $v !== null);
 
         if (!empty($data['access_token']) || !empty($data['api_key']) || !empty($data['username']) || !empty($data['password'])) {
-            $existing = $connection->credentials
-                ? json_decode(Crypt::decryptString($connection->credentials), true)
-                : [];
+            $rawCreds = $connection->credentials;
+            $existing = is_string($rawCreds)
+                ? json_decode(Crypt::decryptString((string) $rawCreds), true)
+                : (is_array($rawCreds) ? $rawCreds : []);
             if (!empty($data['access_token'])) $existing['access_token'] = $data['access_token'];
             if (!empty($data['api_key']))       $existing['api_key'] = $data['api_key'];
             if (!empty($data['username']))      $existing['username'] = $data['username'];

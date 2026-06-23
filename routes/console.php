@@ -171,7 +171,7 @@ Schedule::call(function () {
         ['model' => \App\Modules\ProjectManagement\Models\Project::class],
         ['model' => \App\Modules\ProjectManagement\Models\Task::class],
         ['model' => \App\Modules\ProjectManagement\Models\Client::class],
-        ['model' => \App\Modules\MCP\Models\McpConnection::class],
+        ['model' => McpConnection::class],
     ];
 
     $cutoff = now()->subDays(90);

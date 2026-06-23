@@ -37,7 +37,7 @@ class GmailAdapter extends BaseAdapter
      * @return void
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function validateCredentialsFormat(#[SensitiveParameter] array $credentials): void
+    public function validateCredentialsFormat(#[\SensitiveParameter] array $credentials): void
     {
         $token = $credentials['access_token'] ?? '';
         if (!empty($token) && !str_starts_with($token, 'ya29.')) {
@@ -53,7 +53,7 @@ class GmailAdapter extends BaseAdapter
      * @param array $credentials
      * @return bool
      */
-    public function authenticate(#[SensitiveParameter] array $credentials): bool
+    public function authenticate(#[\SensitiveParameter] array $credentials): bool
     {
         try {
             $client = $this->getGoogleClient($credentials);
@@ -102,7 +102,7 @@ class GmailAdapter extends BaseAdapter
     public function exchangeAuthCode(string $code, string $codeVerifier, string $redirectUri): array
     {
         $client = new Google_Client();
-        $response = $client->getHttpClient()->post('https://oauth2.googleapis.com/token', [
+        $response = $client->getHttpClient()->request('POST', 'https://oauth2.googleapis.com/token', [
             'form_params' => [
                 'client_id' => config('services.google.client_id'),
                 'client_secret' => config('services.google.client_secret'),
@@ -130,7 +130,7 @@ class GmailAdapter extends BaseAdapter
     /**
      * Revoke the provider credentials if supported.
      */
-    public function revokeCredentials(#[SensitiveParameter] array $credentials): void
+    public function revokeCredentials(#[\SensitiveParameter] array $credentials): void
     {
         try {
             $client = $this->getGoogleClient($credentials);
@@ -143,7 +143,7 @@ class GmailAdapter extends BaseAdapter
     /**
      * Test individual scopes for the connection.
      */
-    public function testScopes(#[SensitiveParameter] array $credentials, array $scopes): array
+    public function testScopes(#[\SensitiveParameter] array $credentials, array $scopes): array
     {
         $results = [];
         try {
@@ -156,7 +156,7 @@ class GmailAdapter extends BaseAdapter
                 throw new \Exception('No access token');
             }
 
-            $response = $guzzle->get('https://oauth2.googleapis.com/tokeninfo?access_token=' . $accessToken);
+            $response = $guzzle->request('GET', 'https://oauth2.googleapis.com/tokeninfo?access_token=' . $accessToken);
             $info = json_decode((string)$response->getBody(), true);
             $grantedScopes = explode(' ', $info['scope'] ?? '');
             
@@ -179,7 +179,7 @@ class GmailAdapter extends BaseAdapter
      * @param McpConnection|null $connection
      * @return Google_Client
      */
-    protected function getGoogleClient(#[SensitiveParameter] array $credentials, ?McpConnection $connection = null): Google_Client
+    protected function getGoogleClient(#[\SensitiveParameter] array $credentials, ?McpConnection $connection = null): Google_Client
     {
         $client = new Google_Client();
         
@@ -330,6 +330,7 @@ class GmailAdapter extends BaseAdapter
                     $threadIds = [];
                     foreach ($batchResults as $messageId => $message) {
                         if ($message instanceof \Google_Service_Exception) continue;
+                        /** @var \Google_Service_Gmail_Message $message */
                         if (!empty($message->getThreadId())) {
                             $threadIds[] = $message->getThreadId();
                         }
@@ -351,6 +352,7 @@ class GmailAdapter extends BaseAdapter
                             continue;
                         }
                         
+                        /** @var \Google_Service_Gmail_Message $message */
                         try {
                             $payload = $message->getPayload();
                             $headers = $payload->getHeaders();
@@ -940,7 +942,7 @@ class GmailAdapter extends BaseAdapter
      * @param array $credentials
      * @return ConnectionTestResult
      */
-    public function testConnection(#[SensitiveParameter] array $credentials): ConnectionTestResult
+    public function testConnection(#[\SensitiveParameter] array $credentials): ConnectionTestResult
     {
         try {
             $client = $this->getGoogleClient($credentials);
@@ -966,7 +968,7 @@ class GmailAdapter extends BaseAdapter
             }
 
             // Introspect the token instead of calling the Gmail API
-            $response = $guzzle->get('https://oauth2.googleapis.com/tokeninfo?access_token=' . $accessToken);
+            $response = $guzzle->request('GET', 'https://oauth2.googleapis.com/tokeninfo?access_token=' . $accessToken);
             $info = json_decode((string)$response->getBody(), true);
 
             if (isset($info['error'])) {
