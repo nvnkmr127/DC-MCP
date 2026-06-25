@@ -5,7 +5,6 @@ import { getInitials, cn } from '@/lib/utils';
 import type { PageProps } from '@/types';
 import { toast } from 'sonner';
 import { SearchOverlay } from '@/Components/Shared/SearchOverlay';
-import { ConfirmProvider } from '@/hooks/useConfirm';
 import { ThemeToggle } from '@/Components/Shared/ThemeToggle';
 import { useNotificationPoller } from '@/hooks/useNotificationPoller';
 import axios from 'axios';
@@ -207,8 +206,7 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
     }
 
     return (
-        <ConfirmProvider>
-            <div className="flex h-screen bg-[#f4f5f7] overflow-hidden">
+        <div className="flex h-screen bg-[#f4f5f7] overflow-hidden">
 
             {/* ──────────── SIDEBAR ──────────── */}
             <aside className={cn(
@@ -502,9 +500,7 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                 </main>
             </div>
 
-            {/* ──────────── SEARCH OVERLAY ──────────── */}
             <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
-            </div>
-        </ConfirmProvider>
+        </div>
     );
 }
