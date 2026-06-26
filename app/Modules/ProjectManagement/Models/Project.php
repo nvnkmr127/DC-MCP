@@ -121,6 +121,31 @@ class Project extends BaseModel
         return $this->hasMany(Task::class);
     }
 
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Revenue\Models\Expense::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Revenue\Models\Invoice::class);
+    }
+
+    public function campaignBudgets(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Revenue\Models\CampaignBudget::class);
+    }
+
+    public function issues(): HasMany
+    {
+        return $this->hasMany(Issue::class);
+    }
+
+    public function assets(): HasMany
+    {
+        return $this->hasMany(AssetApproval::class);
+    }
+
     /**
      * Compute task completion percentage.
      * Accepts pre-counted values when already loaded via withCount() to avoid extra queries.

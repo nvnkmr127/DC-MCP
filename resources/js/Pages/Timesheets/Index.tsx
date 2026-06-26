@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import WorkloadLayout from '@/Layouts/WorkloadLayout';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Play, Square, Clock } from 'lucide-react';
 
@@ -76,14 +76,11 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
     const today = new Date().toISOString().slice(0, 10);
 
     return (
-        <AppLayout>
+        <WorkloadLayout title="Timesheets" currentTab="timesheets">
             <Head title="Timesheets" />
-            <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
+            <div className="space-y-5">
                 <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Timesheets</h1>
-                        <p className="text-sm text-gray-500 mt-0.5">Track billable and non-billable time</p>
-                    </div>
+                    <div></div>
                     <div className="flex items-center gap-3">
                         {activeTimer ? (
                             <button onClick={() => router.post(`/timesheets/timer/${activeTimer.id}/stop`)}
@@ -237,6 +234,6 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                     </div>
                 )}
             </div>
-        </AppLayout>
+        </WorkloadLayout>
     );
 }

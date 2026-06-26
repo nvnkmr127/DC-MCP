@@ -8,6 +8,7 @@ use Inertia\Inertia;
 
 use App\Modules\Revenue\Models\ClientSow;
 use App\Modules\Revenue\Models\Proposal;
+use App\Modules\Revenue\Models\Invoice;
 
 use App\Modules\ProjectManagement\Models\Client;
 use App\Modules\ProjectManagement\Services\ClientService;
@@ -158,12 +159,53 @@ class ClientWebController extends Controller
         $role = $request->user()->role ?? '';
         $canReview = in_array($role, ['ceo', 'project_manager']);
 
+        $reports = \App\Modules\Revenue\Models\ClientReport::where('client_id', $client->id)
+            ->orderByDesc('month_year')
+            ->get()
+            ->map(fn($r) => [
+                'id'         => $r->id,
+                'month_year' => $r->month_year,
+                'status'     => $r->status,
+                'highlights' => $r->highlights,
+                'challenges' => $r->challenges,
+                'metrics'    => $r->metrics ?? [],
+            ]);
+
+        $surveys = \App\Modules\Revenue\Models\ClientSurvey::where('client_id', $client->id)
+            ->orderByDesc('sent_at')
+            ->get()
+            ->map(fn($s) => [
+                'id'           => $s->id,
+                'nps_score'    => $s->nps_score,
+                'feedback'     => $s->feedback,
+                'sent_at'      => $s->sent_at->toDateString(),
+                'responded_at' => $s->responded_at?->toDateString(),
+                'status'       => $s->status,
+            ]);
+
+        $invoices = Invoice::where('client_id', $client->id)
+            ->orderByDesc('issue_date')
+            ->get()
+            ->map(fn($inv) => [
+                'id'             => $inv->id,
+                'invoice_number' => $inv->invoice_number,
+                'amount'         => (float) $inv->amount,
+                'currency'       => $inv->currency,
+                'status'         => $inv->status,
+                'issue_date'     => $inv->issue_date?->toDateString(),
+                'due_date'       => $inv->due_date?->toDateString(),
+                'paid_at'        => $inv->paid_at?->toDateString(),
+            ]);
+
         return Inertia::render('Clients/Show', [
             'proposals'      => $proposals,
             'sows'           => $sows,
             'canReview'      => $canReview,
             'client'         => $client,
             'communications' => $communications,
+            'reports'        => $reports,
+            'surveys'        => $surveys,
+            'invoices'       => $invoices,
         ]);
     }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import WorkloadLayout from '@/Layouts/WorkloadLayout';
 import { useConfirm } from '@/hooks/useConfirm';
 import { cn, formatDate, dueDateLabel } from '@/lib/utils';
 import type { Task, PaginatedResponse, User, Project } from '@/types';
@@ -157,7 +157,7 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
     const activeFilterCount = currentFilters.status.length + currentFilters.priority.length + currentFilters.assigned.length + (currentFilters.overdue ? 1 : 0);
 
     return (
-        <AppLayout title="Tasks">
+        <WorkloadLayout title="Tasks" currentTab="tasks">
             <Head title="Tasks" />
             <div className="flex items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -408,6 +408,6 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                     labelPlural="tasks"
                 />
             </div>
-        </AppLayout>
+        </WorkloadLayout>
     );
 }

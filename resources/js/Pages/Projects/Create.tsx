@@ -7,9 +7,10 @@ import { ArrowLeft } from 'lucide-react';
 interface Props {
     clients: Array<{ id: string; name: string }>;
     members: Array<{ id: string; name: string }>;
+    templates: Array<{ id: string; name: string; service_type: string; description: string }>;
 }
 
-export default function ProjectCreate({ clients, members }: Props) {
+export default function ProjectCreate({ clients, members, templates }: Props) {
     const form = useForm({
         name:               '',
         description:        '',
@@ -22,6 +23,7 @@ export default function ProjectCreate({ clients, members }: Props) {
         project_manager_id: '',
         type:               'seo',
         tags:               '',
+        project_template_id: '',
     });
 
     useUnsavedChanges(form.isDirty);
@@ -49,6 +51,32 @@ export default function ProjectCreate({ clients, members }: Props) {
 
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <form onSubmit={submit} className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Use Template (Optional)</label>
+                            <select
+                                value={form.data.project_template_id}
+                                onChange={e => {
+                                    const selectedId = e.target.value;
+                                    form.setData('project_template_id', selectedId);
+                                    if (selectedId) {
+                                        const template = templates.find(t => t.id === selectedId);
+                                        if (template) {
+                                            if (!form.data.name) form.setData('name', template.name);
+                                            if (template.service_type) form.setData('type', template.service_type);
+                                            if (!form.data.description && template.description) form.setData('description', template.description);
+                                        }
+                                    }
+                                }}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50"
+                            >
+                                <option value="">No template (Start from scratch)</option>
+                                {templates?.map(t => (
+                                    <option key={t.id} value={t.id}>{t.name}</option>
+                                ))}
+                            </select>
+                            <p className="text-xs text-gray-500 mt-1">Selecting a template will automatically load its tasks when the project is created.</p>
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
                             <input

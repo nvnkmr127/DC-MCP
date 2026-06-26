@@ -13,7 +13,7 @@ class AssetApproval extends BaseModel
     protected $table = 'asset_approvals';
 
     protected $fillable = [
-        'organization_id', 'client_id', 'submitted_by', 'reviewed_by',
+        'organization_id', 'client_id', 'project_id', 'submitted_by', 'reviewed_by',
         'title', 'description', 'type', 'asset_url', 'feedback',
         'version', 'status', 'reviewed_at',
     ];
@@ -25,6 +25,11 @@ class AssetApproval extends BaseModel
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
     }
 
     public function submitter(): BelongsTo

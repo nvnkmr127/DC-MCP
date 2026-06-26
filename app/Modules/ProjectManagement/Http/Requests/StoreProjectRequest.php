@@ -42,6 +42,12 @@ class StoreProjectRequest extends FormRequest
                     ->where('organization_id', $orgId)
                     ->whereNull('deleted_at'),
             ],
+            'project_template_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('project_templates', 'id')
+                    ->where('organization_id', $orgId)
+            ],
             'settings' => ['nullable', 'array'],
             'tags' => ['nullable', 'array'],
         ];

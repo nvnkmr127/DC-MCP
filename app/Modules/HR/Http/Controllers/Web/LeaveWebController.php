@@ -22,6 +22,7 @@ class LeaveWebController extends Controller
         $year  = now()->year;
 
         $myRequests = LeaveRequest::where('user_id', $user->id)
+            ->with('reviewer:id,name')
             ->orderByDesc('created_at')
             ->get()
             ->map(fn($r) => [
@@ -34,6 +35,7 @@ class LeaveWebController extends Controller
                 'status'         => $r->status,
                 'reviewer_notes' => $r->reviewer_notes,
                 'reviewed_at'    => $r->reviewed_at?->toDateString(),
+                'reviewer'       => $r->reviewer ? ['id' => $r->reviewer->id, 'name' => $r->reviewer->name] : null,
             ]);
 
         $teamRequests = [];

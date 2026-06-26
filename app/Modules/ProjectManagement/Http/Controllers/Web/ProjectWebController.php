@@ -68,10 +68,16 @@ class ProjectWebController extends Controller
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
+            
+        $templates = \App\Modules\ProjectManagement\Models\ProjectTemplate::where('organization_id', $request->user()->organization_id)
+            ->select('id', 'name', 'service_type', 'description')
+            ->orderBy('name')
+            ->get();
 
         return Inertia::render('Projects/Create', [
             'clients' => $clients,
             'members' => $members,
+            'templates' => $templates,
             'defaults' => [
                 'status'     => 'planning',
                 'project_id' => $request->query('project_id'),
@@ -91,9 +97,22 @@ class ProjectWebController extends Controller
             abort(403);
         }
 
-        $project->load(['client', 'manager', 'milestones', 'sprints']);
+        $project->load([
+            'client.retainers', 
+            'manager', 
+            'milestones.goal', 
+            'sprints',
+            'expenses',
+            'invoices' => fn($q) => $q->where('status', '!=', 'cancelled'),
+            'campaignBudgets',
+            'tasks.timeEntries',
+            'issues' => fn($q) => $q->with('assignee:id,name')->orderByDesc('created_at'),
+            'assets' => fn($q) => $q->with('submitter:id,name')->orderByDesc('created_at')
+        ]);
+        
         $project->loadCount(['tasks', 'tasks as completed_tasks_count' => fn($q) => $q->where('status', 'done')]);
 
+        // Activities
         $activities = \App\Models\Activity::where('subject_type', 'project')
             ->where('subject_id', $project->id)
             ->with('user:id,name')
@@ -108,11 +127,88 @@ class ProjectWebController extends Controller
                 'user'        => $a->user ? ['id' => $a->user->id, 'name' => $a->user->name] : null,
             ]);
 
+        // Tasks (Kanban)
+        $tasks = $project->tasks()
+            ->with('assignee:id,name')
+            ->whereNull('parent_task_id')
+            ->orderBy('sort_order')
+            ->get()
+            ->map(fn($t) => [
+                'id'              => $t->id,
+                'title'           => $t->title,
+                'status'          => is_object($t->status) ? $t->status->value : $t->status,
+                'priority'        => is_object($t->priority) ? $t->priority->value : $t->priority,
+                'due_date'        => $t->due_date?->toDateString(),
+                'estimated_hours' => (float) $t->estimated_hours,
+                'assignee'        => $t->assignee ? ['id' => $t->assignee->id, 'name' => $t->assignee->name] : null,
+                'tags'            => $t->tags ?? [],
+            ]);
+
+        // Financials calculation
+        $invoices = $project->invoices;
+        $expenses = $project->expenses;
+        $campaignBudgets = $project->campaignBudgets;
+
+        $invoicedRevenue = $invoices->sum('amount');
+        $baseBudget = (float) $project->budget;
+        $revenue = $invoicedRevenue > 0 ? $invoicedRevenue : $baseBudget; 
+        
+        $totalExpenses = $expenses->sum('amount');
+        $totalAdSpend = $campaignBudgets->sum('spent_amount');
+
+        $blendedRate = 500;
+        $totalLoggedHours = $project->tasks->flatMap->timeEntries->sum('hours_logged');
+        $laborCost = $totalLoggedHours * $blendedRate;
+
+        $totalCosts = $totalExpenses + $totalAdSpend + $laborCost;
+        $profitMargin = $revenue - $totalCosts;
+        $profitMarginPercent = $revenue > 0 ? round(($profitMargin / $revenue) * 100, 1) : 0;
+
+        $goals = \App\Modules\Revenue\Models\Goal::where('organization_id', $request->user()->organization_id)->get(['id', 'title']);
+
+        // Team unique users extraction
+        $teamMap = collect();
+        if ($project->manager) {
+            $teamMap->put($project->manager->id, $project->manager);
+        }
+        foreach ($project->tasks as $task) {
+            if ($task->assignee) {
+                $teamMap->put($task->assignee->id, $task->assignee);
+            }
+        }
+
         return Inertia::render('Projects/Show', [
             'project' => array_merge($project->toArray(), [
                 'completion_pct' => $project->completionPct($project->tasks_count, $project->completed_tasks_count),
+                'total_logged_hours' => $totalLoggedHours,
                 'activities' => $activities,
             ]),
+            'tasks' => $tasks,
+            'goals' => $goals,
+            'team' => $teamMap->values()->map(fn($u) => ['id' => $u->id, 'name' => $u->name]),
+            'financials' => [
+                'revenue' => $revenue,
+                'invoiced_revenue' => $invoicedRevenue,
+                'base_budget' => $baseBudget,
+                'total_expenses' => $totalExpenses,
+                'total_ad_spend' => $totalAdSpend,
+                'labor_cost' => $laborCost,
+                'total_costs' => $totalCosts,
+                'profit_margin' => $profitMargin,
+                'profit_margin_percent' => $profitMarginPercent,
+            ],
+            'invoices' => $invoices->map(fn($i) => [
+                'id' => $i->id, 'invoice_number' => $i->invoice_number, 'amount' => $i->amount, 'status' => $i->status, 'issue_date' => $i->issue_date?->toDateString()
+            ]),
+            'expenses' => $expenses->map(fn($e) => [
+                'id' => $e->id, 'title' => $e->title, 'amount' => $e->amount, 'category' => $e->category, 'expense_date' => $e->expense_date?->toDateString()
+            ]),
+            'campaignBudgets' => $campaignBudgets->map(fn($c) => [
+                'id' => $c->id, 'channel' => $c->channel, 'allocated_budget' => $c->allocated_budget, 'spent_amount' => $c->spent_amount, 'month_year' => $c->month_year
+            ]),
+            'retainers' => $project->client && $project->client->retainers ? $project->client->retainers->map(fn($r) => [
+                'id' => $r->id, 'name' => $r->name, 'monthly_value' => $r->monthly_value, 'status' => $r->status, 'billing_cycle' => $r->billing_cycle, 'currency' => $r->currency
+            ]) : [],
         ]);
     }
 
@@ -151,64 +247,7 @@ class ProjectWebController extends Controller
         return redirect()->route('web.projects.index')->with('success', 'Project deleted.');
     }
 
-    public function kanban(Request $request, Project $project)
-    {
-        if (!$request->user()->hasPermission('view', 'project')) {
-            abort(403);
-        }
 
-        $tasks = $project->tasks()
-            ->with('assignee:id,name')
-            ->whereNull('parent_task_id')
-            ->orderBy('sort_order')
-            ->get()
-            ->map(fn($t) => [
-                'id'              => $t->id,
-                'title'           => $t->title,
-                'status'          => is_object($t->status) ? $t->status->value : $t->status,
-                'priority'        => is_object($t->priority) ? $t->priority->value : $t->priority,
-                'due_date'        => $t->due_date?->toDateString(),
-                'estimated_hours' => (float) $t->estimated_hours,
-                'assignee'        => $t->assignee ? ['id' => $t->assignee->id, 'name' => $t->assignee->name] : null,
-                'tags'            => $t->tags ?? [],
-            ]);
-
-        return Inertia::render('Projects/Kanban', [
-            'project' => $project->only('id', 'name', 'status'),
-            'tasks'   => $tasks,
-        ]);
-    }
-
-    public function stats(Request $request, Project $project)
-    {
-        if (!$request->user()->hasPermission('view', 'project')) {
-            abort(403);
-        }
-
-        $project->load(['client']);
-        $tasksByStatus = $project->tasks()->selectRaw('status, count(*) as count')->groupBy('status')->pluck('count', 'status');
-
-        return Inertia::render('Projects/Stats', [
-            'project'       => $project->only('id', 'name', 'status', 'budget', 'budget_used', 'start_date', 'end_date'),
-            'tasks_by_status' => $tasksByStatus,
-        ]);
-    }
-
-    public function milestones(Request $request, Project $project)
-    {
-        if (!$request->user()->hasPermission('view', 'project')) {
-            abort(403);
-        }
-
-        $project->load('milestones.goal');
-        $goals = \App\Modules\Revenue\Models\Goal::where('organization_id', $request->user()->organization_id)->get(['id', 'title']);
-
-        return Inertia::render('Projects/Milestones', [
-            'project' => $project->only('id', 'name', 'status'),
-            'milestones' => $project->milestones,
-            'goals' => $goals,
-        ]);
-    }
     public function storeMilestone(Request $request, Project $project)
     {
         if (!$request->user()->hasPermission('edit', 'project')) {
@@ -256,5 +295,6 @@ class ProjectWebController extends Controller
 
         return back()->with('success', 'Milestone updated successfully.');
     }
+
 
 }

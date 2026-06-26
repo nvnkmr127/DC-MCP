@@ -18,7 +18,7 @@ class ProspectWebController extends Controller
         $orgId = $request->user()->organization_id;
 
         $prospects = Prospect::where('organization_id', $orgId)
-            ->with('assignee:id,name', 'activities')
+            ->with(['assignee:id,name', 'activities', 'convertedClient:id,name', 'convertedClient.proposals:id,client_id,title,status,total_value'])
             ->orderByDesc('created_at')
             ->get()
             ->map(fn($p) => [
@@ -39,6 +39,16 @@ class ProspectWebController extends Controller
                 'activities_count'    => $p->activities->count(),
                 'last_activity_at'    => $p->activities->max('created_at'),
                 'assignee'            => $p->assignee ? ['id' => $p->assignee->id, 'name' => $p->assignee->name] : null,
+                'client'              => $p->convertedClient ? [
+                    'id'   => $p->convertedClient->id,
+                    'name' => $p->convertedClient->name,
+                ] : null,
+                'proposals'           => $p->convertedClient ? $p->convertedClient->proposals->map(fn($prop) => [
+                    'id'          => $prop->id,
+                    'title'       => $prop->title,
+                    'status'      => $prop->status,
+                    'total_value' => (float) $prop->total_value,
+                ]) : [],
                 'created_at'          => $p->created_at->toISOString(),
             ]);
 
@@ -142,4 +152,28 @@ class ProspectWebController extends Controller
 
         return back()->with('success', 'Activity logged.');
     }
+
+    public function convert(Request $request, Prospect $prospect): RedirectResponse
+    {
+        $this->authorizeOrg($prospect);
+
+        if ($prospect->converted_client_id) {
+            return back()->with('error', 'Prospect is already converted to a client.');
+        }
+
+        $client = \App\Modules\ProjectManagement\Models\Client::create([
+            'organization_id' => $prospect->organization_id,
+            'name'            => $prospect->company_name,
+            'email'           => $prospect->contact_email,
+            'phone'           => $prospect->contact_phone,
+            'company'         => $prospect->company_name,
+            'status'          => 'active',
+            'tier'            => 'standard',
+        ]);
+
+        $prospect->update(['converted_client_id' => $client->id]);
+
+        return back()->with('success', 'Prospect converted to client successfully.');
+    }
 }
+

@@ -76,6 +76,32 @@ class BriefingWebController extends Controller
             ];
         });
 
+        // 1. Fetch active tasks for the user (prioritizing overdue/due today, plus general active)
+        $tasksToday = \App\Modules\ProjectManagement\Models\Task::where('assigned_to', auth()->id())
+            ->whereNotIn('status', ['done', 'cancelled'])
+            ->orderByRaw('CASE WHEN due_date < ? THEN 1 WHEN due_date = ? THEN 2 ELSE 3 END', [now()->startOfDay(), now()->startOfDay()])
+            ->orderBy('due_date')
+            ->limit(15)
+            ->with('project:id,name')
+            ->get()
+            ->map(fn($t) => [
+                'id' => $t->id,
+                'title' => $t->title,
+                'status' => $t->status,
+                'due_date' => $t->due_date?->toDateString(),
+                'project' => $t->project ? ['id' => $t->project->id, 'name' => $t->project->name] : null,
+            ]);
+
+        // 2. Fetch Calendar Events if connected
+        $calendarEvents = [];
+        $connection = \App\Modules\MCP\Models\McpConnection::where('organization_id', $orgId)
+            ->where('provider', 'google_calendar')
+            ->first();
+            
+        if ($connection) {
+            $calendarEvents = app(\App\Modules\MCP\Adapters\GoogleCalendarAdapter::class)->getTodayEvents($connection);
+        }
+
         return Inertia::render('Briefings/Show', [
             'briefing' => [
                 'id'          => $briefing->id,
@@ -88,6 +114,8 @@ class BriefingWebController extends Controller
             'suggestions' => $formattedSuggestions,
             'projects' => $projects,
             'clients' => $clients,
+            'tasks_today' => $tasksToday,
+            'calendar_events' => $calendarEvents,
         ]);
     }
 

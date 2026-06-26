@@ -17,7 +17,7 @@ class Invoice extends BaseModel
     protected $table = 'invoices';
 
     protected $fillable = [
-        'organization_id', 'client_id', 'retainer_id', 'invoice_number',
+        'organization_id', 'client_id', 'project_id', 'retainer_id', 'invoice_number',
         'amount', 'currency', 'status', 'issue_date', 'due_date', 'paid_at',
         'payment_method', 'notes', 'meta',
         'client_gstin', 'agency_gstin', 'gst_rate', 'gst_amount', 'hsn_code', 'supply_type',
@@ -35,6 +35,11 @@ class Invoice extends BaseModel
     public function client(): BelongsTo
     {
         return $this->belongsTo(\App\Modules\ProjectManagement\Models\Client::class);
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\ProjectManagement\Models\Project::class);
     }
 
     public function retainer(): BelongsTo

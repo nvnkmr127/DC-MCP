@@ -41,10 +41,31 @@ class ProjectService
                 }
             }
 
-            $project = Project::create($data);
+            $project = Project::create(collect($data)->except('project_template_id')->toArray());
 
-            // Spawn tasks from template for the project type
-            $this->taskSpawner->spawnFromTemplate($project);
+            if (!empty($data['project_template_id'])) {
+                $template = \App\Modules\ProjectManagement\Models\ProjectTemplate::find($data['project_template_id']);
+                if ($template && $template->organization_id === $orgId) {
+                    $startDate = \Carbon\Carbon::parse($project->start_date ?? now());
+                    foreach ($template->tasks ?? [] as $taskDef) {
+                        $dueDate = $startDate->copy()->addDays($taskDef['offset_days'] ?? 0);
+                        $priority = ($taskDef['priority'] ?? 'medium') === 'urgent' ? 'critical' : ($taskDef['priority'] ?? 'medium');
+                        \App\Modules\ProjectManagement\Models\Task::create([
+                            'organization_id' => $orgId,
+                            'project_id'      => $project->id,
+                            'created_by'      => auth()->id(),
+                            'title'           => $taskDef['title'],
+                            'priority'        => $priority,
+                            'due_date'        => $dueDate,
+                            'estimated_hours' => $taskDef['estimated_hours'] ?? null,
+                            'status'          => 'todo',
+                        ]);
+                    }
+                }
+            } else {
+                // Spawn tasks from template for the project type
+                $this->taskSpawner->spawnFromTemplate($project);
+            }
 
             // Dispatch event so listeners can handle Notion, Calendar, Cliq notifications
             Event::dispatch(new ProjectCreated($project));

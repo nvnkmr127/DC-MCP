@@ -6,7 +6,6 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import AppLayout from '@/Layouts/AppLayout';
 import { cn, formatDate, dueDateLabel } from '@/lib/utils';
 import type { Task, Project } from '@/types';
 import { Plus, GripVertical, Clock, ChevronLeft } from 'lucide-react';
@@ -109,7 +108,7 @@ function SortableTaskCard({ task }: { task: Task }) {
     );
 }
 
-export default function KanbanBoard({ project, tasks: initialTasks }: Props) {
+export default function KanbanTab({ project, tasks: initialTasks }: Props) {
     const [tasks, setTasks] = useState(initialTasks);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
 
@@ -140,31 +139,14 @@ export default function KanbanBoard({ project, tasks: initialTasks }: Props) {
     }
 
     return (
-        <AppLayout title={`${project.name}`}>
-            <Head title={`${project.name} — Kanban`} />
-
-            {/* Sub-header */}
-            <div className="flex items-center gap-3 mb-5">
-                <Link
-                    href={`/projects/${project.id}`}
-                    className="flex items-center gap-1.5 text-[12px] text-gray-400 hover:text-gray-700 transition-colors"
-                >
-                    <ChevronLeft size={14} /> Back to project
-                </Link>
-                <span className="text-gray-200">·</span>
-                <p className="text-[12px] text-gray-500 font-medium">Kanban Board</p>
-                <span className="text-[11px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                    {tasks.length} tasks
-                </span>
-            </div>
-
+        <div>
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCorners}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
             >
-                <div className="flex gap-3 overflow-x-auto pb-4" style={{ height: 'calc(100vh - 12rem)' }}>
+                <div className="flex gap-3 overflow-x-auto pb-4" style={{ height: 'calc(100vh - 18rem)' }}>
                     {COLUMNS.map((col) => {
                         const colTasks = tasksByStatus[col] ?? [];
                         const topColor = COLUMN_TOP[col];
@@ -216,6 +198,6 @@ export default function KanbanBoard({ project, tasks: initialTasks }: Props) {
                     {activeTask && <TaskCard task={activeTask} isDragging />}
                 </DragOverlay>
             </DndContext>
-        </AppLayout>
+        </div>
     );
 }

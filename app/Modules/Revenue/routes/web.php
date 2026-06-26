@@ -35,6 +35,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/prospects/{prospect}',                  [ProspectWebController::class, 'update'])->name('web.prospects.update');
     Route::delete('/prospects/{prospect}',                 [ProspectWebController::class, 'destroy'])->name('web.prospects.destroy');
     Route::post('/prospects/{prospect}/activity',          [ProspectWebController::class, 'addActivity'])->name('web.prospects.activity');
+    Route::post('/prospects/{prospect}/convert',           [ProspectWebController::class, 'convert'])->name('web.prospects.convert');
 
     // SOW Tracker
     Route::post('/sow',                                    [SowWebController::class, 'store'])->name('web.sow.store');

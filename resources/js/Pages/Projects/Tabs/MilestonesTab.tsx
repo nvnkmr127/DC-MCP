@@ -1,6 +1,4 @@
 import React, { useState } from "react"
-import { Head, router } from "@inertiajs/react"
-import AppLayout from "@/Layouts/AppLayout"
 import { DataTable } from "@/Components/ui/DataTable"
 import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/Components/ui/Button"
@@ -24,7 +22,7 @@ type Milestone = {
   goal?: Goal
 }
 
-export default function Milestones({ project, milestones, goals }: { project: any, milestones: Milestone[], goals: Goal[] }) {
+export default function MilestonesTab({ project, milestones, goals }: { project: any, milestones: Milestone[], goals: Goal[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null)
   
@@ -132,10 +130,8 @@ export default function Milestones({ project, milestones, goals }: { project: an
   ]
 
   return (
-    <AppLayout title={`${project.name} - Milestones`}>
-      <Head title="Milestones" />
-
-      <div className="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
+    <div>
+      <div className="py-6">
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -244,6 +240,6 @@ export default function Milestones({ project, milestones, goals }: { project: an
           </form>
         </div>
       </Modal>
-    </AppLayout>
+    </div>
   )
 }

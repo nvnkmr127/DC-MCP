@@ -14,6 +14,7 @@ use App\Modules\ProjectManagement\Http\Controllers\Web\DeliverableWebController;
 use App\Modules\ProjectManagement\Http\Controllers\Web\GoalWebController;
 use App\Modules\ProjectManagement\Http\Controllers\Web\CapacityWebController;
 use App\Modules\ProjectManagement\Http\Controllers\Web\OnboardingWebController;
+use App\Modules\ProjectManagement\Http\Controllers\Web\ClientOnboardingWebController;
 use App\Modules\ProjectManagement\Http\Controllers\Web\AuditChecklistWebController;
 
 Route::middleware(['auth'])->group(function () {
@@ -25,9 +26,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/projects/{project}/edit',     [ProjectWebController::class, 'edit'])->name('web.projects.edit');
     Route::patch('/projects/{project}',        [ProjectWebController::class, 'update'])->name('web.projects.update');
     Route::delete('/projects/{project}',       [ProjectWebController::class, 'destroy'])->name('web.projects.destroy');
-    Route::get('/projects/{project}/kanban',   [ProjectWebController::class, 'kanban'])->name('web.projects.kanban');
-    Route::get('/projects/{project}/stats',    [ProjectWebController::class, 'stats'])->name('web.projects.stats');
-    Route::get('/projects/{project}/milestones',[ProjectWebController::class, 'milestones'])->name('web.projects.milestones');
+    Route::get('/projects/{project}/kanban',   [ProjectWebController::class, 'show'])->name('web.projects.kanban');
+    Route::get('projects/{project}/stats', [ProjectWebController::class, 'show'])->name('web.projects.stats');
+    Route::get('projects/{project}/milestones', [ProjectWebController::class, 'show'])->name('web.projects.milestones');
+    Route::post('projects/{project}/milestones', [ProjectWebController::class, 'storeMilestone'])->name('web.projects.milestones.store');
+    Route::put('projects/{project}/milestones/{milestone}', [ProjectWebController::class, 'updateMilestone'])->name('web.projects.milestones.update');
+    Route::get('projects/{project}/financials', [ProjectWebController::class, 'show'])->name('web.projects.financials');
     Route::post('/projects/{project}/bulk-tasks',            [TaskWebController::class, 'bulkStore'])->name('web.projects.bulk-tasks');
 
     // Tasks
@@ -55,6 +59,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/clients',                     [ClientWebController::class, 'index'])->name('web.clients.index');
     Route::get('/clients/create',              [ClientWebController::class, 'create'])->name('web.clients.create');
     Route::post('/clients',                    [ClientWebController::class, 'store'])->name('web.clients.store');
+    
+    // Client Onboarding Wizard
+    Route::get('/clients/onboard',             [ClientOnboardingWebController::class, 'index'])->name('web.clients.onboard');
+    Route::post('/clients/onboard',            [ClientOnboardingWebController::class, 'store'])->name('web.clients.onboard.store');
     Route::get('/clients/{client}',            [ClientWebController::class, 'show'])->name('web.clients.show');
     Route::get('/clients/{client}/edit',       [ClientWebController::class, 'edit'])->name('web.clients.edit');
     Route::patch('/clients/{client}',          [ClientWebController::class, 'update'])->name('web.clients.update');

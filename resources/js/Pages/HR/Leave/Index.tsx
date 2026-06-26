@@ -8,6 +8,7 @@ interface LeaveRequest {
     id: string; type: string; from_date: string; to_date: string; days: number;
     reason: string | null; status: string; reviewer_notes: string | null; reviewed_at: string | null;
     user?: { id: string; name: string };
+    reviewer?: { id: string; name: string } | null;
 }
 interface Balance {
     earned_total: number; earned_used: number;
@@ -22,7 +23,7 @@ interface Props {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-    pending:  'bg--100 text--800',
+    pending:  'bg-amber-100 text-amber-800',
     approved: 'bg-emerald-100 text-emerald-700',
     rejected: 'bg-rose-100 text-rose-700',
 };
@@ -126,14 +127,46 @@ export default function LeaveIndex({ myRequests, teamRequests, balance, canRevie
                     ) : (
                         <div className="divide-y divide-gray-100">
                             {myRequests.map(r => (
-                                <div key={r.id} className="px-5 py-3.5 flex items-center justify-between">
+                                <div key={r.id} className="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div>
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="text-sm font-medium text-gray-900 capitalize">{r.type}</span>
-                                            <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_STYLES[r.status])}>{r.status}</span>
+                                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                                            <span className="text-sm font-medium text-gray-900 capitalize">{r.type} Leave</span>
+                                            <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium capitalize', STATUS_STYLES[r.status] || 'bg-gray-100 text-gray-700')}>{r.status}</span>
                                         </div>
-                                        <p className="text-xs text-gray-500 mt-0.5">{r.from_date} → {r.to_date} · {r.days} day{r.days !== 1 ? 's' : ''}</p>
-                                        {r.reason && <p className="text-xs text-gray-400 mt-0.5 truncate max-w-xs">{r.reason}</p>}
+                                        <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
+                                            <Clock size={12} className="text-gray-400" />
+                                            {r.from_date} to {r.to_date} ({r.days} day{r.days !== 1 ? 's' : ''})
+                                        </div>
+                                        {r.reason && <p className="text-xs text-gray-600 mt-1.5 max-w-lg border-l-2 border-gray-200 pl-2">{r.reason}</p>}
+                                    </div>
+                                    
+                                    {/* Approval Tracking Section */}
+                                    <div className="sm:text-right shrink-0">
+                                        {r.status === 'pending' ? (
+                                            <div className="text-xs text-gray-500 flex items-center gap-1.5 sm:justify-end">
+                                                <Clock size={12} className="text-amber-500" />
+                                                Waiting for approval
+                                            </div>
+                                        ) : (
+                                            <div className="text-xs">
+                                                <div className="flex items-center gap-1.5 sm:justify-end text-gray-900 font-medium">
+                                                    {r.status === 'approved' ? (
+                                                        <CheckCircle2 size={14} className="text-emerald-500" />
+                                                    ) : (
+                                                        <XCircle size={14} className="text-rose-500" />
+                                                    )}
+                                                    {r.status === 'approved' ? 'Approved' : 'Rejected'} by {r.reviewer?.name || 'Manager'}
+                                                </div>
+                                                {r.reviewed_at && (
+                                                    <div className="text-gray-400 mt-0.5">on {r.reviewed_at}</div>
+                                                )}
+                                                {r.reviewer_notes && (
+                                                    <div className="mt-1.5 text-gray-600 italic bg-gray-50 rounded p-1.5 text-[11px] inline-block sm:max-w-[250px] text-left">
+                                                        "{r.reviewer_notes}"
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}

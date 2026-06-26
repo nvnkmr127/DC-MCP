@@ -2,7 +2,7 @@ import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn, formatDate } from '@/lib/utils';
-import { Zap, ArrowLeft, RefreshCw, Loader2 } from 'lucide-react';
+import { Zap, ArrowLeft, RefreshCw, Loader2, Calendar, CheckSquare, Clock } from 'lucide-react';
 
 interface BriefingData {
     id: string;
@@ -13,20 +13,43 @@ interface BriefingData {
     delivered_at: string | null;
 }
 
-interface Props {
-    briefing: BriefingData;
+interface TaskData {
+    id: string;
+    title: string;
+    status: string;
+    due_date: string | null;
+    project: { id: string; name: string } | null;
 }
 
-export default function BriefingShow({ briefing }: Props) {
+interface CalendarEvent {
+    id: string;
+    summary: string;
+    description: string;
+    start: string;
+    end: string;
+}
+
+interface Props {
+    briefing: BriefingData;
+    tasks_today: TaskData[];
+    calendar_events: CalendarEvent[];
+}
+
+export default function BriefingShow({ briefing, tasks_today, calendar_events }: Props) {
     function regenerate() {
         router.post('/briefings/generate');
     }
+
+    const formatEventTime = (isoString: string) => {
+        const date = new Date(isoString);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
 
     return (
         <AppLayout title={`Briefing Desk — ${formatDate(briefing.date)}`}>
             <Head title={`Briefing — ${formatDate(briefing.date)}`} />
 
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 <div className="flex items-center gap-3 mb-6">
                     <Link href="/briefings" className="p-2 rounded-xl hover:bg-gray-100 text-gray-700 transition-colors">
                         <ArrowLeft size={16} />
@@ -35,53 +58,142 @@ export default function BriefingShow({ briefing }: Props) {
                         <div className="w-7 h-7 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-500 shadow-[0_0_12px_rgba(234,179,8,0.15)] animate-pulse">
                             <Zap size={14} className="fill-yellow-500/20" />
                         </div>
-                        <h1 className="text-sm font-bold text-gray-900">Personal Morning Brief</h1>
+                        <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Start of Day</h1>
                     </div>
                     <span className={cn(
                         'ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize',
                         briefing.status === 'ready' || briefing.status === 'delivered' ? 'bg-emerald-50 text-emerald-700' :
-                        briefing.status === 'generating' ? 'bg--50 text--800' :
+                        briefing.status === 'generating' ? 'bg-indigo-50 text-indigo-800' :
                         briefing.status === 'failed' ? 'bg-rose-50 text-rose-700' : 'bg-gray-50 text-gray-700'
                     )}>
                         {briefing.status}
                     </span>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-                    {briefing.status === 'generating' && (
-                        <div className="flex flex-col items-center py-12 text-center">
-                            <Loader2 size={32} className="text-indigo-500 animate-spin mb-4" />
-                            <p className="text-gray-600 font-medium">Generating your briefing…</p>
-                            <p className="text-sm text-gray-400 mt-1">This usually takes 15–30 seconds</p>
-                        </div>
-                    )}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column: AI Briefing */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm min-h-[400px]">
+                            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Zap size={18} className="text-indigo-500" /> Morning Assistant
+                            </h2>
+                            {briefing.status === 'generating' && (
+                                <div className="flex flex-col items-center py-12 text-center">
+                                    <Loader2 size={32} className="text-indigo-500 animate-spin mb-4" />
+                                    <p className="text-gray-600 font-medium">Generating your briefing…</p>
+                                    <p className="text-sm text-gray-400 mt-1">This usually takes 15–30 seconds</p>
+                                </div>
+                            )}
 
-                    {briefing.status === 'failed' && (
-                        <div className="flex flex-col items-center py-12 text-center">
-                            <p className="text-gray-600 mb-4">Briefing generation failed.</p>
-                            <button onClick={regenerate} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
-                                <RefreshCw size={14} /> Retry
-                            </button>
-                        </div>
-                    )}
+                            {briefing.status === 'failed' && (
+                                <div className="flex flex-col items-center py-12 text-center">
+                                    <p className="text-gray-600 mb-4">Briefing generation failed.</p>
+                                    <button onClick={regenerate} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
+                                        <RefreshCw size={14} /> Retry
+                                    </button>
+                                </div>
+                            )}
 
-                    {briefing.status === 'pending' && !briefing.digest_text && (
-                        <div className="flex flex-col items-center py-12 text-center">
-                            <p className="text-gray-500 mb-4">This briefing hasn't been generated yet.</p>
-                            <button onClick={regenerate} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
-                                <Zap size={14} /> Generate Now
-                            </button>
-                        </div>
-                    )}
+                            {briefing.status === 'pending' && !briefing.digest_text && (
+                                <div className="flex flex-col items-center py-12 text-center">
+                                    <p className="text-gray-500 mb-4">This briefing hasn't been generated yet.</p>
+                                    <button onClick={regenerate} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
+                                        <Zap size={14} /> Generate Now
+                                    </button>
+                                </div>
+                            )}
 
-                    {briefing.digest_html ? (
-                        <div
-                            className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: briefing.digest_html }}
-                        />
-                    ) : briefing.digest_text ? (
-                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{briefing.digest_text}</p>
-                    ) : null}
+                            {briefing.digest_html ? (
+                                <div
+                                    className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
+                                    dangerouslySetInnerHTML={{ __html: briefing.digest_html }}
+                                />
+                            ) : briefing.digest_text ? (
+                                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{briefing.digest_text}</p>
+                            ) : null}
+                        </div>
+                    </div>
+
+                    {/* Right Column: Context Widgets */}
+                    <div className="space-y-6">
+                        {/* Today's Calendar */}
+                        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-[13px] font-bold text-gray-900 flex items-center gap-2">
+                                    <Calendar size={16} className="text-rose-500" /> Today's Schedule
+                                </h3>
+                            </div>
+                            
+                            {calendar_events && calendar_events.length > 0 ? (
+                                <div className="space-y-3">
+                                    {calendar_events.map(event => (
+                                        <div key={event.id} className="flex gap-3 items-start border-l-2 border-rose-200 pl-3 py-1">
+                                            <div className="w-14 shrink-0 text-xs text-gray-500 font-medium">
+                                                {formatEventTime(event.start)}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium text-gray-900 truncate" title={event.summary}>
+                                                    {event.summary}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-6">
+                                    <p className="text-xs text-gray-400">No events scheduled for today, or calendar not connected.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* My Tasks */}
+                        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-[13px] font-bold text-gray-900 flex items-center gap-2">
+                                    <CheckSquare size={16} className="text-emerald-500" /> Active Tasks
+                                </h3>
+                                <Link href="/projects" className="text-[11px] font-medium text-indigo-600 hover:text-indigo-800">
+                                    View All
+                                </Link>
+                            </div>
+                            
+                            {tasks_today && tasks_today.length > 0 ? (
+                                <div className="space-y-3">
+                                    {tasks_today.map(task => (
+                                        <div key={task.id} className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className="text-sm font-medium text-gray-900 leading-tight">
+                                                    <Link href={`/projects/${task.project?.id}?tab=tasks`} className="hover:underline">
+                                                        {task.title}
+                                                    </Link>
+                                                </h4>
+                                            </div>
+                                            <div className="flex items-center gap-3 text-xs mt-2">
+                                                {task.project && (
+                                                    <span className="text-gray-500 truncate max-w-[120px]">{task.project.name}</span>
+                                                )}
+                                                <span className={cn('px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider',
+                                                    task.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                                                    'bg-gray-200 text-gray-700'
+                                                )}>
+                                                    {task.status.replace('_', ' ')}
+                                                </span>
+                                                {task.due_date && (
+                                                    <span className="flex items-center gap-1 text-gray-500 ml-auto">
+                                                        <Clock size={10} /> {formatDate(task.due_date)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-6">
+                                    <p className="text-xs text-gray-400">No active tasks assigned to you right now.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
         </AppLayout>

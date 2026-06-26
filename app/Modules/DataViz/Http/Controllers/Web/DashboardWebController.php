@@ -11,6 +11,8 @@ use App\Modules\ProjectManagement\Models\Task;
 use App\Modules\ProjectManagement\Models\Project;
 use App\Modules\DailyBriefing\Models\DailyBriefing;
 use App\Modules\ProjectManagement\Models\TaskLog;
+use App\Modules\ProjectManagement\Models\Milestone;
+use App\Modules\ProjectManagement\Models\AssetApproval;
 
 class DashboardWebController extends Controller
 {
@@ -81,6 +83,60 @@ class DashboardWebController extends Controller
             ->whereDate('date', $today)
             ->first();
 
+        // Overdue Tasks List
+        $overdueTasksList = Task::with(['project:id,name', 'assignee:id,name'])
+            ->where('assigned_to', $user->id)
+            ->whereNotIn('status', ['done', 'cancelled'])
+            ->whereNotNull('due_date')
+            ->whereDate('due_date', '<', $today)
+            ->orderBy('due_date', 'asc')
+            ->limit(10)
+            ->get();
+
+        // Today's Calendar
+        $todayTasks = Task::with(['project:id,name', 'assignee:id,name'])
+            ->where('assigned_to', $user->id)
+            ->whereNotNull('due_date')
+            ->whereDate('due_date', '=', $today)
+            ->whereNotIn('status', ['cancelled'])
+            ->orderBy('due_date')
+            ->get()
+            ->map(fn($t) => [
+                'id'       => $t->id,
+                'title'    => $t->title,
+                'date'     => $t->due_date->toDateString(),
+                'status'   => $t->status,
+                'priority' => $t->priority,
+                'type'     => 'task',
+                'project'  => $t->project ? ['name' => $t->project->name] : null,
+                'url'      => '/tasks/' . $t->id,
+            ]);
+
+        $todayMilestones = Milestone::with('project:id,name')
+            ->whereNotNull('due_date')
+            ->whereDate('due_date', '=', $today)
+            ->orderBy('due_date')
+            ->get()
+            ->map(fn($m) => [
+                'id'       => $m->id,
+                'title'    => $m->name,
+                'date'     => $m->due_date->toDateString(),
+                'status'   => $m->status ?? 'pending',
+                'priority' => 'high',
+                'type'     => 'milestone',
+                'project'  => $m->project ? ['name' => $m->project->name] : null,
+                'url'      => '/projects/' . $m->project_id,
+            ]);
+
+        $todayCalendar = $todayTasks->concat($todayMilestones)->sortBy('date')->values();
+
+        // Pending Approvals (limit 10 for the org/user)
+        $pendingApprovals = AssetApproval::with(['project:id,name', 'client:id,name', 'submitter:id,name'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
         // Setup Checklist
         $teamInvited = \App\Modules\Auth\Models\User::where('organization_id', $orgId)->count() > 1;
         $projectCreated = Project::where('organization_id', $orgId)->count() > 0;
@@ -112,6 +168,9 @@ class DashboardWebController extends Controller
                 'status'      => $briefing->status,
             ] : null,
             'setup_checklist' => $setupChecklist,
+            'overdue_tasks_list' => $overdueTasksList,
+            'today_calendar'     => $todayCalendar,
+            'pending_approvals'  => $pendingApprovals,
         ]);
     }
 }

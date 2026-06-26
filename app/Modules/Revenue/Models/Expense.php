@@ -13,7 +13,7 @@ class Expense extends BaseModel
     protected $table = 'expenses';
 
     protected $fillable = [
-        'organization_id', 'title', 'category', 'amount', 'currency',
+        'organization_id', 'project_id', 'title', 'category', 'amount', 'currency',
         'expense_date', 'vendor', 'notes', 'receipt_url',
         'is_recurring', 'recurrence', 'created_by',
     ];
@@ -24,4 +24,9 @@ class Expense extends BaseModel
         'is_recurring' => 'boolean',
         'deleted_at'   => 'datetime',
     ];
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\ProjectManagement\Models\Project::class);
+    }
 }

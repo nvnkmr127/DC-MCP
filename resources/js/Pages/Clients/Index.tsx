@@ -159,9 +159,16 @@ export default function ClientsIndex({ clients, filters }: Props) {
                     </form>
                     <Button
                         onClick={() => router.visit('/clients/create')}
+                        variant="outline"
                         size="sm"
                     >
                         <Plus size={14} className="mr-1" /> New Client
+                    </Button>
+                    <Button
+                        onClick={() => router.visit('/clients/onboard')}
+                        size="sm"
+                    >
+                        Onboard Client
                     </Button>
                 </div>
             </div>

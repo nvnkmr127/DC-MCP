@@ -6,7 +6,78 @@ import SowTab from '../Agreements/SowTab';
 import { useConfirm } from '@/hooks/useConfirm';
 import { cn, formatDate } from '@/lib/utils';
 import type { Client, Project } from '@/types';
-import { ArrowLeft, Edit, Trash2, Globe, Mail, Phone, Building2, ExternalLink, Plus, X, MessageSquare, Phone as PhoneIcon, AtSign, Star } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Globe, Mail, Phone, Building2, ExternalLink, Plus, X, MessageSquare, Phone as PhoneIcon, AtSign, Star, Sparkles, Send, ChevronDown, Smile } from 'lucide-react';
+
+interface Metric { key: string; value: string; }
+
+function ReportModal({ clientId, onClose }: { clientId: string; onClose: () => void }) {
+    const form = useForm({ client_id: clientId, month_year: new Date().toISOString().slice(0, 7), highlights: '', challenges: '' });
+    const [metrics, setMetrics] = useState<Metric[]>([{ key: '', value: '' }]);
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const metricsObj = Object.fromEntries(metrics.filter(m => m.key).map(m => [m.key, m.value]));
+        form.transform(d => ({ ...d, metrics: metricsObj }));
+        form.post('/client-updates', { onSuccess: onClose });
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-[15px] font-bold text-gray-900">New Report</h2>
+                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                </div>
+                <form onSubmit={submit} className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="text-xs text-gray-500 font-medium">Month *</label>
+                            <input type="month" value={form.data.month_year} onChange={e => form.setData('month_year', e.target.value)}
+                                className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="text-xs text-gray-500 font-medium">Highlights</label>
+                        <textarea value={form.data.highlights} onChange={e => form.setData('highlights', e.target.value)} rows={3}
+                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
+                    </div>
+                    <div>
+                        <label className="text-xs text-gray-500 font-medium">Challenges</label>
+                        <textarea value={form.data.challenges} onChange={e => form.setData('challenges', e.target.value)} rows={2}
+                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
+                    </div>
+                    <div>
+                        <div className="flex items-center justify-between mb-1">
+                            <label className="text-xs text-gray-500 font-medium">Metrics (key / value)</label>
+                            <button type="button" onClick={() => setMetrics(m => [...m, { key: '', value: '' }])}
+                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</button>
+                        </div>
+                        {metrics.map((m, i) => (
+                            <div key={i} className="flex gap-2 mb-1.5">
+                                <input type="text" placeholder="Metric name" value={m.key}
+                                    onChange={e => { const n = [...metrics]; n[i].key = e.target.value; setMetrics(n); }}
+                                    className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500" />
+                                <input type="text" placeholder="Value" value={m.value}
+                                    onChange={e => { const n = [...metrics]; n[i].value = e.target.value; setMetrics(n); }}
+                                    className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500" />
+                                <button type="button" onClick={() => setMetrics(m => m.filter((_, j) => j !== i))} className="text-gray-400 hover:text-rose-500">
+                                    <X size={13} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex justify-end gap-2 pt-1">
+                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
+                        <button type="submit" disabled={form.processing}
+                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                            {form.processing ? 'Creating…' : 'Create Report'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
 
 interface Communication {
     id: string; type: string; contact_person: string | null; subject: string; notes: string;
@@ -161,16 +232,29 @@ function ScoreModal({ clientId, current, onClose }: { clientId: string; current:
     );
 }
 
-export default function ClientShow({ client, communications, proposals, sows, canReview }: any) {
-    const [activeTab, setActiveTab] = useState<'projects' | 'comms' | 'documents'>('projects');
-    const [documentSubTab, setDocumentSubTab] = useState<'proposals'|'sows'>('proposals');
+export default function ClientShow({ client, communications, proposals, sows, canReview, reports = [], surveys = [], invoices = [] }: any) {
+    const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'comms' | 'documents' | 'invoicing' | 'surveys'>('overview');
+    const [documentSubTab, setDocumentSubTab] = useState<'proposals'|'sows'|'reports'>('proposals');
     const [commOpen, setCommOpen] = useState(false);
     const [scoreOpen, setScoreOpen] = useState(false);
+    const [reportModalOpen, setReportModalOpen] = useState(false);
+    const [expandedReportId, setExpandedReportId] = useState<string | null>(null);
     const confirm = useConfirm();
     const tier   = TIER_CONFIG[client.tier]   ?? TIER_CONFIG.standard;
     const status = STATUS_CONFIG[client.status] ?? STATUS_CONFIG.inactive;
 
     const activeProjects = client.projects.filter(p => p.status === 'active').length;
+
+    const handleSendSurvey = async () => {
+        const ok = await confirm({
+            title: 'Send NPS Survey?',
+            description: `This will generate and send an NPS survey request for ${client.name}.`,
+            confirmText: 'Send',
+        });
+        if (ok) {
+            router.post('/client-surveys/send', { client_id: client.id });
+        }
+    };
 
     return (
         <AppLayout title={client.name}>
@@ -271,38 +355,55 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                 </div>
 
                 {/* Tab bar */}
-                <div className="flex gap-1 mb-4">
-                    {(['projects', 'comms', 'documents'] as const).map(tab => (
+                <div className="flex gap-1 mb-4 overflow-x-auto pb-1">
+                    {(['overview', 'projects', 'documents', 'invoicing', 'surveys', 'comms'] as const).map(tab => (
                         <button key={tab} onClick={() => setActiveTab(tab)}
-                            className={cn('px-4 py-1.5 text-[13px] font-medium rounded-lg transition-colors',
+                            className={cn('px-4 py-1.5 text-[13px] font-medium rounded-lg transition-colors whitespace-nowrap',
                                 activeTab === tab ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100'
                             )}>
-                            {tab === 'projects' ? 'Projects' : tab === 'comms' ? `Communications (${communications.length})` : 'Client Documents'}
+                            {tab === 'overview' ? 'Overview' : 
+                             tab === 'projects' ? 'Projects' : 
+                             tab === 'documents' ? 'Documents' : 
+                             tab === 'invoicing' ? 'Invoicing' : 
+                             tab === 'surveys' ? `NPS Feedback (${surveys.filter((s:any) => s.nps_score !== null).length})` : 
+                             `Activity (${communications.length})`}
                         </button>
                     ))}
                 </div>
 
-                {/* Stats strip */}
-                <div className="grid grid-cols-4 gap-4 mb-4">
-                    {[
-                        { label: 'Total Projects', value: client.projects.length },
-                        { label: 'Active Projects', value: activeProjects },
-                        { label: 'Total Tasks',    value: client.projects.reduce((s, p) => s + (p.tasks_count ?? 0), 0) },
-                    ].map(stat => (
-                        <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-center">
-                            <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                            <p className="text-[11px] text-gray-400 mt-0.5">{stat.label}</p>
+                {activeTab === 'overview' && (
+                    <div className="space-y-4 mb-4">
+                        <div className="grid grid-cols-4 gap-4">
+                            {[
+                                { label: 'Total Projects', value: client.projects.length },
+                                { label: 'Active Projects', value: activeProjects },
+                                { label: 'Total Tasks',    value: client.projects.reduce((s: any, p: any) => s + (p.tasks_count ?? 0), 0) },
+                            ].map(stat => (
+                                <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-center">
+                                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                                    <p className="text-[11px] text-gray-400 mt-0.5">{stat.label}</p>
+                                </div>
+                            ))}
+                            <button onClick={() => setScoreOpen(true)}
+                                className="bg-white rounded-xl border border-gray-100 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-center hover:border-indigo-200 transition-colors group">
+                                <div className="flex items-center justify-center gap-1 mb-0.5">
+                                    <Star size={14} className={client.success_score !== null ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
+                                    <p className="text-2xl font-bold text-gray-900">{client.success_score ?? '—'}</p>
+                                </div>
+                                <p className="text-[11px] text-gray-400">Success Score</p>
+                            </button>
                         </div>
-                    ))}
-                    <button onClick={() => setScoreOpen(true)}
-                        className="bg-white rounded-xl border border-gray-100 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-center hover:border-indigo-200 transition-colors group">
-                        <div className="flex items-center justify-center gap-1 mb-0.5">
-                            <Star size={14} className={client.success_score !== null ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
-                            <p className="text-2xl font-bold text-gray-900">{client.success_score ?? '—'}</p>
+                        
+                        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                            <h3 className="text-[13px] font-semibold text-gray-900 mb-3">Client Overview</h3>
+                            {client.notes ? (
+                                <p className="text-[13px] text-gray-700 leading-relaxed">{client.notes}</p>
+                            ) : (
+                                <p className="text-[13px] text-gray-400 italic">No notes available for this client.</p>
+                            )}
                         </div>
-                        <p className="text-[11px] text-gray-400">Success Score</p>
-                    </button>
-                </div>
+                    </div>
+                )}
 
                 {activeTab === 'projects' && (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
@@ -351,9 +452,107 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                         <div className="flex space-x-4 mb-4">
                             <button onClick={() => setDocumentSubTab('proposals')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'proposals' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Proposals</button>
                             <button onClick={() => setDocumentSubTab('sows')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'sows' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Statements of Work</button>
+                            <button onClick={() => setDocumentSubTab('reports')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'reports' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Reports & Updates</button>
                         </div>
                         {documentSubTab === 'proposals' && <ProposalsTab proposals={proposals} stats={{}} clients={[]} />}
                         {documentSubTab === 'sows' && <SowTab sows={sows} clients={[]} retainers={[]} canReview={canReview} />}
+                        {documentSubTab === 'reports' && (
+                            <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                                <div className="px-5 py-3.5 border-b border-gray-50 flex items-center justify-between">
+                                    <h3 className="text-[13px] font-semibold text-gray-900">Monthly Updates / Reports</h3>
+                                    <button onClick={() => setReportModalOpen(true)}
+                                        className="flex items-center gap-1 text-[12px] text-indigo-600 hover:text-indigo-700 font-medium">
+                                        <Plus size={12} /> New Report
+                                    </button>
+                                </div>
+                                {reports.length === 0 ? (
+                                    <div className="py-12 text-center text-sm text-gray-400">
+                                        No monthly updates logged for this client yet.
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-50">
+                                        {reports.map((r: any) => (
+                                            <div key={r.id} className="p-5">
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-sm font-semibold text-gray-900">
+                                                                {new Date(r.month_year + '-01').toLocaleString('en-IN', { month: 'long', year: 'numeric' })}
+                                                            </p>
+                                                            <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase', 
+                                                                r.status === 'draft' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                                                            )}>
+                                                                {r.status}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {r.status === 'draft' && (
+                                                            <>
+                                                                <button onClick={() => router.post(`/client-updates/${r.id}/draft`)}
+                                                                    className="flex items-center gap-1 px-2.5 py-1 border border-indigo-200 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50">
+                                                                    <Sparkles size={11} /> AI Draft
+                                                                </button>
+                                                                <button onClick={() => router.post(`/client-updates/${r.id}/send`)}
+                                                                    className="flex items-center gap-1 px-2.5 py-1 border border-emerald-200 text-emerald-600 text-xs font-medium rounded-lg hover:bg-emerald-50">
+                                                                    <Send size={11} /> Send
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        <button onClick={() => setExpandedReportId(expandedReportId === r.id ? null : r.id)}
+                                                            className="p-1 text-gray-400 hover:text-gray-600">
+                                                            <ChevronDown size={14} className={cn('transition-transform', expandedReportId === r.id && 'rotate-180')} />
+                                                        </button>
+                                                        <button onClick={async () => {
+                                                            const ok = await confirm({
+                                                                title: 'Delete report?',
+                                                                description: 'This action cannot be undone.',
+                                                                confirmText: 'Delete',
+                                                                variant: 'destructive',
+                                                            });
+                                                            if (!ok) return;
+                                                            router.delete(`/client-updates/${r.id}`);
+                                                        }}
+                                                            className="p-1 text-gray-400 hover:text-rose-500">
+                                                            <Trash2 size={13} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                {(expandedReportId === r.id || reports.length === 1) && (
+                                                    <div className="mt-4 pt-4 border-t border-gray-50 space-y-3">
+                                                        {r.highlights && (
+                                                            <div>
+                                                                <p className="text-xs font-semibold text-gray-500 mb-0.5">Highlights</p>
+                                                                <p className="text-sm text-gray-700 leading-relaxed">{r.highlights}</p>
+                                                            </div>
+                                                        )}
+                                                        {r.challenges && (
+                                                            <div>
+                                                                <p className="text-xs font-semibold text-gray-500 mb-0.5">Challenges</p>
+                                                                <p className="text-sm text-gray-700 leading-relaxed">{r.challenges}</p>
+                                                            </div>
+                                                        )}
+                                                        {Object.keys(r.metrics ?? {}).length > 0 && (
+                                                            <div>
+                                                                <p className="text-xs font-semibold text-gray-500 mb-1.5">Metrics</p>
+                                                                <div className="grid grid-cols-3 gap-2">
+                                                                    {Object.entries(r.metrics).map(([k, v]: any) => (
+                                                                        <div key={k} className="bg-gray-50 rounded-lg p-2">
+                                                                            <p className="text-[10px] text-gray-500">{k}</p>
+                                                                            <p className="text-xs font-semibold text-gray-900">{v}</p>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -419,8 +618,140 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                     </div>
                 )}
 
+                {activeTab === 'invoicing' && (
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                        <div className="p-4 border-b border-gray-50">
+                            <h3 className="text-[13px] font-semibold text-gray-900">Invoices</h3>
+                        </div>
+                        {invoices.length === 0 ? (
+                            <p className="text-[13px] text-gray-400 p-8 text-center">No invoices linked for this client.</p>
+                        ) : (
+                            <div className="divide-y divide-gray-50">
+                                {invoices.map((inv: any) => (
+                                    <div key={inv.id} className="px-5 py-3.5 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[13px] font-semibold text-gray-900">{inv.invoice_number}</p>
+                                            <p className="text-[11px] text-gray-500 mt-0.5">
+                                                Issued {inv.issue_date} {inv.due_date ? `· Due ${inv.due_date}` : ''}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[13px] font-semibold text-gray-900">
+                                                {new Intl.NumberFormat('en-US', { style: 'currency', currency: inv.currency }).format(inv.amount)}
+                                            </p>
+                                            <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase mt-1 inline-block', 
+                                                inv.status === 'paid' ? 'bg-emerald-100 text-emerald-700' : 
+                                                inv.status === 'unpaid' ? 'bg-amber-100 text-amber-700' : 
+                                                inv.status === 'overdue' ? 'bg-rose-100 text-rose-700' :
+                                                'bg-gray-100 text-gray-700'
+                                            )}>
+                                                {inv.status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'surveys' && (() => {
+                    const responded = surveys.filter((s: any) => s.nps_score !== null);
+                    const promoters = responded.filter((s: any) => s.nps_score >= 9).length;
+                    const passives = responded.filter((s: any) => s.nps_score >= 7 && s.nps_score <= 8).length;
+                    const detractors = responded.filter((s: any) => s.nps_score < 7).length;
+                    const avgNps = responded.length > 0 ? (responded.reduce((acc: number, s: any) => acc + (s.nps_score || 0), 0) / responded.length).toFixed(1) : '—';
+                    return (
+                        <div className="space-y-4">
+                            {/* NPS Stats Grid */}
+                            <div className="grid grid-cols-4 gap-4">
+                                <div className="bg-white rounded-xl border border-gray-100 p-4 text-center shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                                    <p className="text-2xl font-bold text-gray-900">{avgNps}</p>
+                                    <p className="text-[11px] text-gray-500 mt-0.5 font-medium">Avg NPS Score</p>
+                                </div>
+                                <div className="bg-emerald-50/50 rounded-xl border border-emerald-100 p-4 text-center">
+                                    <p className="text-2xl font-bold text-emerald-700">{promoters}</p>
+                                    <p className="text-[11px] text-emerald-600 mt-0.5 font-medium">Promoters (9-10)</p>
+                                </div>
+                                <div className="bg-amber-50/50 rounded-xl border border-amber-100 p-4 text-center">
+                                    <p className="text-2xl font-bold text-amber-700">{passives}</p>
+                                    <p className="text-[11px] text-amber-600 mt-0.5 font-medium">Passives (7-8)</p>
+                                </div>
+                                <div className="bg-rose-50/50 rounded-xl border border-rose-100 p-4 text-center">
+                                    <p className="text-2xl font-bold text-rose-700">{detractors}</p>
+                                    <p className="text-[11px] text-rose-600 mt-0.5 font-medium">Detractors (0-6)</p>
+                                </div>
+                            </div>
+
+                            {/* Survey List */}
+                            <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+                                <div className="px-5 py-3.5 border-b border-gray-50 flex items-center justify-between">
+                                    <h3 className="text-[13px] font-semibold text-gray-900">NPS Feedback History</h3>
+                                    <button onClick={handleSendSurvey}
+                                        className="flex items-center gap-1 text-[12px] text-indigo-600 hover:text-indigo-700 font-medium">
+                                        <Send size={12} /> Send NPS Survey
+                                    </button>
+                                </div>
+                                {surveys.length === 0 ? (
+                                    <div className="py-12 text-center text-sm text-gray-400">
+                                        <Smile size={24} className="text-gray-300 mx-auto mb-2" />
+                                        No NPS surveys sent to this client yet.
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-50">
+                                        {surveys.map((s: any) => (
+                                            <div key={s.id} className="px-5 py-3.5 flex items-center gap-4 justify-between">
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-[11px] text-gray-400 font-medium">
+                                                        Sent {new Date(s.sent_at).toLocaleDateString('en-IN')}
+                                                        {s.responded_at ? ` · Responded ${new Date(s.responded_at).toLocaleDateString('en-IN')}` : ''}
+                                                    </p>
+                                                    {s.feedback && (
+                                                        <p className="text-xs text-gray-600 mt-1 italic font-medium leading-relaxed">
+                                                            "{s.feedback}"
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-3 shrink-0">
+                                                    {s.nps_score !== null && (
+                                                        <span className={cn('w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-[0_1px_2px_rgba(0,0,0,0.05)]', 
+                                                            s.nps_score >= 9 ? 'text-emerald-700 bg-emerald-100' : s.nps_score >= 7 ? 'text-amber-700 bg-amber-100' : 'text-rose-700 bg-rose-100'
+                                                        )}>
+                                                            {s.nps_score}
+                                                        </span>
+                                                    )}
+                                                    <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize', 
+                                                        s.status === 'sent' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 
+                                                        s.status === 'responded' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-gray-100 text-gray-700'
+                                                    )}>
+                                                        {s.status}
+                                                    </span>
+                                                    <button onClick={async () => {
+                                                        const ok = await confirm({
+                                                            title: 'Delete survey?',
+                                                            description: 'This action cannot be undone.',
+                                                            confirmText: 'Delete',
+                                                            variant: 'destructive',
+                                                        });
+                                                        if (!ok) return;
+                                                        router.delete(`/client-surveys/${s.id}`);
+                                                    }}
+                                                        className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
+                                                        <Trash2 size={13} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })()}
+
                 {commOpen && <AddCommModal clientId={client.id} onClose={() => setCommOpen(false)} />}
                 {scoreOpen && <ScoreModal clientId={client.id} current={client.success_score} onClose={() => setScoreOpen(false)} />}
+                {reportModalOpen && <ReportModal clientId={client.id} onClose={() => setReportModalOpen(false)} />}
             </div>
         </AppLayout>
     );

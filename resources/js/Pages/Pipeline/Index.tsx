@@ -13,6 +13,8 @@ interface Prospect {
     expected_close_date: string | null; lost_reason: string | null; notes: string | null;
     activities_count: number; last_activity_at: string | null;
     assignee: { id: string; name: string } | null;
+    client: { id: string; name: string } | null;
+    proposals: { id: string; title: string; status: string; total_value: number }[];
 }
 interface Props {
     prospects: Prospect[];
@@ -70,8 +72,45 @@ function ProspectCard({ prospect }: { prospect: Prospect }) {
             {prospect.expected_close_date && (
                 <p className="text-xs text-gray-400">Close: {prospect.expected_close_date}</p>
             )}
+
+            {/* Client Linking / Proposals Section */}
+            <div className="pt-2 mt-2 border-t border-gray-100">
+                {prospect.client ? (
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Linked Client</span>
+                            <a href={`/clients/${prospect.client.id}`} className="text-xs font-medium text-indigo-600 hover:text-indigo-800">
+                                {prospect.client.name}
+                            </a>
+                        </div>
+                        {prospect.proposals && prospect.proposals.length > 0 && (
+                            <div className="space-y-1">
+                                {prospect.proposals.map(prop => (
+                                    <div key={prop.id} className="flex items-center justify-between bg-gray-50 p-1.5 rounded text-xs">
+                                        <span className="truncate max-w-[100px]" title={prop.title}>{prop.title}</span>
+                                        <span className={cn('px-1.5 py-0.5 rounded-full text-[9px] font-medium uppercase', 
+                                            prop.status === 'accepted' ? 'bg-green-100 text-green-700' : 
+                                            prop.status === 'sent' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-700'
+                                        )}>
+                                            {prop.status}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <button
+                        onClick={() => router.post(`/prospects/${prospect.id}/convert`)}
+                        className="w-full py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                    >
+                        Convert to Client
+                    </button>
+                )}
+            </div>
+
             {prospect.assignee && (
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 pt-1">
                     <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-semibold">
                         {prospect.assignee.name[0]}
                     </div>

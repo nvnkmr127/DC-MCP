@@ -1,41 +1,69 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
-import { cn, formatDate, formatCurrency, TASK_STATUS_COLORS, PRIORITY_COLORS } from '@/lib/utils';
+import { cn, formatDate, formatCurrency, PRIORITY_COLORS } from '@/lib/utils';
 import type { Project, Task } from '@/types';
-import { Kanban, Plus, BarChart, Edit, ArrowLeft, Trash2, Activity, AlertTriangle } from 'lucide-react';
+import { Kanban, Plus, BarChart, Edit, ArrowLeft, Trash2, Activity, AlertTriangle, DollarSign, GripVertical, CheckCircle2 } from 'lucide-react';
 import { ActivityLog } from '@/Components/Shared/ActivityLog';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
+
+// Tabs
+import KanbanTab from './Tabs/KanbanTab';
+import MilestonesTab from './Tabs/MilestonesTab';
+import BudgetTab from './Tabs/BudgetTab';
 
 interface Props {
     project: Project & {
         completion_pct: number;
         total_tasks?: number;
         completed_tasks?: number;
+        total_logged_hours?: number;
         client?: { id: string; name: string } | null;
         manager?: { id: string; name: string } | null;
-        milestones?: Array<{ id: string; name: string; due_date: string; status: string }>;
-        sprints?: Array<{ id: string; name: string; status: string; start_date: string; end_date: string }>;
+        milestones?: Array<any>;
+        sprints?: Array<any>;
+        issues?: Array<any>;
+        assets?: Array<any>;
         activities?: any[];
     };
+    tasks: Task[];
+    goals: any[];
+    team: any[];
+    financials: any;
+    invoices: any[];
+    expenses: any[];
+    campaignBudgets: any[];
+    retainers: any[];
 }
 
 const STATUS_STYLES: Record<string, string> = {
     planning:  'bg-gray-100 text-gray-700',
     active:    'bg-green-100 text-green-700',
-    on_hold:   'bg--100 text--800',
+    on_hold:   'bg-yellow-100 text-yellow-800',
     completed: 'bg-blue-100 text-blue-700',
     cancelled: 'bg-red-100 text-red-700',
 };
 
-export default function ProjectShow({ project }: Props) {
+const TABS = [
+    { id: 'tasks', label: 'Tasks' },
+    { id: 'sprints', label: 'Sprints' },
+    { id: 'issues', label: 'Issues' },
+    { id: 'milestones', label: 'Milestones' },
+    { id: 'assets', label: 'Assets' },
+    { id: 'budget', label: 'Budget' },
+    { id: 'team', label: 'Team' },
+    { id: 'settings', label: 'Settings' }
+] as const;
+export default function ProjectShow({ project, tasks, goals, team, financials, invoices, expenses, campaignBudgets, retainers }: Props) {
     const confirm = useConfirm();
+    const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('tasks');
+
     return (
         <AppLayout>
             <Head title={project.name} />
 
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 {/* Breadcrumb */}
                 <div className="mb-4">
                     <Breadcrumbs items={[
@@ -58,54 +86,22 @@ export default function ProjectShow({ project }: Props) {
                 )}
 
                 {/* Header */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6 mb-4">
+                <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-1">
-                                <h1 className="text-xl font-bold text-gray-900">{project.name}</h1>
-                                <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium capitalize', STATUS_STYLES[project.status])}>
+                                <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+                                <span className={cn('px-2.5 py-0.5 rounded-full text-xs font-medium capitalize', STATUS_STYLES[project.status])}>
                                     {project.status.replace('_', ' ')}
                                 </span>
                             </div>
                             {project.client && (
-                                <Link href={`/clients/${project.client.id}`} className="text-sm text-indigo-600 hover:underline">
+                                <Link href={`/clients/${project.client.id}`} className="text-sm font-medium text-indigo-600 hover:underline">
                                     {project.client.name}
                                 </Link>
                             )}
-                            {project.description && (
-                                <p className="text-sm text-gray-600 mt-2 leading-relaxed">{project.description}</p>
-                            )}
                         </div>
-                        <div className="flex items-center gap-2 ml-4">
-                            <Link href={`/projects/${project.id}/kanban`} className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
-                                <Kanban size={14} /> Kanban
-                            </Link>
-                            <Link href={`/projects/${project.id}/stats`} className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
-                                <BarChart size={14} /> Stats
-                            </Link>
-                            <Link href={`/projects/${project.id}/edit`} className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
-                                <Edit size={14} /> Edit
-                            </Link>
-                            <button
-                                onClick={async () => {
-                                    const openTasks = (project.total_tasks ?? 0) - (project.completed_tasks ?? 0);
-                                    const description = openTasks > 0
-                                        ? `This project has ${openTasks} open task${openTasks === 1 ? '' : 's'}. Are you sure? All tasks will be deleted and this cannot be undone.`
-                                        : 'All tasks will also be deleted. This cannot be undone.';
-
-                                    const ok = await confirm({
-                                        title: 'Delete this project?',
-                                        description,
-                                        confirmText: 'Delete',
-                                        variant: 'destructive',
-                                    });
-                                    if (!ok) return;
-                                    router.delete(`/projects/${project.id}`);
-                                }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-red-200 rounded-lg text-red-600 hover:bg-red-50"
-                            >
-                                <Trash2 size={14} /> Delete
-                            </button>
+                        <div className="flex items-center gap-2">
                             <Link href={`/tasks/create?project_id=${project.id}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
                                 <Plus size={14} /> Add Task
                             </Link>
@@ -113,102 +109,169 @@ export default function ProjectShow({ project }: Props) {
                     </div>
 
                     {/* Progress */}
-                    <div className="mt-4">
-                        <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-                            <span>{project.completed_tasks ?? 0}/{project.total_tasks ?? 0} tasks completed</span>
-                            <span className="font-medium">{project.completion_pct}%</span>
-                        </div>
-                        <div className="h-2 bg-gray-100 rounded-full">
-                            <div className="h-full bg-indigo-500 rounded-full transition-all" style={{ width: `${project.completion_pct}%` }} />
+                    <div className="mt-6 flex items-center gap-4">
+                        <div className="flex-1 max-w-md">
+                            <div className="flex justify-between text-xs text-gray-500 mb-1.5">
+                                <span>{project.completed_tasks ?? 0}/{project.total_tasks ?? 0} tasks completed</span>
+                                <span className="font-medium">{project.completion_pct}%</span>
+                            </div>
+                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                <div className="h-full bg-indigo-500 transition-all" style={{ width: `${project.completion_pct}%` }} />
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    {/* Tasks (tasks handled separately in a full implementation) */}
-                    <div className="lg:col-span-2">
-                        <div className="bg-white rounded-xl border border-gray-200 p-5">
-                            <div className="flex items-center justify-between mb-3">
-                                <h3 className="text-sm font-semibold text-gray-900">Quick Actions</h3>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                <Link href={`/tasks?project_id=${project.id}`} className="px-3 py-2 bg-indigo-50 text-indigo-700 text-sm rounded-lg hover:bg-indigo-100">
-                                    View All Tasks
-                                </Link>
-                                <Link href={`/projects/${project.id}/kanban`} className="px-3 py-2 bg-gray-50 text-gray-700 text-sm rounded-lg hover:bg-gray-100">
-                                    Kanban Board
-                                </Link>
-                                <Link href={`/tasks/create?project_id=${project.id}&status=todo`} className="px-3 py-2 bg-gray-50 text-gray-700 text-sm rounded-lg hover:bg-gray-100">
-                                    + Add Task
-                                </Link>
-                            </div>
-                        </div>
+                {/* Tabs Navigation */}
+                <div className="border-b border-gray-200 mb-6">
+                    <nav className="-mb-px flex space-x-8 overflow-x-auto">
+                        {TABS.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={cn(
+                                    'whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors',
+                                    activeTab === tab.id
+                                        ? 'border-indigo-500 text-indigo-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                )}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
 
-                        {/* Activities */}
-                        <div className="bg-white rounded-xl border border-gray-200 p-5 mt-4">
-                            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100">
-                                <Activity size={16} className="text-gray-400" />
-                                <h3 className="text-sm font-semibold text-gray-900">Project Activity</h3>
-                            </div>
-                            <ActivityLog activities={project.activities || []} />
-                        </div>
-                    </div>
+                {/* Tab Content */}
+                <div className="min-h-[50vh]">
+                    {activeTab === 'tasks' && (
+                        <KanbanTab project={project} tasks={tasks} />
+                    )}
 
-                    {/* Sidebar */}
-                    <div className="space-y-4">
-                        <div className="bg-white rounded-xl border border-gray-200 p-4">
-                            <h3 className="text-sm font-semibold text-gray-900 mb-3">Details</h3>
-                            <dl className="space-y-2 text-sm">
-                                <div>
-                                    <dt className="text-xs text-gray-500 mb-0.5">Priority</dt>
-                                    <dd className={cn('inline-flex px-2 py-0.5 rounded-full text-xs font-medium capitalize', PRIORITY_COLORS[project.priority])}>
-                                        {project.priority}
-                                    </dd>
-                                </div>
-                                {project.manager && (
-                                    <div>
-                                        <dt className="text-xs text-gray-500 mb-0.5">Manager</dt>
-                                        <dd className="font-medium text-gray-900">{project.manager.name}</dd>
-                                    </div>
-                                )}
-                                {project.start_date && (
-                                    <div>
-                                        <dt className="text-xs text-gray-500 mb-0.5">Start Date</dt>
-                                        <dd className="text-gray-700">{formatDate(project.start_date)}</dd>
-                                    </div>
-                                )}
-                                {project.end_date && (
-                                    <div>
-                                        <dt className="text-xs text-gray-500 mb-0.5">Deadline</dt>
-                                        <dd className="text-gray-700">{formatDate(project.end_date)}</dd>
-                                    </div>
-                                )}
-                                {project.budget > 0 && (
-                                    <div>
-                                        <dt className="text-xs text-gray-500 mb-0.5">Budget</dt>
-                                        <dd className="text-gray-700">
-                                            {formatCurrency(project.budget_used)} / {formatCurrency(project.budget)}
-                                        </dd>
-                                    </div>
-                                )}
-                            </dl>
-                        </div>
+                    {activeTab === 'milestones' && (
+                        <MilestonesTab project={project} milestones={project.milestones || []} goals={goals} />
+                    )}
 
-                        {/* Milestones */}
-                        {project.milestones && project.milestones.length > 0 && (
-                            <div className="bg-white rounded-xl border border-gray-200 p-4">
-                                <h3 className="text-sm font-semibold text-gray-900 mb-3">Milestones</h3>
-                                <div className="space-y-2">
-                                    {project.milestones.map(m => (
-                                        <div key={m.id} className="flex items-center justify-between">
-                                            <span className="text-sm text-gray-700 truncate">{m.name}</span>
-                                            <span className="text-xs text-gray-400 shrink-0 ml-2">{formatDate(m.due_date)}</span>
+                    {activeTab === 'budget' && (
+                        <BudgetTab project={project as any} financials={financials} invoices={invoices} expenses={expenses} campaignBudgets={campaignBudgets} retainers={retainers} />
+                    )}
+
+                    {activeTab === 'sprints' && (
+                        <div className="bg-white rounded-xl border border-gray-200 p-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Sprints</h3>
+                            {project.sprints && project.sprints.length > 0 ? (
+                                <ul className="divide-y divide-gray-100">
+                                    {project.sprints.map(s => (
+                                        <li key={s.id} className="py-3 flex justify-between items-center">
+                                            <div>
+                                                <p className="font-medium text-gray-900">{s.name}</p>
+                                                <p className="text-xs text-gray-500">{formatDate(s.start_date)} - {formatDate(s.end_date)}</p>
+                                            </div>
+                                            <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 capitalize">{s.status}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-sm text-gray-500 italic">No sprints found for this project.</p>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'issues' && (
+                        <div className="bg-white rounded-xl border border-gray-200 p-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Issues</h3>
+                            {project.issues && project.issues.length > 0 ? (
+                                <ul className="divide-y divide-gray-100">
+                                    {project.issues.map(i => (
+                                        <li key={i.id} className="py-3 flex justify-between items-center">
+                                            <div>
+                                                <p className="font-medium text-gray-900">{i.title}</p>
+                                                <p className="text-xs text-gray-500">{i.assignee?.name || 'Unassigned'}</p>
+                                            </div>
+                                            <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 capitalize">{i.status}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-sm text-gray-500 italic">No issues reported for this project.</p>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'assets' && (
+                        <div className="bg-white rounded-xl border border-gray-200 p-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Assets</h3>
+                            {project.assets && project.assets.length > 0 ? (
+                                <ul className="divide-y divide-gray-100">
+                                    {project.assets.map(a => (
+                                        <li key={a.id} className="py-3 flex justify-between items-center">
+                                            <div>
+                                                <p className="font-medium text-gray-900">{a.title}</p>
+                                                <p className="text-xs text-gray-500">Submitted by: {a.submitter?.name}</p>
+                                            </div>
+                                            <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 capitalize">{a.status}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-sm text-gray-500 italic">No assets submitted for this project.</p>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'team' && (
+                        <div className="bg-white rounded-xl border border-gray-200 p-6">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Project Team</h3>
+                            {team && team.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    {team.map(member => (
+                                        <div key={member.id} className="flex items-center gap-3 p-3 border border-gray-100 rounded-lg">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-sm font-bold text-white shadow-sm">
+                                                {member.name[0]}
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-gray-900 text-sm">{member.name}</p>
+                                                {project.manager?.id === member.id && (
+                                                    <span className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider">Manager</span>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
+                            ) : (
+                                <p className="text-sm text-gray-500 italic">No team members assigned.</p>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'settings' && (
+                        <div className="bg-white rounded-xl border border-gray-200 p-6 max-w-2xl">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Settings</h3>
+                            <div className="space-y-4">
+                                <Link href={`/projects/${project.id}/edit`} className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+                                    <Edit size={16} /> Edit Project Details
+                                </Link>
+                                <div className="border-t border-gray-200 pt-4 mt-6">
+                                    <h4 className="text-sm font-medium text-red-600 mb-2">Danger Zone</h4>
+                                    <p className="text-sm text-gray-500 mb-3">Deleting a project will permanently remove it and all related tasks, issues, and assets.</p>
+                                    <button
+                                        onClick={async () => {
+                                            const ok = await confirm({
+                                                title: 'Delete this project?',
+                                                description: 'This action cannot be undone.',
+                                                confirmText: 'Delete',
+                                                variant: 'destructive',
+                                            });
+                                            if (ok) router.delete(`/projects/${project.id}`);
+                                        }}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                    >
+                                        <Trash2 size={16} /> Delete Project
+                                    </button>
+                                </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </AppLayout>
