@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
-import { Plus, X, ChevronDown } from 'lucide-react';
+import { Plus, X, ChevronDown, Bug } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface CheckItem { id?: string; label: string; checked: boolean; notes?: string; }
 interface Checklist {
@@ -173,14 +174,35 @@ export default function AuditChecklistsIndex({ checklists, clients, users, filte
                                 {expandedId === cl.id && (
                                     <div className="border-t border-gray-100 px-4 pb-4 pt-3 space-y-2">
                                         {cl.items.map((item, idx) => (
-                                            <label key={idx} className="flex items-center gap-2.5 cursor-pointer group">
-                                                <input type="checkbox" checked={item.checked}
-                                                    onChange={() => toggleItem(cl, idx)}
-                                                    className="rounded text-indigo-600 focus:ring-indigo-500" />
-                                                <span className={cn('text-sm', item.checked ? 'line-through text-gray-400' : 'text-gray-700')}>
-                                                    {item.label}
-                                                </span>
-                                            </label>
+                                            <div key={idx} className="flex items-center justify-between group">
+                                                <label className="flex items-center gap-2.5 cursor-pointer flex-1">
+                                                    <input type="checkbox" checked={item.checked}
+                                                        onChange={() => toggleItem(cl, idx)}
+                                                        className="rounded text-indigo-600 focus:ring-indigo-500" />
+                                                    <span className={cn('text-sm', item.checked ? 'line-through text-gray-400' : 'text-gray-700')}>
+                                                        {item.label}
+                                                    </span>
+                                                </label>
+                                                {!item.checked && (
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            router.post('/issues', {
+                                                                title: `Audit Failure: ${item.label}`,
+                                                                description: `Failed on checklist: ${cl.title}`,
+                                                                type: 'bug',
+                                                                priority: 'medium',
+                                                                client_id: cl.client?.id || '',
+                                                                audit_checklist_id: cl.id,
+                                                                source: 'internal'
+                                                            }, { preserveScroll: true, onSuccess: () => toast.success('Issue logged') });
+                                                        }}
+                                                        className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded hover:bg-red-100 transition-opacity flex items-center gap-1"
+                                                    >
+                                                        <Bug size={10} /> Log Issue
+                                                    </button>
+                                                )}
+                                            </div>
                                         ))}
                                         {cl.items.length === 0 && <p className="text-xs text-gray-400">No items in checklist.</p>}
                                     </div>

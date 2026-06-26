@@ -49,25 +49,23 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Credit Notes',   href: '/credit-notes',     icon: FileX,      section: 'financial', roles: ['ceo'] },
 
     { label: 'Pipeline',       href: '/prospects',    icon: GitBranch,    section: 'main',     roles: ['ceo', 'project_manager'] },
-    { label: 'SOW',            href: '/sow',          icon: FileText,     section: 'main',     roles: ['ceo', 'project_manager'] },
     { label: 'Capacity',       href: '/capacity',     icon: Activity,     section: 'main',     roles: ['ceo', 'project_manager'] },
     { label: 'Standup',        href: '/standup',      icon: ClipboardList, section: 'main' },
     { label: 'Onboarding',     href: '/onboarding',    icon: UserCheck,    section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Goals',          href: '/goals',            icon: Flag,        section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Timesheets',     href: '/timesheets',        icon: Clock,       section: 'main' },
     { label: '1:1 Notes',      href: '/one-on-one',        icon: Users2,      section: 'main', roles: ['ceo', 'project_manager'] },
-    { label: 'Recurring',      href: '/recurring-tasks',   icon: RotateCcw,   section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Issues',         href: '/issues',           icon: Bug,        section: 'main' },
     { label: 'Sprints',        href: '/sprints',          icon: GitMerge,   section: 'main', roles: ['ceo', 'project_manager'] },
-    { label: 'Templates',      href: '/project-templates', icon: Layers,    section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Templates',      href: '/templates', icon: Layers,    section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Asset Approvals', href: '/asset-approvals', icon: CheckCircle2, section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Audit Checklists', href: '/audit-checklists', icon: ListChecks, section: 'main' },
-    { label: 'Proposals',      href: '/proposals',        icon: Send,       section: 'main', roles: ['ceo', 'project_manager'] },
-    { label: 'Client Reports', href: '/client-reports',   icon: FileCheck,  section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Agreements',      href: '/agreements',       icon: FileText,       section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Client Updates', href: '/client-updates',   icon: FileCheck,  section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'NPS Surveys',    href: '/client-surveys',   icon: Smile,      section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Daily Briefing', href: '/briefings',    icon: Sun,      section: 'insights' },
     { label: 'AI Suggestions', href: '/suggestions',  icon: Sparkles, section: 'insights', roles: ['ceo', 'project_manager'] },
-    { label: 'Reports',        href: '/reports',      icon: BarChart3, section: 'insights' },
+    { label: 'Internal Reports',        href: '/internal-reports',      icon: BarChart3, section: 'insights' },
     // HR section
     { label: 'Leave',           href: '/leave',         icon: Calendar,       section: 'hr' },
     { label: 'Reviews',         href: '/reviews',       icon: Star,           section: 'hr', roles: ['ceo', 'project_manager'] },
@@ -84,8 +82,6 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Feature Flags',  href: '/admin/feature-flags',    icon: Flag,          section: 'manage', roles: ['super_admin'] },
     // MCP
     { label: 'Integrations',   href: '/settings/mcp',           icon: Plug,    section: 'mcp', roles: ['ceo', 'project_manager'] },
-    { label: 'Global Hub',     href: '/admin/mcp',              icon: Plug,    section: 'mcp', roles: ['super_admin'] },
-    { label: 'Providers',      href: '/admin/mcp/providers',    icon: Settings, section: 'mcp', roles: ['super_admin'] },
 ];
 
 const NAV_SECTIONS = [

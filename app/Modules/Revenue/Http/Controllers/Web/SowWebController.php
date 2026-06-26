@@ -22,7 +22,7 @@ class SowWebController extends Controller
         $canReview = in_array($role, ['ceo', 'project_manager']);
 
         $sows = ClientSow::where('organization_id', $orgId)
-            ->with(['client:id,name,company', 'deliverables.latestSubmission.submitter:id,name', 'retainer:id,name'])
+            ->with(['client:id,name,company', 'deliverables.latestSubmission.submitter:id,name', 'retainer:id,name', 'proposal:id,title'])
             ->orderByDesc('created_at')
             ->get()
             ->map(fn($s) => [
@@ -56,6 +56,7 @@ class SowWebController extends Controller
                 ])->values(),
                 'client'   => $s->client ? ['id' => $s->client->id, 'name' => $s->client->company ?? $s->client->name] : null,
                 'retainer' => $s->retainer ? ['id' => $s->retainer->id, 'name' => $s->retainer->name] : null,
+                'proposal' => $s->proposal ? ['id' => $s->proposal->id, 'title' => $s->proposal->title] : null,
             ]);
 
         $clients = Client::where('organization_id', $orgId)

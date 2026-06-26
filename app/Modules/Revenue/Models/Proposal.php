@@ -42,4 +42,9 @@ class Proposal extends BaseModel
     {
         return $this->hasMany(ProposalLineItem::class);
     }
+
+    public function sows(): HasMany
+    {
+        return $this->hasMany(ClientSow::class);
+    }
 }

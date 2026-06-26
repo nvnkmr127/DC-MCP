@@ -9,45 +9,7 @@ use Inertia\Inertia;
 
 class McpAdminController extends Controller
 {
-    public function index(Request $request)
-    {
-        $search = $request->input('search');
-
-        $query = McpConnection::with(['organization', 'user']);
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('provider', 'like', '%' . $search . '%')
-                  ->orWhereHas('organization', function ($q) use ($search) {
-                      $q->where('name', 'like', '%' . $search . '%');
-                  })
-                  ->orWhereHas('user', function ($q) use ($search) {
-                      $q->where('name', 'like', '%' . $search . '%')
-                        ->orWhere('email', 'like', '%' . $search . '%');
-                  });
-            });
-        }
-
-        $connections = $query->latest()->paginate(20)->withQueryString();
-
-        // Calculate global metrics
-        $metrics = [
-            'total' => McpConnection::count(),
-            'active' => McpConnection::where('status', 'active')->count(),
-            'error' => McpConnection::where('status', 'error')->count(),
-            'degraded' => McpConnection::whereIn('status', ['degraded', 'rate_limited'])->count(),
-        ];
-
-        $organizations = \App\Modules\Auth\Models\Organization::orderBy('name')->get(['id', 'name']);
-
-        return Inertia::render('Admin/McpConnections', [
-            'connections' => $connections,
-            'metrics' => $metrics,
-            'filters' => $request->only('search'),
-            'organizations' => $organizations,
-        ]);
-    }
+    // Admin hub is now consolidated in McpWebController
 
     public function impersonate(Request $request, \App\Modules\Auth\Models\User $user)
     {
@@ -85,13 +47,7 @@ class McpAdminController extends Controller
         ]);
     }
 
-    public function providers()
-    {
-        $providers = \App\Modules\MCP\Models\McpProvider::orderBy('name')->get();
-        return Inertia::render('Admin/McpProviders', [
-            'providers' => $providers
-        ]);
-    }
+
 
     public function storeProvider(Request $request)
     {

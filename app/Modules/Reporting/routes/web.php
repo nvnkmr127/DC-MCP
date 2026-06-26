@@ -6,24 +6,24 @@ use App\Modules\Reporting\Http\Controllers\Web\CampaignResultWebController;
 use App\Modules\Reporting\Http\Controllers\Web\SharedReportWebController;
 
 // Public Shared Reports
-Route::get('/shared/reports/{token}', [SharedReportWebController::class, 'show'])->name('web.reports.shared');
+Route::get('/shared/internal-reports/{token}', [SharedReportWebController::class, 'show'])->name('web.internal-reports.shared');
 
 Route::middleware(['auth'])->group(function () {
     // Reports
-    Route::get('/reports',                     [ReportWebController::class, 'index'])->name('web.reports.index');
-    Route::get('/reports/compare',             [ReportWebController::class, 'compare'])->name('web.reports.compare');
-    Route::get('/reports/create',              [ReportWebController::class, 'create'])->name('web.reports.create');
-    Route::get('/reports/{report}',            [ReportWebController::class, 'show'])->name('web.reports.show');
-    Route::post('/reports/{report}/comments',  [ReportWebController::class, 'storeComment'])->name('web.reports.comments.store');
-    Route::delete('/reports/{report}/comments/{comment}', [ReportWebController::class, 'destroyComment'])->name('web.reports.comments.destroy');
+    Route::get('/internal-reports',                     [ReportWebController::class, 'index'])->name('web.internal-reports.index');
+    Route::get('/internal-reports/compare',             [ReportWebController::class, 'compare'])->name('web.internal-reports.compare');
+    Route::get('/internal-reports/create',              [ReportWebController::class, 'create'])->name('web.internal-reports.create');
+    Route::get('/internal-reports/{report}',            [ReportWebController::class, 'show'])->name('web.internal-reports.show');
+    Route::post('/internal-reports/{report}/comments',  [ReportWebController::class, 'storeComment'])->name('web.internal-reports.comments.store');
+    Route::delete('/internal-reports/{report}/comments/{comment}', [ReportWebController::class, 'destroyComment'])->name('web.internal-reports.comments.destroy');
 
     // Client Reports
-    Route::get('/client-reports',                            [ClientReportWebController::class, 'index'])->name('web.client-reports.index');
-    Route::post('/client-reports',                           [ClientReportWebController::class, 'store'])->name('web.client-reports.store');
-    Route::patch('/client-reports/{report}',                 [ClientReportWebController::class, 'update'])->name('web.client-reports.update');
-    Route::delete('/client-reports/{report}',                [ClientReportWebController::class, 'destroy'])->name('web.client-reports.destroy');
-    Route::post('/client-reports/{report}/send',             [ClientReportWebController::class, 'markSent'])->name('web.client-reports.send');
-    Route::post('/client-reports/{report}/draft',            [ClientReportWebController::class, 'generateDraft'])->name('web.client-reports.draft');
+    Route::get('/client-updates',                            [ClientReportWebController::class, 'index'])->name('web.client-updates.index');
+    Route::post('/client-updates',                           [ClientReportWebController::class, 'store'])->name('web.client-updates.store');
+    Route::patch('/client-updates/{report}',                 [ClientReportWebController::class, 'update'])->name('web.client-updates.update');
+    Route::delete('/client-updates/{report}',                [ClientReportWebController::class, 'destroy'])->name('web.client-updates.destroy');
+    Route::post('/client-updates/{report}/send',             [ClientReportWebController::class, 'markSent'])->name('web.client-updates.send');
+    Route::post('/client-updates/{report}/draft',            [ClientReportWebController::class, 'generateDraft'])->name('web.client-updates.draft');
 
     // Campaign Performance Results
     Route::post('/campaign-results',                         [CampaignResultWebController::class, 'store'])->name('web.campaign-results.store');

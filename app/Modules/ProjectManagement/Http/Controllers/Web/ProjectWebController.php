@@ -200,11 +200,61 @@ class ProjectWebController extends Controller
             abort(403);
         }
 
-        $project->load('milestones');
+        $project->load('milestones.goal');
+        $goals = \App\Modules\Revenue\Models\Goal::where('organization_id', $request->user()->organization_id)->get(['id', 'title']);
 
         return Inertia::render('Projects/Milestones', [
             'project' => $project->only('id', 'name', 'status'),
             'milestones' => $project->milestones,
+            'goals' => $goals,
         ]);
     }
+    public function storeMilestone(Request $request, Project $project)
+    {
+        if (!$request->user()->hasPermission('edit', 'project')) {
+            abort(403);
+        }
+        
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'due_date' => 'nullable|date',
+            'status' => 'required|in:pending,in_progress,completed',
+            'goal_id' => 'nullable|uuid|exists:goals,id',
+        ]);
+
+        $project->milestones()->create($validated);
+
+        return back()->with('success', 'Milestone created successfully.');
+    }
+
+    public function updateMilestone(Request $request, Project $project, \App\Modules\ProjectManagement\Models\Milestone $milestone)
+    {
+        if (!$request->user()->hasPermission('edit', 'project')) {
+            abort(403);
+        }
+
+        if ($milestone->project_id !== $project->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'description' => 'sometimes|nullable|string',
+            'due_date' => 'sometimes|nullable|date',
+            'status' => 'sometimes|in:pending,in_progress,completed',
+            'goal_id' => 'sometimes|nullable|uuid|exists:goals,id',
+        ]);
+
+        if (isset($validated['status']) && $validated['status'] === 'completed' && $milestone->status !== 'completed') {
+            $validated['completed_at'] = now();
+        } elseif (isset($validated['status']) && $validated['status'] !== 'completed') {
+            $validated['completed_at'] = null;
+        }
+
+        $milestone->update($validated);
+
+        return back()->with('success', 'Milestone updated successfully.');
+    }
+
 }

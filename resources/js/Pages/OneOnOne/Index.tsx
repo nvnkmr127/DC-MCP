@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import SyncsLayout from '@/Layouts/SyncsLayout';
 import { cn } from '@/lib/utils';
 import { Plus, X, CheckCircle2, Circle, Users2 } from 'lucide-react';
 
@@ -204,7 +204,7 @@ export default function OneOnOneIndex({ teamMembers, notes, latestByMember }: Pr
     latestByMember.forEach(n => { latestMap[n.member.id] = n; });
 
     return (
-        <AppLayout>
+        <SyncsLayout>
             <Head title="1:1 Notes" />
             <div className="max-w-5xl mx-auto px-4 py-6">
                 <div className="flex items-center justify-between mb-6">
@@ -280,6 +280,6 @@ export default function OneOnOneIndex({ teamMembers, notes, latestByMember }: Pr
 
                 {addOpen && <AddNoteModal teamMembers={teamMembers} onClose={() => setAddOpen(false)} />}
             </div>
-        </AppLayout>
+        </SyncsLayout>
     );
 }

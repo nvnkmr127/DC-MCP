@@ -37,10 +37,14 @@ class McpWebController extends Controller
                 'settings'     => $c->settings ? array_filter($c->settings, fn($k) => !in_array($k, ['api_key', 'password', 'access_token']), ARRAY_FILTER_USE_KEY) : [],
             ]);
 
-        return Inertia::render('Settings/MCP', [
+        $props = [
             'connections'      => $connections,
             'builtin_providers' => $this->getBuiltinProviders(),
-        ]);
+        ];
+
+        
+
+        return Inertia::render('Settings/MCP', $props);
     }
 
     public function store(Request $request)

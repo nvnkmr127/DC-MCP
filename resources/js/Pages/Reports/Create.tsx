@@ -136,7 +136,7 @@ export default function ReportsCreate({ projects, clients }: Props) {
         })
         .then(() => {
             toast.success('Report generation started!');
-            router.visit('/reports');
+            router.visit('/internal-reports');
         })
         .catch(err => {
             toast.error(err.response?.data?.message ?? 'Failed to submit report configuration.');
@@ -150,7 +150,7 @@ export default function ReportsCreate({ projects, clients }: Props) {
             {/* Back action */}
             <div className="mb-6">
                 <Link
-                    href="/reports"
+                    href="/internal-reports"
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gray-900"
                 >
                     <ArrowLeft size={13} /> Back to reports

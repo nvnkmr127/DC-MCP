@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Modules\DailyBriefing\Models\DailyBriefing;
 use App\Modules\DailyBriefing\Jobs\GenerateDailyBriefingJob;
+use App\Modules\ProjectManagement\Models\Client;
+use App\Modules\ProjectManagement\Models\Project;
+use App\Modules\TaskEngine\Models\TaskSuggestion;
 
 class BriefingWebController extends Controller
 {
@@ -35,6 +38,44 @@ class BriefingWebController extends Controller
             abort(403);
         }
 
+        $briefing->load(['suggestions.project', 'suggestions.client', 'suggestions.approver', 'suggestions.task']);
+
+        $orgId = auth()->user()->organization_id;
+
+        $projects = Project::where('organization_id', $orgId)
+            ->whereNotIn('status', ['completed', 'cancelled', 'archived'])
+            ->select('id', 'name', 'client_id')
+            ->orderBy('name')
+            ->get();
+
+        $clients = Client::where('organization_id', $orgId)
+            ->where('status', 'active')
+            ->select('id', 'name', 'company')
+            ->orderBy('name')
+            ->get();
+
+        $formattedSuggestions = $briefing->suggestions->map(function ($s) {
+            return [
+                'id'               => $s->id,
+                'title'            => $s->title,
+                'description'      => $s->description,
+                'role_required'    => $s->role_required,
+                'priority'         => $s->priority,
+                'due_date'         => $s->due_date?->toDateString(),
+                'estimated_hours'  => $s->estimated_hours,
+                'status'           => $s->status,
+                'suggested_by'     => $s->suggested_by,
+                'reasoning'        => $s->meta['reasoning'] ?? null,
+                'rejection_reason' => $s->rejection_reason,
+                'approved_at'      => $s->approved_at?->toISOString(),
+                'created_at'       => $s->created_at->toISOString(),
+                'project'          => $s->project ? ['id' => $s->project->id, 'name' => $s->project->name] : null,
+                'client'           => $s->client  ? ['id' => $s->client->id,  'name' => $s->client->company ?? $s->client->name] : null,
+                'approver'         => $s->approver ? ['id' => $s->approver->id, 'name' => $s->approver->name] : null,
+                'task'             => $s->task ? ['id' => $s->task->id, 'title' => $s->task->title, 'status' => $s->task->status] : null,
+            ];
+        });
+
         return Inertia::render('Briefings/Show', [
             'briefing' => [
                 'id'          => $briefing->id,
@@ -44,6 +85,9 @@ class BriefingWebController extends Controller
                 'digest_html' => $briefing->digest_html,
                 'delivered_at' => $briefing->delivered_at?->toISOString(),
             ],
+            'suggestions' => $formattedSuggestions,
+            'projects' => $projects,
+            'clients' => $clients,
         ]);
     }
 

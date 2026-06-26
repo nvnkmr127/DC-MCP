@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Modules\ProjectManagement\Models\Client;
 use App\Modules\Revenue\Models\Proposal;
 use App\Modules\Revenue\Models\ProposalLineItem;
+use App\Modules\Revenue\Models\ClientSow;
+use App\Modules\Revenue\Models\SowDeliverable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -182,5 +184,37 @@ class ProposalWebController extends Controller
         $this->authorizeOrg($proposal);
         $proposal->update(['status' => 'rejected']);
         return back()->with('success', 'Proposal rejected.');
+    }
+
+    public function convertToSow(Request $request, Proposal $proposal): RedirectResponse
+    {
+        $this->authorizeOrg($proposal);
+        $proposal->load('lineItems');
+
+        $sow = ClientSow::create([
+            'organization_id' => $proposal->organization_id,
+            'client_id'       => $proposal->client_id,
+            'proposal_id'     => $proposal->id,
+            'title'           => 'SOW: ' . $proposal->title,
+            'description'     => $proposal->notes,
+            'status'          => 'draft',
+            'start_date'      => now()->toDateString(),
+            'created_by'      => $request->user()->id,
+        ]);
+
+        foreach ($proposal->lineItems as $li) {
+            SowDeliverable::create([
+                'organization_id'     => $proposal->organization_id,
+                'sow_id'              => $sow->id,
+                'client_id'           => $proposal->client_id,
+                'title'               => $li->service,
+                'service_type'        => 'other', // Default fallback, as proposal doesn't have this enum
+                'frequency'           => in_array($li->frequency, ['one_time', 'weekly', 'monthly', 'quarterly']) ? $li->frequency : 'one_time',
+                'quantity_per_period' => max(1, (int)$li->quantity),
+                'notes'               => $li->description,
+            ]);
+        }
+
+        return redirect()->route('web.agreements.index')->with('success', 'SOW generated successfully from proposal.');
     }
 }

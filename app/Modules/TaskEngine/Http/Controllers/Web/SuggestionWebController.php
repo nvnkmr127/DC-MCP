@@ -16,60 +16,6 @@ class SuggestionWebController extends Controller
 {
     public function __construct(private TaskSuggestionService $suggestionService) {}
 
-    public function index(Request $request): Response
-    {
-        $user  = $request->user();
-        $orgId = $user->organization_id;
-
-        $pending = TaskSuggestion::where('organization_id', $orgId)
-            ->where('status', 'pending')
-            ->with(['project:id,name', 'client:id,name,company'])
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(fn($s) => $this->formatSuggestion($s));
-
-        $recent = TaskSuggestion::where('organization_id', $orgId)
-            ->whereIn('status', ['approved', 'rejected', 'modified'])
-            ->with(['project:id,name', 'client:id,name,company', 'approver:id,name', 'task:id,title,status'])
-            ->orderByDesc('approved_at')
-            ->limit(30)
-            ->get()
-            ->map(fn($s) => $this->formatSuggestion($s));
-
-        $stats = [
-            'pending_count'  => $pending->count(),
-            'approved_today' => TaskSuggestion::where('organization_id', $orgId)
-                ->where('status', 'approved')
-                ->whereDate('approved_at', today())
-                ->count(),
-            'rejected_today' => TaskSuggestion::where('organization_id', $orgId)
-                ->where('status', 'rejected')
-                ->whereDate('approved_at', today())
-                ->count(),
-        ];
-
-        // Projects & clients for the edit dropdown
-        $projects = Project::where('organization_id', $orgId)
-            ->whereNotIn('status', ['completed', 'cancelled', 'archived'])
-            ->select('id', 'name', 'client_id')
-            ->orderBy('name')
-            ->get();
-
-        $clients = Client::where('organization_id', $orgId)
-            ->where('status', 'active')
-            ->select('id', 'name', 'company')
-            ->orderBy('name')
-            ->get();
-
-        return Inertia::render('Suggestions/Index', [
-            'pending'  => $pending,
-            'recent'   => $recent,
-            'stats'    => $stats,
-            'projects' => $projects,
-            'clients'  => $clients,
-        ]);
-    }
-
     public function approve(Request $request, TaskSuggestion $suggestion): RedirectResponse
     {
         $this->authorizeSuggestion($suggestion, $request);

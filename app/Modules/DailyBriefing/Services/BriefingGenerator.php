@@ -45,7 +45,6 @@ class BriefingGenerator
             "- One-line 'Today's Focus' sentence\n" .
             "- Priority Alerts section (urgent items, overdue tasks, SLA risks)\n" .
             "- Task Summary table\n" .
-            "- Metric Highlights (only if ceo or analyst role)\n" .
             "- MCP Data Highlights (calendar events, Notion updates, client emails)\n" .
             "- Quick Wins (2-3 easy wins for today)\n" .
             "</briefing>\n\n" .
@@ -210,20 +209,7 @@ class BriefingGenerator
             $html .= "</ul>";
         }
 
-        if (!empty($data['metrics']['meta_ads'])) {
-            $html .= "<h3 style=\"color:#1e3a8a\">Meta Ads Metrics</h3>";
-            $html .= "<table style=\"width:100%;border-collapse:collapse;margin-bottom:20px\">";
-            $html .= "<tr style=\"background-color:#f3f4f6\"><th style=\"padding:8px;text-align:left\">Metric</th><th style=\"padding:8px;text-align:right\">Yesterday</th><th style=\"padding:8px;text-align:right\">Change %</th></tr>";
-            foreach ($data['metrics']['meta_ads'] as $key => $values) {
-                $val         = number_format($values['yesterday'], 2);
-                $changeColor = $values['change_pct'] >= 0 ? '#10b981' : '#ef4444';
-                $changeSign  = $values['change_pct'] >= 0 ? '+' : '';
-                $html .= "<tr><td style=\"padding:8px;border-bottom:1px solid #e5e7eb\">" . ucfirst($key) . "</td>";
-                $html .= "<td style=\"padding:8px;border-bottom:1px solid #e5e7eb;text-align:right\">{$val}</td>";
-                $html .= "<td style=\"padding:8px;border-bottom:1px solid #e5e7eb;text-align:right;color:{$changeColor};font-weight:bold\">{$changeSign}{$values['change_pct']}%</td></tr>";
-            }
-            $html .= "</table>";
-        }
+
 
         if ($emailsCount > 0) {
             $html .= "<h3 style=\"color:#1e3a8a\">Unread Client Emails (last 24h)</h3><ul>";

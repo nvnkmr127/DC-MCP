@@ -68,7 +68,7 @@ export default function CompareReports({ report1, report2 }: Props) {
 
             <div className="mb-6 flex items-center justify-between">
                 <Link
-                    href="/reports"
+                    href="/internal-reports"
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gray-900"
                 >
                     <ArrowLeft size={13} /> Back to reports

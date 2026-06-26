@@ -1,0 +1,40 @@
+--- app/Modules/MCP/Http/Controllers/Web/McpWebController.php
++++ app/Modules/MCP/Http/Controllers/Web/McpWebController.php
+@@ -47,15 +47,38 @@
+                 'degraded' => McpConnection::whereIn('status', ['degraded', 'rate_limited'])->count(),
+             ];
+ 
+             $organizations = \App\Modules\Auth\Models\Organization::orderBy('name')->get(['id', 'name']);
+ 
++            // Diagnostics
++            $diagnostics = [
++                'queues' => [
++                    'default' => \Illuminate\Support\Facades\Queue::size('default'),
++                    'high'    => \Illuminate\Support\Facades\Queue::size('high'),
++                    'low'     => \Illuminate\Support\Facades\Queue::size('low'),
++                ],
++                'activeSyncs' => \App\Modules\MCP\Models\McpSyncLog::where('status', 'running')->count(),
++                'recentErrors' => \App\Modules\MCP\Models\McpSyncLog::with('connection')
++                    ->where('status', 'failed')
++                    ->latest()
++                    ->take(10)
++                    ->get()
++                    ->map(fn($log) => [
++                        'id' => $log->id,
++                        'provider' => $log->connection->provider ?? 'Unknown',
++                        'connection_name' => $log->connection->name ?? 'Unknown',
++                        'error_message' => $log->error_message,
++                        'created_at' => $log->created_at->diffForHumans(),
++                    ])
++            ];
++
+             $props['global_connections'] = $global_connections;
+             $props['metrics'] = $metrics;
+             $props['filters'] = $request->only('search');
+             $props['organizations'] = $organizations;
++            $props['diagnostics'] = $diagnostics;
++            $props['providers_list'] = \App\Modules\MCP\Models\McpProvider::orderBy('name')->get();
+         }
+ 
+         return Inertia::render('Settings/MCP', $props);
+     }

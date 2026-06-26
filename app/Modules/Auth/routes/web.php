@@ -4,7 +4,6 @@ use App\Modules\Auth\Http\Controllers\Web\AuthWebController;
 use App\Modules\Auth\Http\Controllers\Web\SettingsWebController;
 use App\Modules\Auth\Http\Controllers\Web\RoleWebController;
 use App\Modules\Auth\Http\Controllers\Web\TwoFactorWebController;
-use App\Modules\Auth\Http\Controllers\Web\MyActivityWebController;
 use App\Modules\Auth\Http\Controllers\Api\RegisterApiController;
 use App\Modules\Auth\Http\Controllers\Api\LoginApiController;
 use App\Modules\Auth\Http\Controllers\Web\SetupController;
@@ -28,8 +27,6 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/settings/profile',                      [SettingsWebController::class, 'updateProfile'])->name('web.settings.profile.update');
     Route::patch('/settings/password',                     [SettingsWebController::class, 'updatePassword'])->name('web.settings.password.update');
     
-    Route::get('/my-activity',                             [MyActivityWebController::class, 'index'])->name('web.my-activity');
-
     // Advanced Account Settings
     Route::delete('/settings/sessions/{id}',               [SettingsWebController::class, 'destroySession'])->name('web.settings.sessions.destroy');
     Route::post('/settings/tokens',                        [SettingsWebController::class, 'createToken'])->name('web.settings.tokens.store');

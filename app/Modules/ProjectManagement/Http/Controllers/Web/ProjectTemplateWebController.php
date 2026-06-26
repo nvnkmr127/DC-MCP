@@ -14,6 +14,9 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Modules\Auth\Models\User;
+use App\Modules\TaskEngine\Models\RecurringTaskRule;
+
 class ProjectTemplateWebController extends Controller
 {
     public function index(Request $request): Response
@@ -32,11 +35,35 @@ class ProjectTemplateWebController extends Controller
                 'task_count'   => count($t->tasks ?? []),
             ]);
 
-        $clients = Client::where('organization_id', $orgId)->where('status', 'active')->select('id', 'name', 'company')->get();
+        $rules = RecurringTaskRule::where('organization_id', $orgId)
+            ->with(['client:id,name', 'project:id,name'])
+            ->orderBy('title')
+            ->get()
+            ->map(fn($r) => [
+                'id'              => $r->id,
+                'title'           => $r->title,
+                'description'     => $r->description,
+                'frequency'       => $r->frequency,
+                'frequency_day'   => $r->frequency_day,
+                'priority'        => $r->priority,
+                'role_required'   => $r->role_required,
+                'estimated_hours' => $r->estimated_hours,
+                'is_active'       => $r->is_active,
+                'last_spawned_at' => $r->last_spawned_at?->toDateString(),
+                'next_spawn_at'   => $r->next_spawn_at?->toDateString(),
+                'client'          => $r->client ? ['id' => $r->client->id, 'name' => $r->client->name] : null,
+                'project'         => $r->project ? ['id' => $r->project->id, 'name' => $r->project->name] : null,
+            ]);
 
-        return Inertia::render('ProjectTemplates/Index', [
+        $clients = Client::where('organization_id', $orgId)->where('status', 'active')->select('id', 'name', 'company')->get();
+        
+        $team = User::where('organization_id', $orgId)->where('is_active', true)->select('id', 'name')->orderBy('name')->get();
+
+        return Inertia::render('Templates/Index', [
             'templates' => $templates,
+            'rules'     => $rules,
             'clients'   => $clients,
+            'team'      => $team,
         ]);
     }
 

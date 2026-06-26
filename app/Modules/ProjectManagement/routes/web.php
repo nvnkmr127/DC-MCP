@@ -96,7 +96,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/issues/{issue}/task',                      [IssueWebController::class, 'convertToTask'])->name('web.issues.task');
 
     // Project Templates
-    Route::get('/project-templates',                         [ProjectTemplateWebController::class, 'index'])->name('web.project-templates.index');
+    Route::get('/templates',                                 [ProjectTemplateWebController::class, 'index'])->name('web.templates.index');
     Route::post('/project-templates',                        [ProjectTemplateWebController::class, 'store'])->name('web.project-templates.store');
     Route::patch('/project-templates/{template}',            [ProjectTemplateWebController::class, 'update'])->name('web.project-templates.update');
     Route::delete('/project-templates/{template}',           [ProjectTemplateWebController::class, 'destroy'])->name('web.project-templates.destroy');

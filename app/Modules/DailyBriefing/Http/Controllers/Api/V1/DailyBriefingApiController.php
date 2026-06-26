@@ -31,6 +31,8 @@ class DailyBriefingApiController extends Controller
             return ApiResponse::error('No briefing generated for today yet.', [], 404);
         }
 
+        $briefing->load(['suggestions.project', 'suggestions.client']);
+
         return ApiResponse::success($briefing);
     }
 
@@ -39,6 +41,8 @@ class DailyBriefingApiController extends Controller
         if ($briefing->user_id !== $request->user()->id) {
             return ApiResponse::error('Forbidden.', [], 403);
         }
+
+        $briefing->load(['suggestions.project', 'suggestions.client']);
 
         return ApiResponse::success($briefing);
     }

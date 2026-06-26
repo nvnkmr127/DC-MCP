@@ -86,6 +86,11 @@ class IssueWebController extends Controller
                 'uuid',
                 Rule::exists('users', 'id')->where('organization_id', $orgId)->whereNull('deleted_at'),
             ],
+            'audit_checklist_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('audit_checklists', 'id')->where('organization_id', $orgId),
+            ],
             'source'      => 'nullable|in:internal,client_portal,email,call',
         ]);
 

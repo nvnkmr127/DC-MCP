@@ -261,6 +261,7 @@ class TaskWebController extends Controller
                         'hours'       => (float) $e->hours,
                         'description' => $e->description,
                         'logged_date' => $e->logged_date?->toDateString(),
+                        'timer_started_at' => $e->timer_started_at?->toISOString(),
                         'user'        => ['id' => $e->user?->id, 'name' => $e->user?->name],
                     ]),
                     'dependencies' => $depTasks,

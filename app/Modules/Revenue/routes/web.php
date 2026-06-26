@@ -37,7 +37,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/prospects/{prospect}/activity',          [ProspectWebController::class, 'addActivity'])->name('web.prospects.activity');
 
     // SOW Tracker
-    Route::get('/sow',                                     [SowWebController::class, 'index'])->name('web.sow.index');
     Route::post('/sow',                                    [SowWebController::class, 'store'])->name('web.sow.store');
     Route::patch('/sow/{sow}',                             [SowWebController::class, 'update'])->name('web.sow.update');
     Route::delete('/sow/{sow}',                            [SowWebController::class, 'destroy'])->name('web.sow.destroy');
@@ -50,8 +49,8 @@ Route::middleware(['auth'])->group(function () {
     // GST Report
     Route::get('/gst-report',                                [GSTReportWebController::class, 'index'])->name('web.gst-report.index');
 
+    
     // Proposals
-    Route::get('/proposals',                                 [ProposalWebController::class, 'index'])->name('web.proposals.index');
     Route::post('/proposals',                                [ProposalWebController::class, 'store'])->name('web.proposals.store');
     Route::get('/proposals/{proposal}',                      [ProposalWebController::class, 'show'])->name('web.proposals.show');
     Route::patch('/proposals/{proposal}',                    [ProposalWebController::class, 'update'])->name('web.proposals.update');
@@ -59,6 +58,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/proposals/{proposal}/send',                [ProposalWebController::class, 'markSent'])->name('web.proposals.send');
     Route::post('/proposals/{proposal}/accept',              [ProposalWebController::class, 'accept'])->name('web.proposals.accept');
     Route::post('/proposals/{proposal}/reject',              [ProposalWebController::class, 'reject'])->name('web.proposals.reject');
+    Route::post('/proposals/{proposal}/convert-to-sow',      [ProposalWebController::class, 'convertToSow'])->name('web.proposals.convert-to-sow');
 
     // Purchase Orders
     Route::get('/purchase-orders',                           [PurchaseOrderWebController::class, 'index'])->name('web.purchase-orders.index');

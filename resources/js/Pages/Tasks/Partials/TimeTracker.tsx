@@ -1,43 +1,58 @@
-import React from 'react';
-import { useForm, router } from '@inertiajs/react';
-import type { TimeEntry } from '@/types';
-import { useStopwatch } from '@/hooks/useStopwatch';
+import React, { useState, useEffect } from 'react';
+import { useForm, router, usePage } from '@inertiajs/react';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Play, Square, Trash2 } from 'lucide-react';
 import { cn, formatDate, formatHours } from '@/lib/utils';
 
 interface TimeTrackerProps {
     taskId: string;
-    timeEntries: TimeEntry[];
+    timeEntries: any[];
 }
 
 export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries }) => {
+    const { auth } = usePage<any>().props;
     const confirm = useConfirm();
+    
+    // Find if there is an active timer for this task and current user
+    const activeTimer = timeEntries.find(e => e.timer_started_at && e.user?.id === auth.user.id);
+    
+    const [elapsedTime, setElapsedTime] = useState('00:00:00');
+
+    // Update elapsed time every second if timer is active
+    useEffect(() => {
+        if (!activeTimer?.timer_started_at) {
+            setElapsedTime('00:00:00');
+            return;
+        }
+
+        const interval = setInterval(() => {
+            const start = new Date(activeTimer.timer_started_at).getTime();
+            const now = new Date().getTime();
+            const diff = Math.max(0, Math.floor((now - start) / 1000));
+            
+            const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+            const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+            const s = (diff % 60).toString().padStart(2, '0');
+            setElapsedTime(`${h}:${m}:${s}`);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [activeTimer]);
+
     const timeForm = useForm({
         hours: '',
         description: '',
         logged_date: new Date().toISOString().slice(0, 10)
     });
 
-    const { timerRunning, timerSeconds, formattedTime, start, pause, stop, reset } = useStopwatch(taskId);
+    function startGlobalTimer() {
+        router.post('/timesheets/timer/start', { task_id: taskId }, { preserveScroll: true });
+    }
 
-    function handleStopLog() {
-        const secs = stop();
-        const calculatedHours = +(secs / 3600).toFixed(2);
-        if (calculatedHours < 0.01 && secs > 0) {
-             timeForm.setData({
-                 hours: "0.25", // Minimum increment
-                 description: 'Time tracked via timer',
-                 logged_date: timeForm.data.logged_date,
-             });
-        } else {
-             timeForm.setData({
-                 hours: String(Math.max(calculatedHours, 0.25)), // Enforce min 0.25h to pass validation
-                 description: 'Time tracked via timer',
-                 logged_date: timeForm.data.logged_date,
-             });
+    function stopGlobalTimer() {
+        if (activeTimer) {
+            router.post(`/timesheets/timer/${activeTimer.id}/stop`, {}, { preserveScroll: true });
         }
-        reset();
     }
 
     function submitTime(e: React.FormEvent) {
@@ -48,54 +63,33 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
         });
     }
 
-    const totalLogged = timeEntries.reduce((s, e) => s + e.hours, 0);
+    const totalLogged = timeEntries.reduce((s, e) => s + (e.hours || 0), 0);
 
     return (
         <div className="space-y-4">
             {/* Timer */}
             <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                {!timerRunning && timerSeconds === 0 && (
+                {!activeTimer ? (
                     <button
                         type="button"
-                        onClick={start}
+                        onClick={startGlobalTimer}
                         className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-indigo-600 text-white hover:bg-indigo-700"
                     >
                         <Play size={14} /> Start Timer
                     </button>
-                )}
-
-                {timerRunning && (
+                ) : (
                     <button
                         type="button"
-                        onClick={pause}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-amber-500 text-white hover:bg-amber-600"
-                    >
-                        <Square size={14} /> Pause
-                    </button>
-                )}
-
-                {!timerRunning && timerSeconds > 0 && (
-                    <button
-                        type="button"
-                        onClick={start}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-indigo-600 text-white hover:bg-indigo-700"
-                    >
-                        <Play size={14} /> Resume
-                    </button>
-                )}
-
-                {timerSeconds > 0 && (
-                    <button
-                        type="button"
-                        onClick={handleStopLog}
+                        onClick={stopGlobalTimer}
                         className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-500 text-white hover:bg-red-600"
                     >
                         <Square size={14} /> Stop & Log
                     </button>
                 )}
 
-                <span className="font-mono text-lg font-bold text-gray-900">{formattedTime}</span>
-                {timerSeconds === 0 && <p className="text-xs text-gray-500">Track your time</p>}
+                <span className="font-mono text-lg font-bold text-gray-900">{elapsedTime}</span>
+                {!activeTimer && <p className="text-xs text-gray-500">Track your time</p>}
+                {activeTimer && <p className="text-xs text-indigo-500 font-medium animate-pulse">Running...</p>}
             </div>
 
             {/* Manual log form */}
@@ -144,7 +138,7 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
 
             <div className="border-t border-gray-100 pt-3">
                 <p className="text-xs font-medium text-gray-500 mb-2">LOGGED ({formatHours(totalLogged)} total)</p>
-                {timeEntries.map((entry) => (
+                {timeEntries.filter(e => !e.timer_started_at).map((entry) => (
                     <div key={entry.id} className="flex justify-between items-center py-2 border-b border-gray-50 group">
                         <div>
                             <p className="text-sm text-gray-700">{entry.description || '—'}</p>

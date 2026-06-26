@@ -6,7 +6,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell, LineChart, Line, AreaChart, Area,
 } from 'recharts';
-import { CalendarRange, Download, TrendingUp, BarChart3, FileText, Calendar, Plus, Mail } from 'lucide-react';
+import { CalendarRange, Download, TrendingUp, BarChart3, FileText, Calendar, Plus, Mail, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
 
@@ -108,7 +108,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
     };
 
     function applyRange() {
-        router.get('/reports', { from, to }, { preserveState: true });
+        router.get('/internal-reports', { from, to }, { preserveState: true });
     }
 
     function applyQuick(days: number) {
@@ -116,7 +116,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
         const f = new Date();
         f.setDate(f.getDate() - days);
         const fmt = (d: Date) => d.toISOString().split('T')[0];
-        router.get('/reports', { from: fmt(f), to: fmt(t) }, { preserveState: true });
+        router.get('/internal-reports', { from: fmt(f), to: fmt(t) }, { preserveState: true });
     }
 
     const statusPieData   = Object.entries(data.tasks_by_status).map(([k, v]) => ({ name: k.replace(/_/g, ' '), value: v }));
@@ -141,13 +141,13 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
     };
 
     return (
-        <AppLayout title="Analytics & Reports">
-            <Head title="Reports" />
+        <AppLayout title="Internal Reports">
+            <Head title="Internal Reports" />
 
             {/* Title & Generate action */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Intelligence & Reports</h1>
+                    <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Internal Reports</h1>
                     <p className="text-xs text-gray-400 mt-1 font-medium">Generate SEO audits, client performance reports, and sprint summaries.</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -164,7 +164,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         {compareMode ? "Cancel Compare" : "Compare Reports"}
                     </button>
                     <Link
-                        href="/reports/create"
+                        href="/internal-reports/create"
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm"
                     >
                         <Plus size={13} /> Build Report
@@ -359,7 +359,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                             {!compareMode && (
                                                 <td className="px-5 py-4 text-right space-x-2">
                                                     <Link
-                                                        href={`/reports/${rep.id}`}
+                                                        href={`/internal-reports/${rep.id}`}
                                                         className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg font-bold"
                                                     >
                                                         View
@@ -743,7 +743,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         </button>
                         <button
                             disabled={selectedForCompare.length !== 2}
-                            onClick={() => router.get(`/reports/compare?id1=${selectedForCompare[0]}&id2=${selectedForCompare[1]}`)}
+                            onClick={() => router.get(`/internal-reports/compare?id1=${selectedForCompare[0]}&id2=${selectedForCompare[1]}`)}
                             className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-xs font-bold transition-colors"
                         >
                             Compare Side-by-Side

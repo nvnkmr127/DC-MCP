@@ -24,7 +24,7 @@ function ReportModal({ clients, onClose }: { clients: Client[]; onClose: () => v
         e.preventDefault();
         const metricsObj = Object.fromEntries(metrics.filter(m => m.key).map(m => [m.key, m.value]));
         form.transform(d => ({ ...d, metrics: metricsObj }));
-        form.post('/client-reports', { onSuccess: onClose });
+        form.post('/client-updates', { onSuccess: onClose });
     };
 
     return (
@@ -103,11 +103,11 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
     const fmtMonth = (m: string) => new Date(m + '-01').toLocaleString('en-IN', { month: 'long', year: 'numeric' });
 
     return (
-        <AppLayout title="Client Reports">
-            <Head title="Client Reports" />
+        <AppLayout title="Client Updates">
+            <Head title="Client Updates" />
             <div className="max-w-4xl space-y-5">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-lg font-bold text-gray-900">Monthly Client Reports</h1>
+                    <h1 className="text-lg font-bold text-gray-900">Monthly Client Updates</h1>
                     <button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> New Report
@@ -147,11 +147,11 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     {r.status === 'draft' && (
                                         <>
-                                            <button onClick={() => router.post(`/client-reports/${r.id}/draft`)}
+                                            <button onClick={() => router.post(`/client-updates/${r.id}/draft`)}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 border border-indigo-200 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50">
                                                 <Sparkles size={11} /> AI Draft
                                             </button>
-                                            <button onClick={() => router.post(`/client-reports/${r.id}/send`)}
+                                            <button onClick={() => router.post(`/client-updates/${r.id}/send`)}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 border border-emerald-200 text-emerald-600 text-xs font-medium rounded-lg hover:bg-emerald-50">
                                                 <Send size={11} /> Send
                                             </button>
@@ -169,7 +169,7 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                                             variant: 'destructive',
                                         });
                                         if (!ok) return;
-                                        router.delete(`/client-reports/${r.id}`);
+                                        router.delete(`/client-updates/${r.id}`);
                                     }}
                                         className="p-1.5 text-gray-400 hover:text-rose-500">
                                         <Trash2 size={13} />

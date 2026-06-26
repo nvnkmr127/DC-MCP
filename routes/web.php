@@ -44,18 +44,13 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin Diagnostics & Hub
     Route::middleware(['role:super_admin'])->group(function () {
-        Route::get('/admin/diagnostics', [\App\Http\Controllers\Admin\DiagnosticController::class, 'index'])
-            ->name('admin.diagnostics');
-        Route::get('/admin/mcp', [\App\Http\Controllers\Admin\McpAdminController::class, 'index'])
-            ->name('admin.mcp');
         Route::post('/admin/impersonate/{user}', [\App\Http\Controllers\Admin\McpAdminController::class, 'impersonate'])
             ->name('admin.impersonate');
+        Route::get('/admin/integrations', [\App\Http\Controllers\Admin\IntegrationsController::class, 'index']);
         Route::get('/admin/mcp/{connection}/history', [\App\Http\Controllers\Admin\McpAdminController::class, 'history'])
             ->name('admin.mcp.history');
         Route::post('/admin/mcp/{connection}/migrate', [\App\Http\Controllers\Admin\McpAdminController::class, 'migrate'])
             ->name('admin.mcp.migrate');
-        Route::get('/admin/mcp/providers', [\App\Http\Controllers\Admin\McpAdminController::class, 'providers'])
-            ->name('admin.mcp.providers');
         Route::post('/admin/mcp/providers', [\App\Http\Controllers\Admin\McpAdminController::class, 'storeProvider'])
             ->name('admin.mcp.providers.store');
         Route::put('/admin/mcp/providers/{provider}', [\App\Http\Controllers\Admin\McpAdminController::class, 'updateProvider'])

@@ -91,7 +91,7 @@ export default function ReportsShow({ report }: Props) {
             {/* Back action */}
             <div className="mb-6 flex items-center justify-between">
                 <Link
-                    href="/reports"
+                    href="/internal-reports"
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gray-900"
                 >
                     <ArrowLeft size={13} /> Back to reports
@@ -229,8 +229,8 @@ export default function ReportsShow({ report }: Props) {
                             <MessageSquare size={14} className="text-gray-400" /> Internal Notes & Annotations
                         </h3>
                         <CommentsSection
-                            submitUrl={`/reports/${report.id}/comments`}
-                            deleteUrlTemplate={(id) => `/reports/${report.id}/comments/${id}`}
+                            submitUrl={`/internal-reports/${report.id}/comments`}
+                            deleteUrlTemplate={(id) => `/internal-reports/${report.id}/comments/${id}`}
                             comments={report.comments || []}
                         />
                     </div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, Send, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle, XCircle, FileText } from 'lucide-react';
 
 interface Proposal {
     id: string; title: string; status: string; valid_until: string | null;
@@ -63,6 +63,12 @@ export default function ProposalShow({ proposal }: Props) {
                                         <XCircle size={13} /> Reject
                                     </button>
                                 </>
+                            )}
+                            {proposal.status === 'accepted' && (
+                                <button onClick={() => router.post(`/proposals/${proposal.id}/convert-to-sow`)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
+                                    <FileText size={13} /> Generate SOW
+                                </button>
                             )}
                         </div>
                     </div>

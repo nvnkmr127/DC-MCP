@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
+import ProposalsTab from '../Agreements/ProposalsTab';
+import SowTab from '../Agreements/SowTab';
 import { useConfirm } from '@/hooks/useConfirm';
 import { cn, formatDate } from '@/lib/utils';
 import type { Client, Project } from '@/types';
@@ -159,8 +161,9 @@ function ScoreModal({ clientId, current, onClose }: { clientId: string; current:
     );
 }
 
-export default function ClientShow({ client, communications }: Props) {
-    const [activeTab, setActiveTab] = useState<'projects' | 'comms'>('projects');
+export default function ClientShow({ client, communications, proposals, sows, canReview }: any) {
+    const [activeTab, setActiveTab] = useState<'projects' | 'comms' | 'documents'>('projects');
+    const [documentSubTab, setDocumentSubTab] = useState<'proposals'|'sows'>('proposals');
     const [commOpen, setCommOpen] = useState(false);
     const [scoreOpen, setScoreOpen] = useState(false);
     const confirm = useConfirm();
@@ -269,12 +272,12 @@ export default function ClientShow({ client, communications }: Props) {
 
                 {/* Tab bar */}
                 <div className="flex gap-1 mb-4">
-                    {(['projects', 'comms'] as const).map(tab => (
+                    {(['projects', 'comms', 'documents'] as const).map(tab => (
                         <button key={tab} onClick={() => setActiveTab(tab)}
                             className={cn('px-4 py-1.5 text-[13px] font-medium rounded-lg transition-colors',
                                 activeTab === tab ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100'
                             )}>
-                            {tab === 'projects' ? 'Projects' : `Communications (${communications.length})`}
+                            {tab === 'projects' ? 'Projects' : tab === 'comms' ? `Communications (${communications.length})` : 'Client Documents'}
                         </button>
                     ))}
                 </div>
@@ -301,7 +304,7 @@ export default function ClientShow({ client, communications }: Props) {
                     </button>
                 </div>
 
-                {activeTab === 'projects' ? (
+                {activeTab === 'projects' && (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                         <div className="px-5 py-3.5 border-b border-gray-50 flex items-center justify-between">
                             <h3 className="text-[13px] font-semibold text-gray-900">Projects</h3>
@@ -341,7 +344,20 @@ export default function ClientShow({ client, communications }: Props) {
                             </div>
                         )}
                     </div>
-                ) : (
+                )}
+                
+                {activeTab === 'documents' && (
+                    <div className="space-y-6">
+                        <div className="flex space-x-4 mb-4">
+                            <button onClick={() => setDocumentSubTab('proposals')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'proposals' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Proposals</button>
+                            <button onClick={() => setDocumentSubTab('sows')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'sows' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Statements of Work</button>
+                        </div>
+                        {documentSubTab === 'proposals' && <ProposalsTab proposals={proposals} stats={{}} clients={[]} />}
+                        {documentSubTab === 'sows' && <SowTab sows={sows} clients={[]} retainers={[]} canReview={canReview} />}
+                    </div>
+                )}
+
+                {activeTab === 'comms' && (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                         <div className="px-5 py-3.5 border-b border-gray-50 flex items-center justify-between">
                             <h3 className="text-[13px] font-semibold text-gray-900">Communication Log</h3>

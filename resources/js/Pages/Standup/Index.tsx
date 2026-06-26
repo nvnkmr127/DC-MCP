@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import SyncsLayout from '@/Layouts/SyncsLayout';
 import { Users, CheckCircle2, Clock, AlertTriangle, ChevronLeft, ChevronRight, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -47,7 +47,7 @@ export default function StandupIndex({ myStandup, teamStandups, date, stats }: P
     const isToday = viewDate === new Date().toISOString().split('T')[0];
 
     return (
-        <AppLayout>
+        <SyncsLayout>
             <Head title="EOD Standup" />
 
             <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -213,6 +213,6 @@ export default function StandupIndex({ myStandup, teamStandups, date, stats }: P
                     ))}
                 </div>
             </div>
-        </AppLayout>
+        </SyncsLayout>
     );
 }

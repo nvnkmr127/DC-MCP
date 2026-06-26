@@ -14,10 +14,8 @@ use App\Modules\Revenue\Models\ClientRetainer;
 use App\Modules\Revenue\Models\Invoice;
 use App\Modules\Revenue\Models\Expense;
 use App\Modules\Revenue\Models\PayrollRecord;
-use App\Modules\Revenue\Models\ClientOnboarding;
-use App\Modules\Revenue\Services\FinancialService;
-use App\Modules\Standup\Models\EodStandup;
 use Illuminate\Support\Facades\DB;
+
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
@@ -120,50 +118,7 @@ class BriefingDataCollector
                 ->toArray();
         }
 
-        // 4. Metrics & Snaps (Analyst/CEO)
-        $metaAds = [];
-        $campaignAlerts = [];
-
-        if ($isCeo || $isAnalyst) {
-            // Query metric_snapshots for meta ads metrics
-            // Slugs: meta_spend, meta_clicks, meta_impressions
-            $metrics = ['meta_spend', 'meta_clicks', 'meta_impressions'];
-            $yesterday = $date->copy()->subDay()->toDateString();
-            $dayBefore = $date->copy()->subDays(2)->toDateString();
-
-            foreach ($metrics as $metricSlug) {
-                $kpi = DB::table('kpi_definitions')
-                    ->where('organization_id', $orgId)
-                    ->where('slug', $metricSlug)
-                    ->first();
-
-                if ($kpi) {
-                    $valYesterday = DB::table('metric_snapshots')
-                        ->where('kpi_definition_id', $kpi->id)
-                        ->whereDate('date_key', $yesterday)
-                        ->sum('value');
-
-                    $valDayBefore = DB::table('metric_snapshots')
-                        ->where('kpi_definition_id', $kpi->id)
-                        ->whereDate('date_key', $dayBefore)
-                        ->sum('value');
-
-                    $metaAds[str_replace('meta_', '', $metricSlug)] = [
-                        'yesterday' => floatval($valYesterday),
-                        'previous_day' => floatval($valDayBefore),
-                        'change_pct' => $valDayBefore > 0 ? round((($valYesterday - $valDayBefore) / $valDayBefore) * 100, 2) : 0
-                    ];
-                }
-            }
-
-            // Yesterday's campaign_alert notifications
-            $campaignAlerts = DB::table('notifications_log')
-                ->where('organization_id', $orgId)
-                ->where('type', 'campaign_alert')
-                ->whereDate('created_at', $date->copy()->subDay())
-                ->get()
-                ->toArray();
-        }
+        // 4. Removed Metrics & Snaps to avoid overlap with Reports
 
         // 5. Notion recent updates (CEO/PM/Analyst)
         $notionUpdates = [];
@@ -215,31 +170,7 @@ class BriefingDataCollector
             }
         }
 
-        // 7. Team blockers & overdue (PM/CEO)
-        $overdueByMember = [];
-        $blockedCount = 0;
-
-        if ($isPm || $isCeo) {
-            $overdueTasks = Task::where('organization_id', $orgId)
-                ->whereDate('due_date', '<', $date)
-                ->whereNotIn('status', ['done', 'cancelled'])
-                ->with('assignee')
-                ->get();
-
-            $grouped = $overdueTasks->groupBy('assigned_to');
-            foreach ($grouped as $assignedId => $tasks) {
-                $name = $tasks->first()->assignee->name ?? 'Unassigned';
-                $overdueByMember[] = [
-                    'name' => $name,
-                    'count' => $tasks->count()
-                ];
-            }
-
-            // Blocked tasks count
-            $blockedCount = Task::where('organization_id', $orgId)
-                ->where('status', 'backlog')
-                ->count();
-        }
+        // 7. Removed Team blockers & overdue to keep briefing personal
 
         // 8. Reports due today (Analyst/PM)
         $reportsDue = [];
@@ -332,26 +263,7 @@ class BriefingDataCollector
                 ->toArray();
         }
 
-        // 11. Yesterday's standup summary (CEO/PM)
-        $standupSummary = [];
-        if ($isCeo || $isPm) {
-            $yesterday = $date->copy()->subDay()->toDateString();
-            $standups = EodStandup::where('organization_id', $orgId)
-                ->whereDate('date', $yesterday)
-                ->with('user:id,name')
-                ->get();
-
-            $standupSummary = [
-                'date'          => $yesterday,
-                'submitted'     => $standups->count(),
-                'blocker_count' => $standups->filter(fn($s) => !empty(trim((string) $s->blockers)))->count(),
-                'blockers'      => $standups
-                    ->filter(fn($s) => !empty(trim((string) $s->blockers)))
-                    ->map(fn($s) => ['user' => $s->user?->name, 'blockers' => $s->blockers])
-                    ->values()
-                    ->toArray(),
-            ];
-        }
+        // 11. Removed Standup summary to keep briefing focused on user tasks
 
         return [
             'user' => [
@@ -372,19 +284,11 @@ class BriefingDataCollector
                 'due_soon' => $dueSoonProjects,
                 'stale' => $staleProjects
             ],
-            'metrics' => [
-                'meta_ads' => $metaAds,
-                'alerts' => $campaignAlerts
-            ],
             'notion' => [
                 'recent_updates' => $notionUpdates
             ],
             'emails' => [
                 'unread_client_emails' => $unreadEmails
-            ],
-            'team' => [
-                'overdue_by_member' => $overdueByMember,
-                'blocked_count' => $blockedCount
             ],
             'reports' => [
                 'due_today' => $reportsDue
@@ -395,45 +299,9 @@ class BriefingDataCollector
             'revenue' => [
                 'overdue_invoices' => $overdueInvoices,
                 'renewal_alerts'   => $renewalAlerts,
-            ],
-            'standup' => $standupSummary,
-            'financials' => $isCeo ? $this->collectFinancials($orgId) : [],
+            ]
         ];
     }
 
-    private function collectFinancials(string $orgId): array
-    {
-        $monthYear = now()->format('Y-m');
 
-        try {
-            $financialService = app(FinancialService::class);
-            $pnl = $financialService->getPnl($orgId, $monthYear);
-
-            $stalledOnboarding = ClientOnboarding::where('organization_id', $orgId)
-                ->whereNotIn('stage', ['active'])
-                ->where('updated_at', '<', now()->subDays(5))
-                ->with('client:id,name,company')
-                ->get()
-                ->map(fn($o) => [
-                    'client' => $o->client?->company ?? $o->client?->name,
-                    'stage'  => $o->stage,
-                    'days_stalled' => now()->diffInDays($o->updated_at),
-                ])
-                ->toArray();
-
-            return [
-                'mrr'               => $pnl['revenue']['mrr'],
-                'net_profit'        => $pnl['net_profit'],
-                'profit_margin'     => $pnl['profit_margin'],
-                'total_costs'       => $pnl['costs']['total'],
-                'stalled_onboarding'=> $stalledOnboarding,
-            ];
-        } catch (\Exception $e) {
-            Log::warning('Financial data collection failed for briefing', [
-                'organization_id' => $orgId,
-                'exception'       => $e->getMessage(),
-            ]);
-            return [];
-        }
-    }
 }

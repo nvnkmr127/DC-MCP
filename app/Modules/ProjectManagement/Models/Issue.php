@@ -15,7 +15,7 @@ class Issue extends BaseModel
 
     protected $fillable = [
         'organization_id', 'client_id', 'project_id', 'reported_by', 'assigned_to',
-        'task_id', 'title', 'description', 'type', 'priority', 'status',
+        'task_id', 'audit_checklist_id', 'title', 'description', 'type', 'priority', 'status',
         'source', 'resolution', 'resolved_at',
     ];
 

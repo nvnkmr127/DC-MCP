@@ -17,8 +17,8 @@ class ClientSow extends BaseModel
     protected $table = 'client_sows';
 
     protected $fillable = [
-        'organization_id', 'client_id', 'retainer_id', 'title', 'description',
-        'start_date', 'end_date', 'status', 'created_by',
+        'organization_id', 'client_id', 'retainer_id', 'proposal_id', 'title',
+        'description', 'status', 'start_date', 'end_date', 'created_by',
     ];
 
     protected $casts = [
@@ -35,6 +35,11 @@ class ClientSow extends BaseModel
     public function retainer(): BelongsTo
     {
         return $this->belongsTo(ClientRetainer::class, 'retainer_id');
+    }
+
+    public function proposal(): BelongsTo
+    {
+        return $this->belongsTo(Proposal::class);
     }
 
     public function deliverables(): HasMany

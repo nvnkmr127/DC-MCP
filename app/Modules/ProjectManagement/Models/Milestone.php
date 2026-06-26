@@ -23,6 +23,7 @@ class Milestone extends BaseModel
     protected $fillable = [
         'project_id',
         'sprint_id',
+        'goal_id',
         'name',
         'description',
         'due_date',
@@ -45,6 +46,11 @@ class Milestone extends BaseModel
      *
      * @return BelongsTo
      */
+        public function goal(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Revenue\Models\Goal::class);
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
