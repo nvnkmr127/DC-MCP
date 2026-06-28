@@ -23,11 +23,7 @@ interface Props {
     canReview: boolean;
 }
 
-const STATUS_STYLES: Record<string, string> = {
-    pending:  'bg-amber-100 text-amber-800',
-    approved: 'bg-emerald-100 text-emerald-700',
-    rejected: 'bg-rose-100 text-rose-700',
-};
+
 
 function BalanceCard({ label, used, total, color }: { label: string; used: number; total: number; color: string }) {
     const pct = total > 0 ? Math.round((used / total) * 100) : 0;
@@ -112,7 +108,7 @@ export default function LeaveIndex({ myRequests, teamRequests, balance, canRevie
     return (
         <AppLayout title="Leave Management">
             <Head title="Leave Management" />
-            <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-5xl mx-auto space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Leave Management</h1>
@@ -161,7 +157,7 @@ export default function LeaveIndex({ myRequests, teamRequests, balance, canRevie
                                     <div>
                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                             <span className="text-sm font-medium text-gray-900 capitalize">{r.type} Leave</span>
-                                            <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium capitalize', STATUS_STYLES[r.status] || 'bg-gray-100 text-gray-700')}>{r.status}</span>
+                                            <StatusBadge value={r.status} />
                                         </div>
                                         <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5">
                                             <Clock size={12} className="text-gray-400" />
@@ -216,7 +212,7 @@ export default function LeaveIndex({ myRequests, teamRequests, balance, canRevie
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className="text-sm font-medium text-gray-900">{r.user?.name}</span>
                                             <span className="text-sm text-gray-600 capitalize">· {r.type}</span>
-                                            <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_STYLES[r.status])}>{r.status}</span>
+                                            <StatusBadge value={r.status} />
                                         </div>
                                         <p className="text-xs text-gray-500 mt-0.5">{r.from_date} → {r.to_date} · {r.days} days</p>
                                         {r.reason && <p className="text-xs text-gray-400 mt-0.5">{r.reason}</p>}

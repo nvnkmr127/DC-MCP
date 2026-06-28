@@ -18,12 +18,7 @@ interface Props { payslips: Payslip[]; monthYear: string; totalPayroll: number; 
 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
 
-const STATUS_STYLES: Record<string, string> = {
-    draft:      'bg-gray-100 text-gray-700',
-    processing: 'bg-indigo-100 text-indigo-700',
-    paid:       'bg-emerald-100 text-emerald-700',
-    failed:     'bg-rose-100 text-rose-700',
-};
+
 
 function MonthNav({ monthYear, onChange }: { monthYear: string; onChange: (m: string) => void }) {
     const navigate = (offset: number) => {
@@ -70,9 +65,7 @@ function PayslipCard({ payslip, monthYear }: { payslip: Payslip; monthYear: stri
                     {r ? (
                         <>
                             <p className="text-lg font-bold text-gray-900">{fmt(r.net_pay)}</p>
-                            <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', STATUS_STYLES[r.status] ?? STATUS_STYLES.draft)}>
-                                {r.status}
-                            </span>
+                            <StatusBadge value={r.status} />
                         </>
                     ) : (
                         <p className="text-sm text-gray-400">No record</p>
@@ -154,7 +147,7 @@ export default function PayrollIndex({ payslips, monthYear, totalPayroll }: Prop
     return (
         <AppLayout>
             <Head title="Payroll" />
-            <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-5xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>

@@ -18,9 +18,7 @@ interface Sprint {
 interface Project { id: string; name: string; }
 interface Props { sprints: Sprint[]; projects: Project[]; }
 
-const STATUS_STYLES: Record<string, string> = {
-    planning: 'bg-gray-100 text-gray-700', active: 'bg-emerald-100 text-emerald-700', completed: 'bg-blue-100 text-blue-700',
-};
+
 
 function SprintModal({ projects, onClose }: { projects: Project[]; onClose: () => void }) {
     const form = useForm({ project_id: '', name: '', start_date: '', end_date: '', goal: '', status: 'planning' });
@@ -176,9 +174,7 @@ export default function SprintsIndex({ sprints, projects }: Props) {
                         <p className="text-xs text-gray-500 mt-0.5">{sprint.project?.name ?? '—'}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className={cn('px-2 py-0.5 rounded text-[10px] font-semibold capitalize', STATUS_STYLES[sprint.status])}>
-                            {sprint.status}
-                        </span>
+                        <StatusBadge value={sprint.status} />
                         <select value={sprint.status}
                             onChange={e => {
                                 if (e.target.value === 'completed') {

@@ -10,7 +10,7 @@ interface Freelancer { id: string; name: string; email: string | null; phone: st
 interface Project { id: string; name: string; }
 interface Props { freelancers: Freelancer[]; projects: Project[]; }
 
-const STATUS_STYLES: Record<string, string> = { active: 'bg-emerald-100 text-emerald-700', inactive: 'bg-gray-100 text-gray-700', blacklisted: 'bg-rose-100 text-rose-700' };
+
 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
 
@@ -178,9 +178,7 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
                                         <p className="text-sm font-semibold text-gray-900">{f.name}</p>
-                                        <span className={cn('px-1.5 py-0.5 rounded text-[10px] font-semibold capitalize', STATUS_STYLES[f.status] ?? STATUS_STYLES.active)}>
-                                            {f.status}
-                                        </span>
+                                        <StatusBadge value={f.status} />
                                     </div>
                                     <p className="text-xs text-gray-500 mt-0.5">
                                         {f.skill_set ?? 'No skills listed'}

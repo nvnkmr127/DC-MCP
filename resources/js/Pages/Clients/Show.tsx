@@ -117,13 +117,7 @@ const STATUS_CONFIG: Record<string, { label: string; cls: string; dot: string }>
     churned:  { label: 'Churned',  cls: 'bg--50 text--700',         dot: 'bg-red-400' },
 };
 
-const PROJECT_STATUS_STYLES: Record<string, string> = {
-    planning:  'bg-gray-100 text-gray-700',
-    active:    'bg-emerald-50 text-emerald-700',
-    on_hold:   'bg--50 text--800',
-    completed: 'bg-blue-50 text-blue-700',
-    cancelled: 'bg--50 text--700',
-};
+
 
 function AddCommModal({ clientId, onClose }: { clientId: string; onClose: () => void }) {
     const form = useForm({
@@ -439,10 +433,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                                 {project.end_date && ` · Due ${formatDate(project.end_date)}`}
                                             </p>
                                         </div>
-                                        <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize',
-                                            PROJECT_STATUS_STYLES[project.status] ?? 'bg-gray-100 text-gray-700')}>
-                                            {project.status.replace(/_/g, ' ')}
-                                        </span>
+                                        <StatusBadge value={project.status} />
                                     </Link>
                                 ))}
                             </div>

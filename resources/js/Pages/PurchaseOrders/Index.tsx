@@ -11,13 +11,7 @@ interface PO { id: string; po_number: string; issue_date: string; expected_deliv
 interface Vendor { id: string; vendor_name: string; }
 interface Props { purchaseOrders: PO[]; vendors: Vendor[]; }
 
-const STATUS_STYLES: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-700',
-    sent: 'bg-blue-100 text-blue-700',
-    acknowledged: 'bg-indigo-100 text-indigo-700',
-    received: 'bg-emerald-100 text-emerald-700',
-    cancelled: 'bg-rose-100 text-rose-700',
-};
+
 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
 
@@ -135,9 +129,7 @@ export default function PurchaseOrdersIndex({ purchaseOrders, vendors }: Props) 
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
                                         <p className="text-sm font-semibold text-gray-900">{po.po_number}</p>
-                                        <span className={cn('px-2 py-0.5 rounded text-[10px] font-semibold capitalize', STATUS_STYLES[po.status] ?? STATUS_STYLES.draft)}>
-                                            {po.status}
-                                        </span>
+                                        <StatusBadge value={po.status} />
                                     </div>
                                     <p className="text-xs text-gray-500 mt-0.5">
                                         {po.issue_date}

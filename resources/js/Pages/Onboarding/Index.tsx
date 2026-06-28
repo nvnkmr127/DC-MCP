@@ -204,7 +204,7 @@ export default function OnboardingIndex({ onboardings, byStage, clients, totalAc
     return (
         <AppLayout>
             <Head title="Client Onboarding" />
-            <div className="px-4 py-6 space-y-6 max-w-screen-2xl mx-auto">
+            <div className="space-y-6 max-w-screen-2xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>

@@ -17,13 +17,7 @@ interface Client { id: string; name: string; }
 interface Stats { total_sent: number; accepted_value: number; conversion_rate: number; }
 interface Props { proposals: Proposal[]; stats: Stats; clients: Client[]; }
 
-const STATUS_STYLES: Record<string, string> = {
-    draft:    'bg-gray-100 text-gray-700',
-    sent:     'bg-blue-100 text-blue-700',
-    accepted: 'bg-emerald-100 text-emerald-700',
-    rejected: 'bg-rose-100 text-rose-700',
-    expired:  'bg--100 text--800',
-};
+
 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
 
@@ -173,9 +167,7 @@ export default function ProposalsIndex({ proposals, stats, clients }: Props) {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                     <p className="text-sm font-semibold text-gray-900">{p.title}</p>
-                                    <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize', STATUS_STYLES[p.status] ?? STATUS_STYLES.draft)}>
-                                        {p.status}
-                                    </span>
+                                    <StatusBadge value={p.status} />
                                 </div>
                                 <p className="text-xs text-gray-500 mt-0.5">
                                     {p.client?.name ?? '—'}

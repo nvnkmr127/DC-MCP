@@ -38,13 +38,7 @@ interface Props {
     retainers: any[];
 }
 
-const STATUS_STYLES: Record<string, string> = {
-    planning:  'bg-gray-100 text-gray-700',
-    active:    'bg-green-100 text-green-700',
-    on_hold:   'bg-yellow-100 text-yellow-800',
-    completed: 'bg-blue-100 text-blue-700',
-    cancelled: 'bg-red-100 text-red-700',
-};
+
 
 const TABS = [
     { id: 'tasks', label: 'Tasks' },
@@ -64,7 +58,7 @@ export default function ProjectShow({ project, tasks, goals, team, financials, i
         <AppLayout>
             <Head title={project.name} />
 
-            <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto">
                 {/* Breadcrumb */}
                 <div className="mb-4">
                     <Breadcrumbs items={[
@@ -92,9 +86,7 @@ export default function ProjectShow({ project, tasks, goals, team, financials, i
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-1">
                                 <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
-                                <span className={cn('px-2.5 py-0.5 rounded-full text-xs font-medium capitalize', STATUS_STYLES[project.status])}>
-                                    {project.status.replace('_', ' ')}
-                                </span>
+                                <StatusBadge value={project.status} />
                             </div>
                             {project.client && (
                                 <Link href={`/clients/${project.client.id}`} className="text-sm font-medium text-indigo-600 hover:underline">

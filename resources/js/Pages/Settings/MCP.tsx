@@ -127,22 +127,7 @@ const PROVIDER_DETAILS: Record<string, { desc: string; scopes: string[]; synced_
     },
 };
 
-const STATUS_STYLES: Record<string, string> = {
-    active:               'bg-green-100 text-green-700',
-    error:                'bg-red-100 text-red-700',
-    inactive:             'bg-gray-100 text-gray-700',
-    syncing:              'bg-blue-100 text-blue-700',
-    pending:              'bg-yellow-100 text-yellow-700',
-    disconnected:         'bg-gray-200 text-gray-600',
-    pending_verification: 'bg-purple-100 text-purple-700',
-    token_expired:        'bg-orange-100 text-orange-700',
-    rate_limited:         'bg-orange-100 text-orange-700',
-    partially_active:     'bg-teal-100 text-teal-700',
-    suspended:            'bg-red-200 text-red-800',
-    quota_exceeded:       'bg-red-100 text-red-700',
-    pending_reauth:       'bg-yellow-200 text-yellow-800',
-    degraded:             'bg-yellow-100 text-yellow-700',
-};
+
 
 const getFreshnessColor = (dateStr: string) => {
     const diffHours = (Date.now() - new Date(dateStr).getTime()) / (1000 * 60 * 60);
@@ -780,9 +765,7 @@ export default function MCPSettings({ connections, builtin_providers, global_con
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                            <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium capitalize', STATUS_STYLES[conn.status] ?? STATUS_STYLES.inactive)}>
-                                                {conn.status}
-                                            </span>
+                                            <StatusBadge value={conn.status} />
                                         </div>
                                     </div>
 

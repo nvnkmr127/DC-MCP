@@ -61,7 +61,7 @@ export default function GSTReportIndex({ invoices, month }: Props) {
     return (
         <AppLayout title="GST Report">
             <Head title="GST Report" />
-            <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-6xl mx-auto space-y-6">
                 <div className="flex items-center justify-between flex-wrap gap-3">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">GST Report</h1>

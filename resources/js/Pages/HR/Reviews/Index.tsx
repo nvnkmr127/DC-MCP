@@ -16,11 +16,7 @@ interface Review {
 }
 interface Props { written: Review[]; received: Review[]; users: { id: string; name: string }[]; }
 
-const STATUS_STYLES: Record<string, string> = {
-    draft:        'bg-gray-100 text-gray-700',
-    submitted:    'bg--100 text--800',
-    acknowledged: 'bg-emerald-100 text-emerald-700',
-};
+
 
 const PERIOD_LABELS: Record<string, string> = { q1: 'Q1', q2: 'Q2', q3: 'Q3', q4: 'Q4', annual: 'Annual' };
 
@@ -119,7 +115,7 @@ function ReviewCard({ review, showActions }: { review: Review; showActions: bool
                         <span className="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">
                             {PERIOD_LABELS[review.period]} {review.year}
                         </span>
-                        <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_STYLES[review.status])}>{review.status}</span>
+                        <StatusBadge value={review.status} />
                     </div>
                     <p className="text-sm font-medium text-gray-900 mt-1">
                         {review.reviewer?.name} → {review.reviewee?.name}
@@ -162,7 +158,7 @@ export default function ReviewsIndex({ written, received, users }: Props) {
     return (
         <AppLayout title="Performance Reviews">
             <Head title="Performance Reviews" />
-            <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-4xl mx-auto space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Performance Reviews</h1>

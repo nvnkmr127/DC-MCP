@@ -20,12 +20,7 @@ const PRIORITY_STYLES: Record<string, string> = {
     low: 'bg-gray-100 text-gray-700', medium: 'bg--100 text--800',
     high: 'bg--100 text--800', critical: 'bg-rose-100 text-rose-700',
 };
-const STATUS_STYLES: Record<string, string> = {
-    open:        'bg-amber-100 text-amber-800',
-    in_progress: 'bg-indigo-100 text-indigo-700',
-    resolved:    'bg-emerald-100 text-emerald-700',
-    closed:      'bg-gray-100 text-gray-700',
-};
+
 const TYPE_ICONS: Record<string, React.ReactNode> = {
     bug: <Bug size={16} className="text-rose-500" />, enhancement: <Zap size={16} className="text-blue-500" />,
     question: <HelpCircle size={16} className="text-amber-500" />, feedback: <MessageSquare size={16} className="text-emerald-500" />,
@@ -156,9 +151,7 @@ export default function IssuesIndex({ issues, clients, users, filters }: Props) 
                                     <span className={cn('px-2 py-0.5 rounded text-[10px] font-semibold capitalize', PRIORITY_STYLES[issue.priority])}>
                                         {issue.priority}
                                     </span>
-                                    <span className={cn('px-2 py-0.5 rounded text-[10px] font-semibold', STATUS_STYLES[issue.status] ?? STATUS_STYLES.open)}>
-                                        {issue.status.replace('_', ' ')}
-                                    </span>
+                                    <StatusBadge value={issue.status} />
                                     <ChevronDown size={16} className={cn('text-gray-400 transition-transform', expandedId === issue.id && 'rotate-180')} />
                                 </div>
                             </div>

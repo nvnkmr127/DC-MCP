@@ -15,13 +15,7 @@ interface Proposal {
 }
 interface Props { proposal: Proposal; }
 
-const STATUS_STYLES: Record<string, string> = {
-    draft: 'bg-gray-100 text-gray-700',
-    sent: 'bg-blue-100 text-blue-700',
-    accepted: 'bg-emerald-100 text-emerald-700',
-    rejected: 'bg-rose-100 text-rose-700',
-    expired: 'bg--100 text--800',
-};
+
 const FREQ_LABELS: Record<string, string> = { one_time: 'One Time', monthly: 'Monthly', quarterly: 'Quarterly', annual: 'Annual' };
 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
@@ -45,9 +39,7 @@ export default function ProposalShow({ proposal }: Props) {
                             </p>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold capitalize', STATUS_STYLES[proposal.status] ?? STATUS_STYLES.draft)}>
-                                {proposal.status}
-                            </span>
+                            <StatusBadge value={proposal.status} />
                             {proposal.status === 'draft' && (
                                 <Button onClick={() => router.post(`/proposals/${proposal.id}/send`)}
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">

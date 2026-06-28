@@ -15,10 +15,7 @@ interface Approval {
 interface Client { id: string; name: string; }
 interface Props { approvals: Approval[]; clients: Client[]; filters: Record<string, string>; }
 
-const STATUS_STYLES: Record<string, string> = {
-    pending: 'bg-amber-100 text-amber-800', approved: 'bg-emerald-100 text-emerald-700',
-    revision_requested: 'bg-blue-100 text-blue-700', rejected: 'bg-rose-100 text-rose-700',
-};
+
 const TYPE_LABELS: Record<string, string> = {
     social_post: 'Social Post', ad_creative: 'Ad Creative', blog: 'Blog', video: 'Video', email: 'Email', other: 'Other',
 };
@@ -122,9 +119,7 @@ export default function AssetApprovalsIndex({ approvals, clients, filters }: Pro
                                     <div className="flex items-center gap-2">
                                         <p className="text-sm font-semibold text-gray-900">{a.title}</p>
                                         <span className="text-xs text-gray-400">v{a.version}</span>
-                                        <span className={cn('px-2 py-0.5 rounded text-[10px] font-semibold', STATUS_STYLES[a.status] ?? STATUS_STYLES.pending)}>
-                                            {a.status.replace('_', ' ')}
-                                        </span>
+                                        <StatusBadge value={a.status} />
                                     </div>
                                     <p className="text-xs text-gray-500 mt-0.5">
                                         {TYPE_LABELS[a.type] ?? a.type} · {a.client?.name ?? '—'} · {a.submitter?.name ?? '—'}

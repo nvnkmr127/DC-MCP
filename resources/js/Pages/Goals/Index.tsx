@@ -9,12 +9,7 @@ import { Plus, X, Trash2, Flag } from 'lucide-react';
 const PERIODS = ['q1', 'q2', 'q3', 'q4', 'annual'] as const;
 const PERIOD_LABELS: Record<string, string> = { q1: 'Q1', q2: 'Q2', q3: 'Q3', q4: 'Q4', annual: 'Annual' };
 
-const STATUS_STYLES: Record<string, string> = {
-    draft:     'bg-gray-100 text-gray-700',
-    active:    'bg-indigo-100 text-indigo-700',
-    completed: 'bg-emerald-100 text-emerald-700',
-    cancelled: 'bg--100 text--700',
-};
+
 
 interface KeyResult { id: string; title: string; target: number; current: number; unit: string; }
 interface Goal {
@@ -56,9 +51,7 @@ function GoalCard({ goal }: { goal: Goal }) {
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-gray-900 text-sm">{goal.title}</h3>
-                        <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', STATUS_STYLES[goal.status])}>
-                            {goal.status}
-                        </span>
+                        <StatusBadge value={goal.status} />
                     </div>
                     {goal.owner && <p className="text-xs text-gray-400 mt-0.5">Owner: {goal.owner.name}</p>}
                     {goal.description && <p className="text-xs text-gray-500 mt-1">{goal.description}</p>}
@@ -239,7 +232,7 @@ export default function GoalsIndex({ goals, byPeriod, currentPeriod, orgProgress
     return (
         <AppLayout>
             <Head title="Goals & OKRs" />
-            <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-5xl mx-auto space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Goals & OKRs</h1>

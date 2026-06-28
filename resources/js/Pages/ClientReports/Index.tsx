@@ -15,7 +15,7 @@ interface Report {
 interface Client { id: string; name: string; }
 interface Props { reports: Report[]; clients: Client[]; }
 
-const STATUS_STYLES: Record<string, string> = { draft: 'bg--100 text--800', sent: 'bg-emerald-100 text-emerald-700' };
+
 
 function ReportModal({ clients, onClose }: { clients: Client[]; onClose: () => void }) {
     const form = useForm({ client_id: '', month_year: new Date().toISOString().slice(0, 7), highlights: '', challenges: '' });
@@ -136,9 +136,7 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
                                         <p className="text-sm font-semibold text-gray-900">{r.client?.name ?? '—'}</p>
-                                        <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold', STATUS_STYLES[r.status])}>
-                                            {r.status}
-                                        </span>
+                                        <StatusBadge value={r.status} />
                                     </div>
                                     <p className="text-xs text-gray-500 mt-0.5">{fmtMonth(r.month_year)}</p>
                                     {r.highlights && (

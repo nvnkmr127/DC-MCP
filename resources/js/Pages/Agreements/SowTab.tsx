@@ -81,11 +81,7 @@ function SubmitDeliverableModal({ deliverable, onClose }: { deliverable: Deliver
     );
 }
 
-const STATUS_STYLES: Record<string, string> = {
-    draft:   'bg-gray-100 text-gray-700',
-    active:  'bg-emerald-100 text-emerald-700',
-    expired: 'bg--100 text--800',
-};
+
 
 const SERVICE_LABELS: Record<string, string> = {
     seo: 'SEO', ads: 'Ads', social: 'Social', content: 'Content',
@@ -117,9 +113,7 @@ function SowCard({ sow, canReview }: { sow: Sow; canReview?: boolean }) {
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-gray-900">{sow.title}</h3>
-                        <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', STATUS_STYLES[sow.status] ?? STATUS_STYLES.draft)}>
-                            {sow.status}
-                        </span>
+                        <StatusBadge value={sow.status} />
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                         {sow.client && <span>{sow.client.name}</span>}

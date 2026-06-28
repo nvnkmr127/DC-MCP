@@ -43,15 +43,7 @@ interface Props {
     filters: { clientId: string | null; type: string | null; status: string | null; month: string };
 }
 
-const STATUS_STYLES: Record<Status, string> = {
-    idea:        'bg-gray-100 text-gray-700',
-    in_progress: 'bg-blue-100 text-blue-700',
-    in_review:   'bg--100 text--800',
-    approved:    'bg-emerald-100 text-emerald-700',
-    scheduled:   'bg-purple-100 text-purple-700',
-    published:   'bg-green-100 text-green-700',
-    cancelled:   'bg-red-100 text-red-400',
-};
+
 
 const STATUS_FLOW: Status[] = ['idea', 'in_progress', 'in_review', 'approved', 'scheduled', 'published'];
 
@@ -211,9 +203,7 @@ function ContentCard({ item }: { item: ContentItem }) {
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900 truncate">{item.title}</p>
                     <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', STATUS_STYLES[item.status])}>
-                            {item.status.replace('_', ' ')}
-                        </span>
+                        <StatusBadge value={item.status} />
                         {item.platform && (
                             <span className={cn('text-xs font-medium', PLATFORM_COLORS[item.platform])}>
                                 {item.platform}
@@ -312,7 +302,7 @@ export default function ContentCalendarIndex({ calendarItems, listItems, stats, 
 
             {createOpen && <CreateModal clients={clients} projects={projects} onClose={() => setCreateOpen(false)} />}
 
-            <div className="max-w-7xl mx-auto px-4 py-6 space-y-5">
+            <div className="max-w-7xl mx-auto space-y-5">
 
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -367,9 +357,7 @@ export default function ContentCalendarIndex({ calendarItems, listItems, stats, 
                     {(['idea', 'in_progress', 'in_review', 'approved', 'scheduled', 'published'] as Status[]).map(status => (
                         <div key={status} className="space-y-2">
                             <div className="flex items-center justify-between mb-2">
-                                <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', STATUS_STYLES[status])}>
-                                    {status.replace('_', ' ')}
-                                </span>
+                                <StatusBadge value={status} />
                                 <span className="text-xs text-gray-400">{(grouped[status] ?? []).length}</span>
                             </div>
                             {(grouped[status] ?? []).map(item => (

@@ -16,12 +16,7 @@ interface Client { id: string; name: string; company: string | null; }
 interface Invoice { id: string; invoice_number: string; client_id: string; }
 interface Props { creditNotes: CreditNote[]; clients: Client[]; invoices: Invoice[]; }
 
-const STATUS_STYLES: Record<string, string> = {
-    draft:   'bg-gray-100 text-gray-700',
-    issued:  'bg-indigo-100 text-indigo-700',
-    applied: 'bg-emerald-100 text-emerald-700',
-    voided:  'bg-rose-100 text-rose-700',
-};
+
 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
 
@@ -131,9 +126,7 @@ export default function CreditNotesIndex({ creditNotes, clients, invoices }: Pro
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                     <p className="text-sm font-semibold text-gray-900">{creditNote.credit_note_number}</p>
-                                    <span className={cn('px-2 py-0.5 rounded text-[10px] font-semibold capitalize', STATUS_STYLES[creditNote.status] ?? STATUS_STYLES.draft)}>
-                                        {creditNote.status}
-                                    </span>
+                                    <StatusBadge value={creditNote.status} />
                                 </div>
                                 <p className="text-xs text-gray-500">
                                     {creditNote.client?.name ?? '—'}{creditNote.invoice ? ` · ${creditNote.invoice.number}` : ''}
