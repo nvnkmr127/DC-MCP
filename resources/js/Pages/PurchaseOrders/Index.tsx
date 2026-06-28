@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -37,7 +38,7 @@ function POModal({ vendors, onClose }: { vendors: Vendor[]; onClose: () => void 
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">New Purchase Order</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={submit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -64,8 +65,8 @@ function POModal({ vendors, onClose }: { vendors: Vendor[]; onClose: () => void 
                     <div>
                         <div className="flex items-center justify-between mb-1">
                             <label className="text-xs text-gray-500 font-medium">Line Items *</label>
-                            <button type="button" onClick={() => setItems(i => [...i, { description: '', quantity: '1', unit_price: '' }])}
-                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</button>
+                            <Button type="button" onClick={() => setItems(i => [...i, { description: '', quantity: '1', unit_price: '' }])}
+                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</Button>
                         </div>
                         {items.map((item, i) => (
                             <div key={i} className="grid grid-cols-12 gap-2 mb-1.5 items-center">
@@ -78,9 +79,9 @@ function POModal({ vendors, onClose }: { vendors: Vendor[]; onClose: () => void 
                                 <input type="number" placeholder="Price (₹)" value={item.unit_price}
                                     onChange={e => { const n = [...items]; n[i].unit_price = e.target.value; setItems(n); }}
                                     className="col-span-3 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500" />
-                                <button type="button" onClick={() => setItems(it => it.filter((_, j) => j !== i))} className="col-span-1 text-gray-400 hover:text-rose-500 flex justify-center">
+                                <Button type="button" onClick={() => setItems(it => it.filter((_, j) => j !== i))} className="col-span-1 text-gray-400 hover:text-rose-500 flex justify-center">
                                     <X size={13} />
-                                </button>
+                                </Button>
                             </div>
                         ))}
                         <div className="text-right mt-1">
@@ -95,11 +96,11 @@ function POModal({ vendors, onClose }: { vendors: Vendor[]; onClose: () => void 
                     </div>
 
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Creating…' : 'Create PO'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -117,10 +118,10 @@ export default function PurchaseOrdersIndex({ purchaseOrders, vendors }: Props) 
             <div className="max-w-4xl space-y-5">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">Purchase Orders</h1>
-                    <button onClick={() => setModalOpen(true)}
+                    <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> New PO
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">

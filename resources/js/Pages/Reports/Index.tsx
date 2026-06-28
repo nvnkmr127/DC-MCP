@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { formatHours, cn } from '@/lib/utils';
@@ -152,7 +153,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                     <p className="text-xs text-gray-400 mt-1 font-medium">Generate SEO audits, client performance reports, and sprint summaries.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button
+                    <Button
                         onClick={() => {
                             setCompareMode(!compareMode);
                             setSelectedForCompare([]);
@@ -163,7 +164,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         )}
                     >
                         {compareMode ? "Cancel Compare" : "Compare Reports"}
-                    </button>
+                    </Button>
                     <Link
                         href="/internal-reports/create"
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm"
@@ -180,7 +181,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                     { id: 'pdfs', label: 'Generated PDF Reports', icon: FileText },
                     { id: 'schedules', label: 'Report Schedules', icon: Calendar },
                 ].map(t => (
-                    <button
+                    <Button
                         key={t.id}
                         onClick={() => setActiveTab(t.id as any)}
                         className={cn(
@@ -191,7 +192,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         )}
                     >
                         <t.icon size={13} /> {t.label}
-                    </button>
+                    </Button>
                 ))}
             </div>
 
@@ -203,13 +204,13 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         <CalendarRange size={15} className="text-gray-400 shrink-0" />
                         <div className="flex items-center gap-2 flex-wrap flex-1">
                             {QUICK_RANGES.map(({ label, days }) => (
-                                <button
+                                <Button
                                     key={days}
                                     onClick={() => applyQuick(days)}
                                     className="px-2.5 py-1 text-[11px] font-bold text-gray-500 hover:text-indigo-600 hover:bg-indigo-50/50 rounded-lg transition-colors border border-gray-200"
                                 >
                                     {label}
-                                </button>
+                                </Button>
                             ))}
                             <div className="w-px h-4 bg-gray-200 mx-1" />
                             <div className="flex items-center gap-2">
@@ -226,12 +227,12 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                     onChange={e => setTo(e.target.value)}
                                     className="px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white transition-colors"
                                 />
-                                <button
+                                <Button
                                     onClick={applyRange}
-                                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
-                                >
+                                    className="transition-all shadow-md" 
+                                size="sm" >
                                     Apply
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -318,9 +319,9 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                 </div>
                                                 <p className="text-[14px] font-semibold text-gray-900 mb-1">No reports generated yet</p>
                                                 <p className="text-[13px] text-gray-500 max-w-sm mb-6">Create your first client report. Start from scratch or use templates for monthly summaries, SEO audits, and campaign results.</p>
-                                                <button onClick={() => setModalOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                                                <Button onClick={() => setModalOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
                                                     Create New Report
-                                                </button>
+                                                </Button>
                                             </div>
                                         </td>
                                     </tr>
@@ -376,26 +377,26 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                     </Link>
                                                     {rep.status === 'ready' && (
                                                         <>
-                                                            <button
+                                                            <Button
                                                                 onClick={() => handleDownload(rep.id, rep.title)}
                                                                 disabled={downloadingId === rep.id}
                                                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg font-bold disabled:opacity-50"
                                                             >
                                                                 {downloadingId === rep.id ? <RefreshCw className="animate-spin" size={12} /> : <Download size={12} />}
                                                                 {downloadingId === rep.id ? 'Preparing...' : 'Download'}
-                                                            </button>
-                                                            <button
+                                                            </Button>
+                                                            <Button
                                                                 onClick={() => setEmailModalReport(rep)}
                                                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-sm"
                                                             >
                                                                 <Mail size={12} /> Send Email
-                                                            </button>
-                                                            <button
+                                                            </Button>
+                                                            <Button
                                                                 onClick={() => setShareModalReport(rep)}
                                                                 className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg font-bold"
                                                             >
                                                                 Share
-                                                            </button>
+                                                            </Button>
                                                         </>
                                                     )}
                                                 </td>
@@ -448,7 +449,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                 {sched.next_run_at ? sched.next_run_at.slice(0, 10) : '—'}
                                             </td>
                                             <td className="px-5 py-4">
-                                                <button
+                                                <Button
                                                     onClick={() => {
                                                         axios.patch(`/api/v1/report-schedules/${sched.id}`, {
                                                             is_active: !sched.is_active
@@ -465,11 +466,11 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                     )}
                                                 >
                                                     {sched.is_active ? 'Active' : 'Paused'}
-                                                </button>
+                                                </Button>
                                             </td>
                                             <td className="px-5 py-4 text-right">
                                                 <div className="flex justify-end items-center gap-2">
-                                                    <button
+                                                    <Button
                                                         onClick={() => {
                                                             setEditSchedule(sched);
                                                             setScheduleConfig({
@@ -493,8 +494,8 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                         className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg font-bold"
                                                     >
                                                         Edit Scope
-                                                    </button>
-                                                    <button
+                                                    </Button>
+                                                    <Button
                                                         onClick={() => {
                                                             if (confirm('Are you sure you want to delete this schedule?')) {
                                                                 axios.delete(`/api/v1/report-schedules/${sched.id}`)
@@ -507,7 +508,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                         className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-red-50 hover:bg--100 text--700 rounded-lg font-bold"
                                                     >
                                                         Delete
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -525,9 +526,9 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                     <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-100">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-sm font-bold text-gray-900">Email Report</h3>
-                            <button onClick={() => setEmailModalReport(null)} className="text-gray-400 hover:text-gray-700">
+                            <Button onClick={() => setEmailModalReport(null)} className="text-gray-400 hover:text-gray-700">
                                 <Plus className="rotate-45" size={18} />
-                            </button>
+                            </Button>
                         </div>
                         <p className="text-xs text-gray-400 mb-4">This will send the PDF report: <strong>{emailModalReport.title}</strong> directly to the recipient.</p>
                         
@@ -544,19 +545,19 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                 />
                             </div>
                             <div className="flex justify-end gap-2 pt-2">
-                                <button
+                                <Button
                                     type="button"
                                     onClick={() => setEmailModalReport(null)}
                                     className="px-3.5 py-2 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50"
                                 >
                                     Cancel
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="submit"
-                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
-                                >
+                                    className="transition-all shadow-md" 
+                                size="sm" >
                                     Send Report
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>
@@ -568,9 +569,9 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                     <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-100">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-sm font-bold text-gray-900">Share Report</h3>
-                            <button onClick={() => setShareModalReport(null)} className="text-gray-400 hover:text-gray-700">
+                            <Button onClick={() => setShareModalReport(null)} className="text-gray-400 hover:text-gray-700">
                                 <Plus className="rotate-45" size={18} />
-                            </button>
+                            </Button>
                         </div>
                         
                         <p className="text-xs text-gray-500 mb-6">
@@ -611,7 +612,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                             className="w-full text-xs font-mono bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-600 focus:outline-none"
                                             onClick={e => e.currentTarget.select()}
                                         />
-                                        <button 
+                                        <Button 
                                             onClick={() => {
                                                 navigator.clipboard.writeText(`${window.location.origin}/shared/reports/${shareModalReport.share_token}`);
                                                 toast.success('Link copied to clipboard');
@@ -619,20 +620,20 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                             className="bg-gray-800 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-gray-700 transition-colors"
                                         >
                                             Copy
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             )}
                         </div>
 
                         <div className="flex justify-end pt-2">
-                            <button
+                            <Button
                                 type="button"
                                 onClick={() => setShareModalReport(null)}
                                 className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition-all"
                             >
                                 Done
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -644,9 +645,9 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                     <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border border-gray-100">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-sm font-bold text-gray-900">Edit Scope: {editSchedule.title}</h3>
-                            <button onClick={() => setEditSchedule(null)} className="text-gray-400 hover:text-gray-700">
+                            <Button onClick={() => setEditSchedule(null)} className="text-gray-400 hover:text-gray-700">
                                 <Plus className="rotate-45" size={18} />
-                            </button>
+                            </Button>
                         </div>
                         
                         {!editSchedule.client_id && !editSchedule.project_id && (
@@ -702,14 +703,14 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         )}
                         
                         <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 mt-4 pt-4">
-                            <button
+                            <Button
                                 type="button"
                                 onClick={() => setEditSchedule(null)}
                                 className="px-3.5 py-2 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50"
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
                                 onClick={() => {
                                     axios.patch(`/api/v1/report-schedules/${editSchedule.id}`, {
@@ -730,7 +731,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
                             >
                                 Save Changes
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -742,7 +743,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         {selectedForCompare.length} selected <span className="text-gray-400 font-normal">/ 2 required</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button 
+                        <Button 
                             onClick={() => {
                                 setCompareMode(false);
                                 setSelectedForCompare([]);
@@ -750,14 +751,14 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                             className="text-gray-300 hover:text-white text-xs font-semibold px-2 py-1"
                         >
                             Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             disabled={selectedForCompare.length !== 2}
                             onClick={() => router.get(`/internal-reports/compare?id1=${selectedForCompare[0]}&id2=${selectedForCompare[1]}`)}
                             className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl text-xs font-bold transition-colors"
                         >
                             Compare Side-by-Side
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

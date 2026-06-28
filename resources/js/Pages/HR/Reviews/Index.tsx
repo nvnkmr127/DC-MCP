@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -44,7 +45,7 @@ function WriteReviewModal({ users, onClose }: { users: Props['users']; onClose: 
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg my-4">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                     <h2 className="text-base font-semibold text-gray-900">Write Performance Review</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/reviews', { onSuccess: () => { onClose(); form.reset(); } }); }} className="px-6 py-4 space-y-4">
                     <div className="grid grid-cols-2 gap-3">
@@ -96,11 +97,11 @@ function WriteReviewModal({ users, onClose }: { users: Props['users']; onClose: 
                         </div>
                     ))}
                     <div className="flex justify-end gap-3 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Saving…' : 'Save Review'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -128,9 +129,9 @@ function ReviewCard({ review, showActions }: { review: Review; showActions: bool
                         {review.overall_rating && <span className="text-xs text-gray-400">Overall {review.overall_rating}/5</span>}
                     </div>
                 </div>
-                <button onClick={() => setExpanded(!expanded)} className="text-xs text-indigo-600 hover:text-indigo-800 ml-2">
+                <Button onClick={() => setExpanded(!expanded)} className="text-xs text-indigo-600 hover:text-indigo-800 ml-2">
                     {expanded ? 'Collapse' : 'Expand'}
-                </button>
+                </Button>
             </div>
             {expanded && (
                 <div className="mt-3 pt-3 border-t border-gray-100 space-y-2 text-sm text-gray-700">
@@ -140,12 +141,12 @@ function ReviewCard({ review, showActions }: { review: Review; showActions: bool
                     {showActions && (
                         <div className="flex gap-2 pt-2">
                             {review.status === 'draft' && (
-                                <button onClick={() => router.post(`/reviews/${review.id}/submit`)}
-                                    className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700">Submit</button>
+                                <Button onClick={() => router.post(`/reviews/${review.id}/submit`)}
+                                    className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700">Submit</Button>
                             )}
                             {review.status === 'submitted' && (
-                                <button onClick={() => router.post(`/reviews/${review.id}/acknowledge`)}
-                                    className="px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700">Acknowledge</button>
+                                <Button onClick={() => router.post(`/reviews/${review.id}/acknowledge`)}
+                                    className="px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700">Acknowledge</Button>
                             )}
                         </div>
                     )}
@@ -167,10 +168,10 @@ export default function ReviewsIndex({ written, received, users }: Props) {
                         <h1 className="text-2xl font-bold text-gray-900">Performance Reviews</h1>
                         <p className="text-sm text-gray-500 mt-0.5">Quarterly and annual performance tracking</p>
                     </div>
-                    <button onClick={() => setShowWrite(true)}
+                    <Button onClick={() => setShowWrite(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> Write Review
-                    </button>
+                    </Button>
                 </div>
 
                 {written.length > 0 && (

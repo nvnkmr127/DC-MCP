@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { CreditCard, ChevronLeft, ChevronRight, CheckCircle2, Clock, FileText, Plus, X } from 'lucide-react';
@@ -33,9 +34,9 @@ function MonthNav({ monthYear, onChange }: { monthYear: string; onChange: (m: st
     const label = new Date(monthYear + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
     return (
         <div className="flex items-center gap-2">
-            <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"><ChevronLeft className="w-4 h-4" /></button>
+            <Button onClick={() => navigate(-1)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"><ChevronLeft className="w-4 h-4" /></Button>
             <span className="text-sm font-semibold text-gray-700 min-w-32 text-center">{label}</span>
-            <button onClick={() => navigate(1)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"><ChevronRight className="w-4 h-4" /></button>
+            <Button onClick={() => navigate(1)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"><ChevronRight className="w-4 h-4" /></Button>
         </div>
     );
 }
@@ -97,14 +98,14 @@ function PayslipCard({ payslip, monthYear }: { payslip: Payslip; monthYear: stri
             )}
 
             <div className="flex items-center gap-2">
-                <button onClick={() => setExpanded(!expanded)} className="flex-1 py-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors">
+                <Button onClick={() => setExpanded(!expanded)} className="flex-1 py-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors">
                     {r ? 'Edit Record' : 'Add Record'}
-                </button>
+                </Button>
                 {r?.status === 'pending' && (
-                    <button onClick={() => router.post(`/payroll/${r.id}/paid`)}
+                    <Button onClick={() => router.post(`/payroll/${r.id}/paid`)}
                         className="flex items-center gap-1 px-3 py-1.5 text-xs bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">
                         <CheckCircle2 className="w-3 h-3" /> Mark Paid
-                    </button>
+                    </Button>
                 )}
             </div>
 
@@ -131,11 +132,11 @@ function PayslipCard({ payslip, monthYear }: { payslip: Payslip; monthYear: stri
                     <input type="text" placeholder="Notes" value={form.data.notes} onChange={e => form.setData('notes', e.target.value)}
                         className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-indigo-500" />
                     <div className="flex justify-end gap-2">
-                        <button type="button" onClick={() => setExpanded(false)} className="px-3 py-1.5 text-xs text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing}
-                            className="px-3 py-1.5 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={() => setExpanded(false)} className="px-3 py-1.5 text-xs text-gray-600">Cancel</Button>
+                        <Button type="submit" disabled={form.processing}
+                            className="disabled:opacity-50" size="sm" >
                             {form.processing ? 'Saving…' : 'Save'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             )}
@@ -162,10 +163,10 @@ export default function PayrollIndex({ payslips, monthYear, totalPayroll }: Prop
                     </div>
                     <div className="flex items-center gap-3">
                         <MonthNav monthYear={monthYear} onChange={navigate} />
-                        <button onClick={() => router.post('/payroll/bulk-generate', { month_year: monthYear })}
+                        <Button onClick={() => router.post('/payroll/bulk-generate', { month_year: monthYear })}
                             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
                             <FileText className="w-4 h-4" /> Generate All
-                        </button>
+                        </Button>
                     </div>
                 </div>
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, useForm, router } from '@inertiajs/react';import AppLayout from '@/Layouts/AppLayout';
 
@@ -83,13 +84,13 @@ export default function OrganizationSettings({ organization }: Props) {
                                 <option value="SGD">SGD — Singapore Dollar</option>
                             </select>
                         </div>
-                        <button
+                        <Button
                             type="submit"
                             disabled={form.processing}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                            className="disabled:opacity-50" 
                         >
                             Save Changes
-                        </button>
+                        </Button>
                     </form>
                 </div>
             </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router } from '@inertiajs/react';
 import {
     DndContext, DragEndEvent, DragStartEvent,
@@ -93,13 +94,13 @@ function SortableTaskCard({ task }: { task: Task }) {
             className="group"
         >
             <div className="flex items-start gap-1">
-                <button
+                <Button
                     {...attributes}
                     {...listeners}
-                    className="mt-3 p-0.5 text-gray-200 hover:text-gray-400 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
-                >
+                    className="mt-3 p-0.5 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" 
+                variant="ghost" size="icon" >
                     <GripVertical size={13} />
-                </button>
+                </Button>
                 <div className="flex-1">
                     <TaskCard task={task} isDragging={isDragging} />
                 </div>
@@ -164,12 +165,12 @@ export default function KanbanTab({ project, tasks: initialTasks }: Props) {
                                             {colTasks.length}
                                         </span>
                                     </div>
-                                    <button
+                                    <Button
                                         onClick={() => router.get(`/tasks/create?project_id=${project.id}&status=${col}`)}
                                         className="p-1 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-white transition-colors"
                                     >
                                         <Plus size={14} />
-                                    </button>
+                                    </Button>
                                 </div>
 
                                 {/* Column body */}

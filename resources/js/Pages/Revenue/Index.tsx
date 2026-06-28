@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import {
@@ -62,12 +63,12 @@ export default function RevenueIndex({ retainers, stats, clients }: Props) {
                         <h1 className="text-2xl font-bold text-gray-900">Revenue</h1>
                         <p className="text-sm text-gray-500 mt-0.5">Retainers, invoices & client health</p>
                     </div>
-                    <button
+                    <Button
                         onClick={() => setShowCreate(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
                     >
                         <Plus className="w-4 h-4" /> Add Retainer
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Stats */}
@@ -144,9 +145,9 @@ export default function RevenueIndex({ retainers, stats, clients }: Props) {
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                             <h2 className="text-base font-semibold text-gray-900">New Retainer</h2>
-                            <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600">
+                            <Button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-5 h-5" />
-                            </button>
+                            </Button>
                         </div>
                         <form onSubmit={submit} className="px-6 py-4 space-y-4">
                             <div>
@@ -192,12 +193,12 @@ export default function RevenueIndex({ retainers, stats, clients }: Props) {
                                 Auto-renew
                             </label>
                             <div className="flex justify-end gap-3 pt-2">
-                                <button type="button" onClick={() => setShowCreate(false)}
-                                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-                                <button type="submit" disabled={form.processing}
-                                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                                <Button type="button" onClick={() => setShowCreate(false)}
+                                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</Button>
+                                <Button type="submit" disabled={form.processing}
+                                    className="disabled:opacity-50" >
                                     {form.processing ? 'Saving…' : 'Create Retainer'}
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>

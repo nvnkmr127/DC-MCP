@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
@@ -364,13 +365,13 @@ export default function ReportsCreate({ projects, clients }: Props) {
                                         placeholder="stakeholder@company.com"
                                         className="flex-1 px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50 focus:bg-white"
                                     />
-                                    <button
+                                    <Button
                                         type="button"
                                         onClick={handleAddRecipient}
-                                        className="px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-semibold rounded-xl hover:bg-indigo-100 transition-colors border border-indigo-100"
-                                    >
+                                        
+                                    size="sm" >
                                         Add
-                                    </button>
+                                    </Button>
                                 </div>
 
                                 {form.data.recipients.length > 0 && (
@@ -378,9 +379,9 @@ export default function ReportsCreate({ projects, clients }: Props) {
                                         {form.data.recipients.map(email => (
                                             <span key={email} className="inline-flex items-center gap-1 bg-gray-50 border border-gray-200 text-gray-600 px-2 py-0.5 rounded-lg text-[10px] font-semibold">
                                                 {email}
-                                                <button type="button" onClick={() => handleRemoveRecipient(email)} className="text-red-500 hover:text-red-700 ml-1">
+                                                <Button type="button" onClick={() => handleRemoveRecipient(email)} className="text-red-500 hover:text-red-700 ml-1">
                                                     ×
-                                                </button>
+                                                </Button>
                                             </span>
                                         ))}
                                     </div>
@@ -441,32 +442,32 @@ export default function ReportsCreate({ projects, clients }: Props) {
                     {/* Step Navigation */}
                     <div className="flex justify-between items-center border-t border-gray-100 pt-5">
                         {step > 1 ? (
-                            <button
+                            <Button
                                 type="button"
                                 onClick={() => setStep(step - 1)}
                                 className="px-4 py-2 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50"
                             >
                                 Back
-                            </button>
+                            </Button>
                         ) : (
                             <div />
                         )}
 
                         {step < 4 ? (
-                            <button
+                            <Button
                                 type="button"
                                 onClick={() => setStep(step + 1)}
                                 className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
                             >
                                 Continue <ArrowRight size={13} />
-                            </button>
+                            </Button>
                         ) : (
-                            <button
+                            <Button
                                 type="submit"
-                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
-                            >
+                                className="px-5 py-2.5 transition-all shadow-md" 
+                            size="sm" >
                                 Generate & Schedule Report
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </form>

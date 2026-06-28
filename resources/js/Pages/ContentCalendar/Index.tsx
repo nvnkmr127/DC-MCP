@@ -167,7 +167,7 @@ function CreateModal({ clients, projects, onClose }: {
                     </div>
 
                     <div className="flex gap-2 pt-2">
-                        <Button type="submit" loading={processing} className="flex-1">
+                        <Button type="submit" loading={processing} className="flex-1" variant="ghost" size="icon" >
                             Create Item
                         </Button>
                         <Button type="button" variant="ghost" onClick={onClose}>
@@ -238,9 +238,9 @@ function ContentCard({ item }: { item: ContentItem }) {
                         </div>
                     )}
                 </div>
-                <button onClick={() => setOpen(o => !o)} className="p-1 text-gray-400 hover:text-gray-600">
+                <Button onClick={() => setOpen(o => !o)} className="p-1 text-gray-400 hover:text-gray-600">
                     <ChevronDown className={cn('w-4 h-4 transition-transform', open && 'rotate-180')} />
-                </button>
+                </Button>
             </div>
 
             {open && (
@@ -248,28 +248,28 @@ function ContentCard({ item }: { item: ContentItem }) {
                     {item.body && <p className="text-xs text-gray-600 leading-relaxed">{item.body}</p>}
                     <div className="flex gap-2 flex-wrap">
                         {!['published', 'cancelled'].includes(item.status) && (
-                            <button
+                            <Button
                                 onClick={advance}
-                                className="flex items-center gap-1 text-xs px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100"
-                            >
+                                className="flex items-center gap-1 px-2.5" 
+                            size="sm" >
                                 <ArrowRight className="w-3 h-3" />
                                 Move to {STATUS_FLOW[STATUS_FLOW.indexOf(item.status) + 1]?.replace('_', ' ')}
-                            </button>
+                            </Button>
                         )}
                         {!item.task_id && (
-                            <button
+                            <Button
                                 onClick={convertToTask}
-                                className="flex items-center gap-1 text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100"
-                            >
+                                className="flex items-center gap-1 px-2.5" 
+                            variant="ghost" size="sm" >
                                 <CheckCircle2 className="w-3 h-3" /> Create Task
-                            </button>
+                            </Button>
                         )}
                         {item.task_id && (
                             <a href={`/tasks/${item.task_id}`} className="flex items-center gap-1 text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
                                 <Eye className="w-3 h-3" /> View Task
                             </a>
                         )}
-                        <button
+                        <Button
                             onClick={async () => {
                                 const ok = await confirm({
                                     title: 'Delete this content item?',
@@ -283,7 +283,7 @@ function ContentCard({ item }: { item: ContentItem }) {
                             className="flex items-center gap-1 text-xs px-2.5 py-1 text-red-400 hover:text-red-600 ml-auto"
                         >
                             <Trash2 className="w-3 h-3" /> Delete
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

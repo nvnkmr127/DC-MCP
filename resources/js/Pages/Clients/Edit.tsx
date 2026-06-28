@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
@@ -165,14 +166,14 @@ export default function ClientEdit({ client }: Props) {
                         </div>
 
                         <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
-                            <button
+                            <Button
                                 type="submit"
                                 disabled={form.processing}
-                                className="flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 text-white text-[13px] font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+                                className="flex items-center gap-1.5 px-5 py-2.5 disabled:opacity-50" 
                             >
                                 <Save size={14} />
                                 {form.processing ? 'Saving…' : 'Save Changes'}
-                            </button>
+                            </Button>
                             <Link
                                 href={`/clients/${client.id}`}
                                 className="px-4 py-2.5 text-[13px] text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"

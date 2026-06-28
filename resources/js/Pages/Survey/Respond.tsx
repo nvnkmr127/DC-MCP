@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router } from '@inertiajs/react';
 import { cn } from '@/lib/utils';
 import { Smile } from 'lucide-react';
@@ -69,13 +70,13 @@ export default function SurveyRespond({ survey, token, submitted: initialSubmitt
                     </div>
                     <div className="flex gap-1.5 justify-between">
                         {[0,1,2,3,4,5,6,7,8,9,10].map(n => (
-                            <button key={n} onClick={() => setScore(n)}
+                            <Button key={n} onClick={() => setScore(n)}
                                 className={cn(
                                     'w-9 h-9 rounded-lg text-sm font-semibold border transition-all',
                                     score === n ? scoreColor(n) + ' border-transparent' : `border-gray-200 text-gray-600 ${hoverColor(n)}`,
                                 )}>
                                 {n}
-                            </button>
+                            </Button>
                         ))}
                     </div>
                 </div>
@@ -87,10 +88,10 @@ export default function SurveyRespond({ survey, token, submitted: initialSubmitt
                         className="w-full mt-2 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
                 </div>
 
-                <button onClick={submit} disabled={score === null || submitting}
-                    className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                <Button onClick={submit} disabled={score === null || submitting}
+                    className="w-full py-3 disabled:opacity-50" size="lg" >
                     {submitting ? 'Submitting…' : 'Submit Feedback'}
-                </button>
+                </Button>
             </div>
         </div>
     );

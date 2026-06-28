@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -29,7 +30,7 @@ function SubmitModal({ clients, onClose }: { clients: Client[]; onClose: () => v
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Submit Asset for Approval</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/asset-approvals', { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -66,11 +67,11 @@ function SubmitModal({ clients, onClose }: { clients: Client[]; onClose: () => v
                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.title || !form.data.client_id}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.title || !form.data.client_id}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Submitting…' : 'Submit'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -92,19 +93,19 @@ export default function AssetApprovalsIndex({ approvals, clients, filters }: Pro
             <div className="max-w-4xl space-y-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">Asset Approval Workflow</h1>
-                    <button onClick={() => setSubmitOpen(true)}
+                    <Button onClick={() => setSubmitOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> Submit Asset
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="flex items-center gap-2">
                     {['', 'pending', 'approved', 'revision_requested', 'rejected'].map(s => (
-                        <button key={s} onClick={() => setStatusFilter(s)}
+                        <Button key={s} onClick={() => setStatusFilter(s)}
                             className={cn('px-3 py-1.5 text-xs rounded-lg font-medium transition-colors',
                                 statusFilter === s ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50')}>
                             {s === '' ? 'All' : s.replace('_', ' ')}
-                        </button>
+                        </Button>
                     ))}
                 </div>
 
@@ -152,18 +153,18 @@ export default function AssetApprovalsIndex({ approvals, clients, filters }: Pro
                                                 rows={2} placeholder="Feedback (required for revision/rejection)…"
                                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
                                             <div className="flex gap-2">
-                                                <button onClick={() => router.patch(`/asset-approvals/${a.id}`, { status: 'approved' })}
+                                                <Button onClick={() => router.patch(`/asset-approvals/${a.id}`, { status: 'approved' })}
                                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700">
                                                     <CheckCircle size={12} /> Approve
-                                                </button>
-                                                <button onClick={() => router.patch(`/asset-approvals/${a.id}`, { status: 'revision_requested', feedback: feedbacks[a.id] ?? '' })}
+                                                </Button>
+                                                <Button onClick={() => router.patch(`/asset-approvals/${a.id}`, { status: 'revision_requested', feedback: feedbacks[a.id] ?? '' })}
                                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 text-white text-xs font-medium rounded-lg hover:bg-amber-600">
                                                     <RotateCcw size={12} /> Request Revision
-                                                </button>
-                                                <button onClick={() => router.patch(`/asset-approvals/${a.id}`, { status: 'rejected', feedback: feedbacks[a.id] ?? '' })}
+                                                </Button>
+                                                <Button onClick={() => router.patch(`/asset-approvals/${a.id}`, { status: 'rejected', feedback: feedbacks[a.id] ?? '' })}
                                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white text-xs font-medium rounded-lg hover:bg-rose-700">
                                                     <XCircle size={12} /> Reject
-                                                </button>
+                                                </Button>
                                             </div>
                                         </div>
                                     )}

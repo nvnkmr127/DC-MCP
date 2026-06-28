@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { router, useForm } from '@inertiajs/react';
 
 import { useConfirm } from '@/hooks/useConfirm';
@@ -42,7 +43,7 @@ function SubmitDeliverableModal({ deliverable, onClose }: { deliverable: Deliver
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Submit Deliverable</h2>
-                    <button onClick={onClose}><X className="w-4 h-4 text-gray-400" /></button>
+                    <Button onClick={onClose}><X className="w-4 h-4 text-gray-400" /></Button>
                 </div>
                 <p className="text-sm text-gray-600">{deliverable.title}</p>
                 <form onSubmit={e => {
@@ -68,11 +69,11 @@ function SubmitDeliverableModal({ deliverable, onClose }: { deliverable: Deliver
                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Submitting…' : 'Submit'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -129,13 +130,13 @@ function SowCard({ sow, canReview }: { sow: Sow; canReview?: boolean }) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                     <span className="text-xs text-gray-400">{sow.deliverables.length} deliverable{sow.deliverables.length !== 1 ? 's' : ''}</span>
-                    <button
+                    <Button
                         onClick={() => setExpanded(!expanded)}
                         className="p-1 rounded hover:bg-gray-100 text-gray-700"
                     >
                         {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={async () => {
                             const ok = await confirm({
                                 title: 'Delete this SOW?',
@@ -149,7 +150,7 @@ function SowCard({ sow, canReview }: { sow: Sow; canReview?: boolean }) {
                         className="p-1 rounded hover:bg-rose-50 text-gray-400 hover:text-rose-500"
                     >
                         <Trash2 className="w-4 h-4" />
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -171,11 +172,11 @@ function SowCard({ sow, canReview }: { sow: Sow; canReview?: boolean }) {
                                             {subCfg.icon} {subCfg.label}
                                         </span>
                                     )}
-                                    <button onClick={() => setSubmitting(d)}
+                                    <Button onClick={() => setSubmitting(d)}
                                         className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium shrink-0 px-2 py-1 rounded hover:bg-indigo-50">
                                         <Upload className="w-3 h-3" />
                                         {sub ? 'Re-submit' : 'Submit'}
-                                    </button>
+                                    </Button>
                                 </div>
 
                                 {/* Reviewer actions — only for CEO/PM when submission is pending */}
@@ -188,16 +189,16 @@ function SowCard({ sow, canReview }: { sow: Sow; canReview?: boolean }) {
                                             onChange={e => setRevNotes(prev => ({ ...prev, [sub.id]: e.target.value }))}
                                             className="w-full border border-amber-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-amber-400" />
                                         <div className="flex gap-2">
-                                            <button
+                                            <Button
                                                 onClick={() => router.post(`/deliverables/${sub.id}/approve`, { reviewer_notes: revNotes[sub.id] ?? '' })}
                                                 className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700">
                                                 <CheckCircle2 className="w-3 h-3" /> Approve
-                                            </button>
-                                            <button
+                                            </Button>
+                                            <Button
                                                 onClick={() => router.post(`/deliverables/${sub.id}/revision`, { reviewer_notes: revNotes[sub.id] ?? '' })}
                                                 className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 text-white text-xs font-medium rounded-lg hover:bg-amber-600">
                                                 <RotateCcw className="w-3 h-3" /> Request Revision
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 )}
@@ -265,12 +266,12 @@ export default function SowTab({ sows, clients, retainers, canReview }: Props) {
                         <h1 className="text-2xl font-bold text-gray-900">SOW Tracker</h1>
                         <p className="text-sm text-gray-500 mt-0.5">Statement of Work & deliverables per client</p>
                     </div>
-                    <button
+                    <Button
                         onClick={() => setShowCreate(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
                     >
                         <Plus className="w-4 h-4" /> New SOW
-                    </button>
+                    </Button>
                 </div>
 
                 {/* SOW List */}
@@ -291,9 +292,9 @@ export default function SowTab({ sows, clients, retainers, canReview }: Props) {
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white">
                             <h2 className="text-base font-semibold text-gray-900">New SOW</h2>
-                            <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600">
+                            <Button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-5 h-5" />
-                            </button>
+                            </Button>
                         </div>
                         <form onSubmit={submit} className="px-6 py-4 space-y-5">
                             <div className="grid grid-cols-2 gap-4">
@@ -344,10 +345,10 @@ export default function SowTab({ sows, clients, retainers, canReview }: Props) {
                             <div>
                                 <div className="flex items-center justify-between mb-2">
                                     <label className="text-xs font-semibold text-gray-700">Deliverables</label>
-                                    <button type="button" onClick={addDeliverable}
-                                        className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                    <Button type="button" onClick={addDeliverable}
+                                        className="flex items-center gap-1" variant="ghost" size="sm" >
                                         <Plus className="w-3 h-3" /> Add
-                                    </button>
+                                    </Button>
                                 </div>
                                 <div className="space-y-2">
                                     {deliverables.map((d, idx) => (
@@ -368,22 +369,22 @@ export default function SowTab({ sows, clients, retainers, canReview }: Props) {
                                             </select>
                                             <input type="number" min="1" value={d.quantity_per_period} onChange={e => updateDeliverable(idx, 'quantity_per_period', e.target.value)}
                                                 className="col-span-2 border border-gray-300 rounded px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500" />
-                                            <button type="button" onClick={() => removeDeliverable(idx)}
+                                            <Button type="button" onClick={() => removeDeliverable(idx)}
                                                 disabled={deliverables.length === 1}
                                                 className="col-span-1 flex items-center justify-center text-gray-400 hover:text-rose-500 disabled:opacity-30">
                                                 <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
+                                            </Button>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
                             <div className="flex justify-end gap-3 pt-2">
-                                <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-                                <button type="submit"
-                                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
+                                <Button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</Button>
+                                <Button type="submit"
+                                    >
                                     Create SOW
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>

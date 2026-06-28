@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -36,7 +37,7 @@ function ChecklistModal({ clients, users, onClose }: { clients: Client[]; users:
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">New Checklist</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={submit} className="space-y-3">
                     <div>
@@ -77,26 +78,26 @@ function ChecklistModal({ clients, users, onClose }: { clients: Client[]; users:
                     <div>
                         <div className="flex items-center justify-between mb-1">
                             <label className="text-xs text-gray-500 font-medium">Checklist Items</label>
-                            <button type="button" onClick={() => setItems(i => [...i, { label: '' }])}
-                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</button>
+                            <Button type="button" onClick={() => setItems(i => [...i, { label: '' }])}
+                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</Button>
                         </div>
                         {items.map((item, i) => (
                             <div key={i} className="flex gap-2 mb-1.5">
                                 <input type="text" placeholder={`Item ${i + 1}`} value={item.label}
                                     onChange={e => { const n = [...items]; n[i].label = e.target.value; setItems(n); }}
                                     className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500" />
-                                <button type="button" onClick={() => setItems(it => it.filter((_, j) => j !== i))} className="text-gray-400 hover:text-rose-500">
+                                <Button type="button" onClick={() => setItems(it => it.filter((_, j) => j !== i))} className="text-gray-400 hover:text-rose-500">
                                     <X size={13} />
-                                </button>
+                                </Button>
                             </div>
                         ))}
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.title}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.title}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Creating…' : 'Create'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -122,19 +123,19 @@ export default function AuditChecklistsIndex({ checklists, clients, users, filte
             <div className="max-w-4xl space-y-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">Audit Checklists</h1>
-                    <button onClick={() => setModalOpen(true)}
+                    <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> New Checklist
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
                     {['', 'seo', 'social', 'ads', 'content', 'website', 'general'].map(t => (
-                        <button key={t} onClick={() => setTypeFilter(t)}
+                        <Button key={t} onClick={() => setTypeFilter(t)}
                             className={cn('px-3 py-1.5 text-xs rounded-lg font-medium capitalize transition-colors',
                                 typeFilter === t ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50')}>
                             {t === '' ? 'All' : t}
-                        </button>
+                        </Button>
                     ))}
                 </div>
 
@@ -184,7 +185,7 @@ export default function AuditChecklistsIndex({ checklists, clients, users, filte
                                                     </span>
                                                 </label>
                                                 {!item.checked && (
-                                                    <button 
+                                                    <Button 
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             router.post('/issues', {
@@ -200,7 +201,7 @@ export default function AuditChecklistsIndex({ checklists, clients, users, filte
                                                         className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded hover:bg-red-100 transition-opacity flex items-center gap-1"
                                                     >
                                                         <Bug size={10} /> Log Issue
-                                                    </button>
+                                                    </Button>
                                                 )}
                                             </div>
                                         ))}

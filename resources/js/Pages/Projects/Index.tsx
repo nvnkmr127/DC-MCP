@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { formatDate, formatCurrency, cn } from '@/lib/utils';
@@ -35,7 +36,7 @@ export default function ProjectsIndex({ projects, filters }: Props) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                 {/* Status filters */}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                    <button
+                    <Button
                         onClick={() => router.get('/projects', { search }, { preserveState: true })}
                         className={cn(
                             'px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors border',
@@ -45,12 +46,12 @@ export default function ProjectsIndex({ projects, filters }: Props) {
                         )}
                     >
                         All
-                    </button>
+                    </Button>
                     {statuses.map((s) => {
                         const cfg = PROJECT_STATUS_CONFIG[s];
                         const active = filters.status === s;
                         return (
-                            <button
+                            <Button
                                 key={s}
                                 onClick={() => filterStatus(s)}
                                 className={cn(
@@ -62,7 +63,7 @@ export default function ProjectsIndex({ projects, filters }: Props) {
                             >
                                 <span className={cn('w-1.5 h-1.5 rounded-full', cfg.dot)} />
                                 {cfg.label}
-                            </button>
+                            </Button>
                         );
                     })}
                 </div>

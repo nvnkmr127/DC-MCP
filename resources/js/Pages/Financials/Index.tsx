@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import {
@@ -47,9 +48,9 @@ function MonthNav({ monthYear, onChange }: { monthYear: string; onChange: (m: st
     const label = new Date(monthYear + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
     return (
         <div className="flex items-center gap-2">
-            <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"><ChevronLeft className="w-4 h-4 text-gray-600" /></button>
+            <Button onClick={() => navigate(-1)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"><ChevronLeft className="w-4 h-4 text-gray-600" /></Button>
             <span className="text-sm font-semibold text-gray-700 min-w-32 text-center">{label}</span>
-            <button onClick={() => navigate(1)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"><ChevronRight className="w-4 h-4 text-gray-600" /></button>
+            <Button onClick={() => navigate(1)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50"><ChevronRight className="w-4 h-4 text-gray-600" /></Button>
         </div>
     );
 }
@@ -197,9 +198,9 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
                         <div className="bg-white rounded-xl border border-gray-200 p-5">
                             <div className="flex items-center justify-between mb-3">
                                 <h2 className="text-sm font-semibold text-gray-700">Tool & Vendor Costs</h2>
-                                <button onClick={() => setShowAddVendor(true)} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                                <Button onClick={() => setShowAddVendor(true)} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
                                     <Plus className="w-3 h-3" /> Add
-                                </button>
+                                </Button>
                             </div>
                             <div className="space-y-2">
                                 {vendors.slice(0, 6).map(v => (
@@ -224,9 +225,9 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
                 <div className="bg-white rounded-xl border border-gray-200">
                     <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                         <h2 className="text-sm font-semibold text-gray-700">Expenses This Month</h2>
-                        <button onClick={() => setShowAddExpense(true)} className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                        <Button onClick={() => setShowAddExpense(true)} className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium">
                             <Plus className="w-3.5 h-3.5" /> Add Expense
-                        </button>
+                        </Button>
                     </div>
                     {/* Category summary */}
                     <div className="px-5 py-3 flex flex-wrap gap-2 border-b border-gray-100">
@@ -261,7 +262,7 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                             <h2 className="text-base font-semibold">Add Expense</h2>
-                            <button onClick={() => setShowAddExpense(false)}><X className="w-5 h-5 text-gray-400" /></button>
+                            <Button onClick={() => setShowAddExpense(false)}><X className="w-5 h-5 text-gray-400" /></Button>
                         </div>
                         <form onSubmit={e => { e.preventDefault(); expenseForm.post('/expenses', { onSuccess: () => { setShowAddExpense(false); expenseForm.reset(); } }); }}
                             className="px-6 py-4 space-y-3">
@@ -284,10 +285,10 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
                                 Recurring expense
                             </label>
                             <div className="flex justify-end gap-3 pt-1">
-                                <button type="button" onClick={() => setShowAddExpense(false)} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                                <button type="submit" disabled={expenseForm.processing} className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                                <Button type="button" onClick={() => setShowAddExpense(false)} className="px-4 py-2 text-sm text-gray-600">Cancel</Button>
+                                <Button type="submit" disabled={expenseForm.processing} className="disabled:opacity-50" >
                                     {expenseForm.processing ? 'Saving…' : 'Save Expense'}
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>
@@ -300,7 +301,7 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                             <h2 className="text-base font-semibold">Add Vendor / Tool</h2>
-                            <button onClick={() => setShowAddVendor(false)}><X className="w-5 h-5 text-gray-400" /></button>
+                            <Button onClick={() => setShowAddVendor(false)}><X className="w-5 h-5 text-gray-400" /></Button>
                         </div>
                         <form onSubmit={e => { e.preventDefault(); vendorForm.post('/vendors', { onSuccess: () => { setShowAddVendor(false); vendorForm.reset(); } }); }}
                             className="px-6 py-4 space-y-3">
@@ -323,10 +324,10 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
                             <input type="url" placeholder="Website (optional)" value={vendorForm.data.website} onChange={e => vendorForm.setData('website', e.target.value)}
                                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
                             <div className="flex justify-end gap-3 pt-1">
-                                <button type="button" onClick={() => setShowAddVendor(false)} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                                <button type="submit" disabled={vendorForm.processing} className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                                <Button type="button" onClick={() => setShowAddVendor(false)} className="px-4 py-2 text-sm text-gray-600">Cancel</Button>
+                                <Button type="submit" disabled={vendorForm.processing} className="disabled:opacity-50" >
                                     {vendorForm.processing ? 'Saving…' : 'Add Vendor'}
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>

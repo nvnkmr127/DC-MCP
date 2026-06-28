@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -98,7 +99,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
             });
             if (ok) {
                 setSkipTimeCheck(true);
-                setOptimisticStatus(status);
+                setOptimisticStatus(status as any);
                 router.patch(`/tasks/${task.id}`, { status }, { 
                     preserveScroll: true, 
                     onSuccess: () => setSkipTimeCheck(false),
@@ -110,7 +111,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
             return;
         }
         
-        setOptimisticStatus(status);
+        setOptimisticStatus(status as any);
         router.patch(`/tasks/${task.id}`, { status }, { 
             preserveScroll: true,
             onSuccess: () => setSkipTimeCheck(false),
@@ -163,7 +164,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                         >
                             <Edit size={13} /> Edit
                         </Link>
-                        <button
+                        <Button
                             type="button"
                             onClick={async () => {
                                 const ok = await confirm({
@@ -178,7 +179,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                             className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-red-200 rounded-lg text-red-600 hover:bg-red-50"
                         >
                             <Trash2 size={13} /> Delete
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -209,7 +210,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                     { key: 'dependencies', label: 'Dependencies', icon: GitFork, count: dependencies.length || null },
                                     { key: 'activities', label: 'Activity', icon: Activity, count: task.activities.length },
                                 ].map(({ key, label, icon: Icon, count }) => (
-                                    <button
+                                    <Button
                                         key={key}
                                         type="button"
                                         onClick={() => setActiveTab(key as any)}
@@ -224,7 +225,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                         {count !== null && count > 0 && (
                                             <span className="px-1.5 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full">{count}</span>
                                         )}
-                                    </button>
+                                    </Button>
                                 ))}
                             </div>
 
@@ -242,13 +243,13 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                         <input ref={fileRef} type="file" className="hidden" onChange={handleFileChange} />
                                         
                                         {!pendingFile && (
-                                            <button
+                                            <Button
                                                 type="button"
                                                 onClick={() => fileRef.current?.click()}
                                                 className="flex items-center justify-center gap-2 w-full px-4 py-3 border-2 border-dashed border-gray-200 rounded-lg text-sm text-gray-500 hover:border-indigo-300 hover:text-indigo-600 transition-colors"
                                             >
                                                 <Upload size={16} /> Click to upload a file
-                                            </button>
+                                            </Button>
                                         )}
 
                                         {pendingFile && (
@@ -264,20 +265,20 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                                 
                                                 {uploadError && (
                                                     <div className="flex items-center gap-1">
-                                                        <button 
+                                                        <Button 
                                                             type="button" 
                                                             onClick={retryUpload}
-                                                            className="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold rounded"
-                                                        >
+                                                            
+                                                        variant="destructive" size="sm" >
                                                             Retry
-                                                        </button>
-                                                        <button 
+                                                        </Button>
+                                                        <Button 
                                                             type="button" 
                                                             onClick={cancelUpload}
-                                                            className="p-1 text-gray-400 hover:text-gray-600"
-                                                        >
+                                                            
+                                                        variant="ghost" size="icon" >
                                                             <XCircle size={16} />
-                                                        </button>
+                                                        </Button>
                                                     </div>
                                                 )}
                                             </div>
@@ -295,7 +296,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                                     </a>
                                                     <p className="text-xs text-gray-400">{(att.size / 1024).toFixed(1)} KB · {timeAgo(att.created_at)}</p>
                                                 </div>
-                                                <button
+                                                <Button
                                                     type="button"
                                                     onClick={async () => {
                                                         const ok = await confirm({
@@ -310,7 +311,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                                     className="p-1.5 text-gray-300 hover:text-red-500 transition-colors rounded opacity-0 group-hover:opacity-100 shrink-0"
                                                 >
                                                     <Trash2 size={14} />
-                                                </button>
+                                                </Button>
                                             </div>
                                         ))}
                                     </div>

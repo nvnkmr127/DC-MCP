@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, router } from '@inertiajs/react';
@@ -73,13 +74,13 @@ export default function FeatureFlags({ flags, organizations }: Props) {
                                 Manage application features globally or per organization.
                             </p>
                         </div>
-                        <button
+                        <Button
                             onClick={() => setIsCreating(true)}
                             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
                         >
                             <Plus className="w-4 h-4" />
                             Create Flag
-                        </button>
+                        </Button>
                     </div>
 
                     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden">
@@ -113,7 +114,7 @@ export default function FeatureFlags({ flags, organizations }: Props) {
                                                 )}
                                             </td>
                                             <td className="p-4 whitespace-nowrap">
-                                                <button
+                                                <Button
                                                     onClick={() => toggleFlag(flag)}
                                                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 focus:ring-offset-[#0f172a] ${
                                                         flag.is_enabled ? 'bg-indigo-600' : 'bg-gray-700'
@@ -124,16 +125,16 @@ export default function FeatureFlags({ flags, organizations }: Props) {
                                                             flag.is_enabled ? 'translate-x-5' : 'translate-x-0'
                                                         }`}
                                                     />
-                                                </button>
+                                                </Button>
                                             </td>
                                             <td className="p-4 whitespace-nowrap text-right">
-                                                <button
+                                                <Button
                                                     onClick={() => deleteFlag(flag)}
                                                     className="p-1.5 text-red-400 hover:text-red-300 bg-red-400/10 hover:bg-red-400/20 rounded-lg transition-colors inline-flex items-center"
                                                     title="Delete"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
-                                                </button>
+                                                </Button>
                                             </td>
                                         </tr>
                                     ))}
@@ -206,19 +207,19 @@ export default function FeatureFlags({ flags, organizations }: Props) {
                     </div>
 
                     <div className="mt-6 flex justify-end gap-3">
-                        <button
+                        <Button
                             type="button"
                             onClick={() => setIsCreating(false)}
                             className="px-4 py-2 text-sm text-gray-400 hover:text-white"
                         >
                             Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="submit"
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium"
+                            
                         >
                             Create
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </Modal>

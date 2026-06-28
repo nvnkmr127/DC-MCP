@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { useForm, router } from '@inertiajs/react';
 import type { Comment } from '@/types';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -38,7 +39,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ submitUrl, del
                         <div className="flex items-center gap-2 mb-1">
                             <span className="text-sm font-medium text-gray-900">{comment.user?.name}</span>
                             <span className="text-xs text-gray-400">{timeAgo(comment.created_at)}</span>
-                            <button
+                            <Button
                                 type="button"
                                 onClick={async () => {
                                     const ok = await confirm({
@@ -53,7 +54,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ submitUrl, del
                                 className="ml-auto p-1 text-gray-300 hover:text-red-500 transition-colors rounded"
                             >
                                 <Trash2 size={12} />
-                            </button>
+                            </Button>
                         </div>
                         <div 
                             className="text-sm text-gray-700 prose prose-sm max-w-none"
@@ -71,13 +72,13 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ submitUrl, del
                         className="bg-white"
                     />
                 </div>
-                <button
+                <Button
                     type="submit"
                     disabled={!commentForm.data.body || commentForm.data.body === '<p></p>' || commentForm.processing}
                     className="self-end p-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
                 >
                     <Send size={16} />
-                </button>
+                </Button>
             </form>
         </div>
     );

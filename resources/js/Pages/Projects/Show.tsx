@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -126,7 +127,7 @@ export default function ProjectShow({ project, tasks, goals, team, financials, i
                 <div className="border-b border-gray-200 mb-6">
                     <nav className="-mb-px flex space-x-8 overflow-x-auto">
                         {TABS.map((tab) => (
-                            <button
+                            <Button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={cn(
@@ -137,7 +138,7 @@ export default function ProjectShow({ project, tasks, goals, team, financials, i
                                 )}
                             >
                                 {tab.label}
-                            </button>
+                            </Button>
                         ))}
                     </nav>
                 </div>
@@ -254,7 +255,7 @@ export default function ProjectShow({ project, tasks, goals, team, financials, i
                                 <div className="border-t border-gray-200 pt-4 mt-6">
                                     <h4 className="text-sm font-medium text-red-600 mb-2">Danger Zone</h4>
                                     <p className="text-sm text-gray-500 mb-3">Deleting a project will permanently remove it and all related tasks, issues, and assets.</p>
-                                    <button
+                                    <Button
                                         onClick={async () => {
                                             const ok = await confirm({
                                                 title: 'Delete this project?',
@@ -267,7 +268,7 @@ export default function ProjectShow({ project, tasks, goals, team, financials, i
                                         className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                                     >
                                         <Trash2 size={16} /> Delete Project
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
@@ -29,7 +30,7 @@ function InviteModal({ clientId, onClose }: { clientId: string; onClose: () => v
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Invite Contact</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post(`/settings/client-portal/${clientId}/invite`, { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -43,11 +44,11 @@ function InviteModal({ clientId, onClose }: { clientId: string; onClose: () => v
                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.name || !form.data.email}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.name || !form.data.email}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Sending…' : 'Send Invite'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -62,7 +63,7 @@ function ShareModal({ clientId, projects, onClose }: { clientId: string; project
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Share with Client</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/settings/client-portal/share', { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -98,11 +99,11 @@ function ShareModal({ clientId, projects, onClose }: { clientId: string; project
                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.shareable_id}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.shareable_id}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Sharing…' : 'Share'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -135,14 +136,14 @@ export default function ClientPortalClientPage({ client, users, shares, projects
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">{client.name} — Portal</h1>
                     <div className="flex gap-2">
-                        <button onClick={() => setShareOpen(true)}
+                        <Button onClick={() => setShareOpen(true)}
                             className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
                             <Share2 size={13} /> Share Item
-                        </button>
-                        <button onClick={() => setInviteOpen(true)}
+                        </Button>
+                        <Button onClick={() => setInviteOpen(true)}
                             className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                             <Plus size={14} /> Invite Contact
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -162,18 +163,18 @@ export default function ClientPortalClientPage({ client, users, shares, projects
                                         <p className="text-xs text-gray-400">{u.email}</p>
                                     </div>
                                     <div className="flex items-center gap-1.5">
-                                        <button onClick={() => router.post(`/settings/client-portal/users/${u.id}/resend`, {})}
+                                        <Button onClick={() => router.post(`/settings/client-portal/users/${u.id}/resend`, {})}
                                             className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-200 text-gray-500 rounded-lg hover:bg-gray-50">
                                             <RotateCcw size={10} /> Resend
-                                        </button>
-                                        <button onClick={() => router.post(`/settings/client-portal/users/${u.id}/toggle`, {})}
+                                        </Button>
+                                        <Button onClick={() => router.post(`/settings/client-portal/users/${u.id}/toggle`, {})}
                                             className={cn('flex items-center gap-1 px-2 py-1 text-xs border rounded-lg transition-colors',
                                                 u.is_active
                                                     ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
                                                     : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
                                             )}>
                                             {u.is_active ? <><UserX size={10} /> Disable</> : <><UserCheck size={10} /> Enable</>}
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             ))}
@@ -196,7 +197,7 @@ export default function ClientPortalClientPage({ client, users, shares, projects
                                         <p className="text-sm font-medium text-gray-900 capitalize">{s.shareable_type}</p>
                                         <p className="text-xs text-gray-400">{s.permissions.join(', ')} access{s.expires_at ? ` · expires ${new Date(s.expires_at).toLocaleDateString('en-IN')}` : ''}</p>
                                     </div>
-                                    <button onClick={async () => {
+                                    <Button onClick={async () => {
                                         const ok = await confirm({
                                             title: 'Revoke this share?',
                                             description: 'The client will lose access immediately.',
@@ -208,7 +209,7 @@ export default function ClientPortalClientPage({ client, users, shares, projects
                                     }}
                                         className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                         <Trash2 size={13} />
-                                    </button>
+                                    </Button>
                                 </div>
                             ))}
                         </div>

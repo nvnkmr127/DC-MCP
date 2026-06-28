@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link } from '@inertiajs/react';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
 
@@ -21,12 +22,12 @@ export default function Forbidden({ message }: { message?: string }) {
                     >
                         Return to Dashboard
                     </Link>
-                    <button
+                    <Button
                         onClick={() => window.history.back()}
                         className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors border border-gray-200 shadow-sm"
                     >
                         <ArrowLeft size={16} /> Go Back
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

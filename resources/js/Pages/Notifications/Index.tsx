@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn, timeAgo } from '@/lib/utils';
@@ -50,12 +51,12 @@ export default function NotificationsIndex({ notifications, unread_count }: Prop
                     )}
                 </div>
                 {unread_count > 0 && (
-                    <button
+                    <Button
                         onClick={markAllRead}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-colors"
-                    >
+                        className="flex items-center gap-1.5" 
+                    size="sm" >
                         <CheckCheck size={13} /> Mark all as read
-                    </button>
+                    </Button>
                 )}
             </div>
 
@@ -105,13 +106,13 @@ export default function NotificationsIndex({ notifications, unread_count }: Prop
 
                                     {!notif.is_read && (
                                         <div className="flex items-center gap-3 pt-1 shrink-0">
-                                            <button
+                                            <Button
                                                 onClick={(e) => snooze(notif.id, e)}
                                                 className="hidden group-hover:flex items-center gap-1 text-[11px] font-medium text-gray-500 hover:text-indigo-600 transition-colors bg-white px-2 py-1 rounded-md border border-gray-200 shadow-sm"
                                                 title="Snooze for 1 hour"
                                             >
                                                 <AlarmClock size={12} /> Snooze 1h
-                                            </button>
+                                            </Button>
                                             <div className="w-2 h-2 rounded-full bg-indigo-500" />
                                         </div>
                                     )}
@@ -129,7 +130,7 @@ export default function NotificationsIndex({ notifications, unread_count }: Prop
                         </p>
                         <div className="flex gap-1">
                             {Array.from({ length: notifications.meta.last_page }, (_, i) => i + 1).map((page) => (
-                                <button
+                                <Button
                                     key={page}
                                     onClick={() => router.get('/notifications', { page }, { preserveState: true })}
                                     className={cn(
@@ -140,7 +141,7 @@ export default function NotificationsIndex({ notifications, unread_count }: Prop
                                     )}
                                 >
                                     {page}
-                                </button>
+                                </Button>
                             ))}
                         </div>
                     </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -28,7 +29,7 @@ function SprintModal({ projects, onClose }: { projects: Project[]; onClose: () =
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">New Sprint</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/sprints', { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -63,11 +64,11 @@ function SprintModal({ projects, onClose }: { projects: Project[]; onClose: () =
                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.project_id || !form.data.name}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.project_id || !form.data.name}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Creating…' : 'Create Sprint'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -84,7 +85,7 @@ function SprintRetrospectiveModal({ sprint, onClose, onComplete }: { sprint: Spr
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Complete Sprint</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 
                 {unfinishedCount > 0 ? (
@@ -141,11 +142,11 @@ function SprintRetrospectiveModal({ sprint, onClose, onComplete }: { sprint: Spr
                     </div>
 
                     <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || (form.data.unfinished_action === 'new_sprint' && !form.data.new_sprint_name && unfinishedCount > 0)}
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || (form.data.unfinished_action === 'new_sprint' && !form.data.new_sprint_name && unfinishedCount > 0)}
                             className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
                             {form.processing ? 'Completing…' : 'Complete Sprint'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -219,10 +220,10 @@ export default function SprintsIndex({ sprints, projects }: Props) {
                     </div>
                 )}
 
-                <button onClick={() => setExpandedId(expandedId === sprint.id ? null : sprint.id)}
+                <Button onClick={() => setExpandedId(expandedId === sprint.id ? null : sprint.id)}
                     className="mt-2 text-xs text-indigo-600 font-medium">
                     {expandedId === sprint.id ? 'Hide tasks ↑' : 'Show tasks ↓'}
-                </button>
+                </Button>
                 {expandedId === sprint.id && (
                     <div className="mt-3 space-y-1.5 border-t border-gray-100 pt-3">
                         {sprint.sprint_tasks.map(st => (
@@ -252,10 +253,10 @@ export default function SprintsIndex({ sprints, projects }: Props) {
                 </div>
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">Sprint Planner</h1>
-                    <button onClick={() => setModalOpen(true)}
+                    <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> New Sprint
-                    </button>
+                    </Button>
                 </div>
 
                 {active.length > 0 && (
@@ -294,9 +295,9 @@ export default function SprintsIndex({ sprints, projects }: Props) {
                         </div>
                         <p className="text-[14px] font-semibold text-gray-900 mb-1">Welcome to Sprint Planning!</p>
                         <p className="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Organize your tasks into time-boxed sprints to focus your team and deliver work incrementally.</p>
-                        <button onClick={() => setModalOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                        <Button onClick={() => setModalOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
                             Create First Sprint
-                        </button>
+                        </Button>
                     </div>
                 )}
             </div>

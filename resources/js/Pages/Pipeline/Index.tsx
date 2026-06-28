@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Plus, X, TrendingUp, Users, DollarSign, ArrowRight, Mail } from 'lucide-react';
@@ -62,12 +63,12 @@ function ProspectCard({ prospect }: { prospect: Prospect }) {
                     <p className="text-xs text-gray-400">Weighted: {fmt(prospect.weighted_value)}</p>
                 </div>
                 {nextStage && (
-                    <button
+                    <Button
                         onClick={() => router.patch(`/prospects/${prospect.id}`, { stage: nextStage })}
                         className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
                     >
                         Move <ArrowRight className="w-3 h-3" />
-                    </button>
+                    </Button>
                 )}
             </div>
             {prospect.expected_close_date && (
@@ -101,12 +102,12 @@ function ProspectCard({ prospect }: { prospect: Prospect }) {
                         )}
                     </div>
                 ) : (
-                    <button
+                    <Button
                         onClick={() => router.post(`/prospects/${prospect.id}/convert`)}
                         className="w-full py-1.5 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 hover:text-gray-900 transition-colors"
                     >
                         Convert to Client
-                    </button>
+                    </Button>
                 )}
             </div>
 
@@ -150,12 +151,12 @@ export default function PipelineIndex({ prospects, byStage, totalPipeline, weigh
                         </div>
                         <p className="text-sm text-gray-500 mt-0.5">Track prospects from lead to close</p>
                     </div>
-                    <button
+                    <Button
                         onClick={() => setShowCreate(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
                     >
                         <Plus className="w-4 h-4" /> Add Prospect
-                    </button>
+                    </Button>
                 </div>
 
                 {prospects.length === 0 ? (
@@ -165,9 +166,9 @@ export default function PipelineIndex({ prospects, byStage, totalPipeline, weigh
                         </div>
                         <p className="text-[14px] font-semibold text-gray-900 mb-1">Your sales pipeline is empty</p>
                         <p className="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Track your prospects, visualize your sales funnel, and close more deals by adding your first prospect.</p>
-                        <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                        <Button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
                             Add First Prospect
-                        </button>
+                        </Button>
                     </div>
                 ) : (
                     <>
@@ -221,9 +222,9 @@ export default function PipelineIndex({ prospects, byStage, totalPipeline, weigh
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white">
                             <h2 className="text-base font-semibold text-gray-900">Add Prospect</h2>
-                            <button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600">
+                            <Button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-5 h-5" />
-                            </button>
+                            </Button>
                         </div>
                         <form onSubmit={submit} className="px-6 py-4 space-y-4">
                             <div className="grid grid-cols-2 gap-3">
@@ -289,11 +290,11 @@ export default function PipelineIndex({ prospects, byStage, totalPipeline, weigh
                                 </div>
                             </div>
                             <div className="flex justify-end gap-3 pt-2">
-                                <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-                                <button type="submit" disabled={form.processing}
-                                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                                <Button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</Button>
+                                <Button type="submit" disabled={form.processing}
+                                    className="disabled:opacity-50" >
                                     {form.processing ? 'Saving…' : 'Add Prospect'}
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>

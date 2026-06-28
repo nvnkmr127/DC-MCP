@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -32,7 +33,7 @@ function ReportModal({ clients, onClose }: { clients: Client[]; onClose: () => v
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">New Report</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={submit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -63,8 +64,8 @@ function ReportModal({ clients, onClose }: { clients: Client[]; onClose: () => v
                     <div>
                         <div className="flex items-center justify-between mb-1">
                             <label className="text-xs text-gray-500 font-medium">Metrics (key / value)</label>
-                            <button type="button" onClick={() => setMetrics(m => [...m, { key: '', value: '' }])}
-                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</button>
+                            <Button type="button" onClick={() => setMetrics(m => [...m, { key: '', value: '' }])}
+                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</Button>
                         </div>
                         {metrics.map((m, i) => (
                             <div key={i} className="flex gap-2 mb-1.5">
@@ -74,18 +75,18 @@ function ReportModal({ clients, onClose }: { clients: Client[]; onClose: () => v
                                 <input type="text" placeholder="Value" value={m.value}
                                     onChange={e => { const n = [...metrics]; n[i].value = e.target.value; setMetrics(n); }}
                                     className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500" />
-                                <button type="button" onClick={() => setMetrics(m => m.filter((_, j) => j !== i))} className="text-gray-400 hover:text-rose-500">
+                                <Button type="button" onClick={() => setMetrics(m => m.filter((_, j) => j !== i))} className="text-gray-400 hover:text-rose-500">
                                     <X size={13} />
-                                </button>
+                                </Button>
                             </div>
                         ))}
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.client_id}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.client_id}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Creating…' : 'Create Report'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -108,10 +109,10 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
             <div className="max-w-4xl space-y-5">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">Monthly Client Updates</h1>
-                    <button onClick={() => setModalOpen(true)}
+                    <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> New Report
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -147,11 +148,11 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     {r.status === 'draft' && (
                                         <>
-                                            <button onClick={() => router.post(`/client-updates/${r.id}/draft`)}
+                                            <Button onClick={() => router.post(`/client-updates/${r.id}/draft`)}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 border border-indigo-200 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50">
                                                 <Sparkles size={11} /> AI Draft
-                                            </button>
-                                            <button onClick={async () => {
+                                            </Button>
+                                            <Button onClick={async () => {
                                                 const ok = await confirm({
                                                     title: 'Send Report?',
                                                     description: `This will email the monthly update to ${r.client?.name ?? 'the client'}. Are you sure?`,
@@ -161,14 +162,14 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                                             }}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 border border-emerald-200 text-emerald-600 text-xs font-medium rounded-lg hover:bg-emerald-50">
                                                 <Send size={11} /> Send
-                                            </button>
+                                            </Button>
                                         </>
                                     )}
-                                    <button onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
+                                    <Button onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
                                         className="p-1.5 text-gray-400 hover:text-gray-600">
                                         <ChevronDown size={14} className={cn('transition-transform', expandedId === r.id && 'rotate-180')} />
-                                    </button>
-                                    <button onClick={async () => {
+                                    </Button>
+                                    <Button onClick={async () => {
                                         const ok = await confirm({
                                             title: 'Delete report?',
                                             description: 'This action cannot be undone.',
@@ -180,7 +181,7 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                                     }}
                                         className="p-1.5 text-gray-400 hover:text-rose-500">
                                         <Trash2 size={13} />
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                             {expandedId === r.id && (

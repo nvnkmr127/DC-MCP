@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head } from '@inertiajs/react';
 import WorkloadLayout from '@/Layouts/WorkloadLayout';
 import { Users, AlertTriangle, CheckSquare, Clock } from 'lucide-react';
@@ -143,9 +144,9 @@ export default function CapacityIndex({ team, activeTasks, recentTimesheets, sta
                                 Active Tasks {filterMember ? `— ${team.find(m => m.id === filterMember)?.name}` : '(all)'}
                             </h2>
                             {filterMember && (
-                                <button onClick={() => setFilterMember('')} className="text-xs text-indigo-600 hover:text-indigo-800">
+                                <Button onClick={() => setFilterMember('')} className="text-xs text-indigo-600 hover:text-indigo-800">
                                     Clear filter
-                                </button>
+                                </Button>
                             )}
                         </div>
                         <div className="divide-y divide-gray-100 flex-1 overflow-auto max-h-[600px]">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -19,7 +20,7 @@ function RateModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Add Rate</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/rate-cards', { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -53,11 +54,11 @@ function RateModal({ onClose }: { onClose: () => void }) {
                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.service_name || !form.data.rate}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.service_name || !form.data.rate}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Adding…' : 'Add Rate'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -89,10 +90,10 @@ export default function RateCardsIndex({ rateCards }: Props) {
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5">{rateCards.length} services · {categories.length} categories</p>
                     </div>
-                    <button onClick={() => setModalOpen(true)}
+                    <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> New Rate
-                    </button>
+                    </Button>
                 </div>
 
                 {categories.map(cat => {
@@ -111,8 +112,8 @@ export default function RateCardsIndex({ rateCards }: Props) {
                                                 <input type="number" defaultValue={r.rate}
                                                     onChange={e => setEditData(d => ({ ...d, rate: parseFloat(e.target.value) }))}
                                                     className="w-28 border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-indigo-500" />
-                                                <button onClick={() => saveEdit(r.id)} className="px-3 py-1 bg-indigo-600 text-white text-xs rounded-lg">Save</button>
-                                                <button onClick={() => setEditingId(null)} className="text-gray-400"><X size={13} /></button>
+                                                <Button onClick={() => saveEdit(r.id)} className="px-3 py-1 bg-indigo-600 text-white text-xs rounded-lg">Save</Button>
+                                                <Button onClick={() => setEditingId(null)} className="text-gray-400"><X size={13} /></Button>
                                             </>
                                         ) : (
                                             <>
@@ -122,15 +123,15 @@ export default function RateCardsIndex({ rateCards }: Props) {
                                                 </div>
                                                 <p className="text-sm font-semibold text-gray-900">{fmt(r.rate)} / {r.unit}</p>
                                                 <div className="flex items-center gap-1.5">
-                                                    <button onClick={() => router.patch(`/rate-cards/${r.id}`, { is_active: !r.is_active })}
+                                                    <Button onClick={() => router.patch(`/rate-cards/${r.id}`, { is_active: !r.is_active })}
                                                         className="text-gray-400 hover:text-indigo-600 transition-colors">
                                                         {r.is_active ? <ToggleRight size={18} className="text-indigo-600" /> : <ToggleLeft size={18} />}
-                                                    </button>
-                                                    <button onClick={() => { setEditingId(r.id); setEditData({}); }}
+                                                    </Button>
+                                                    <Button onClick={() => { setEditingId(r.id); setEditData({}); }}
                                                         className="p-1 text-gray-400 hover:text-indigo-600 rounded hover:bg-indigo-50 transition-colors">
                                                         <Edit2 size={13} />
-                                                    </button>
-                                                    <button onClick={async () => {
+                                                    </Button>
+                                                    <Button onClick={async () => {
                                                         const ok = await confirm({
                                                             title: 'Delete rate?',
                                                             description: 'This cannot be undone.',
@@ -142,7 +143,7 @@ export default function RateCardsIndex({ rateCards }: Props) {
                                                     }}
                                                         className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                                         <Trash2 size={13} />
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             </>
                                         )}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -20,7 +21,7 @@ function FreelancerModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Add Freelancer</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/freelancers', { onSuccess: onClose }); }} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -58,11 +59,11 @@ function FreelancerModal({ onClose }: { onClose: () => void }) {
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.name}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.name}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Adding…' : 'Add Freelancer'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -77,7 +78,7 @@ function AssignModal({ freelancer, projects, onClose }: { freelancer: Freelancer
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Assign {freelancer.name}</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post(`/freelancers/${freelancer.id}/assignments`, { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -107,11 +108,11 @@ function AssignModal({ freelancer, projects, onClose }: { freelancer: Freelancer
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Assigning…' : 'Assign'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -148,10 +149,10 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
                                 className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 w-64"
                             />
                         </div>
-                        <button onClick={() => setAddOpen(true)}
+                        <Button onClick={() => setAddOpen(true)}
                             className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                             <Plus size={14} /> Add Freelancer
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -163,9 +164,9 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
                             </div>
                             <p className="text-[14px] font-semibold text-gray-900 mb-1">No freelancers added</p>
                             <p className="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Build your external talent pool. Add freelancers to assign them to projects, track their hours, and manage payments all in one place.</p>
-                            <button onClick={() => setAddOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                            <Button onClick={() => setAddOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
                                 Add First Freelancer
-                            </button>
+                            </Button>
                         </div>
                     ) : (
                         filteredFreelancers.map(f => (
@@ -188,14 +189,14 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                     <span className="text-xs text-gray-500">{f.assignments_count} assignments</span>
-                                    <button onClick={() => setAssignFor(f)}
+                                    <Button onClick={() => setAssignFor(f)}
                                         className="px-2.5 py-1.5 border border-gray-200 text-xs text-gray-600 rounded-lg hover:bg-gray-50">
                                         Assign
-                                    </button>
-                                    <button onClick={() => setExpandedId(expandedId === f.id ? null : f.id)}
+                                    </Button>
+                                    <Button onClick={() => setExpandedId(expandedId === f.id ? null : f.id)}
                                         className="p-1.5 text-gray-400 hover:text-gray-600">
                                         <ChevronDown size={14} className={cn('transition-transform', expandedId === f.id && 'rotate-180')} />
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                             {expandedId === f.id && (
@@ -224,7 +225,7 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
                                 </div>
                             )}
                         </div>
-                    ))}
+                    )))}
                 </div>
             </div>
             {addOpen && <FreelancerModal onClose={() => setAddOpen(false)} />}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -33,7 +34,7 @@ function WorkflowModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">New Workflow</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/workflows', { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -64,11 +65,11 @@ function WorkflowModal({ onClose }: { onClose: () => void }) {
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.name}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.name}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Creating…' : 'Create Workflow'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -89,10 +90,10 @@ export default function WorkflowsIndex({ workflows }: Props) {
                         <h1 className="text-lg font-bold text-gray-900">Workflow Triggers</h1>
                         <p className="text-xs text-gray-500 mt-0.5">Automate actions based on events</p>
                     </div>
-                    <button onClick={() => setModalOpen(true)}
+                    <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> New Workflow
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
@@ -121,11 +122,11 @@ export default function WorkflowsIndex({ workflows }: Props) {
                                 </p>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
-                                <button onClick={() => router.post(`/workflows/${w.id}/toggle`)}
+                                <Button onClick={() => router.post(`/workflows/${w.id}/toggle`)}
                                     className="text-gray-400 hover:text-indigo-600 transition-colors">
                                     {w.is_active ? <ToggleRight size={20} className="text-indigo-600" /> : <ToggleLeft size={20} />}
-                                </button>
-                                <button onClick={async () => {
+                                </Button>
+                                <Button onClick={async () => {
                                     const ok = await confirm({
                                         title: 'Delete workflow?',
                                         description: 'This cannot be undone.',
@@ -137,7 +138,7 @@ export default function WorkflowsIndex({ workflows }: Props) {
                                 }}
                                     className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                     <Trash2 size={14} />
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     ))}

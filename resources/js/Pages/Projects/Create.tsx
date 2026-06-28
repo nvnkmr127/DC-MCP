@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
@@ -231,13 +232,13 @@ export default function ProjectCreate({ clients, members, templates }: Props) {
                         </div>
 
                         <div className="flex gap-3 pt-2">
-                            <button
+                            <Button
                                 type="submit"
                                 disabled={form.processing}
-                                className="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                                className="px-5 disabled:opacity-50" 
                             >
                                 {form.processing ? 'Creating…' : 'Create Project'}
-                            </button>
+                            </Button>
                             <Link href="/projects" className="px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100">
                                 Cancel
                             </Link>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
@@ -56,12 +57,12 @@ export default function TeamSettings({ members, roles }: Props) {
 
             <div className="flex items-center justify-between mb-6">
                 <p className="text-sm text-gray-500">{members.length} team member{members.length !== 1 ? 's' : ''}</p>
-                <button
+                <Button
                     onClick={() => setShowInvite(!showInvite)}
                     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
                 >
                     <UserPlus size={15} /> Invite Member
-                </button>
+                </Button>
             </div>
 
             {showInvite && (
@@ -103,13 +104,13 @@ export default function TeamSettings({ members, roles }: Props) {
                             </select>
                         </div>
                         <div className="flex items-end">
-                            <button
+                            <Button
                                 type="submit"
                                 disabled={inviteForm.processing}
-                                className="w-full py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                                className="w-full disabled:opacity-50" 
                             >
                                 Send Invite
-                            </button>
+                            </Button>
                         </div>
                     </form>
                     {Object.values(inviteForm.errors).map((err, i) => (

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -21,7 +22,7 @@ export default function InsightsIndex(props: any) {
 
                 {/* Tabs Navigation */}
                 <div className="flex border-b border-gray-200">
-                    <button
+                    <Button
                         onClick={() => setActiveTab('briefings')}
                         className={cn(
                             "pb-3 px-1 text-sm font-medium mr-8 border-b-2 transition-colors",
@@ -29,8 +30,8 @@ export default function InsightsIndex(props: any) {
                         )}
                     >
                         Today's Briefing
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={() => setActiveTab('suggestions')}
                         className={cn(
                             "pb-3 px-1 text-sm font-medium mr-8 border-b-2 transition-colors",
@@ -38,8 +39,8 @@ export default function InsightsIndex(props: any) {
                         )}
                     >
                         Suggestions
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={() => setActiveTab('custom_reports')}
                         className={cn(
                             "pb-3 px-1 text-sm font-medium border-b-2 transition-colors",
@@ -47,7 +48,7 @@ export default function InsightsIndex(props: any) {
                         )}
                     >
                         Custom Reports
-                    </button>
+                    </Button>
                 </div>
 
                 {activeTab === 'briefings' && <BriefingsTab briefings={props.briefings} />}

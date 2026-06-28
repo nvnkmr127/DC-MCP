@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
@@ -74,12 +75,12 @@ export default function Trash({ items, retentionDays }: Props) {
                                         {item.deleted_at}
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        <button
+                                        <Button
                                             onClick={() => handleRestore(item)}
                                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
                                         >
                                             <RotateCcw size={14} /> Restore
-                                        </button>
+                                        </Button>
                                     </td>
                                 </tr>
                             ))}

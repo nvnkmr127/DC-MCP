@@ -55,8 +55,8 @@ function UpsellModal({ client, onClose }: { client: Client & { projects_count: n
                         <Button
                             type="submit"
                             loading={form.processing}
-                            className="bg-amber-500 hover:bg-amber-600 focus:ring-amber-500"
-                        >
+                            
+                        variant="ghost" size="icon" >
                             Flag for Upsell
                         </Button>
                     </div>
@@ -112,7 +112,7 @@ export default function ClientsIndex({ clients, filters }: Props) {
                     {statusOptions.map((s) => {
                         const cfg = CLIENT_STATUS_CONFIG[s];
                         return (
-                            <button
+                            <Button
                                 key={s}
                                 onClick={() => filterBy('status', s)}
                                 className={cn(
@@ -124,14 +124,14 @@ export default function ClientsIndex({ clients, filters }: Props) {
                             >
                                 <span className={cn('w-1.5 h-1.5 rounded-full', cfg.dot)} />
                                 {cfg.label}
-                            </button>
+                            </Button>
                         );
                     })}
                     <div className="w-px h-5 bg-gray-200 mx-0.5" />
                     {tierOptions.map((t) => {
                         const cfg = CLIENT_TIER_CONFIG[t];
                         return (
-                            <button
+                            <Button
                                 key={t}
                                 onClick={() => filterBy('tier', t)}
                                 className={cn(
@@ -143,7 +143,7 @@ export default function ClientsIndex({ clients, filters }: Props) {
                             >
                                 <span className={cn('w-1.5 h-1.5 rounded-full', cfg.dot)} />
                                 {cfg.label}
-                            </button>
+                            </Button>
                         );
                     })}
                 </div>

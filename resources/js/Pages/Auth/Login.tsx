@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { useForm, Head, Link, router } from '@inertiajs/react';
 import AuthLayout from '@/Layouts/AuthLayout';
 import { cn } from '@/lib/utils';
@@ -81,13 +82,13 @@ export default function Login({ demo_accounts = [] }: Props) {
                             autoComplete="current-password"
                             required
                         />
-                        <button
+                        <Button
                             type="button"
                             onClick={() => setShowPw(!showPw)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         >
                             {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
-                        </button>
+                        </Button>
                     </div>
                     {errors.password && <p className="mt-1.5 text-[11px] text-red-500 font-medium">{errors.password}</p>}
                 </div>
@@ -107,10 +108,10 @@ export default function Login({ demo_accounts = [] }: Props) {
                 </div>
 
                 {/* Submit */}
-                <button
+                <Button
                     type="submit"
                     disabled={processing}
-                    className="w-full py-2.5 bg-indigo-600 text-white text-[13px] font-bold rounded-lg hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
+                    className="w-full py-2.5 font-bold disabled:opacity-60 disabled:cursor-not-allowed" 
                 >
                     {processing ? (
                         <span className="flex items-center justify-center gap-2">
@@ -118,7 +119,7 @@ export default function Login({ demo_accounts = [] }: Props) {
                             Signing in…
                         </span>
                     ) : 'Sign in'}
-                </button>
+                </Button>
             </form>
 
             <p className="mt-5 text-center text-[12px] text-gray-400">
@@ -137,7 +138,7 @@ export default function Login({ demo_accounts = [] }: Props) {
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                         {demo_accounts.map(acc => (
-                            <button
+                            <Button
                                 key={acc.role}
                                 type="button"
                                 onClick={() => quickLogin(acc.role)}
@@ -147,7 +148,7 @@ export default function Login({ demo_accounts = [] }: Props) {
                                 )}
                             >
                                 {acc.label}
-                            </button>
+                            </Button>
                         ))}
                     </div>
                     <p className="text-[11px] text-gray-400 mt-2.5 text-center">

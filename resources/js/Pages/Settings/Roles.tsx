@@ -1,5 +1,6 @@
 import React, { useState } from "react"
 import { Head, router, useForm } from "@inertiajs/react"
+import { Breadcrumbs } from "@/Components/Shared/Breadcrumbs";
 import AppLayout from "@/Layouts/AppLayout"
 import { DataTable } from "@/Components/ui/DataTable"
 import { ColumnDef } from "@tanstack/react-table"
@@ -35,9 +36,9 @@ function Modal({ isOpen, onClose, title, children, maxWidth = "max-w-lg" }: { is
             <div className={`relative bg-white rounded-xl shadow-2xl w-full ${maxWidth} flex flex-col max-h-[90vh]`}>
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                     <h3 className="font-semibold text-slate-800">{title}</h3>
-                    <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                    <Button onClick={onClose} variant="ghost" size="icon" >
                         <X size={18} />
-                    </button>
+                    </Button>
                 </div>
                 <div className="p-5 overflow-y-auto">
                     {children}

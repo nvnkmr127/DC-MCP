@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router } from '@inertiajs/react';
 
 import { useConfirm } from '@/hooks/useConfirm';
@@ -157,12 +158,12 @@ function SuggestionCard({
                         </div>
                     </div>
 
-                    <button
+                    <Button
                         onClick={() => setExpanded(e => !e)}
                         className="p-1 rounded hover:bg-gray-100 text-gray-400 flex-shrink-0"
                     >
                         {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -247,64 +248,64 @@ function SuggestionCard({
             <div className="px-4 py-3 border-t border-gray-100 flex items-center gap-2">
                 {editing ? (
                     <>
-                        <button
+                        <Button
                             onClick={() => approve(form)}
                             disabled={processing || !form.project_id}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
                         >
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             Save & Approve
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             onClick={() => setEditing(false)}
                             className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
                         >
                             Cancel
-                        </button>
+                        </Button>
                     </>
                 ) : rejectOpen ? (
                     <>
-                        <button
+                        <Button
                             onClick={reject}
                             disabled={processing}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 text-white text-xs font-medium rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
-                        >
+                            className="flex items-center gap-1.5 disabled:opacity-50" 
+                        variant="destructive" size="sm" >
                             <XCircle className="w-3.5 h-3.5" />
                             Confirm Dismiss
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             onClick={() => setRejectOpen(false)}
                             className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
                         >
                             Cancel
-                        </button>
+                        </Button>
                     </>
                 ) : (
                     <>
-                        <button
+                        <Button
                             onClick={() => approve()}
                             disabled={processing || needsProject}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50"
                         >
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             Approve
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             onClick={() => { setEditing(true); setExpanded(true); }}
                             disabled={processing}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-gray-700 text-xs font-medium rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-50"
                         >
                             <Edit3 className="w-3.5 h-3.5" />
                             Edit & Approve
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             onClick={() => setRejectOpen(true)}
                             disabled={processing}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 text-xs font-medium hover:text-red-500 transition-colors disabled:opacity-50 ml-auto"
                         >
                             <XCircle className="w-3.5 h-3.5" />
                             Dismiss
-                        </button>
+                        </Button>
                     </>
                 )}
             </div>
@@ -389,14 +390,14 @@ export default function SuggestionsIndex({ pending, recent, stats, projects, cli
                         </p>
                     </div>
                     {stats.pending_count > 1 && (
-                        <button
+                        <Button
                             onClick={approveAll}
                             disabled={bulkProcessing}
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-2 disabled:opacity-50" 
                         >
                             <Zap className="w-4 h-4" />
                             Approve All ({stats.pending_count})
-                        </button>
+                        </Button>
                     )}
                 </div>
 

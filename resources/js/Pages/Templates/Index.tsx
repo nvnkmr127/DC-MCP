@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Plus, X, Layers, Trash2, Play, RotateCcw, Pause } from 'lucide-react';
@@ -10,7 +11,7 @@ import type { Client, User } from '@/types';
 type TemplateTask = {
     title: string;
     priority: string;
-    offset_days: parseInt;
+    offset_days: number;
     estimated_hours: number;
 };
 
@@ -75,7 +76,7 @@ function ProjectTemplateModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
                 <div className="flex items-center justify-between p-6 border-b border-gray-100">
                     <h2 className="text-lg font-bold text-gray-900">New Project Template</h2>
-                    <button onClick={onClose}><X size={20} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={20} className="text-gray-400" /></Button>
                 </div>
                 <div className="p-6 overflow-y-auto flex-1 space-y-5">
                     <div className="space-y-4">
@@ -101,9 +102,9 @@ function ProjectTemplateModal({ onClose }: { onClose: () => void }) {
                     <div>
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-sm font-semibold text-gray-900">Tasks</h3>
-                            <button type="button" onClick={addTask} className="text-xs font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+                            <Button type="button" onClick={addTask} className="flex items-center gap-1" variant="ghost" size="sm" >
                                 <Plus size={12} /> Add Task
-                            </button>
+                            </Button>
                         </div>
                         {form.data.tasks.length === 0 ? (
                             <div className="p-6 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center text-sm text-gray-500">
@@ -136,9 +137,9 @@ function ProjectTemplateModal({ onClose }: { onClose: () => void }) {
                                                     className="w-full border-gray-300 rounded px-2 py-1 text-xs" placeholder="Hrs" />
                                             </div>
                                         </div>
-                                        <button type="button" onClick={() => removeTask(idx)} className="p-1 text-gray-400 hover:text-rose-500">
+                                        <Button type="button" onClick={() => removeTask(idx)} className="p-1 text-gray-400 hover:text-rose-500">
                                             <Trash2 size={14} />
-                                        </button>
+                                        </Button>
                                     </div>
                                 ))}
                             </div>
@@ -146,11 +147,11 @@ function ProjectTemplateModal({ onClose }: { onClose: () => void }) {
                     </div>
                 </div>
                 <div className="p-6 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/50 rounded-b-2xl">
-                    <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                    <button onClick={() => form.post('/project-templates', { onSuccess: onClose })} disabled={form.processing || !form.data.name}
+                    <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                    <Button onClick={() => form.post('/project-templates', { onSuccess: onClose })} disabled={form.processing || !form.data.name}
                         className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
                         {form.processing ? 'Creating…' : 'Create Template'}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>
@@ -164,7 +165,7 @@ function UseProjectTemplateModal({ template, clients, onClose }: { template: Tem
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Use Template: {template.name}</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post(`/project-templates/${template.id}/create-project`, { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -186,11 +187,11 @@ function UseProjectTemplateModal({ template, clients, onClose }: { template: Tem
                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.client_id || !form.data.name}
-                            className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.client_id || !form.data.name}
+                            className="disabled:opacity-50" variant="ghost" >
                             {form.processing ? 'Creating…' : 'Create Project'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -230,7 +231,7 @@ function AddRecurringRuleModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">New Recurring Task</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/recurring-tasks', { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -282,11 +283,11 @@ function AddRecurringRuleModal({ onClose }: { onClose: () => void }) {
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.title}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.title}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Adding…' : 'Add Rule'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -321,22 +322,22 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                     </div>
                     <div>
                         {activeTab === 'projects' ? (
-                            <button onClick={() => setNewTemplateOpen(true)}
+                            <Button onClick={() => setNewTemplateOpen(true)}
                                 className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors">
                                 <Plus size={16} /> New Template
-                            </button>
+                            </Button>
                         ) : (
-                            <button onClick={() => setNewRuleOpen(true)}
+                            <Button onClick={() => setNewRuleOpen(true)}
                                 className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors">
                                 <Plus size={16} /> Add Rule
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>
 
                 {/* Tabs Navigation */}
                 <div className="flex border-b border-gray-200">
-                    <button
+                    <Button
                         onClick={() => setActiveTab('projects')}
                         className={cn(
                             "pb-3 px-1 text-sm font-medium mr-8 border-b-2 transition-colors",
@@ -344,8 +345,8 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                         )}
                     >
                         Project Templates
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={() => setActiveTab('recurring')}
                         className={cn(
                             "pb-3 px-1 text-sm font-medium border-b-2 transition-colors",
@@ -353,7 +354,7 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                         )}
                     >
                         Recurring Tasks
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Tab Content: Project Templates */}
@@ -378,7 +379,7 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                                         )}
                                         {t.description && <p className="text-sm text-gray-500 mt-2 line-clamp-2">{t.description}</p>}
                                     </div>
-                                    <button onClick={async () => {
+                                    <Button onClick={async () => {
                                         const ok = await confirm({
                                             title: 'Delete template?',
                                             description: 'This action cannot be undone.',
@@ -390,7 +391,7 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                                     }}
                                         className="p-1.5 rounded-md text-gray-400 hover:bg-rose-50 hover:text-rose-600 transition-colors shrink-0">
                                         <Trash2 size={16} />
-                                    </button>
+                                    </Button>
                                 </div>
                                 
                                 <div className="bg-gray-50 rounded-lg p-3 mb-4">
@@ -413,10 +414,10 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                                     </div>
                                 </div>
                                 
-                                <button onClick={() => setUseTemplate(t)}
+                                <Button onClick={() => setUseTemplate(t)}
                                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-colors text-sm font-semibold rounded-lg">
                                     <Play size={14} /> Use Template
-                                </button>
+                                </Button>
                             </div>
                         ))}
                     </div>
@@ -474,15 +475,15 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0 border-l border-gray-100 pl-4 ml-2">
-                                        <button onClick={() => router.patch(`/recurring-tasks/${rule.id}`, { is_active: !rule.is_active }, { preserveScroll: true })}
+                                        <Button onClick={() => router.patch(`/recurring-tasks/${rule.id}`, { is_active: !rule.is_active }, { preserveScroll: true })}
                                             className={cn('p-2 rounded-lg border transition-colors flex items-center justify-center',
                                                 rule.is_active
                                                     ? 'border-amber-200 text-amber-600 hover:bg-amber-50'
                                                     : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
                                             )} title={rule.is_active ? 'Pause Rule' : 'Resume Rule'}>
                                             {rule.is_active ? <Pause size={18} /> : <Play size={18} />}
-                                        </button>
-                                        <button onClick={async () => {
+                                        </Button>
+                                        <Button onClick={async () => {
                                             const ok = await confirm({
                                                 title: 'Delete this rule?',
                                                 description: 'This cannot be undone.',
@@ -494,7 +495,7 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                                         }}
                                             className="p-2 rounded-lg border border-gray-200 text-gray-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-colors flex items-center justify-center">
                                             <Trash2 size={18} />
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             </div>

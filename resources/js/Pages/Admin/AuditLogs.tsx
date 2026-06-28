@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, router } from '@inertiajs/react';
@@ -139,13 +140,13 @@ export default function AuditLogs({ logs, filters, subjectTypes }: Props) {
                                             </td>
                                             <td className="p-4 text-right">
                                                 {log.changes && (
-                                                    <button
+                                                    <Button
                                                         onClick={() => setSelectedLog(log)}
                                                         className="p-1.5 text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg transition-colors inline-flex items-center gap-2"
                                                         title="View Details"
                                                     >
                                                         <Eye className="w-4 h-4" />
-                                                    </button>
+                                                    </Button>
                                                 )}
                                             </td>
                                         </tr>
@@ -214,12 +215,12 @@ export default function AuditLogs({ logs, filters, subjectTypes }: Props) {
                         </div>
                     )}
                     <div className="mt-6 flex justify-end">
-                        <button
+                        <Button
                             onClick={() => setSelectedLog(null)}
                             className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm transition-colors"
                         >
                             Close
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </Modal>

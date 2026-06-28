@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import SyncsLayout from '@/Layouts/SyncsLayout';
 import { cn } from '@/lib/utils';
@@ -30,7 +31,7 @@ function NoteCard({ note, defaultExpanded }: { note: Note; defaultExpanded?: boo
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <button onClick={() => setExpanded(!expanded)}
+            <Button onClick={() => setExpanded(!expanded)}
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left">
                 <div className="flex items-center gap-3">
                     {mood && <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', mood.dot)} />}
@@ -49,7 +50,7 @@ function NoteCard({ note, defaultExpanded }: { note: Note; defaultExpanded?: boo
                         <span className="text-xs text-gray-400">Next: {note.next_meeting_date}</span>
                     )}
                 </div>
-            </button>
+            </Button>
 
             {expanded && (
                 <div className="px-4 pb-4 space-y-3 border-t border-gray-100">
@@ -70,7 +71,7 @@ function NoteCard({ note, defaultExpanded }: { note: Note; defaultExpanded?: boo
                             <p className="text-xs font-semibold text-gray-500 mb-1.5">Action Items</p>
                             <div className="space-y-1">
                                 {note.action_items.map(item => (
-                                    <button key={item.id} onClick={() => router.post(`/one-on-one/${note.id}/action-item`, { id: item.id })}
+                                    <Button key={item.id} onClick={() => router.post(`/one-on-one/${note.id}/action-item`, { id: item.id })}
                                         className="flex items-center gap-2 w-full text-left group hover:bg-gray-50 rounded px-1 py-0.5">
                                         {item.done
                                             ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -80,7 +81,7 @@ function NoteCard({ note, defaultExpanded }: { note: Note; defaultExpanded?: boo
                                             {item.text}
                                         </span>
                                         {item.due_date && <span className="text-xs text-gray-400">{item.due_date}</span>}
-                                    </button>
+                                    </Button>
                                 ))}
                             </div>
                         </div>
@@ -116,7 +117,7 @@ function AddNoteModal({ teamMembers, onClose }: { teamMembers: Props['teamMember
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between">
                     <h2 className="text-lg font-bold text-gray-900">Add 1:1 Note</h2>
-                    <button onClick={onClose}><X className="w-5 h-5 text-gray-400" /></button>
+                    <Button onClick={onClose}><X className="w-5 h-5 text-gray-400" /></Button>
                 </div>
                 <form onSubmit={submit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -164,7 +165,7 @@ function AddNoteModal({ teamMembers, onClose }: { teamMembers: Props['teamMember
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <label className="text-xs text-gray-500 font-medium">Action Items</label>
-                            <button type="button" onClick={addItem} className="text-xs text-indigo-600 font-medium">+ Add</button>
+                            <Button type="button" onClick={addItem} variant="ghost" size="sm" >+ Add</Button>
                         </div>
                         {actionItems.map((item, i) => (
                             <div key={i} className="flex items-center gap-2 mb-2">
@@ -174,17 +175,17 @@ function AddNoteModal({ teamMembers, onClose }: { teamMembers: Props['teamMember
                                 <input type="date" value={item.due_date}
                                     onChange={e => setActionItems(prev => prev.map((a, j) => j === i ? { ...a, due_date: e.target.value } : a))}
                                     className="w-32 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-400" />
-                                <button type="button" onClick={() => setActionItems(prev => prev.filter((_, j) => j !== i))}
-                                    className="text-gray-400 hover:text-rose-500"><X className="w-3.5 h-3.5" /></button>
+                                <Button type="button" onClick={() => setActionItems(prev => prev.filter((_, j) => j !== i))}
+                                    className="text-gray-400 hover:text-rose-500"><X className="w-3.5 h-3.5" /></Button>
                             </div>
                         ))}
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={!form.data.member_id || !form.data.meeting_date}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={!form.data.member_id || !form.data.meeting_date}
+                            className="disabled:opacity-50" >
                             Save Note
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -231,10 +232,10 @@ export default function OneOnOneIndex({ teamMembers, notes, latestByMember }: Pr
                                 className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 w-64"
                             />
                         </div>
-                        <button onClick={() => setAddOpen(true)}
+                        <Button onClick={() => setAddOpen(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                             <Plus className="w-4 h-4" /> Add Note
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -250,7 +251,7 @@ export default function OneOnOneIndex({ teamMembers, notes, latestByMember }: Pr
                                 const latest = latestMap[member.id];
                                 const mood = latest?.mood ? MOOD_CONFIG[latest.mood] : null;
                                 return (
-                                    <button key={member.id} onClick={() => setSelectedMember(selectedMember === member.id ? null : member.id)}
+                                    <Button key={member.id} onClick={() => setSelectedMember(selectedMember === member.id ? null : member.id)}
                                         className={cn('w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-colors',
                                             selectedMember === member.id
                                                 ? 'bg-indigo-600 text-white'
@@ -268,7 +269,7 @@ export default function OneOnOneIndex({ teamMembers, notes, latestByMember }: Pr
                                             </p>}
                                         </div>
                                         {mood && <span className={cn('w-2 h-2 rounded-full shrink-0', mood.dot)} />}
-                                    </button>
+                                    </Button>
                                 );
                             })}
                         </div>
@@ -284,9 +285,9 @@ export default function OneOnOneIndex({ teamMembers, notes, latestByMember }: Pr
                         ) : memberNotes.length === 0 ? (
                             <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
                                 <p className="text-sm text-gray-400">No 1:1 notes yet for this team member.</p>
-                                <button onClick={() => setAddOpen(true)} className="mt-2 text-sm text-indigo-600 font-medium">
+                                <Button onClick={() => setAddOpen(true)} className="mt-2 text-sm text-indigo-600 font-medium">
                                     Add the first note →
-                                </button>
+                                </Button>
                             </div>
                         ) : (
                             <div className="space-y-3">

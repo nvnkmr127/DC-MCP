@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -17,7 +18,7 @@ function ArticleModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">New Article</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/knowledge-base', { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -45,11 +46,11 @@ function ArticleModal({ onClose }: { onClose: () => void }) {
                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none font-mono text-xs" />
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.title || !form.data.body}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.title || !form.data.body}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Publishing…' : 'Publish Article'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -80,10 +81,10 @@ export default function KnowledgeBaseIndex({ articles, categories, filters }: Pr
             <div className="max-w-4xl space-y-5">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">Knowledge Base</h1>
-                    <button onClick={() => setModalOpen(true)}
+                    <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> New Article
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -96,11 +97,11 @@ export default function KnowledgeBaseIndex({ articles, categories, filters }: Pr
                     </div>
                     <div className="flex items-center gap-2">
                         {['', ...(categories || [])].map(cat => (
-                            <button key={cat} onClick={() => { setCatFilter(cat); router.get('/knowledge-base', { search, category: cat }, { preserveState: true }); }}
+                            <Button key={cat} onClick={() => { setCatFilter(cat); router.get('/knowledge-base', { search, category: cat }, { preserveState: true }); }}
                                 className={cn('px-3 py-1.5 text-xs rounded-lg font-medium transition-colors',
                                     catFilter === cat ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50')}>
                                 {cat === '' ? 'All' : cat}
-                            </button>
+                            </Button>
                         ))}
                     </div>
                 </div>
@@ -108,17 +109,17 @@ export default function KnowledgeBaseIndex({ articles, categories, filters }: Pr
                 {allTags.length > 0 && (
                     <div className="flex items-center gap-2 flex-wrap pb-2 border-b border-gray-100">
                         <span className="text-xs font-semibold text-gray-500 mr-2">Tags:</span>
-                        <button onClick={() => setTagFilter(null)}
+                        <Button onClick={() => setTagFilter(null)}
                             className={cn('px-2 py-1 text-[11px] rounded-md font-medium transition-colors border',
                                 tagFilter === null ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50')}>
                             All Tags
-                        </button>
+                        </Button>
                         {allTags.map(tag => (
-                            <button key={tag} onClick={() => setTagFilter(tag)}
+                            <Button key={tag} onClick={() => setTagFilter(tag)}
                                 className={cn('px-2 py-1 text-[11px] rounded-md font-medium transition-colors border',
                                     tagFilter === tag ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50')}>
                                 {tag}
-                            </button>
+                            </Button>
                         ))}
                     </div>
                 )}
@@ -133,17 +134,17 @@ export default function KnowledgeBaseIndex({ articles, categories, filters }: Pr
                                 <>
                                     <p className="text-[14px] font-semibold text-gray-900 mb-1">No articles match your search</p>
                                     <p className="text-[13px] text-gray-500 mb-5">Try using different keywords or clearing your filters.</p>
-                                    <button onClick={() => { setSearch(''); setCatFilter(''); setTagFilter(null); router.get('/knowledge-base', {}, { preserveState: true }); }} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                                    <Button onClick={() => { setSearch(''); setCatFilter(''); setTagFilter(null); router.get('/knowledge-base', {}, { preserveState: true }); }} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
                                         Clear filters
-                                    </button>
+                                    </Button>
                                 </>
                             ) : (
                                 <>
                                     <p className="text-[14px] font-semibold text-gray-900 mb-1">Your knowledge base is empty</p>
                                     <p className="text-[13px] text-gray-500 mb-6">Create your first article to start sharing knowledge, SOPs, and documentation with your team.</p>
-                                    <button onClick={() => setModalOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                                    <Button onClick={() => setModalOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
                                         Create New Article
-                                    </button>
+                                    </Button>
                                 </>
                             )}
                         </div>
@@ -167,13 +168,13 @@ export default function KnowledgeBaseIndex({ articles, categories, filters }: Pr
                             {a.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
                                     {a.tags.map(tag => (
-                                        <button 
+                                        <Button 
                                             key={tag} 
                                             onClick={(e) => { e.preventDefault(); setTagFilter(tag); }}
                                             className="px-1.5 py-0.5 bg-gray-100 text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded text-[9px] transition-colors"
                                         >
                                             {tag}
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                             )}

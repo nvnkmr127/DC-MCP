@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, router, useForm, Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
@@ -354,7 +355,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                 </div>
                 
                 {activeTab === 'workspace' && (
-                    <button
+                    <Button
                         onClick={() => {
                             if (!showForm) setWizardStep(1);
                             setShowForm(!showForm);
@@ -362,7 +363,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 w-fit"
                     >
                         <Plus size={15} /> Add Connection
-                    </button>
+                    </Button>
                 )}
             </div>
 
@@ -384,7 +385,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
             {/* Tabs for Super Admins */}
             {global_connections && (
                 <div className="mb-6 flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
-                    <button
+                    <Button
                         onClick={() => setActiveTab('workspace')}
                         className={cn(
                             "px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2",
@@ -392,8 +393,8 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                         )}
                     >
                         My Workspace
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={() => setActiveTab('global')}
                         className={cn(
                             "px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2",
@@ -401,7 +402,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                         )}
                     >
                         Global Hub <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-200 text-gray-600">Admin</span>
-                    </button>
+                    </Button>
                 </div>
             )}
 
@@ -425,7 +426,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                     <h4 className="text-sm font-medium text-gray-700 mb-3">Select a Provider</h4>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                                         {builtin_providers.map(p => (
-                                            <button
+                                            <Button
                                                 key={p}
                                                 type="button"
                                                 onClick={() => {
@@ -440,9 +441,9 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                             >
                                                 <span className="text-3xl mb-2">{PROVIDER_ICONS[p] ?? '🔌'}</span>
                                                 <span className="text-xs font-semibold capitalize text-gray-700">{p.replace('_', ' ')}</span>
-                                            </button>
+                                            </Button>
                                         ))}
-                                        <button
+                                        <Button
                                             type="button"
                                             onClick={() => {
                                                 form.setData('provider', '');
@@ -456,16 +457,16 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                         >
                                             <Globe size={30} className="mb-2 text-gray-400" />
                                             <span className="text-xs font-semibold text-gray-700">Custom HTTP</span>
-                                        </button>
+                                        </Button>
                                     </div>
                                     <div className="flex justify-end pt-2 border-t border-gray-100">
-                                        <button
+                                        <Button
                                             type="button"
                                             onClick={() => setShowForm(false)}
                                             className="px-4 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"
                                         >
                                             Cancel
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             )}
@@ -509,13 +510,13 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                     </div>
 
                                     <div className="flex gap-3 justify-between pt-2 mt-4 border-t border-gray-100">
-                                        <button
+                                        <Button
                                             type="button"
                                             onClick={() => setWizardStep(1)}
                                             className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
                                         >
                                             Back
-                                        </button>
+                                        </Button>
                                         <div className="flex gap-2">
                                             <a
                                                 href={`https://docs.example.com/integrations/${form.data.provider}`}
@@ -524,13 +525,13 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                             >
                                                 <ExternalLink size={14} /> Setup Guide
                                             </a>
-                                            <button
+                                            <Button
                                                 type="button"
                                                 onClick={() => setWizardStep(3)}
                                                 className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
                                             >
                                                 Continue to Credentials
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 </div>
@@ -696,20 +697,20 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                     </div>
 
                                     <div className="flex gap-3 justify-between mt-6 pt-2 border-t border-gray-100">
-                                        <button
+                                        <Button
                                             type="button"
                                             onClick={() => setWizardStep(2)}
                                             className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
                                         >
                                             Back
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                             type="submit"
                                             disabled={form.processing || !isValidCredentials()}
-                                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                                            className="disabled:opacity-50" 
                                         >
                                             Connect {isCustom ? 'Provider' : form.data.provider.replace('_', ' ')}
-                                        </button>
+                                        </Button>
                                     </div>
                                 </form>
                                 {!isCustom && (
@@ -747,9 +748,9 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                     <p className="text-gray-600 mb-8 text-sm leading-relaxed">
                                         Connect your favorite external services and platforms to sync data seamlessly. The onboarding process takes just a few minutes.
                                     </p>
-                                    <button onClick={() => setShowForm(true)} className="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors w-full md:w-auto flex items-center justify-center md:justify-start gap-2">
+                                    <Button onClick={() => setShowForm(true)} className="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors w-full md:w-auto flex items-center justify-center md:justify-start gap-2">
                                         <Plus size={18} /> Add First Connection
-                                    </button>
+                                    </Button>
                                 </div>
                                 <div className="flex-1 w-full bg-gray-50 rounded-2xl p-6 md:p-8 border border-gray-100 relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-100 rounded-bl-full opacity-50 -mr-16 -mt-16"></div>
@@ -862,12 +863,12 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                 </div>
                                                 <div className="mt-2.5 pt-2 border-t border-red-100 flex flex-wrap items-center gap-2">
                                                     {['token_expired', 'pending_reauth', 'error'].includes(conn.status) && !isPlatformIssue && (
-                                                        <button
+                                                        <Button
                                                             onClick={() => handleReauthorize(conn)}
                                                             className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-[10px] font-semibold transition-colors"
                                                         >
                                                             Update Credentials
-                                                        </button>
+                                                        </Button>
                                                     )}
                                                     {['rate_limited', 'quota_exceeded', 'suspended'].includes(conn.status) && conn.settings?.base_url && (
                                                         <a
@@ -885,26 +886,26 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                     >
                                                         Contact Support
                                                     </a>
-                                                    <button
+                                                    <Button
                                                         onClick={() => remove(conn.id)}
                                                         className="px-2.5 py-1 border border-transparent text-red-600 hover:bg-red-100 rounded text-[10px] font-medium transition-colors ml-auto"
                                                     >
                                                         Remove
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             </div>
                                         );
                                     })()}
 
                                     <div className="flex items-center gap-2 mt-3">
-                                        <button
+                                        <Button
                                             onClick={() => sync(conn.id)}
                                             disabled={!!syncingMap[conn.id]}
                                             className="flex items-center gap-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 disabled:opacity-50"
                                         >
                                             <RefreshCw size={12} className={cn(!!syncingMap[conn.id] && "animate-spin")} /> {syncingMap[conn.id] ? 'Syncing...' : 'Sync'}
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                             onClick={() => toggleActive(conn)}
                                             className={cn(
                                                 'flex items-center gap-1 px-3 py-1.5 text-xs border rounded-lg transition-colors',
@@ -914,13 +915,13 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                             )}
                                         >
                                             {conn.is_active ? <><CheckCircle size={12} /> Active</> : <><XCircle size={12} /> Inactive</>}
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
                                             onClick={() => remove(conn.id)}
                                             className="ml-auto p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-red-50 transition-colors"
                                         >
                                             <Trash2 size={13} />
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             ))}
@@ -934,9 +935,9 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                 <div className="space-y-6">
 
                 <div className="mb-6 flex gap-4 border-b border-gray-200">
-                    <button onClick={() => setGlobalTab('connections')} className={cn("pb-3 text-sm font-medium transition-colors border-b-2", globalTab === 'connections' ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700")}>Connections</button>
-                    <button onClick={() => setGlobalTab('providers')} className={cn("pb-3 text-sm font-medium transition-colors border-b-2", globalTab === 'providers' ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700")}>Providers</button>
-                    <button onClick={() => setGlobalTab('diagnostics')} className={cn("pb-3 text-sm font-medium transition-colors border-b-2", globalTab === 'diagnostics' ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700")}>Diagnostics</button>
+                    <Button onClick={() => setGlobalTab('connections')} className={cn("pb-3 text-sm font-medium transition-colors border-b-2", globalTab === 'connections' ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700")}>Connections</Button>
+                    <Button onClick={() => setGlobalTab('providers')} className={cn("pb-3 text-sm font-medium transition-colors border-b-2", globalTab === 'providers' ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700")}>Providers</Button>
+                    <Button onClick={() => setGlobalTab('diagnostics')} className={cn("pb-3 text-sm font-medium transition-colors border-b-2", globalTab === 'diagnostics' ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700")}>Diagnostics</Button>
                 </div>
 {globalTab === 'connections' && (
                     <>
@@ -1077,9 +1078,9 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                     <Link href={`/admin/mcp/${conn.id}/history`} className="text-indigo-600 hover:text-indigo-900">
                                                         History
                                                     </Link>
-                                                    <button onClick={() => setMigratingConnection(conn)} className="text-emerald-600 hover:text-emerald-900 ml-2">
+                                                    <Button onClick={() => setMigratingConnection(conn)} className="text-emerald-600 hover:text-emerald-900 ml-2">
                                                         Migrate
-                                                    </button>
+                                                    </Button>
                                                     {conn.user && (
                                                         <Link href={`/admin/impersonate/${conn.user.id}`} method="post" as="button" className="text-amber-600 hover:text-amber-900 border border-amber-600 rounded px-2 py-1 ml-2 transition-colors">
                                                             Impersonate
@@ -1099,7 +1100,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                 </div>
                                 <div className="flex space-x-2">
                                     {global_connections.links.map((link, i) => (
-                                        <button
+                                        <Button
                                             key={i}
                                             onClick={() => link.url && router.get(link.url, { search: search }, { preserveState: true })}
                                             disabled={!link.url}
@@ -1125,9 +1126,9 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                         <div className="space-y-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-bold text-gray-900">Manage Providers</h2>
-                                <button onClick={openAddProvider} className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 flex items-center gap-2">
+                                <Button onClick={openAddProvider} className="flex items-center gap-2" >
                                     <Plus size={15} /> Add Provider
-                                </button>
+                                </Button>
                             </div>
                             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                                 <table className="min-w-full divide-y divide-gray-200">
@@ -1151,7 +1152,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                     {p.is_active ? <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Active</span> : <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Disabled</span>}
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <button onClick={() => openEditProvider(p)} className="text-indigo-600 hover:text-indigo-900"><Settings size={16}/></button>
+                                                    <Button onClick={() => openEditProvider(p)} className="text-indigo-600 hover:text-indigo-900"><Settings size={16}/></Button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -1242,13 +1243,13 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                         </div>
                     </div>
                     <div className="mt-6 flex justify-end gap-3">
-                        <button
+                        <Button
                             onClick={() => setMigratingConnection(null)}
                             className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
                         >
                             Cancel
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             disabled={!targetOrgId}
                             onClick={() => {
                                 if (migratingConnection && targetOrgId) {
@@ -1262,7 +1263,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
                         >
                             Migrate
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </Modal>
@@ -1292,8 +1293,8 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                             <label htmlFor="is_active" className="text-sm">Active</label>
                         </div>
                         <div className="flex justify-end gap-3 mt-6">
-                            <button type="button" onClick={() => { setIsAddProviderOpen(false); setIsEditProviderOpen(false); }} className="px-4 py-2 text-sm">Cancel</button>
-                            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm">{isAddProviderOpen ? 'Add' : 'Save'}</button>
+                            <Button type="button" onClick={() => { setIsAddProviderOpen(false); setIsEditProviderOpen(false); }} className="px-4 py-2 text-sm">Cancel</Button>
+                            <Button type="submit" >{isAddProviderOpen ? 'Add' : 'Save'}</Button>
                         </div>
                     </form>
                 </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
@@ -190,7 +191,7 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                     )}
 
                     <div className="flex items-center gap-2 mt-4">
-                        <button onClick={() => router.post(`/settings/mcp/${connection.id}/sync`, {}, { 
+                        <Button onClick={() => router.post(`/settings/mcp/${connection.id}/sync`, {}, { 
                                 preserveScroll: true,
                                 onStart: () => setIsSyncing(true),
                                 onFinish: () => setIsSyncing(false)
@@ -198,18 +199,18 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                             disabled={isSyncing}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 disabled:opacity-50">
                             <RefreshCw size={12} className={cn(isSyncing && "animate-spin")} /> {isSyncing ? 'Syncing...' : 'Sync Now'}
-                        </button>
-                        <button onClick={() => router.post(`/settings/mcp/${connection.id}/test`, {}, { preserveScroll: true })}
+                        </Button>
+                        <Button onClick={() => router.post(`/settings/mcp/${connection.id}/test`, {}, { preserveScroll: true })}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-indigo-200 rounded-lg hover:bg-indigo-50 text-indigo-600">
                             <Zap size={12} /> Test Connection
-                        </button>
-                        <button onClick={() => setEditing(!editing)}
+                        </Button>
+                        <Button onClick={() => setEditing(!editing)}
                             className={cn('flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-lg transition-colors',
                                 editing ? 'bg-indigo-600 text-white border-indigo-600' : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                             )}>
                             {editing ? 'Cancel Edit' : 'Edit'}
-                        </button>
-                        <button onClick={async () => {
+                        </Button>
+                        <Button onClick={async () => {
                             const ok = await confirm({
                                 title: 'Remove this connection?',
                                 description: 'This will disconnect the integration.',
@@ -221,7 +222,7 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                         }}
                             className="ml-auto p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-red-50 transition-colors">
                             <Trash2 size={14} />
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -280,24 +281,24 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                                                 }}
                                                 placeholder="External (e.g. Name, Title)"
                                                 className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono" />
-                                            <button type="button" onClick={() => {
+                                            <Button type="button" onClick={() => {
                                                 const newMappings = { ...form.data.settings?.field_mappings };
                                                 delete newMappings[internalKey];
                                                 form.setData('settings', { ...form.data.settings, field_mappings: newMappings });
                                             }} className="p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-red-50">
                                                 <XCircle size={16} />
-                                            </button>
+                                            </Button>
                                         </div>
                                     ))}
                                     
                                     <div className="flex items-center gap-3 pt-2">
-                                        <button type="button" onClick={() => {
+                                        <Button type="button" onClick={() => {
                                             const newMappings = { ...form.data.settings?.field_mappings };
                                             newMappings['new_field_' + Object.keys(newMappings).length] = '';
                                             form.setData('settings', { ...form.data.settings, field_mappings: newMappings });
                                         }} className="text-xs font-medium text-indigo-600 hover:text-indigo-800">
                                             + Add Mapping
-                                        </button>
+                                        </Button>
                                         {MAPPING_TEMPLATES[connection.provider] && (
                                             <select
                                                 className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-600"
@@ -317,10 +318,10 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                                             </select>
                                         )}
                                         <div className="ml-auto">
-                                            <button type="button" onClick={handlePreview} disabled={isPreviewing}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-indigo-50 text-indigo-700 font-medium rounded-lg hover:bg-indigo-100 disabled:opacity-50 transition-colors">
+                                            <Button type="button" onClick={handlePreview} disabled={isPreviewing}
+                                                className="flex items-center gap-1.5 disabled:opacity-50" size="sm" >
                                                 <Zap size={13} /> {isPreviewing ? 'Running Preview...' : 'Test Mapping Preview'}
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                     
@@ -330,9 +331,9 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                                         <div className="mt-4 border border-indigo-200 bg-indigo-50/30 rounded-xl overflow-hidden shadow-sm">
                                             <div className="bg-indigo-50 border-b border-indigo-100 px-4 py-2 flex justify-between items-center">
                                                 <h4 className="text-xs font-semibold text-indigo-900">Live Mapping Preview (1 Record)</h4>
-                                                <button type="button" onClick={() => setPreviewResult(null)} className="text-indigo-400 hover:text-indigo-600 transition-colors">
+                                                <Button type="button" onClick={() => setPreviewResult(null)} className="text-indigo-400 hover:text-indigo-600 transition-colors">
                                                     <XCircle size={14} />
-                                                </button>
+                                                </Button>
                                             </div>
                                             <div className="p-4 grid grid-cols-2 gap-4">
                                                 <div>
@@ -388,13 +389,13 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                                                         <div className="text-[10px] mt-1 bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded w-fit capitalize">{action.entity_type}</div>
                                                     </div>
                                                 </label>
-                                                <button 
+                                                <Button 
                                                     type="button" 
                                                     onClick={() => setOutboundPreview(prev => ({ ...prev, isOpen: true, action, result: null, error: '' }))}
                                                     className="shrink-0 text-xs text-indigo-600 font-medium px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
                                                 >
                                                     Test / Preview
-                                                </button>
+                                                </Button>
                                             </div>
                                         ))}
                                     </div>
@@ -406,13 +407,13 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                             </div>
 
                             <div className="flex gap-2 pt-1 border-t border-gray-200 pt-4">
-                                <button type="submit" disabled={form.processing}
-                                    className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                                <Button type="submit" disabled={form.processing}
+                                    className="flex items-center gap-1.5 disabled:opacity-50" >
                                     <Save size={13} /> {form.processing ? 'Saving…' : 'Save Changes'}
-                                </button>
-                                <button type="button" onClick={() => setEditing(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
+                                </Button>
+                                <Button type="button" onClick={() => setEditing(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
                                     Cancel
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>
@@ -443,9 +444,9 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                                 <h3 className="text-lg font-bold text-gray-900">Preview: {outboundPreview.action.name}</h3>
                                 <p className="text-xs text-gray-500 mt-0.5">Test payload rendering without sending data.</p>
                             </div>
-                            <button onClick={() => setOutboundPreview(prev => ({ ...prev, isOpen: false }))} className="text-gray-400 hover:text-gray-600 p-2">
+                            <Button onClick={() => setOutboundPreview(prev => ({ ...prev, isOpen: false }))} className="text-gray-400 hover:text-gray-600 p-2">
                                 <XCircle size={20} />
-                            </button>
+                            </Button>
                         </div>
                         
                         <div className="p-5 overflow-y-auto flex-1 space-y-4">
@@ -459,13 +460,13 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                                 />
                             </div>
 
-                            <button
+                            <Button
                                 onClick={handleOutboundPreview}
                                 disabled={outboundPreview.isLoading}
-                                className="w-full py-2 bg-indigo-600 text-white rounded-lg font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                                className="w-full disabled:opacity-50" 
                             >
                                 {outboundPreview.isLoading ? 'Generating...' : 'Run Preview'}
-                            </button>
+                            </Button>
 
                             {outboundPreview.error && (
                                 <div className="p-3 bg-red-50 text-red-700 border border-red-100 rounded-lg text-sm">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { toast } from 'sonner';
 import { Head, Link, router } from '@inertiajs/react';
 import WorkloadLayout from '@/Layouts/WorkloadLayout';
@@ -162,7 +163,7 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
             <Head title="Tasks" />
             <div className="flex items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <button
+                    <Button
                         onClick={() => setShowFilters(!showFilters)}
                         className={cn(
                             'flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium border rounded-lg transition-colors shadow-sm',
@@ -178,15 +179,15 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                                 {activeFilterCount}
                             </span>
                         )}
-                    </button>
+                    </Button>
                     
                     {activeFilterCount > 0 && (
-                        <button 
+                        <Button 
                             onClick={clearFilters}
-                            className="text-[12px] font-medium text-gray-500 hover:text-gray-900 px-2 flex items-center gap-1 transition-colors"
-                        >
+                            className="flex items-center gap-1" 
+                        variant="ghost" size="sm" >
                             <X size={12} /> Clear all
-                        </button>
+                        </Button>
                     )}
 
                     {selected.length > 0 && (
@@ -200,12 +201,12 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                                 <option value="" disabled>Set Status...</option>
                                 {statuses.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                             </select>
-                            <button
+                            <Button
                                 onClick={handleBulkDelete}
-                                className="px-2.5 py-1 bg-red-600 text-white text-[11px] font-semibold rounded hover:bg-red-700 transition-colors whitespace-nowrap"
-                            >
+                                className="px-2.5 whitespace-nowrap" 
+                            variant="destructive" size="sm" >
                                 Delete {selected.length}
-                            </button>
+                            </Button>
                         </div>
                     )}
                 </div>
@@ -328,9 +329,9 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                             <>
                                 <p className="text-[14px] font-semibold text-gray-900 mb-1.5">No tasks match your filters</p>
                                 <p className="text-[13px] text-gray-500 max-w-sm mb-6">Try adjusting or clearing your filters to see more results</p>
-                                <button onClick={clearFilters} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                                <Button onClick={clearFilters} variant="outline" >
                                     Clear all filters
-                                </button>
+                                </Button>
                             </>
                         ) : (
                             <>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { LayoutGrid, Plus, Save, Trash2, Settings, BarChart2, Calendar, Info } from 'lucide-react';
@@ -89,12 +90,12 @@ export default function DataVizIndex() {
                     />
                     <p className="text-xs text-gray-400 mt-1 font-medium">Drag KPIs and design custom metric boards.</p>
                 </div>
-                <button
+                <Button
                     onClick={handleSaveDashboard}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md self-start"
-                >
+                    className="flex items-center gap-1.5 transition-all shadow-md self-start" 
+                size="sm" >
                     <Save size={13} /> Save Dashboard
-                </button>
+                </Button>
             </div>
 
             {/* Layout panel split */}
@@ -137,7 +138,7 @@ export default function DataVizIndex() {
                                         { id: 'line_chart', label: 'Line' },
                                         { id: 'bar_chart', label: 'Bar' },
                                     ].map(t => (
-                                        <button
+                                        <Button
                                             key={t.id}
                                             type="button"
                                             onClick={() => setChartType(t.id as any)}
@@ -149,17 +150,17 @@ export default function DataVizIndex() {
                                             )}
                                         >
                                             {t.label}
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                             </div>
 
-                            <button
+                            <Button
                                 type="submit"
-                                className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
-                            >
+                                className="w-full transition-all shadow-md" 
+                            size="sm" >
                                 Insert to Canvas
-                            </button>
+                            </Button>
                         </form>
                     )}
                 </div>
@@ -176,12 +177,12 @@ export default function DataVizIndex() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                             {layout.map(w => (
                                 <div key={w.id} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col relative group">
-                                    <button
+                                    <Button
                                         onClick={() => handleRemoveWidget(w.id)}
                                         className="absolute top-3 right-3 p-1 rounded-lg bg--50 text--700 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
                                     >
                                         <Trash2 size={12} />
-                                    </button>
+                                    </Button>
 
                                     <h4 className="text-xs font-bold text-gray-900 mb-2">{w.title}</h4>
                                     <div className="flex-1 bg-gray-50 border border-gray-100 rounded-xl p-6 flex items-center justify-center text-center text-xs text-gray-400 capitalize">

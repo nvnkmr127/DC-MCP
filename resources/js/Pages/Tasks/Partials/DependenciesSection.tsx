@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Link, router } from '@inertiajs/react';
 import { X, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -53,7 +54,7 @@ export const DependenciesSection: React.FC<DependenciesSectionProps> = ({
                                     {dep.status.replace('_', ' ')}{dep.project ? ` · ${dep.project.name}` : ''}
                                 </p>
                             </div>
-                            <button
+                            <Button
                                 type="button"
                                 onClick={async () => {
                                     const ok = await confirm({
@@ -68,7 +69,7 @@ export const DependenciesSection: React.FC<DependenciesSectionProps> = ({
                                 className="p-1.5 text-gray-300 hover:text-rose-500 transition-colors rounded opacity-0 group-hover:opacity-100 shrink-0"
                             >
                                 <X size={13} />
-                            </button>
+                            </Button>
                         </div>
                     ))}
                 </div>
@@ -89,7 +90,7 @@ export const DependenciesSection: React.FC<DependenciesSectionProps> = ({
                     </div>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
                         {availableDeps.slice(0, 10).map(t => (
-                            <button 
+                            <Button 
                                 key={t.id} 
                                 type="button"
                                 onClick={() => router.post(`/tasks/${taskId}/dependencies`, { depends_on_task_id: t.id }, { preserveScroll: true })}
@@ -97,7 +98,7 @@ export const DependenciesSection: React.FC<DependenciesSectionProps> = ({
                             >
                                 <span className="text-sm text-gray-700 flex-1 truncate">{t.title}</span>
                                 <span className="text-xs text-gray-400 capitalize shrink-0">{t.status.replace('_', ' ')}</span>
-                            </button>
+                            </Button>
                         ))}
                         {availableDeps.length === 0 && (
                             <p className="text-xs text-gray-400 text-center py-3">No matching tasks</p>

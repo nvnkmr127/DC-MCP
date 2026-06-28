@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -53,7 +54,7 @@ function ApplyModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                     <h2 className="text-base font-semibold text-gray-900">Apply for Leave</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/leave', { onSuccess: () => { onClose(); form.reset(); } }); }} className="px-6 py-4 space-y-4">
                     <div>
@@ -82,11 +83,11 @@ function ApplyModal({ onClose }: { onClose: () => void }) {
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
                     </div>
                     <div className="flex justify-end gap-3 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Submitting…' : 'Submit Request'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -117,10 +118,10 @@ export default function LeaveIndex({ myRequests, teamRequests, balance, canRevie
                         <h1 className="text-2xl font-bold text-gray-900">Leave Management</h1>
                         <p className="text-sm text-gray-500 mt-0.5">Track and manage leave requests</p>
                     </div>
-                    <button onClick={() => setShowApply(true)}
+                    <Button onClick={() => setShowApply(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> Apply for Leave
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
@@ -224,11 +225,11 @@ export default function LeaveIndex({ myRequests, teamRequests, balance, canRevie
                                         <div className="flex items-center gap-2">
                                             <form method="post" action={`/leave/${r.id}/approve`}>
                                                 <input type="hidden" name="_token" value={(document.querySelector('meta[name=csrf-token]') as HTMLMetaElement)?.content} />
-                                                <button type="submit" className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700">Approve</button>
+                                                <Button type="submit" variant="ghost" size="sm" >Approve</Button>
                                             </form>
                                             <form method="post" action={`/leave/${r.id}/reject`}>
                                                 <input type="hidden" name="_token" value={(document.querySelector('meta[name=csrf-token]') as HTMLMetaElement)?.content} />
-                                                <button type="submit" className="px-3 py-1.5 bg-rose-600 text-white text-xs font-medium rounded-lg hover:bg-rose-700">Reject</button>
+                                                <Button type="submit" variant="ghost" size="sm" >Reject</Button>
                                             </form>
                                         </div>
                                     )}

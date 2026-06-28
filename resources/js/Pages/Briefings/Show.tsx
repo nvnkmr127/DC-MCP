@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn, formatDate } from '@/lib/utils';
@@ -88,18 +89,18 @@ export default function BriefingShow({ briefing, tasks_today, calendar_events }:
                             {briefing.status === 'failed' && (
                                 <div className="flex flex-col items-center py-12 text-center">
                                     <p className="text-gray-600 mb-4">Briefing generation failed.</p>
-                                    <button onClick={regenerate} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
+                                    <Button onClick={regenerate} className="flex items-center gap-2" >
                                         <RefreshCw size={14} /> Retry
-                                    </button>
+                                    </Button>
                                 </div>
                             )}
 
                             {briefing.status === 'pending' && !briefing.digest_text && (
                                 <div className="flex flex-col items-center py-12 text-center">
                                     <p className="text-gray-500 mb-4">This briefing hasn't been generated yet.</p>
-                                    <button onClick={regenerate} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
+                                    <Button onClick={regenerate} className="flex items-center gap-2" >
                                         <Zap size={14} /> Generate Now
-                                    </button>
+                                    </Button>
                                 </div>
                             )}
 

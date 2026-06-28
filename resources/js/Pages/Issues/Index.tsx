@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -40,7 +41,7 @@ function ReportModal({ clients, users, onClose }: { clients: Client[]; users: Us
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Report Issue</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/issues', { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -78,11 +79,11 @@ function ReportModal({ clients, users, onClose }: { clients: Client[]; users: Us
                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.title}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.title}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Saving…' : 'Report Issue'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -113,19 +114,19 @@ export default function IssuesIndex({ issues, clients, users, filters }: Props) 
             <div className="max-w-4xl space-y-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">Issue Tracker</h1>
-                    <button onClick={() => setReportOpen(true)}
+                    <Button onClick={() => setReportOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> Report Issue
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
                     {['', 'open', 'in_progress', 'resolved', 'closed'].map(s => (
-                        <button key={s} onClick={() => setStatusFilter(s)}
+                        <Button key={s} onClick={() => setStatusFilter(s)}
                             className={cn('px-3 py-1.5 text-xs rounded-lg font-medium transition-colors',
                                 statusFilter === s ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50')}>
                             {s === '' ? 'All' : s.replace('_', ' ')}
-                        </button>
+                        </Button>
                     ))}
                     <select value={priorityFilter} onChange={e => setPriorityFilter(e.target.value)}
                         className="ml-2 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 bg-white focus:ring-1 focus:ring-indigo-500">
@@ -174,16 +175,16 @@ export default function IssuesIndex({ issues, clients, users, filters }: Props) 
                                     )}
                                     <div className="flex gap-2">
                                         {issue.status !== 'resolved' && (
-                                            <button onClick={() => router.patch(`/issues/${issue.id}`, { status: 'resolved', resolution: resolution[issue.id] ?? '' })}
+                                            <Button onClick={() => router.patch(`/issues/${issue.id}`, { status: 'resolved', resolution: resolution[issue.id] ?? '' })}
                                                 className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700">
                                                 Mark Resolved
-                                            </button>
+                                            </Button>
                                         )}
                                         {!issue.task_id && (
-                                            <button onClick={() => router.post(`/issues/${issue.id}/task`)}
+                                            <Button onClick={() => router.post(`/issues/${issue.id}/task`)}
                                                 className="px-3 py-1.5 border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50">
                                                 Convert to Task
-                                            </button>
+                                            </Button>
                                         )}
                                         {issue.task_id && (
                                             <span className="px-3 py-1.5 text-xs text-emerald-600 font-medium">↗ Linked to Task</span>

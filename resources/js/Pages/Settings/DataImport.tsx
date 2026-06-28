@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, useForm } from '@inertiajs/react';
+declare const route: any;
 import AppLayout from '@/Layouts/AppLayout';
 import { Upload, Download, FileSpreadsheet, AlertCircle } from 'lucide-react';
 import { Button } from '@/Components/ui/button';

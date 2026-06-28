@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -51,11 +52,11 @@ function FaqItem({ q, a }: { q: string; a: string }) {
     const [open, setOpen] = useState(false);
     return (
         <div className="border-b border-gray-100 last:border-0">
-            <button onClick={() => setOpen(!open)}
+            <Button onClick={() => setOpen(!open)}
                 className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors">
                 <span className="text-sm font-medium text-gray-900">{q}</span>
                 {open ? <ChevronUp size={15} className="text-gray-400 shrink-0" /> : <ChevronDown size={15} className="text-gray-400 shrink-0" />}
-            </button>
+            </Button>
             {open && <p className="px-5 pb-4 text-sm text-gray-600 leading-relaxed">{a}</p>}
         </div>
     );

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -90,10 +91,10 @@ function GoalCard({ goal }: { goal: Goal }) {
                                                     autoFocus
                                                     className="w-16 border border-indigo-300 rounded px-1 py-0.5 text-xs text-right focus:outline-none focus:ring-1 focus:ring-indigo-400" />
                                             ) : (
-                                                <button onClick={() => { setEditingKr(kr.id); setKrValue(String(kr.current)); }}
+                                                <Button onClick={() => { setEditingKr(kr.id); setKrValue(String(kr.current)); }}
                                                     className="hover:text-indigo-600 font-medium">
                                                     {kr.current}/{kr.target}{kr.unit ? ` ${kr.unit}` : ''}
-                                                </button>
+                                                </Button>
                                             )}
                                         </span>
                                     </div>
@@ -109,10 +110,10 @@ function GoalCard({ goal }: { goal: Goal }) {
 
             <div className="flex items-center gap-2 pt-1">
                 {goal.status === 'active' && (
-                    <button onClick={() => router.patch(`/goals/${goal.id}`, { status: 'completed' })}
-                        className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">Mark Complete</button>
+                    <Button onClick={() => router.patch(`/goals/${goal.id}`, { status: 'completed' })}
+                        className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">Mark Complete</Button>
                 )}
-                <button onClick={async () => {
+                <Button onClick={async () => {
                     const ok = await confirm({
                         title: 'Delete this goal?',
                         description: 'This action cannot be undone.',
@@ -124,7 +125,7 @@ function GoalCard({ goal }: { goal: Goal }) {
                 }}
                     className="text-xs text-gray-400 hover:text-rose-500 ml-auto">
                     <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                </Button>
             </div>
         </div>
     );
@@ -157,7 +158,7 @@ function AddGoalModal({ team, onClose, currentPeriod, year }: { team: Props['tea
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between">
                     <h2 className="text-lg font-bold text-gray-900">Add Goal</h2>
-                    <button onClick={onClose}><X className="w-5 h-5 text-gray-400" /></button>
+                    <Button onClick={onClose}><X className="w-5 h-5 text-gray-400" /></Button>
                 </div>
                 <form onSubmit={submit} className="space-y-3">
                     <div>
@@ -196,7 +197,7 @@ function AddGoalModal({ team, onClose, currentPeriod, year }: { team: Props['tea
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <label className="text-xs text-gray-500 font-medium">Key Results</label>
-                            <button type="button" onClick={addKr} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">+ Add KR</button>
+                            <Button type="button" onClick={addKr} variant="ghost" size="sm" >+ Add KR</Button>
                         </div>
                         {krs.map((kr, i) => (
                             <div key={i} className="flex items-center gap-2 mb-2">
@@ -209,19 +210,19 @@ function AddGoalModal({ team, onClose, currentPeriod, year }: { team: Props['tea
                                 <input type="text" placeholder="Unit" value={kr.unit}
                                     onChange={e => setKrs(prev => prev.map((k, j) => j === i ? { ...k, unit: e.target.value } : k))}
                                     className="w-16 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-400" />
-                                <button type="button" onClick={() => removeKr(i)} className="text-gray-400 hover:text-rose-500">
+                                <Button type="button" onClick={() => removeKr(i)} className="text-gray-400 hover:text-rose-500">
                                     <X className="w-3.5 h-3.5" />
-                                </button>
+                                </Button>
                             </div>
                         ))}
                     </div>
 
                     <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={!form.data.title}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={!form.data.title}
+                            className="disabled:opacity-50" >
                             Add Goal
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -249,16 +250,16 @@ export default function GoalsIndex({ goals, byPeriod, currentPeriod, orgProgress
                             <p className="text-xs text-gray-400">Org Progress</p>
                             <p className={cn('text-2xl font-bold', progressTextColor(orgProgress))}>{orgProgress}%</p>
                         </div>
-                        <button onClick={() => setAddOpen(true)}
+                        <Button onClick={() => setAddOpen(true)}
                             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                             <Plus className="w-4 h-4" /> Add Goal
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
                 <div className="flex gap-2">
                     {PERIODS.map(p => (
-                        <button key={p} onClick={() => setActivePeriod(p)}
+                        <Button key={p} onClick={() => setActivePeriod(p)}
                             className={cn('px-4 py-1.5 rounded-lg text-sm font-medium border transition-all',
                                 activePeriod === p
                                     ? 'bg-indigo-600 text-white border-indigo-600'
@@ -268,7 +269,7 @@ export default function GoalsIndex({ goals, byPeriod, currentPeriod, orgProgress
                             )}>
                             {PERIOD_LABELS[p]}
                             {p === currentPeriod && <span className="ml-1.5 text-[10px] opacity-70">Current</span>}
-                        </button>
+                        </Button>
                     ))}
                 </div>
 
@@ -279,9 +280,9 @@ export default function GoalsIndex({ goals, byPeriod, currentPeriod, orgProgress
                         </div>
                         <p className="text-[14px] font-semibold text-gray-900 mb-1">No goals for {PERIOD_LABELS[activePeriod]} {year}</p>
                         <p className="text-[13px] text-gray-500 mb-6 max-w-sm mx-auto">Align your team by setting objectives and measurable key results.</p>
-                        <button onClick={() => setAddOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                        <Button onClick={() => setAddOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
                             Create First OKR
-                        </button>
+                        </Button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

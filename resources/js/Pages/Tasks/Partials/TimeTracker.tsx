@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { useForm, router, usePage } from '@inertiajs/react';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Play, Square, Trash2 } from 'lucide-react';
@@ -77,21 +78,21 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
             {/* Timer */}
             <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                 {!activeTimer ? (
-                    <button
+                    <Button
                         type="button"
                         onClick={startGlobalTimer}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-indigo-600 text-white hover:bg-indigo-700"
+                        className="flex items-center gap-2" 
                     >
                         <Play size={14} /> Start Timer
-                    </button>
+                    </Button>
                 ) : (
-                    <button
+                    <Button
                         type="button"
                         onClick={stopGlobalTimer}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-red-500 text-white hover:bg-red-600"
-                    >
+                        className="flex items-center gap-2" 
+                    variant="destructive" >
                         <Square size={14} /> Stop & Log
-                    </button>
+                    </Button>
                 )}
 
                 <span className="font-mono text-lg font-bold text-gray-900">{elapsedTime}</span>
@@ -125,13 +126,13 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
                 </div>
                 <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">&nbsp;</label>
-                    <button 
+                    <Button 
                         type="submit" 
                         disabled={timeForm.processing} 
-                        className="w-full py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 disabled:opacity-50 font-medium"
+                        className="w-full disabled:opacity-50" 
                     >
                         Log Time
-                    </button>
+                    </Button>
                 </div>
                 <div className="col-span-3">
                     <input
@@ -153,7 +154,7 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-900">{formatHours(entry.hours)}</span>
-                            <button
+                            <Button
                                 type="button"
                                 onClick={async () => {
                                     const ok = await confirm({
@@ -168,7 +169,7 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
                                 className="p-1 text-gray-300 hover:text-red-500 transition-colors rounded opacity-0 group-hover:opacity-100"
                             >
                                 <Trash2 size={12} />
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 ))}

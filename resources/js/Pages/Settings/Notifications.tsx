@@ -1,5 +1,7 @@
 import React from "react"
 import { Head, useForm } from "@inertiajs/react"
+import { Breadcrumbs } from "@/Components/Shared/Breadcrumbs";
+declare const route: any;
 import AppLayout from "@/Layouts/AppLayout"
 import { Switch } from "@/Components/ui/Switch"
 import { Button } from "@/Components/ui/Button"

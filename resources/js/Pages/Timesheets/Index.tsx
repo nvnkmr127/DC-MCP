@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import WorkloadLayout from '@/Layouts/WorkloadLayout';
 import { cn } from '@/lib/utils';
@@ -85,7 +86,7 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                     <div></div>
                     <div className="flex items-center gap-3">
                         {activeTimer ? (
-                            <button onClick={async () => {
+                            <Button onClick={async () => {
                                 const ok = await confirm({
                                     title: 'Stop Timer & Log Time?',
                                     description: 'Are you sure these hours are correct? The time entry will be locked once stopped.',
@@ -97,15 +98,15 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                             }}
                                 className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white text-sm font-medium rounded-lg hover:bg-rose-700">
                                 <Square className="w-4 h-4" /> Stop Timer
-                            </button>
+                            </Button>
                         ) : (
-                            <button onClick={() => {
+                            <Button onClick={() => {
                                 if (tasks.length === 0) return;
                                 const taskId = tasks[0].id;
                                 router.post('/timesheets/timer/start', { task_id: taskId, is_billable: true });
                             }} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700">
                                 <Play className="w-4 h-4" /> Start Timer
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>
@@ -135,7 +136,7 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                         <p className="text-sm text-rose-700 font-medium">
                             Timer running — {activeTimer.task_title ?? 'No task'} (started {activeTimer.timer_started_at ? new Date(activeTimer.timer_started_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''})
                         </p>
-                        <button onClick={async () => {
+                        <Button onClick={async () => {
                             const ok = await confirm({
                                 title: 'Stop Timer & Log Time?',
                                 description: 'Are you sure these hours are correct? The time entry will be locked once stopped.',
@@ -147,23 +148,23 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                         }}
                             className="ml-auto px-3 py-1 bg-rose-600 text-white text-xs rounded-lg hover:bg-rose-700 font-medium">
                             Stop
-                        </button>
+                        </Button>
                     </div>
                 )}
 
                 {/* Week grid */}
                 <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                     <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-                        <button onClick={() => navigate(prevWeek(weekStart))} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <Button onClick={() => navigate(prevWeek(weekStart))} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">
                             <ChevronLeft className="w-4 h-4" />
-                        </button>
+                        </Button>
                         <span className="text-sm font-semibold text-gray-700">
                             {new Date(weekStart + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} –{' '}
                             {new Date(weekEnd + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
-                        <button onClick={() => navigate(nextWeek(weekStart))} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <Button onClick={() => navigate(nextWeek(weekStart))} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">
                             <ChevronRight className="w-4 h-4" />
-                        </button>
+                        </Button>
                     </div>
                     <div className="grid grid-cols-7">
                         {days.map((day, i) => {
@@ -188,10 +189,10 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                                                 <p className="text-gray-400">{formatHours(e.hours)}{!e.is_billable && ' · NB'}</p>
                                             </div>
                                         ))}
-                                        <button onClick={() => openAddFor(day)}
+                                        <Button onClick={() => openAddFor(day)}
                                             className="w-full text-[10px] text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 rounded py-1 transition-colors text-center">
                                             + log
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             );
@@ -243,11 +244,11 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                                         className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
                                 </div>
                                 <div className="flex justify-end gap-2 pt-2">
-                                    <button type="button" onClick={() => setAddOpen(false)} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                                    <button type="submit" disabled={!form.data.task_id || !form.data.hours}
-                                        className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                                    <Button type="button" onClick={() => setAddOpen(false)} className="px-4 py-2 text-sm text-gray-600">Cancel</Button>
+                                    <Button type="submit" disabled={!form.data.task_id || !form.data.hours}
+                                        className="disabled:opacity-50" >
                                         Log Time
-                                    </button>
+                                    </Button>
                                 </div>
                             </form>
                         </div>

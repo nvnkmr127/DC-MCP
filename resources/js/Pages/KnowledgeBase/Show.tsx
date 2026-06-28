@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -21,7 +22,7 @@ export default function KnowledgeBaseShow({ article }: Props) {
                     <Link href="/knowledge-base" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 w-fit">
                         <ArrowLeft size={14} /> Knowledge Base
                     </Link>
-                    <button onClick={async () => {
+                    <Button onClick={async () => {
                         const ok = await confirm({
                             title: 'Delete article?',
                             description: 'This action cannot be undone.',
@@ -33,7 +34,7 @@ export default function KnowledgeBaseShow({ article }: Props) {
                     }}
                         className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                         <Trash2 size={14} />
-                    </button>
+                    </Button>
                 </div>
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <div className="mb-4">

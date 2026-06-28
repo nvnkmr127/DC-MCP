@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -101,29 +102,29 @@ export default function CalendarIndex({ events, year, month }: Props) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div className="flex items-center gap-3">
                     <div className="flex bg-white rounded-xl border border-gray-200/80 p-0.5 shadow-sm">
-                        <button 
+                        <Button 
                             onClick={() => navigate(-1)} 
                             className="p-2 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-gray-900 transition-colors"
                         >
                             <ChevronLeft size={16} />
-                        </button>
+                        </Button>
                         <div className="px-4 flex items-center justify-center min-w-[140px]">
                             <span className="text-sm font-bold text-gray-800">{MONTH_NAMES[month - 1]} {year}</span>
                         </div>
-                        <button 
+                        <Button 
                             onClick={() => navigate(1)} 
                             className="p-2 rounded-lg hover:bg-gray-50 text-gray-700 hover:text-gray-900 transition-colors"
                         >
                             <ChevronRight size={16} />
-                        </button>
+                        </Button>
                     </div>
 
-                    <button
+                    <Button
                         onClick={() => router.get('/calendar', { year: today.getFullYear(), month: today.getMonth() + 1 })}
                         className="px-3.5 py-2 text-xs font-semibold bg-white border border-gray-200/80 rounded-xl hover:bg-gray-50 text-gray-700 transition-colors shadow-sm"
                     >
                         Today
-                    </button>
+                    </Button>
                 </div>
                 
                 <p className="text-xs text-gray-400 flex items-center gap-1.5 self-end sm:self-auto">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
@@ -39,9 +40,9 @@ interface Props extends PageProps {
     tokens: ApiToken[];
     connectedAccounts: ConnectedAccount[];
     flash: {
-        success?: string;
-        error?: string;
-        new_token?: string;
+        success: string | null;
+        error: string | null;
+        new_token: string | null;
     };
 }
 
@@ -73,6 +74,7 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
         phone:        user.phone || '',
         timezone:     user.timezone ?? 'Asia/Kolkata',
         avatar:       null as File | null,
+        _method:      'patch',
     });
 
     const passwordForm = useForm({
@@ -92,7 +94,6 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
         profileForm.post('/settings/profile', {
             preserveScroll: true,
             forceFormData: true,
-            data: { _method: 'patch' }
         });
     }
 
@@ -238,9 +239,9 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                             </select>
                         </Field>
                         <div className="pt-1">
-                            <button type="submit" disabled={profileForm.processing} className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-[13px] font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm">
+                            <Button type="submit" disabled={profileForm.processing} className="flex items-center gap-1.5 disabled:opacity-50" >
                                 <Save size={13} /> {profileForm.processing ? 'Saving…' : 'Save changes'}
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -266,9 +267,9 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                             </Field>
                         </div>
                         <div className="pt-1">
-                            <button type="submit" disabled={passwordForm.processing} className="flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-[13px] font-semibold rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors shadow-sm">
+                            <Button type="submit" disabled={passwordForm.processing} className="flex items-center gap-1.5 disabled:opacity-50" variant="ghost" >
                                 <Lock size={13} /> {passwordForm.processing ? 'Updating…' : 'Update password'}
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -296,14 +297,14 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                                             <p className="text-[11px] text-gray-500">{isConnected ? 'Connected' : 'Not connected'}</p>
                                         </div>
                                     </div>
-                                    <button 
+                                    <Button 
                                         className={cn("px-3 py-1.5 text-[12px] font-semibold rounded-md border transition-colors", 
                                             isConnected ? "text-gray-500 border-gray-200 hover:bg-gray-50" : "text-blue-600 border-blue-100 bg-blue-50 hover:bg-blue-100"
                                         )}
                                         onClick={() => !isConnected && toast.info(`${provider} integration is coming soon!`)}
                                     >
                                         {isConnected ? 'Disconnect' : 'Connect'}
-                                    </button>
+                                    </Button>
                                 </div>
                             );
                         })}
@@ -327,9 +328,9 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                                 <code className="flex-1 block p-2 bg-white border border-emerald-200 rounded text-[12px] text-gray-800 font-mono overflow-x-auto">
                                     {flash.new_token}
                                 </code>
-                                <button onClick={() => copyToken(flash.new_token!)} className="p-2 bg-white border border-emerald-200 rounded hover:bg-gray-50 text-emerald-700">
+                                <Button onClick={() => copyToken(flash.new_token!)} className="p-2 bg-white border border-emerald-200 rounded hover:bg-gray-50 text-emerald-700">
                                     {copied ? <Check size={16} /> : <Copy size={16} />}
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -340,9 +341,9 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                                 <input type="text" placeholder="e.g. Zapier Integration" value={tokenForm.data.token_name} onChange={e => tokenForm.setData('token_name', e.target.value)} className={inputCls} required />
                             </Field>
                         </div>
-                        <button type="submit" disabled={tokenForm.processing} className="px-4 py-2.5 bg-gray-900 text-white text-[13px] font-semibold rounded-lg hover:bg-gray-800 disabled:opacity-50 h-[42px]">
+                        <Button type="submit" disabled={tokenForm.processing} className="py-2.5 disabled:opacity-50 h-[42px]" variant="ghost" >
                             {tokenForm.processing ? 'Creating…' : 'Create Token'}
-                        </button>
+                        </Button>
                     </form>
 
                     {tokens && tokens.length > 0 && (
@@ -353,9 +354,9 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                                         <p className="text-[13px] font-semibold text-gray-900">{token.name}</p>
                                         <p className="text-[11px] text-gray-500">Created: {new Date(token.created_at).toLocaleDateString()} · Last used: {token.last_used_at || 'Never'}</p>
                                     </div>
-                                    <button onClick={() => revokeToken(token.id)} className="text-red-500 hover:text-red-700 p-2 rounded hover:bg-red-50" title="Revoke Token">
+                                    <Button onClick={() => revokeToken(token.id)} className="text-red-500 hover:text-red-700 p-2 rounded hover:bg-red-50" title="Revoke Token">
                                         <Trash2 size={14} />
-                                    </button>
+                                    </Button>
                                 </div>
                             ))}
                         </div>
@@ -387,9 +388,9 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                                     </div>
                                 </div>
                                 {!session.is_current && (
-                                    <button onClick={() => destroySession(session.id)} className="text-[12px] text-red-600 hover:text-red-800 font-semibold px-2 py-1 rounded hover:bg-red-50">
+                                    <Button onClick={() => destroySession(session.id)} className="text-[12px] text-red-600 hover:text-red-800 font-semibold px-2 py-1 rounded hover:bg-red-50">
                                         Log out
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
                         ))}
@@ -409,17 +410,17 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                         <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
                             <h3 className="text-[13px] font-semibold text-gray-900 mb-1">Export Data</h3>
                             <p className="text-[11px] text-gray-500 mb-4">Download a JSON copy of all your personal data for GDPR compliance.</p>
-                            <button onClick={exportData} className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-[12px] font-semibold rounded hover:bg-gray-50 shadow-sm transition-colors">
+                            <Button onClick={exportData} className="flex items-center gap-1.5" variant="outline" size="sm" >
                                 <Download size={12} /> Download Data
-                            </button>
+                            </Button>
                         </div>
                         
                         <div className="p-4 border border-red-200 rounded-lg bg-red-50">
                             <h3 className="text-[13px] font-semibold text-red-700 mb-1">Delete Account</h3>
                             <p className="text-[11px] text-red-500 mb-4">Permanently delete your account and remove all personal information.</p>
-                            <button onClick={deleteAccount} disabled={deleteAccountForm.processing} className="px-3 py-1.5 bg-red-600 text-white text-[12px] font-semibold rounded hover:bg-red-700 shadow-sm transition-colors disabled:opacity-50">
+                            <Button onClick={deleteAccount} disabled={deleteAccountForm.processing} className="disabled:opacity-50" variant="destructive" size="sm" >
                                 Delete Account
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>

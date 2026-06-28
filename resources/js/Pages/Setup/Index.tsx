@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, useForm } from '@inertiajs/react';
 import { ChevronRight, ArrowRight, CheckCircle, Server, Plus, Trash2, Shield } from 'lucide-react';
 
@@ -177,24 +178,24 @@ export default function SetupIndex({ organization, roles }: Props) {
                                                         <option key={r.id} value={r.id}>{r.name}</option>
                                                     ))}
                                                 </select>
-                                                <button
+                                                <Button
                                                     type="button"
                                                     onClick={() => removeTeamMember(idx)}
                                                     className="p-2 text-gray-400 hover:text-red-500"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
-                                                </button>
+                                                </Button>
                                             </div>
                                         ))}
                                         
-                                        <button
+                                        <Button
                                             type="button"
                                             onClick={addTeamMember}
-                                            className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                        >
+                                            className="inline-flex items-center" 
+                                        variant="outline" size="sm" >
                                             <Plus className="h-4 w-4 mr-1.5" />
                                             Add Team Member
-                                        </button>
+                                        </Button>
                                     </div>
                                 </div>
                             )}
@@ -262,35 +263,35 @@ export default function SetupIndex({ organization, roles }: Props) {
 
                             <div className="flex justify-between pt-6 border-t border-gray-200">
                                 {step > 1 ? (
-                                    <button
+                                    <Button
                                         type="button"
                                         onClick={prevStep}
-                                        className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                    >
+                                        className="inline-flex justify-center" 
+                                    variant="outline" >
                                         Back
-                                    </button>
+                                    </Button>
                                 ) : (
                                     <div></div>
                                 )}
                                 
                                 {step < 4 ? (
-                                    <button
+                                    <Button
                                         type="button"
                                         onClick={nextStep}
-                                        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        className="inline-flex justify-center border-transparent" 
                                     >
                                         Next Step
                                         <ChevronRight className="ml-2 -mr-1 h-4 w-4" />
-                                    </button>
+                                    </Button>
                                 ) : (
-                                    <button
+                                    <Button
                                         type="submit"
                                         disabled={processing}
-                                        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        className="inline-flex justify-center border-transparent" 
                                     >
                                         {processing ? 'Saving...' : 'Complete Setup'}
                                         <CheckCircle className="ml-2 -mr-1 h-4 w-4" />
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
                         </form>

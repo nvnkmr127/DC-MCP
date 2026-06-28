@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -28,7 +29,7 @@ function PostModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Post Announcement</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/announcements', { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -53,11 +54,11 @@ function PostModal({ onClose }: { onClose: () => void }) {
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.title || !form.data.body}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.title || !form.data.body}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Posting…' : 'Post'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -98,10 +99,10 @@ export default function AnnouncementsIndex({ announcements, canPost }: Props) {
                             />
                         </div>
                         {canPost && (
-                            <button onClick={() => setOpen(true)}
+                            <Button onClick={() => setOpen(true)}
                                 className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                                 <Plus size={14} /> Post Announcement
-                            </button>
+                            </Button>
                         )}
                     </div>
                 </div>
@@ -156,7 +157,7 @@ function AnnouncementCard({ announcement: a, canPost, pinned }: { announcement: 
                     )}
                 </div>
                 {canPost && (
-                    <button onClick={async () => {
+                    <Button onClick={async () => {
                         const ok = await confirm({
                             title: 'Delete this announcement?',
                             description: 'This action cannot be undone.',
@@ -168,7 +169,7 @@ function AnnouncementCard({ announcement: a, canPost, pinned }: { announcement: 
                     }}
                         className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors shrink-0">
                         <Trash2 size={13} />
-                    </button>
+                    </Button>
                 )}
             </div>
         </div>

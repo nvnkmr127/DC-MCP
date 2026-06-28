@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -41,7 +42,7 @@ function SendModal({ clients, onClose }: { clients: Client[]; onClose: () => voi
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Send NPS Survey</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-3">
                     <div>
@@ -53,11 +54,11 @@ function SendModal({ clients, onClose }: { clients: Client[]; onClose: () => voi
                         </select>
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.client_id}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.client_id}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Sending…' : 'Send Survey'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -77,10 +78,10 @@ export default function ClientSurveysIndex({ surveys, clients, npsStats }: Props
             <div className="max-w-4xl space-y-5">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">NPS Surveys</h1>
-                    <button onClick={() => setSendOpen(true)}
+                    <Button onClick={() => setSendOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> Send Survey
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="grid grid-cols-4 gap-4">
@@ -128,7 +129,7 @@ export default function ClientSurveysIndex({ surveys, clients, npsStats }: Props
                                 <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize', STATUS_STYLES[s.status] ?? STATUS_STYLES.sent)}>
                                     {s.status}
                                 </span>
-                                <button onClick={async () => {
+                                <Button onClick={async () => {
                                     const ok = await confirm({
                                         title: 'Delete survey?',
                                         description: 'This action cannot be undone.',
@@ -140,7 +141,7 @@ export default function ClientSurveysIndex({ surveys, clients, npsStats }: Props
                                 }}
                                     className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                     <Trash2 size={13} />
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     ))}

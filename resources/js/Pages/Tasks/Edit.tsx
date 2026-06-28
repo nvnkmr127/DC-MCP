@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
@@ -17,7 +18,7 @@ const inputCls = 'w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-[1
 const labelCls = 'block text-[12px] font-semibold text-gray-700 mb-1.5';
 
 export default function TaskEdit({ task, projects, members }: Props) {
-    const { data, setData, post, processing, errors, transform, isDirty } = useForm({
+    const form = useForm({
         title:           task.title,
         description:     task.description ?? '',
         project_id:      task.project_id,
@@ -29,16 +30,16 @@ export default function TaskEdit({ task, projects, members }: Props) {
         tags:            (task.tags ?? []).join(', '),
     });
 
-    useUnsavedChanges(isDirty);
+    useUnsavedChanges(form.isDirty);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
-        transform(data => ({
+        form.transform(data => ({
             ...data,
             _method: 'patch',
-            tags: data.tags ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+            tags: form.data.tags ? form.data.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         }));
-        post(`/tasks/${task.id}`);
+        form.post(`/tasks/${task.id}`);
     }
 
     return (
@@ -68,13 +69,13 @@ export default function TaskEdit({ task, projects, members }: Props) {
                             <label className={labelCls}>Title <span className="text-red-400">*</span></label>
                             <input
                                 type="text"
-                                value={data.title}
-                                onChange={e => setData('title', e.target.value)}
-                                className={cn(inputCls, errors.title && 'border-red-300 bg-red-50')}
+                                value={form.data.title}
+                                onChange={e => form.setData('title', e.target.value)}
+                                className={cn(inputCls, form.errors.title && 'border-red-300 bg-red-50')}
                                 required
                                 autoFocus
                             />
-                            {errors.title && <p className="mt-1.5 text-[11px] text-red-500 font-medium">{errors.title}</p>}
+                            {form.errors.title && <p className="mt-1.5 text-[11px] text-red-500 font-medium">{form.errors.title}</p>}
                         </div>
 
                         {/* Description */}
@@ -83,8 +84,8 @@ export default function TaskEdit({ task, projects, members }: Props) {
                                 <AlignLeft size={14} className="text-gray-400" /> Description
                             </label>
                             <RichTextEditor
-                                value={data.description}
-                                onChange={(value) => setData('description', value)}
+                                value={form.data.description}
+                                onChange={(value) => form.setData('description', value)}
                                 placeholder="Add more details to this task..."
                             />
                         </div>
@@ -188,14 +189,14 @@ export default function TaskEdit({ task, projects, members }: Props) {
 
                         {/* Actions */}
                         <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
-                            <button
+                            <Button
                                 type="submit"
                                 disabled={form.processing}
-                                className="flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 text-white text-[13px] font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+                                className="flex items-center gap-1.5 px-5 py-2.5 disabled:opacity-50" 
                             >
                                 <Save size={14} />
                                 {form.processing ? 'Saving…' : 'Save Changes'}
-                            </button>
+                            </Button>
                             <Link
                                 href={`/tasks/${task.id}`}
                                 className="px-4 py-2.5 text-[13px] text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"

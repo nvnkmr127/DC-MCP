@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
@@ -67,17 +68,17 @@ export default function GSTReportIndex({ invoices, month }: Props) {
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1">
-                            <button onClick={() => navigate(prevMonth(month))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700">
+                            <Button onClick={() => navigate(prevMonth(month))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700">
                                 <ChevronLeft size={15} />
-                            </button>
+                            </Button>
                             <span className="px-3 text-sm font-semibold text-gray-800 min-w-[150px] text-center">{monthLabel(month)}</span>
-                            <button onClick={() => navigate(nextMonth(month))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700">
+                            <Button onClick={() => navigate(nextMonth(month))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700">
                                 <ChevronRight size={15} />
-                            </button>
+                            </Button>
                         </div>
-                        <button onClick={downloadCSV} className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700">
+                        <Button onClick={downloadCSV} className="flex items-center gap-1.5" >
                             <Download size={14} /> Download CSV
-                        </button>
+                        </Button>
                     </div>
                 </div>
 

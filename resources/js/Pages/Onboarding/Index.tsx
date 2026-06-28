@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { UserCheck, ChevronRight, CheckCircle2, Circle, ArrowRight, Plus, Star } from 'lucide-react';
@@ -81,14 +82,14 @@ function ChecklistPanel({ onboarding }: { onboarding: Onboarding }) {
                     style={{ width: `${progress}%` }} />
             </div>
             {onboarding.checklist.map(item => (
-                <button key={item.key} onClick={() => router.post(`/onboarding/${onboarding.id}/checklist`, { key: item.key })}
+                <Button key={item.key} onClick={() => router.post(`/onboarding/${onboarding.id}/checklist`, { key: item.key })}
                     className="flex items-center gap-2 w-full text-left hover:bg-white/60 rounded px-1 py-0.5 group">
                     {item.done
                         ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
                         : <Circle className="w-3.5 h-3.5 text-gray-300 group-hover:text-gray-400 flex-shrink-0" />
                     }
                     <span className={cn('text-xs', item.done ? 'line-through text-gray-400' : 'text-gray-700')}>{item.label}</span>
-                </button>
+                </Button>
             ))}
         </div>
     );
@@ -113,16 +114,16 @@ function OnboardingCard({ onboarding, isLast }: { onboarding: Onboarding; isLast
                 </div>
                 <div className="flex items-center gap-1">
                     {onboarding.stage !== 'active' && !isLast && (
-                        <button onClick={() => router.post(`/onboarding/${onboarding.id}/advance`)}
+                        <Button onClick={() => router.post(`/onboarding/${onboarding.id}/advance`)}
                             className="flex items-center gap-1 px-2 py-1 bg-indigo-600 text-white text-xs rounded-lg hover:bg-indigo-700 font-medium">
                             <ArrowRight className="w-3 h-3" /> Next
-                        </button>
+                        </Button>
                     )}
                     {onboarding.stage === 'active' && (
-                        <button onClick={() => setNpsOpen(!npsOpen)}
+                        <Button onClick={() => setNpsOpen(!npsOpen)}
                             className="flex items-center gap-1 px-2 py-1 bg-amber-500 text-white text-xs rounded-lg hover:bg-amber-600 font-medium">
                             <Star className="w-3 h-3" /> NPS
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>
@@ -131,10 +132,10 @@ function OnboardingCard({ onboarding, isLast }: { onboarding: Onboarding; isLast
                 <NpsInput onboardingId={onboarding.id} current={onboarding.nps_score} onClose={() => setNpsOpen(false)} />
             )}
 
-            <button onClick={() => setExpanded(!expanded)}
+            <Button onClick={() => setExpanded(!expanded)}
                 className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
                 {expanded ? 'Hide checklist' : 'Show checklist'}
-            </button>
+            </Button>
 
             {expanded && <ChecklistPanel onboarding={onboarding} />}
         </div>
@@ -150,11 +151,11 @@ function NpsInput({ onboardingId, current, onClose }: { onboardingId: string; cu
             <input type="number" min="0" max="10" value={form.data.nps_score}
                 onChange={e => form.setData('nps_score', e.target.value)}
                 className="w-16 border border-amber-200 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-amber-400" />
-            <button type="submit" disabled={form.processing}
-                className="px-2 py-1 bg-amber-500 text-white text-xs rounded hover:bg-amber-600 disabled:opacity-50">
+            <Button type="submit" disabled={form.processing}
+                className="disabled:opacity-50" variant="ghost" size="sm" >
                 Save
-            </button>
-            <button type="button" onClick={onClose} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+            </Button>
+            <Button type="button" onClick={onClose} variant="ghost" size="sm" >Cancel</Button>
         </form>
     );
 }
@@ -185,11 +186,11 @@ function AddOnboardingModal({ clients, onClose }: { clients: Props['clients']; o
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mt-1 focus:ring-2 focus:ring-indigo-500" />
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.client_id}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.client_id}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Adding…' : 'Add Client'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -210,10 +211,10 @@ export default function OnboardingIndex({ onboardings, byStage, clients, totalAc
                         <h1 className="text-2xl font-bold text-gray-900">Client Onboarding</h1>
                         <p className="text-sm text-gray-500 mt-0.5">Track clients through the 7-stage onboarding pipeline</p>
                     </div>
-                    <button onClick={() => setAddOpen(true)}
+                    <Button onClick={() => setAddOpen(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
                         <Plus className="w-4 h-4" /> Add Client
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Stats */}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthLayout from '@/Layouts/AuthLayout';
 
@@ -79,13 +80,13 @@ export default function Register() {
                         required
                     />
                 </div>
-                <button
+                <Button
                     type="submit"
                     disabled={form.processing}
-                    className="w-full py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                    className="w-full py-2.5 disabled:opacity-50" 
                 >
                     {form.processing ? 'Creating account…' : 'Create account'}
-                </button>
+                </Button>
                 <p className="text-center text-sm text-gray-500">
                     Already have an account?{' '}
                     <Link href="/login" className="text-indigo-600 hover:underline font-medium">Sign in</Link>

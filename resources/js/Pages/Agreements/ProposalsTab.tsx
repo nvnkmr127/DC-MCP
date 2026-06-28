@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Link, router, useForm } from '@inertiajs/react';
 
 import { cn } from '@/lib/utils';
@@ -54,7 +55,7 @@ function ProposalModal({ clients, onClose }: { clients: Client[]; onClose: () =>
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">New Proposal</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={submit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
@@ -81,9 +82,9 @@ function ProposalModal({ clients, onClose }: { clients: Client[]; onClose: () =>
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <label className="text-xs text-gray-500 font-medium">Line Items *</label>
-                            <button type="button" onClick={addItem} className="text-xs text-indigo-600 font-medium flex items-center gap-1">
+                            <Button type="button" onClick={addItem} className="flex items-center gap-1" variant="ghost" size="sm" >
                                 <Plus size={12} /> Add Row
-                            </button>
+                            </Button>
                         </div>
                         <div className="space-y-2">
                             {items.map((item, i) => (
@@ -104,9 +105,9 @@ function ProposalModal({ clients, onClose }: { clients: Client[]; onClose: () =>
                                         <option value="quarterly">Quarterly</option>
                                         <option value="annual">Annual</option>
                                     </select>
-                                    <button type="button" onClick={() => removeItem(i)} className="col-span-1 text-gray-400 hover:text-rose-500 flex justify-center">
+                                    <Button type="button" onClick={() => removeItem(i)} className="col-span-1 text-gray-400 hover:text-rose-500 flex justify-center">
                                         <X size={13} />
-                                    </button>
+                                    </Button>
                                 </div>
                             ))}
                         </div>
@@ -122,11 +123,11 @@ function ProposalModal({ clients, onClose }: { clients: Client[]; onClose: () =>
                     </div>
 
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.title || !form.data.client_id}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.title || !form.data.client_id}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Creating…' : 'Create Proposal'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -144,10 +145,10 @@ export default function ProposalsIndex({ proposals, stats, clients }: Props) {
             <div className="max-w-5xl space-y-5">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">Proposals</h1>
-                    <button onClick={() => setModalOpen(true)}
+                    <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> New Proposal
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
@@ -188,24 +189,24 @@ export default function ProposalsIndex({ proposals, stats, clients }: Props) {
                                     <Eye size={14} />
                                 </Link>
                                 {p.status === 'draft' && (
-                                    <button onClick={() => router.post(`/proposals/${p.id}/send`)}
+                                    <Button onClick={() => router.post(`/proposals/${p.id}/send`)}
                                         className="p-1.5 text-gray-400 hover:text-blue-600 rounded hover:bg-blue-50 transition-colors">
                                         <Send size={14} />
-                                    </button>
+                                    </Button>
                                 )}
                                 {p.status === 'sent' && (
                                     <>
-                                        <button onClick={() => router.post(`/proposals/${p.id}/accept`)}
+                                        <Button onClick={() => router.post(`/proposals/${p.id}/accept`)}
                                             className="p-1.5 text-gray-400 hover:text-emerald-600 rounded hover:bg-emerald-50 transition-colors">
                                             <CheckCircle size={14} />
-                                        </button>
-                                        <button onClick={() => router.post(`/proposals/${p.id}/reject`)}
+                                        </Button>
+                                        <Button onClick={() => router.post(`/proposals/${p.id}/reject`)}
                                             className="p-1.5 text-gray-400 hover:text-rose-600 rounded hover:bg-rose-50 transition-colors">
                                             <XCircle size={14} />
-                                        </button>
+                                        </Button>
                                     </>
                                 )}
-                                <button onClick={async () => {
+                                <Button onClick={async () => {
                                     const ok = await confirm({
                                         title: 'Delete proposal?',
                                         description: 'This action cannot be undone.',
@@ -217,7 +218,7 @@ export default function ProposalsIndex({ proposals, stats, clients }: Props) {
                                 }}
                                     className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                     <Trash2 size={14} />
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     ))}

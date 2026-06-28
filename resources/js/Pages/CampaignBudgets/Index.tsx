@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -89,9 +90,9 @@ function AddBudgetModal({
             <div className="bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-md">
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                     <h2 className="text-sm font-semibold text-gray-900">Add Campaign Budget</h2>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors">
+                    <Button onClick={onClose} className="p-1.5" variant="secondary" size="icon" >
                         <X size={16} />
-                    </button>
+                    </Button>
                 </div>
                 <form onSubmit={submit} className="px-5 py-4 space-y-4">
                     <div>
@@ -163,16 +164,16 @@ function AddBudgetModal({
                         />
                     </div>
                     <div className="flex items-center gap-2 pt-1">
-                        <button
+                        <Button
                             type="submit"
                             disabled={form.processing || !form.data.client_id || !form.data.allocated_budget}
-                            className="flex-1 py-2.5 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60 shadow-sm"
+                            className="flex-1 py-2.5 disabled:opacity-60" 
                         >
                             {form.processing ? 'Saving…' : 'Save Budget'}
-                        </button>
-                        <button type="button" onClick={onClose} className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                        </Button>
+                        <Button type="button" onClick={onClose} className="py-2.5" variant="ghost" >
                             Cancel
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -223,22 +224,22 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
                     <div className="flex items-center gap-2">
                         {/* Month Selector */}
                         <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
-                            <button onClick={() => navigate(prevMonth(monthYear))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
+                            <Button onClick={() => navigate(prevMonth(monthYear))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
                                 <ChevronLeft size={15} />
-                            </button>
+                            </Button>
                             <span className="px-3 text-sm font-semibold text-gray-800 min-w-[140px] text-center">
                                 {monthLabel(monthYear)}
                             </span>
-                            <button onClick={() => navigate(nextMonth(monthYear))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
+                            <Button onClick={() => navigate(nextMonth(monthYear))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
                                 <ChevronRight size={15} />
-                            </button>
+                            </Button>
                         </div>
-                        <button
+                        <Button
                             onClick={() => setShowModal(true)}
                             className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
                         >
                             <Plus size={14} /> Add Budget
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -294,13 +295,13 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
                             You don't have any campaign budgets set up for {monthLabel(monthYear)}. Track your ad spend across different channels and clients by adding your first budget.
                         </p>
                         
-                        <button
+                        <Button
                             onClick={() => setShowModal(true)}
                             className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5 z-10 relative"
                         >
                             <Plus size={18} />
                             Add Budget
-                        </button>
+                        </Button>
                     </div>
                 ) : (
                     <div className="space-y-4">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import ProposalsTab from '../Agreements/ProposalsTab';
@@ -27,7 +28,7 @@ function ReportModal({ clientId, onClose }: { clientId: string; onClose: () => v
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">New Report</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={submit} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -50,8 +51,8 @@ function ReportModal({ clientId, onClose }: { clientId: string; onClose: () => v
                     <div>
                         <div className="flex items-center justify-between mb-1">
                             <label className="text-xs text-gray-500 font-medium">Metrics (key / value)</label>
-                            <button type="button" onClick={() => setMetrics(m => [...m, { key: '', value: '' }])}
-                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</button>
+                            <Button type="button" onClick={() => setMetrics(m => [...m, { key: '', value: '' }])}
+                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</Button>
                         </div>
                         {metrics.map((m, i) => (
                             <div key={i} className="flex gap-2 mb-1.5">
@@ -61,18 +62,18 @@ function ReportModal({ clientId, onClose }: { clientId: string; onClose: () => v
                                 <input type="text" placeholder="Value" value={m.value}
                                     onChange={e => { const n = [...metrics]; n[i].value = e.target.value; setMetrics(n); }}
                                     className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500" />
-                                <button type="button" onClick={() => setMetrics(m => m.filter((_, j) => j !== i))} className="text-gray-400 hover:text-rose-500">
+                                <Button type="button" onClick={() => setMetrics(m => m.filter((_, j) => j !== i))} className="text-gray-400 hover:text-rose-500">
                                     <X size={13} />
-                                </button>
+                                </Button>
                             </div>
                         ))}
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Creating…' : 'Create Report'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -135,7 +136,7 @@ function AddCommModal({ clientId, onClose }: { clientId: string; onClose: () => 
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Log Communication</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post(`/clients/${clientId}/communications`, { onSuccess: onClose }); }}
                     className="space-y-3">
@@ -192,11 +193,11 @@ function AddCommModal({ clientId, onClose }: { clientId: string; onClose: () => 
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.subject || !form.data.notes}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.subject || !form.data.notes}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Saving…' : 'Log'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -211,7 +212,7 @@ function ScoreModal({ clientId, current, onClose }: { clientId: string; current:
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-6 space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Update Success Score</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post(`/clients/${clientId}/success-score`, { onSuccess: onClose }); }} className="space-y-3">
                     <div>
@@ -221,11 +222,11 @@ function ScoreModal({ clientId, current, onClose }: { clientId: string; current:
                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
                     </div>
                     <div className="flex justify-end gap-2">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Saving…' : 'Save'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -329,7 +330,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                             >
                                 <Edit size={13} /> Edit
                             </Link>
-                            <button
+                            <Button
                                 onClick={async () => {
                                     const ok = await confirm({
                                         title: 'Delete this client?',
@@ -343,7 +344,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] border border-red-200 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
                             >
                                 <Trash2 size={13} /> Delete
-                            </button>
+                            </Button>
                         </div>
                     </div>
 
@@ -359,7 +360,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                 {/* Tab bar */}
                 <div className="flex gap-1 mb-4 overflow-x-auto pb-1">
                     {(['overview', 'projects', 'documents', 'invoicing', 'surveys', 'comms'] as const).map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab)}
+                        <Button key={tab} onClick={() => setActiveTab(tab)}
                             className={cn('px-4 py-1.5 text-[13px] font-medium rounded-lg transition-colors whitespace-nowrap',
                                 activeTab === tab ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100'
                             )}>
@@ -369,7 +370,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                              tab === 'invoicing' ? 'Invoicing' : 
                              tab === 'surveys' ? `NPS Feedback (${surveys.filter((s:any) => s.nps_score !== null).length})` : 
                              `Activity (${communications.length})`}
-                        </button>
+                        </Button>
                     ))}
                 </div>
 
@@ -386,14 +387,14 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                     <p className="text-[11px] text-gray-400 mt-0.5">{stat.label}</p>
                                 </div>
                             ))}
-                            <button onClick={() => setScoreOpen(true)}
+                            <Button onClick={() => setScoreOpen(true)}
                                 className="bg-white rounded-xl border border-gray-100 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-center hover:border-indigo-200 transition-colors group">
                                 <div className="flex items-center justify-center gap-1 mb-0.5">
                                     <Star size={14} className={client.success_score !== null ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
                                     <p className="text-2xl font-bold text-gray-900">{client.success_score ?? '—'}</p>
                                 </div>
                                 <p className="text-[11px] text-gray-400">Success Score</p>
-                            </button>
+                            </Button>
                         </div>
                         
                         <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
@@ -452,9 +453,9 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                 {activeTab === 'documents' && (
                     <div className="space-y-6">
                         <div className="flex space-x-4 mb-4">
-                            <button onClick={() => setDocumentSubTab('proposals')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'proposals' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Proposals</button>
-                            <button onClick={() => setDocumentSubTab('sows')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'sows' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Statements of Work</button>
-                            <button onClick={() => setDocumentSubTab('reports')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'reports' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Reports & Updates</button>
+                            <Button onClick={() => setDocumentSubTab('proposals')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'proposals' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Proposals</Button>
+                            <Button onClick={() => setDocumentSubTab('sows')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'sows' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Statements of Work</Button>
+                            <Button onClick={() => setDocumentSubTab('reports')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'reports' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Reports & Updates</Button>
                         </div>
                         {documentSubTab === 'proposals' && <ProposalsTab proposals={proposals} stats={{}} clients={[]} />}
                         {documentSubTab === 'sows' && <SowTab sows={sows} clients={[]} retainers={[]} canReview={canReview} />}
@@ -462,10 +463,10 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                             <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                                 <div className="px-5 py-3.5 border-b border-gray-50 flex items-center justify-between">
                                     <h3 className="text-[13px] font-semibold text-gray-900">Monthly Updates / Reports</h3>
-                                    <button onClick={() => setReportModalOpen(true)}
+                                    <Button onClick={() => setReportModalOpen(true)}
                                         className="flex items-center gap-1 text-[12px] text-indigo-600 hover:text-indigo-700 font-medium">
                                         <Plus size={12} /> New Report
-                                    </button>
+                                    </Button>
                                 </div>
                                 {reports.length === 0 ? (
                                     <div className="py-12 text-center text-sm text-gray-400">
@@ -491,21 +492,21 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                                     <div className="flex items-center gap-2">
                                                         {r.status === 'draft' && (
                                                             <>
-                                                                <button onClick={() => router.post(`/client-updates/${r.id}/draft`)}
+                                                                <Button onClick={() => router.post(`/client-updates/${r.id}/draft`)}
                                                                     className="flex items-center gap-1 px-2.5 py-1 border border-indigo-200 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50">
                                                                     <Sparkles size={11} /> AI Draft
-                                                                </button>
-                                                                <button onClick={() => router.post(`/client-updates/${r.id}/send`)}
+                                                                </Button>
+                                                                <Button onClick={() => router.post(`/client-updates/${r.id}/send`)}
                                                                     className="flex items-center gap-1 px-2.5 py-1 border border-emerald-200 text-emerald-600 text-xs font-medium rounded-lg hover:bg-emerald-50">
                                                                     <Send size={11} /> Send
-                                                                </button>
+                                                                </Button>
                                                             </>
                                                         )}
-                                                        <button onClick={() => setExpandedReportId(expandedReportId === r.id ? null : r.id)}
+                                                        <Button onClick={() => setExpandedReportId(expandedReportId === r.id ? null : r.id)}
                                                             className="p-1 text-gray-400 hover:text-gray-600">
                                                             <ChevronDown size={14} className={cn('transition-transform', expandedReportId === r.id && 'rotate-180')} />
-                                                        </button>
-                                                        <button onClick={async () => {
+                                                        </Button>
+                                                        <Button onClick={async () => {
                                                             const ok = await confirm({
                                                                 title: 'Delete report?',
                                                                 description: 'This action cannot be undone.',
@@ -517,7 +518,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                                         }}
                                                             className="p-1 text-gray-400 hover:text-rose-500">
                                                             <Trash2 size={13} />
-                                                        </button>
+                                                        </Button>
                                                     </div>
                                                 </div>
                                                 {(expandedReportId === r.id || reports.length === 1) && (
@@ -562,19 +563,19 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                     <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                         <div className="px-5 py-3.5 border-b border-gray-50 flex items-center justify-between">
                             <h3 className="text-[13px] font-semibold text-gray-900">Communication Log</h3>
-                            <button onClick={() => setCommOpen(true)}
+                            <Button onClick={() => setCommOpen(true)}
                                 className="flex items-center gap-1 text-[12px] text-indigo-600 hover:text-indigo-700 font-medium">
                                 <Plus size={12} /> Log
-                            </button>
+                            </Button>
                         </div>
                         {communications.length === 0 ? (
                             <div className="py-12 text-center">
                                 <MessageSquare size={28} className="text-gray-200 mx-auto mb-2" />
                                 <p className="text-[13px] text-gray-400">No communications logged yet.</p>
-                                <button onClick={() => setCommOpen(true)}
+                                <Button onClick={() => setCommOpen(true)}
                                     className="mt-2 text-[12px] text-indigo-600 hover:text-indigo-700">
                                     Log the first one →
-                                </button>
+                                </Button>
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-50">
@@ -600,7 +601,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                             <div className="text-right shrink-0">
                                                 <p className="text-[11px] text-gray-400">{c.communicated_at}</p>
                                                 {c.logged_by && <p className="text-[10px] text-gray-300">{c.logged_by}</p>}
-                                                <button onClick={async () => {
+                                                <Button onClick={async () => {
                                                     const ok = await confirm({
                                                         title: 'Delete this entry?',
                                                         description: 'This cannot be undone.',
@@ -610,7 +611,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                                     if (!ok) return;
                                                     router.delete(`/client-communications/${c.id}`);
                                                 }}
-                                                    className="text-[10px] text-gray-300 hover:text-rose-400 mt-1">delete</button>
+                                                    className="text-[10px] text-gray-300 hover:text-rose-400 mt-1">delete</Button>
                                             </div>
                                         </div>
                                     </div>
@@ -689,10 +690,10 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                             <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                                 <div className="px-5 py-3.5 border-b border-gray-50 flex items-center justify-between">
                                     <h3 className="text-[13px] font-semibold text-gray-900">NPS Feedback History</h3>
-                                    <button onClick={handleSendSurvey}
-                                        className="flex items-center gap-1 text-[12px] text-indigo-600 hover:text-indigo-700 font-medium">
+                                    <Button onClick={handleSendSurvey}
+                                        className="flex items-center gap-1" variant="ghost" size="icon" >
                                         <Send size={12} /> Send NPS Survey
-                                    </button>
+                                    </Button>
                                 </div>
                                 {surveys.length === 0 ? (
                                     <div className="py-12 text-center text-sm text-gray-400">
@@ -728,7 +729,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                                     )}>
                                                         {s.status}
                                                     </span>
-                                                    <button onClick={async () => {
+                                                    <Button onClick={async () => {
                                                         const ok = await confirm({
                                                             title: 'Delete survey?',
                                                             description: 'This action cannot be undone.',
@@ -740,7 +741,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                                     }}
                                                         className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                                         <Trash2 size={13} />
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             </div>
                                         ))}

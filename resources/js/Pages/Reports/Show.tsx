@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { ArrowLeft, Download, Mail, RefreshCw, FileText, Calendar, Check, Send, MessageSquare } from 'lucide-react';
@@ -99,21 +100,21 @@ export default function ReportsShow({ report }: Props) {
                 </Link>
                 
                 <div className="flex gap-2">
-                    <button
+                    <Button
                         onClick={handleRegenerate}
-                        className="flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700 text-xs font-semibold"
-                    >
+                        className="flex items-center gap-1" 
+                    variant="ghost" size="sm" >
                         <RefreshCw size={12} /> Regenerate
-                    </button>
+                    </Button>
                     {report.status === 'ready' && (
-                        <button
+                        <Button
                             onClick={handleDownload}
                             disabled={downloading}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md disabled:bg-indigo-400 disabled:cursor-not-allowed"
-                        >
+                            className="flex items-center gap-1 transition-all shadow-md disabled:bg-indigo-400 disabled:cursor-not-allowed" 
+                        size="sm" >
                             {downloading ? <RefreshCw className="animate-spin" size={12} /> : <Download size={12} />} 
                             {downloading ? 'Preparing...' : 'Download PDF'}
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>
@@ -200,13 +201,13 @@ export default function ReportsShow({ report }: Props) {
                                         className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
                                 </div>
-                                <button
+                                <Button
                                     type="submit"
                                     disabled={sending}
-                                    className="w-full flex items-center justify-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
-                                >
+                                    className="w-full flex items-center justify-center gap-1.5 disabled:bg-indigo-400 transition-all shadow-md" 
+                                size="sm" >
                                     <Send size={12} /> {sending ? 'Sending...' : 'Mail PDF'}
-                                </button>
+                                </Button>
                             </form>
 
                             {report.recipients && report.recipients.length > 0 && (

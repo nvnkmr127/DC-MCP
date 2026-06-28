@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, useForm } from '@inertiajs/react';
 import { CheckCircle2, Clock, AlertTriangle, FolderKanban, FileText, MessageSquare, Plus, X, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -53,7 +54,7 @@ function NewRequestModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
                 <div className="flex items-center justify-between px-6 py-4 border-b">
                     <h2 className="font-semibold text-gray-900">Submit a Request</h2>
-                    <button onClick={onClose}><X className="w-4 h-4 text-gray-400" /></button>
+                    <Button onClick={onClose}><X className="w-4 h-4 text-gray-400" /></Button>
                 </div>
                 <form onSubmit={submit} className="p-6 space-y-4">
                     <div>
@@ -74,10 +75,10 @@ function NewRequestModal({ onClose }: { onClose: () => void }) {
                         <textarea className="w-full text-sm border rounded-lg p-2 resize-none" rows={4} placeholder="Describe what you need in detail..." value={data.description} onChange={e => setData('description', e.target.value)} />
                     </div>
                     <div className="flex gap-2">
-                        <button type="submit" disabled={processing} className="flex-1 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="submit" disabled={processing} className="flex-1 disabled:opacity-50" >
                             Submit Request
-                        </button>
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-500 border rounded-lg">Cancel</button>
+                        </Button>
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
                     </div>
                 </form>
             </div>
@@ -108,12 +109,12 @@ export default function PortalDashboard({ portalUser, clientName, projects, shar
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button
+                    <Button
                         onClick={() => setRequestOpen(true)}
                         className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
                     >
                         <Plus className="w-3.5 h-3.5" /> New Request
-                    </button>
+                    </Button>
                     <div className="text-right">
                         <p className="text-xs font-medium text-gray-700">{portalUser.name}</p>
                         <a href="/portal/logout" className="text-xs text-gray-400 hover:text-red-500 flex items-center gap-1 justify-end">
@@ -218,7 +219,7 @@ export default function PortalDashboard({ portalUser, clientName, projects, shar
                             {myRequests.length === 0 ? (
                                 <div className="p-5 text-center">
                                     <p className="text-xs text-gray-400">No requests submitted yet.</p>
-                                    <button onClick={() => setRequestOpen(true)} className="mt-2 text-xs text-indigo-600 hover:underline">Submit your first request</button>
+                                    <Button onClick={() => setRequestOpen(true)} className="mt-2 text-xs text-indigo-600 hover:underline">Submit your first request</Button>
                                 </div>
                             ) : (
                                 myRequests.map(r => (

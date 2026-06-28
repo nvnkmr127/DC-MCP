@@ -1,5 +1,7 @@
 import React, { useState } from "react"
 import { Head, useForm } from "@inertiajs/react"
+import { Breadcrumbs } from "@/Components/Shared/Breadcrumbs";
+declare const route: any;
 import AppLayout from "@/Layouts/AppLayout"
 import { Button } from "@/Components/ui/Button"
 import { Input } from "@/Components/ui/Input"

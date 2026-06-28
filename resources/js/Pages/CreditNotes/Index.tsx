@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -33,7 +34,7 @@ function CreditNoteModal({ clients, invoices, onClose }: { clients: Client[]; in
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">New Credit Note</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/credit-notes', { onSuccess: onClose }); }} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -70,11 +71,11 @@ function CreditNoteModal({ clients, invoices, onClose }: { clients: Client[]; in
                             className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none" />
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.client_id || !form.data.amount || !form.data.reason}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.client_id || !form.data.amount || !form.data.reason}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Creating…' : 'Create Credit Note'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -99,10 +100,10 @@ export default function CreditNotesIndex({ creditNotes, clients, invoices }: Pro
                         <h1 className="text-lg font-bold text-gray-900">Credit Notes</h1>
                         <p className="text-xs text-gray-500 mt-0.5">{creditNotes.length} total</p>
                     </div>
-                    <button onClick={() => setModalOpen(true)}
+                    <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                         <Plus size={14} /> New Credit Note
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
@@ -144,16 +145,16 @@ export default function CreditNotesIndex({ creditNotes, clients, invoices }: Pro
                             <p className="text-sm font-semibold text-gray-900 shrink-0">{fmt(creditNote.amount)}</p>
                             <div className="flex items-center gap-1.5 shrink-0">
                                 {creditNote.status !== 'applied' && (
-                                    <button onClick={async () => {
+                                    <Button onClick={async () => {
                                         const ok = await confirm({ title: 'Mark this credit note as applied?', confirmText: 'Mark applied' });
                                         if (!ok) return;
                                         router.post(`/credit-notes/${creditNote.id}/apply`);
                                     }}
                                         className="p-1 text-gray-400 hover:text-emerald-600 rounded hover:bg-emerald-50 transition-colors" title="Apply">
                                         <CheckCircle size={14} />
-                                    </button>
+                                    </Button>
                                 )}
-                                <button onClick={async () => {
+                                <Button onClick={async () => {
                                     const ok = await confirm({
                                         title: 'Delete credit note?',
                                         description: 'This cannot be undone.',
@@ -165,7 +166,7 @@ export default function CreditNotesIndex({ creditNotes, clients, invoices }: Pro
                                 }}
                                     className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
                                     <Trash2 size={14} />
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     ))}

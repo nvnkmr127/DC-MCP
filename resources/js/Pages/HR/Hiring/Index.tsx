@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -38,7 +39,7 @@ function OpeningModal({ onClose }: { onClose: () => void }) {
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Add Job Opening</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/hiring/openings', { onSuccess: onClose }); }} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -69,11 +70,11 @@ function OpeningModal({ onClose }: { onClose: () => void }) {
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.title}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.title}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Adding…' : 'Add Opening'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -88,7 +89,7 @@ function CandidateModal({ opening, onClose }: { opening: Opening; onClose: () =>
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[15px] font-bold text-gray-900">Add Candidate — {opening.title}</h2>
-                    <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post(`/hiring/openings/${opening.id}/candidates`, { onSuccess: onClose }); }} className="space-y-3">
                     <div className="grid grid-cols-2 gap-3">
@@ -123,11 +124,11 @@ function CandidateModal({ opening, onClose }: { opening: Opening; onClose: () =>
                         </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-1">
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600">Cancel</button>
-                        <button type="submit" disabled={form.processing || !form.data.name}
-                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
+                        <Button type="submit" disabled={form.processing || !form.data.name}
+                            className="disabled:opacity-50" >
                             {form.processing ? 'Adding…' : 'Add Candidate'}
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>
@@ -153,14 +154,14 @@ export default function HiringIndex({ openings }: Props) {
                 <div className="w-72 flex-shrink-0 flex flex-col">
                     <div className="flex items-center justify-between mb-3">
                         <h1 className="text-base font-bold text-gray-900">Job Openings</h1>
-                        <button onClick={() => setNewOpen(true)}
+                        <Button onClick={() => setNewOpen(true)}
                             className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700">
                             <Plus size={12} /> Add
-                        </button>
+                        </Button>
                     </div>
                     <div className="overflow-y-auto space-y-2 flex-1">
                         {openings.map(o => (
-                            <button key={o.id} onClick={() => setSelectedOpening(o)}
+                            <Button key={o.id} onClick={() => setSelectedOpening(o)}
                                 className={cn('w-full text-left bg-white rounded-xl border p-3.5 hover:border-indigo-200 transition-all',
                                     selectedOpening?.id === o.id ? 'border-indigo-300 shadow-sm' : 'border-gray-200')}>
                                 <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -179,7 +180,7 @@ export default function HiringIndex({ openings }: Props) {
                                     <Users size={11} className="text-gray-400" />
                                     <span className="text-xs text-gray-500">{o.candidates_count} candidate{o.candidates_count !== 1 ? 's' : ''}</span>
                                 </div>
-                            </button>
+                            </Button>
                         ))}
                         {openings.length === 0 && (
                             <div className="bg-white rounded-xl border border-dashed border-gray-200 p-6 text-center">
@@ -217,10 +218,10 @@ export default function HiringIndex({ openings }: Props) {
                                     <option value="">All Stages</option>
                                     {STAGES.map(s => <option key={s} value={s}>{STAGE_LABELS[s]}</option>)}
                                 </select>
-                                <button onClick={() => setAddCandidate(selectedOpening)}
+                                <Button onClick={() => setAddCandidate(selectedOpening)}
                                     className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-sm text-gray-600 rounded-lg hover:bg-gray-50">
                                     <Plus size={13} /> Add
-                                </button>
+                                </Button>
                             </div>
                         </div>
                         <div className="flex gap-3 overflow-x-auto pb-3 flex-1">
@@ -258,11 +259,11 @@ export default function HiringIndex({ openings }: Props) {
                                                             {c.notes && <p className="text-[10px] text-gray-600">{c.notes}</p>}
                                                             <div className="flex flex-wrap gap-1 pt-1">
                                                                 {STAGES.filter(s => s !== c.stage).slice(0, 2).map(s => (
-                                                                    <button key={s}
+                                                                    <Button key={s}
                                                                         onClick={e => { e.stopPropagation(); router.patch(`/hiring/candidates/${c.id}`, { stage: s }); }}
                                                                         className="px-1.5 py-0.5 text-[9px] border border-gray-200 rounded text-gray-500 hover:bg-gray-50">
                                                                         → {STAGE_LABELS[s]}
-                                                                    </button>
+                                                                    </Button>
                                                                 ))}
                                                             </div>
                                                         </div>

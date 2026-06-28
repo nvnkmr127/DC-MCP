@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
@@ -56,7 +57,7 @@ function InviteModal({ client, onClose }: { client: ClientRow; onClose: () => vo
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
                 <div className="flex items-center justify-between px-6 py-4 border-b">
                     <h2 className="font-semibold text-gray-900">Invite Client Contact</h2>
-                    <button onClick={onClose} className="p-1 rounded hover:bg-gray-100"><X className="w-4 h-4" /></button>
+                    <Button onClick={onClose} variant="secondary" size="icon" ><X className="w-4 h-4" /></Button>
                 </div>
                 <form onSubmit={submit} className="p-6 space-y-4">
                     <p className="text-sm text-gray-500">Sending portal access to a contact at <strong>{client.company || client.name}</strong>.</p>
@@ -70,10 +71,10 @@ function InviteModal({ client, onClose }: { client: ClientRow; onClose: () => vo
                     </div>
                     <p className="text-xs text-gray-400">A magic link will be emailed. Valid for 24 hours. Client can see their projects and submit requests.</p>
                     <div className="flex gap-2 pt-1">
-                        <button type="submit" disabled={processing} className="flex-1 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                        <Button type="submit" disabled={processing} className="flex-1 disabled:opacity-50" >
                             Send Portal Invite
-                        </button>
-                        <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-500 border rounded-lg hover:bg-gray-50">Cancel</button>
+                        </Button>
+                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
                     </div>
                 </form>
             </div>
@@ -106,12 +107,12 @@ function ClientPortalCard({ client }: { client: ClientRow }) {
                             </span>
                         )}
                     </div>
-                    <button
+                    <Button
                         onClick={() => setInviteOpen(true)}
                         className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100"
                     >
                         <Plus className="w-3 h-3" /> Invite
-                    </button>
+                    </Button>
                 </div>
 
                 {client.portal_users.length === 0 ? (
@@ -130,12 +131,12 @@ function ClientPortalCard({ client }: { client: ClientRow }) {
                                     )}
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <button onClick={() => resend(u.id)} title="Resend magic link" className="p-1.5 text-gray-400 hover:text-indigo-600 rounded">
+                                    <Button onClick={() => resend(u.id)} title="Resend magic link" className="p-1.5 text-gray-400 hover:text-indigo-600 rounded">
                                         <Mail className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button onClick={() => toggle(u.id)} title={u.is_active ? 'Disable access' : 'Enable access'} className={cn('p-1.5 rounded', u.is_active ? 'text-emerald-500 hover:text-red-500' : 'text-gray-400 hover:text-emerald-500')}>
+                                    </Button>
+                                    <Button onClick={() => toggle(u.id)} title={u.is_active ? 'Disable access' : 'Enable access'} className={cn('p-1.5 rounded', u.is_active ? 'text-emerald-500 hover:text-red-500' : 'text-gray-400 hover:text-emerald-500')}>
                                         {u.is_active ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         ))}
@@ -237,18 +238,18 @@ export default function ClientPortalSettings({ clients, pendingRequests }: Props
                                             <p className="text-xs text-gray-500 line-clamp-2">{r.description}</p>
                                         )}
                                         <div className="flex gap-1.5">
-                                            <button
+                                            <Button
                                                 onClick={() => convertToTask(r.id)}
                                                 className="flex items-center gap-1 text-xs px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100"
                                             >
                                                 <ArrowRight className="w-3 h-3" /> Create Task
-                                            </button>
-                                            <button
+                                            </Button>
+                                            <Button
                                                 onClick={() => closeRequest(r.id)}
                                                 className="flex items-center gap-1 text-xs px-2 py-1 text-gray-400 hover:text-red-500"
                                             >
                                                 <X className="w-3 h-3" /> Close
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 ))

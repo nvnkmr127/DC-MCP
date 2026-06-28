@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
@@ -47,28 +48,28 @@ export default function ProposalShow({ proposal }: Props) {
                                 {proposal.status}
                             </span>
                             {proposal.status === 'draft' && (
-                                <button onClick={() => router.post(`/proposals/${proposal.id}/send`)}
+                                <Button onClick={() => router.post(`/proposals/${proposal.id}/send`)}
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
                                     <Send size={13} /> Send
-                                </button>
+                                </Button>
                             )}
                             {proposal.status === 'sent' && (
                                 <>
-                                    <button onClick={() => router.post(`/proposals/${proposal.id}/accept`)}
+                                    <Button onClick={() => router.post(`/proposals/${proposal.id}/accept`)}
                                         className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700">
                                         <CheckCircle size={13} /> Accept
-                                    </button>
-                                    <button onClick={() => router.post(`/proposals/${proposal.id}/reject`)}
+                                    </Button>
+                                    <Button onClick={() => router.post(`/proposals/${proposal.id}/reject`)}
                                         className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 text-white text-sm font-medium rounded-lg hover:bg-rose-700">
                                         <XCircle size={13} /> Reject
-                                    </button>
+                                    </Button>
                                 </>
                             )}
                             {proposal.status === 'accepted' && (
-                                <button onClick={() => router.post(`/proposals/${proposal.id}/convert-to-sow`)}
+                                <Button onClick={() => router.post(`/proposals/${proposal.id}/convert-to-sow`)}
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
                                     <FileText size={13} /> Generate SOW
-                                </button>
+                                </Button>
                             )}
                         </div>
                     </div>

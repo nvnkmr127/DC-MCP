@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Link, router } from '@inertiajs/react';
 
 import { cn, formatDate } from '@/lib/utils';
@@ -72,12 +73,12 @@ export default function BriefingsIndex({ briefings }: Props) {
                             Catch up on recent updates, SLA alerts, notifications, and key metrics generated automatically by intelligence models each morning.
                         </p>
                     </div>
-                    <button
+                    <Button
                         onClick={generate}
-                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all shrink-0 active:scale-95"
-                    >
+                        className="flex items-center justify-center gap-2 py-2.5 from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all shrink-0" 
+                    variant="ghost" size="sm" >
                         <Zap size={14} className="fill-white/10" /> Compile Today's Briefing
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -89,12 +90,12 @@ export default function BriefingsIndex({ briefings }: Props) {
                     </div>
                     <p className="text-sm font-semibold text-gray-900 mb-1">No Briefings Available</p>
                     <p className="text-xs text-gray-500 mb-5 max-w-xs mx-auto">Generate your first automated personal summary to review recent activities across your workspace.</p>
-                    <button 
+                    <Button 
                         onClick={generate} 
-                        className="px-4 py-2 text-xs font-semibold bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
-                    >
+                        
+                    size="sm" >
                         Compile First Briefing
-                    </button>
+                    </Button>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -184,7 +185,7 @@ export default function BriefingsIndex({ briefings }: Props) {
                     </p>
                     <div className="flex gap-1">
                         {Array.from({ length: briefings.meta.last_page }, (_, i) => i + 1).map((page) => (
-                            <button
+                            <Button
                                 key={page}
                                 onClick={() => router.get('/briefings', { page }, { preserveState: true })}
                                 className={cn(
@@ -195,7 +196,7 @@ export default function BriefingsIndex({ briefings }: Props) {
                                 )}
                             >
                                 {page}
-                            </button>
+                            </Button>
                         ))}
                     </div>
                 </div>

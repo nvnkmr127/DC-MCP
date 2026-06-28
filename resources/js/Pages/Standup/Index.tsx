@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import SyncsLayout from '@/Layouts/SyncsLayout';
 import { Users, CheckCircle2, Clock, AlertTriangle, ChevronLeft, ChevronRight, Send } from 'lucide-react';
@@ -58,15 +59,15 @@ export default function StandupIndex({ myStandup, teamStandups, date, stats }: P
                         <p className="text-sm text-gray-500 mt-0.5">End-of-day team check-ins</p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button onClick={() => navigateDate(-1)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">
+                        <Button onClick={() => navigateDate(-1)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50">
                             <ChevronLeft className="w-4 h-4 text-gray-600" />
-                        </button>
+                        </Button>
                         <span className="text-sm font-medium text-gray-700 min-w-28 text-center">
                             {isToday ? 'Today' : viewDate}
                         </span>
-                        <button onClick={() => navigateDate(1)} disabled={isToday} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">
+                        <Button onClick={() => navigateDate(1)} disabled={isToday} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40">
                             <ChevronRight className="w-4 h-4 text-gray-600" />
-                        </button>
+                        </Button>
                     </div>
                 </div>
 
@@ -139,11 +140,11 @@ export default function StandupIndex({ myStandup, teamStandups, date, stats }: P
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none" />
                             </div>
                             <div className="flex justify-end">
-                                <button type="submit" disabled={form.processing}
-                                    className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                                <Button type="submit" disabled={form.processing}
+                                    className="flex items-center gap-2 px-5 disabled:opacity-50" >
                                     <Send className="w-3.5 h-3.5" />
                                     {form.processing ? 'Submitting…' : myStandup ? 'Update Standup' : 'Submit Standup'}
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>
@@ -174,11 +175,11 @@ export default function StandupIndex({ myStandup, teamStandups, date, stats }: P
                                 <div className="flex items-center gap-3">
                                     <span className="text-xs text-gray-400">{s.submitted_at ? new Date(s.submitted_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                                     {s.status === 'submitted' && (
-                                        <button
+                                        <Button
                                             onClick={() => router.post(`/standup/${s.id}/reviewed`)}
                                             className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
                                             Mark Reviewed
-                                        </button>
+                                        </Button>
                                     )}
                                     {s.status === 'reviewed' && (
                                         <span className="text-xs text-emerald-600 font-medium">Reviewed</span>
