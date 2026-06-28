@@ -79,7 +79,7 @@ function ChecklistModal({ clients, users, onClose }: { clients: Client[]; users:
                         <div className="flex items-center justify-between mb-1">
                             <label className="text-xs text-gray-500 font-medium">Checklist Items</label>
                             <Button type="button" onClick={() => setItems(i => [...i, { label: '' }])}
-                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</Button>
+                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={12} /> Add</Button>
                         </div>
                         {items.map((item, i) => (
                             <div key={i} className="flex gap-2 mb-1.5">
@@ -87,7 +87,7 @@ function ChecklistModal({ clients, users, onClose }: { clients: Client[]; users:
                                     onChange={e => { const n = [...items]; n[i].label = e.target.value; setItems(n); }}
                                     className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500" />
                                 <Button type="button" onClick={() => setItems(it => it.filter((_, j) => j !== i))} className="text-gray-400 hover:text-rose-500">
-                                    <X size={13} />
+                                    <X size={16} />
                                 </Button>
                             </div>
                         ))}
@@ -125,7 +125,7 @@ export default function AuditChecklistsIndex({ checklists, clients, users, filte
                     <h1 className="text-lg font-bold text-gray-900">Audit Checklists</h1>
                     <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> New Checklist
+                        <Plus size={16} /> New Checklist
                     </Button>
                 </div>
 
@@ -170,7 +170,7 @@ export default function AuditChecklistsIndex({ checklists, clients, users, filte
                                             <span className="text-xs text-gray-500">{done}/{total}</span>
                                         </div>
                                     </div>
-                                    <ChevronDown size={13} className={cn('text-gray-400 transition-transform shrink-0', expandedId === cl.id && 'rotate-180')} />
+                                    <ChevronDown size={16} className={cn('text-gray-400 transition-transform shrink-0', expandedId === cl.id && 'rotate-180')} />
                                 </div>
                                 {expandedId === cl.id && (
                                     <div className="border-t border-gray-100 px-4 pb-4 pt-3 space-y-2">
@@ -200,7 +200,7 @@ export default function AuditChecklistsIndex({ checklists, clients, users, filte
                                                         }}
                                                         className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded hover:bg-red-100 transition-opacity flex items-center gap-1"
                                                     >
-                                                        <Bug size={10} /> Log Issue
+                                                        <Bug size={12} /> Log Issue
                                                     </Button>
                                                 )}
                                             </div>

@@ -128,7 +128,7 @@ export default function ClientPortalClientPage({ client, users, shares, projects
 
             <div className="mb-5">
                 <Link href="/settings/client-portal" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 w-fit">
-                    <ArrowLeft size={14} /> Back to Portal Management
+                    <ArrowLeft size={16} /> Back to Portal Management
                 </Link>
             </div>
 
@@ -138,11 +138,11 @@ export default function ClientPortalClientPage({ client, users, shares, projects
                     <div className="flex gap-2">
                         <Button onClick={() => setShareOpen(true)}
                             className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50">
-                            <Share2 size={13} /> Share Item
+                            <Share2 size={16} /> Share Item
                         </Button>
                         <Button onClick={() => setInviteOpen(true)}
                             className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                            <Plus size={14} /> Invite Contact
+                            <Plus size={16} /> Invite Contact
                         </Button>
                     </div>
                 </div>
@@ -165,7 +165,7 @@ export default function ClientPortalClientPage({ client, users, shares, projects
                                     <div className="flex items-center gap-1.5">
                                         <Button onClick={() => router.post(`/settings/client-portal/users/${u.id}/resend`, {})}
                                             className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-200 text-gray-500 rounded-lg hover:bg-gray-50">
-                                            <RotateCcw size={10} /> Resend
+                                            <RotateCcw size={12} /> Resend
                                         </Button>
                                         <Button onClick={() => router.post(`/settings/client-portal/users/${u.id}/toggle`, {})}
                                             className={cn('flex items-center gap-1 px-2 py-1 text-xs border rounded-lg transition-colors',
@@ -173,7 +173,7 @@ export default function ClientPortalClientPage({ client, users, shares, projects
                                                     ? 'border-rose-200 text-rose-600 hover:bg-rose-50'
                                                     : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
                                             )}>
-                                            {u.is_active ? <><UserX size={10} /> Disable</> : <><UserCheck size={10} /> Enable</>}
+                                            {u.is_active ? <><UserX size={12} /> Disable</> : <><UserCheck size={12} /> Enable</>}
                                         </Button>
                                     </div>
                                 </div>
@@ -208,7 +208,7 @@ export default function ClientPortalClientPage({ client, users, shares, projects
                                         router.delete(`/settings/client-portal/shares/${s.id}`);
                                     }}
                                         className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
-                                        <Trash2 size={13} />
+                                        <Trash2 size={16} />
                                     </Button>
                                 </div>
                             ))}

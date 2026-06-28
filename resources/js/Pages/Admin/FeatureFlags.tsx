@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, router } from '@inertiajs/react';
 import { Flag, Plus, Trash2, Globe, Building } from 'lucide-react';
 import Modal from '@/Components/ui/Modal';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
 
 interface Organization {
     id: number | string;
@@ -85,22 +86,22 @@ export default function FeatureFlags({ flags, organizations }: Props) {
 
                     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-white/5 border-b border-white/10 text-gray-300 text-sm">
-                                        <th className="p-4 font-medium">Feature</th>
-                                        <th className="p-4 font-medium">Scope</th>
-                                        <th className="p-4 font-medium">Status</th>
-                                        <th className="p-4 font-medium text-right">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-sm divide-y divide-white/5">
+                            <Table className="w-full text-left border-collapse">
+                                <TableHeader>
+                                    <TableRow className="bg-white/5 border-b border-white/10 text-gray-300 text-sm">
+                                        <TableHead className="p-4 font-medium">Feature</TableHead>
+                                        <TableHead className="p-4 font-medium">Scope</TableHead>
+                                        <TableHead className="p-4 font-medium">Status</TableHead>
+                                        <TableHead className="p-4 font-medium text-right">Actions</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="text-sm divide-y divide-white/5">
                                     {flags.map((flag) => (
-                                        <tr key={flag.id} className="hover:bg-white/5 transition-colors">
-                                            <td className="p-4 whitespace-nowrap text-gray-200 font-medium">
+                                        <TableRow key={flag.id} className="hover:bg-white/5 transition-colors">
+                                            <TableCell className="p-4 whitespace-nowrap text-gray-200 font-medium">
                                                 {flag.feature}
-                                            </td>
-                                            <td className="p-4 whitespace-nowrap text-gray-400">
+                                            </TableCell>
+                                            <TableCell className="p-4 whitespace-nowrap text-gray-400">
                                                 {flag.organization ? (
                                                     <div className="flex items-center gap-2 text-blue-400">
                                                         <Building className="w-4 h-4" />
@@ -112,8 +113,8 @@ export default function FeatureFlags({ flags, organizations }: Props) {
                                                         Global
                                                     </div>
                                                 )}
-                                            </td>
-                                            <td className="p-4 whitespace-nowrap">
+                                            </TableCell>
+                                            <TableCell className="p-4 whitespace-nowrap">
                                                 <Button
                                                     onClick={() => toggleFlag(flag)}
                                                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 focus:ring-offset-[#0f172a] ${
@@ -126,8 +127,8 @@ export default function FeatureFlags({ flags, organizations }: Props) {
                                                         }`}
                                                     />
                                                 </Button>
-                                            </td>
-                                            <td className="p-4 whitespace-nowrap text-right">
+                                            </TableCell>
+                                            <TableCell className="p-4 whitespace-nowrap text-right">
                                                 <Button
                                                     onClick={() => deleteFlag(flag)}
                                                     className="p-1.5 text-red-400 hover:text-red-300 bg-red-400/10 hover:bg-red-400/20 rounded-lg transition-colors inline-flex items-center"
@@ -135,18 +136,18 @@ export default function FeatureFlags({ flags, organizations }: Props) {
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
                                     {flags.length === 0 && (
-                                        <tr>
-                                            <td colSpan={4} className="p-8 text-center text-gray-400">
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="p-8 text-center text-gray-400">
                                                 No feature flags defined.
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     )}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                     </div>
                 </div>

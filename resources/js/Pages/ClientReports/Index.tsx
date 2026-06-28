@@ -65,7 +65,7 @@ function ReportModal({ clients, onClose }: { clients: Client[]; onClose: () => v
                         <div className="flex items-center justify-between mb-1">
                             <label className="text-xs text-gray-500 font-medium">Metrics (key / value)</label>
                             <Button type="button" onClick={() => setMetrics(m => [...m, { key: '', value: '' }])}
-                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</Button>
+                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={12} /> Add</Button>
                         </div>
                         {metrics.map((m, i) => (
                             <div key={i} className="flex gap-2 mb-1.5">
@@ -76,7 +76,7 @@ function ReportModal({ clients, onClose }: { clients: Client[]; onClose: () => v
                                     onChange={e => { const n = [...metrics]; n[i].value = e.target.value; setMetrics(n); }}
                                     className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500" />
                                 <Button type="button" onClick={() => setMetrics(m => m.filter((_, j) => j !== i))} className="text-gray-400 hover:text-rose-500">
-                                    <X size={13} />
+                                    <X size={16} />
                                 </Button>
                             </div>
                         ))}
@@ -111,7 +111,7 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                     <h1 className="text-lg font-bold text-gray-900">Monthly Client Updates</h1>
                     <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> New Report
+                        <Plus size={16} /> New Report
                     </Button>
                 </div>
 
@@ -150,7 +150,7 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                                         <>
                                             <Button onClick={() => router.post(`/client-updates/${r.id}/draft`)}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 border border-indigo-200 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50">
-                                                <Sparkles size={11} /> AI Draft
+                                                <Sparkles size={12} /> AI Draft
                                             </Button>
                                             <Button onClick={async () => {
                                                 const ok = await confirm({
@@ -161,13 +161,13 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                                                 if (ok) router.post(`/client-updates/${r.id}/send`);
                                             }}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 border border-emerald-200 text-emerald-600 text-xs font-medium rounded-lg hover:bg-emerald-50">
-                                                <Send size={11} /> Send
+                                                <Send size={12} /> Send
                                             </Button>
                                         </>
                                     )}
                                     <Button onClick={() => setExpandedId(expandedId === r.id ? null : r.id)}
                                         className="p-1.5 text-gray-400 hover:text-gray-600">
-                                        <ChevronDown size={14} className={cn('transition-transform', expandedId === r.id && 'rotate-180')} />
+                                        <ChevronDown size={16} className={cn('transition-transform', expandedId === r.id && 'rotate-180')} />
                                     </Button>
                                     <Button onClick={async () => {
                                         const ok = await confirm({
@@ -180,7 +180,7 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                                         router.delete(`/client-updates/${r.id}`);
                                     }}
                                         className="p-1.5 text-gray-400 hover:text-rose-500">
-                                        <Trash2 size={13} />
+                                        <Trash2 size={16} />
                                     </Button>
                                 </div>
                             </div>

@@ -77,7 +77,7 @@ export default function BriefingsIndex({ briefings }: Props) {
                         onClick={generate}
                         className="flex items-center justify-center gap-2 py-2.5 from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all shrink-0" 
                     variant="ghost" size="sm" >
-                        <Zap size={14} className="fill-white/10" /> Compile Today's Briefing
+                        <Zap size={16} className="fill-white/10" /> Compile Today's Briefing
                     </Button>
                 </div>
             </div>
@@ -118,7 +118,7 @@ export default function BriefingsIndex({ briefings }: Props) {
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="flex items-center gap-2">
                                             <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                                                <Calendar size={15} />
+                                                <Calendar size={16} />
                                             </div>
                                             <span className="text-xs font-bold text-gray-900">{formatDate(briefing.date)}</span>
                                         </div>
@@ -136,7 +136,7 @@ export default function BriefingsIndex({ briefings }: Props) {
                                             </div>
                                         ) : briefing.status === 'failed' ? (
                                             <div className="flex items-start gap-2.5 py-2">
-                                                <AlertCircle size={15} className="text-rose-500 shrink-0 mt-0.5" />
+                                                <AlertCircle size={16} className="text-rose-500 shrink-0 mt-0.5" />
                                                 <p className="text-xs text-rose-600 leading-snug">
                                                     Generation failed due to missing system analytics variables. Please retry compiling.
                                                 </p>
@@ -168,7 +168,7 @@ export default function BriefingsIndex({ briefings }: Props) {
                                         <span className="text-[11px] font-bold text-gray-500 group-hover:text-indigo-600 transition-colors">
                                             {briefing.status === 'failed' ? 'Re-generate' : 'View Full Summary'}
                                         </span>
-                                        <ChevronRight size={13} className="text-gray-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
+                                        <ChevronRight size={16} className="text-gray-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
                                     </div>
                                 )}
                             </Link>

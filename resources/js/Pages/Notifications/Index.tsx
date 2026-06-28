@@ -55,7 +55,7 @@ export default function NotificationsIndex({ notifications, unread_count }: Prop
                         onClick={markAllRead}
                         className="flex items-center gap-1.5" 
                     size="sm" >
-                        <CheckCheck size={13} /> Mark all as read
+                        <CheckCheck size={16} /> Mark all as read
                     </Button>
                 )}
             </div>
@@ -70,7 +70,7 @@ export default function NotificationsIndex({ notifications, unread_count }: Prop
                         </div>
 
                         <div className="w-24 h-24 mb-6 rounded-[2rem] bg-gradient-to-tr from-emerald-400 to-cyan-500 flex items-center justify-center shadow-[0_8px_30px_rgba(16,185,129,0.25)] text-white transform rotate-3 hover:rotate-0 transition-transform duration-500 z-10">
-                            <CheckCheck size={40} className="transform -rotate-3 hover:rotate-0 transition-transform duration-500" />
+                            <CheckCheck size={48} className="transform -rotate-3 hover:rotate-0 transition-transform duration-500" />
                         </div>
                         
                         <h3 className="text-2xl font-extrabold text-gray-900 mb-3 tracking-tight z-10">You're all caught up!</h3>

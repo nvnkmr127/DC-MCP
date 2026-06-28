@@ -10,6 +10,8 @@ import {
 import { CalendarRange, Download, TrendingUp, BarChart3, FileText, Calendar, Plus, Mail, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
+import { Card } from "@/Components/ui/Card";
 
 interface Report {
     id: string;
@@ -169,7 +171,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         href="/internal-reports/create"
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-sm"
                     >
-                        <Plus size={13} /> Build Report
+                        <Plus size={16} /> Build Report
                     </Link>
                 </div>
             </div>
@@ -191,7 +193,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                 : "border-transparent text-gray-400 hover:text-gray-900"
                         )}
                     >
-                        <t.icon size={13} /> {t.label}
+                        <t.icon size={16} /> {t.label}
                     </Button>
                 ))}
             </div>
@@ -201,7 +203,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                 <>
                     {/* Date range bar */}
                     <div className="bg-white border border-gray-100 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-                        <CalendarRange size={15} className="text-gray-400 shrink-0" />
+                        <CalendarRange size={16} className="text-gray-400 shrink-0" />
                         <div className="flex items-center gap-2 flex-wrap flex-1">
                             {QUICK_RANGES.map(({ label, days }) => (
                                 <Button
@@ -245,20 +247,20 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                             { label: 'Active Projects',    value: data.projects.length,      color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
                             { label: 'Team Members',       value: data.time_by_user.length,  color: 'text-orange-600', bg: 'bg-orange-50/50' },
                         ].map(({ label, value, color, bg }) => (
-                            <div key={label} className="bg-white rounded-2xl border border-gray-100 p-5">
+                            <Card key={label} className="p-5">
                                 <div className={cn('inline-flex w-8 h-8 rounded-xl items-center justify-center mb-3', bg)}>
-                                    <TrendingUp size={15} className={color} />
+                                    <TrendingUp size={16} className={color} />
                                 </div>
                                 <p className="text-2xl font-extrabold text-gray-900 tracking-tight tabular-nums">{value}</p>
                                 <p className="text-[11px] text-gray-400 mt-1 font-semibold uppercase tracking-wider">{label}</p>
-                            </div>
+                            </Card>
                         ))}
                     </div>
 
                     {/* Charts grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Task completion over time */}
-                        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                        <Card className="p-6">
                             <h3 className="text-[13px] font-bold text-gray-900 mb-4">Task Completions</h3>
                             <ResponsiveContainer width="100%" height={210}>
                                 <AreaChart data={data.task_completion}>
@@ -275,10 +277,10 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                     <Area type="monotone" dataKey="completed" stroke="#6366f1" strokeWidth={2} fill="url(#grad1)" dot={false} />
                                 </AreaChart>
                             </ResponsiveContainer>
-                        </div>
+                        </Card>
 
                         {/* Time by user */}
-                        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                        <Card className="p-6">
                             <h3 className="text-[13px] font-bold text-gray-900 mb-4">Time by Team Member</h3>
                             <ResponsiveContainer width="100%" height={210}>
                                 <BarChart data={data.time_by_user} layout="vertical">
@@ -289,7 +291,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                     <Bar dataKey="hours" fill="#6366f1" radius={[0, 4, 4, 0]} maxBarSize={16} />
                                 </BarChart>
                             </ResponsiveContainer>
-                        </div>
+                        </Card>
                     </div>
                 </>
             )}
@@ -298,21 +300,21 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
             {activeTab === 'pdfs' && (
                 <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-xs">
-                            <thead>
-                                <tr className="border-b border-gray-100 bg-gray-50/70">
-                                    {compareMode && <th className="px-5 py-3 w-10 text-center"></th>}
-                                    <th className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Report Title</th>
-                                    <th className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Period</th>
-                                    <th className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Project / Client</th>
-                                    <th className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                                    {!compareMode && <th className="px-5 py-3 text-right font-bold text-gray-400 uppercase tracking-wider">Actions</th>}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
+                        <Table className="w-full text-xs">
+                            <TableHeader>
+                                <TableRow className="border-b border-gray-100 bg-gray-50/70">
+                                    {compareMode && <TableHead className="px-5 py-3 w-10 text-center"></TableHead>}
+                                    <TableHead className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Report Title</TableHead>
+                                    <TableHead className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Period</TableHead>
+                                    <TableHead className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Project / Client</TableHead>
+                                    <TableHead className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Status</TableHead>
+                                    {!compareMode && <TableHead className="px-5 py-3 text-right font-bold text-gray-400 uppercase tracking-wider">Actions</TableHead>}
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-y divide-gray-50">
                                 {reports.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={compareMode ? 6 : 5} className="py-16 text-center">
+                                    <TableRow>
+                                        <TableCell colSpan={compareMode ? 6 : 5} className="py-16 text-center">
                                             <div className="flex flex-col items-center justify-center">
                                                 <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 shadow-sm flex items-center justify-center mx-auto mb-4">
                                                     <FileText size={20} className="text-gray-400" />
@@ -323,13 +325,13 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                     Create New Report
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     reports.map(rep => (
-                                        <tr key={rep.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                        <TableRow key={rep.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                                             {compareMode && (
-                                                <td className="px-5 py-4 text-center">
+                                                <TableCell className="px-5 py-4 text-center">
                                                     <input
                                                         type="checkbox"
                                                         className="rounded text-indigo-600 focus:ring-indigo-500 border-gray-300 w-4 h-4"
@@ -343,32 +345,32 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                             }
                                                         }}
                                                     />
-                                                </td>
+                                                </TableCell>
                                             )}
-                                            <td className="px-5 py-4">
+                                            <TableCell className="px-5 py-4">
                                                 <div className="text-sm font-bold text-gray-900">{rep.title}</div>
                                                 <div className="text-[10px] uppercase font-bold tracking-wider text-gray-400 mt-0.5">{rep.template.replace('_', ' ')}</div>
-                                            </td>
-                                            <td className="px-5 py-4 text-xs font-semibold text-gray-500">
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4 text-xs font-semibold text-gray-500">
                                                 {rep.date_from} — {rep.date_to}
-                                            </td>
-                                            <td className="px-5 py-4">
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4">
                                                 {rep.project ? (
                                                     <div className="text-xs font-bold text-gray-800">{rep.project.name}</div>
                                                 ) : rep.client ? (
                                                     <div className="text-xs font-bold text-gray-800">{rep.client.name}</div>
                                                 ) : <span className="text-gray-400 text-xs">—</span>}
-                                            </td>
-                                            <td className="px-5 py-4">
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4">
                                                 <span className={cn(
                                                     "px-2 py-0.5 rounded-full text-[10px] font-bold capitalize",
                                                     rep.status === 'ready' ? "bg-emerald-50 text-emerald-700" : "bg--50 text--800"
                                                 )}>
                                                     {rep.status}
                                                 </span>
-                                            </td>
+                                            </TableCell>
                                             {!compareMode && (
-                                                <td className="px-5 py-4 text-right space-x-2">
+                                                <TableCell className="px-5 py-4 text-right space-x-2">
                                                     <Link
                                                         href={`/internal-reports/${rep.id}`}
                                                         className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg font-bold"
@@ -399,13 +401,13 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                             </Button>
                                                         </>
                                                     )}
-                                                </td>
+                                                </TableCell>
                                             )}
-                                        </tr>
+                                        </TableRow>
                                     ))
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
             )}
@@ -414,41 +416,41 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
             {activeTab === 'schedules' && (
                 <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-xs">
-                            <thead>
-                                <tr className="border-b border-gray-100 bg-gray-50/70">
-                                    <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Schedule Config</th>
-                                    <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Target</th>
-                                    <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Frequency</th>
-                                    <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Next Run</th>
-                                    <th className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Status</th>
-                                    <th className="text-right px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
+                        <Table className="w-full text-xs">
+                            <TableHeader>
+                                <TableRow className="border-b border-gray-100 bg-gray-50/70">
+                                    <TableHead className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Schedule Config</TableHead>
+                                    <TableHead className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Target</TableHead>
+                                    <TableHead className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Frequency</TableHead>
+                                    <TableHead className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Next Run</TableHead>
+                                    <TableHead className="text-left px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Status</TableHead>
+                                    <TableHead className="text-right px-5 py-3.5 font-bold text-gray-400 uppercase tracking-wider">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-y divide-gray-50">
                                 {schedules.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="text-center py-12 text-gray-400">
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center py-12 text-gray-400">
                                             No report schedules configured. Report schedules can be configured dynamically via reports creation.
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ) : (
                                     schedules.map(sched => (
-                                        <tr key={sched.id} className="hover:bg-gray-50/50 transition-colors">
-                                            <td className="px-5 py-4">
+                                        <TableRow key={sched.id} className="hover:bg-gray-50/50 transition-colors">
+                                            <TableCell className="px-5 py-4">
                                                 <div className="font-bold text-gray-900 text-[13px]">{sched.title}</div>
                                                 <div className="text-gray-400 mt-0.5 capitalize text-[10px]">{sched.template.replace('_', ' ')}</div>
-                                            </td>
-                                            <td className="px-5 py-4 text-gray-600">
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4 text-gray-600">
                                                 {sched.project?.name ?? sched.client?.name ?? 'General'}
-                                            </td>
-                                            <td className="px-5 py-4 capitalize text-gray-500">
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4 capitalize text-gray-500">
                                                 {sched.frequency} (Day {sched.send_day})
-                                            </td>
-                                            <td className="px-5 py-4 text-gray-500">
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4 text-gray-500">
                                                 {sched.next_run_at ? sched.next_run_at.slice(0, 10) : '—'}
-                                            </td>
-                                            <td className="px-5 py-4">
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4">
                                                 <Button
                                                     onClick={() => {
                                                         axios.patch(`/api/v1/report-schedules/${sched.id}`, {
@@ -467,8 +469,8 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                 >
                                                     {sched.is_active ? 'Active' : 'Paused'}
                                                 </Button>
-                                            </td>
-                                            <td className="px-5 py-4 text-right">
+                                            </TableCell>
+                                            <TableCell className="px-5 py-4 text-right">
                                                 <div className="flex justify-end items-center gap-2">
                                                     <Button
                                                         onClick={() => {
@@ -510,12 +512,12 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                         Delete
                                                     </Button>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
             )}
@@ -527,7 +529,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-sm font-bold text-gray-900">Email Report</h3>
                             <Button onClick={() => setEmailModalReport(null)} className="text-gray-400 hover:text-gray-700">
-                                <Plus className="rotate-45" size={18} />
+                                <Plus className="rotate-45" size={20} />
                             </Button>
                         </div>
                         <p className="text-xs text-gray-400 mb-4">This will send the PDF report: <strong>{emailModalReport.title}</strong> directly to the recipient.</p>
@@ -570,7 +572,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-sm font-bold text-gray-900">Share Report</h3>
                             <Button onClick={() => setShareModalReport(null)} className="text-gray-400 hover:text-gray-700">
-                                <Plus className="rotate-45" size={18} />
+                                <Plus className="rotate-45" size={20} />
                             </Button>
                         </div>
                         
@@ -646,7 +648,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-sm font-bold text-gray-900">Edit Scope: {editSchedule.title}</h3>
                             <Button onClick={() => setEditSchedule(null)} className="text-gray-400 hover:text-gray-700">
-                                <Plus className="rotate-45" size={18} />
+                                <Plus className="rotate-45" size={20} />
                             </Button>
                         </div>
                         

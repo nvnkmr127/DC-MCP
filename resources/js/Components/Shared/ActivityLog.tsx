@@ -41,7 +41,7 @@ export function ActivityLog({ activities }: Props) {
                             <div className="relative flex space-x-3">
                                 <div>
                                     <span className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center ring-8 ring-white">
-                                        <Clock size={14} className="text-gray-500" />
+                                        <Clock size={16} className="text-gray-500" />
                                     </span>
                                 </div>
                                 <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">

@@ -55,7 +55,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
             <Button onClick={() => setOpen(!open)}
                 className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors">
                 <span className="text-sm font-medium text-gray-900">{q}</span>
-                {open ? <ChevronUp size={15} className="text-gray-400 shrink-0" /> : <ChevronDown size={15} className="text-gray-400 shrink-0" />}
+                {open ? <ChevronUp size={16} className="text-gray-400 shrink-0" /> : <ChevronDown size={16} className="text-gray-400 shrink-0" />}
             </Button>
             {open && <p className="px-5 pb-4 text-sm text-gray-600 leading-relaxed">{a}</p>}
         </div>
@@ -100,7 +100,7 @@ export default function HelpIndex() {
                         {SECTIONS.map(({ icon: Icon, label, desc }) => (
                             <div key={label} className="bg-white rounded-xl border border-gray-200 p-4 flex items-start gap-3">
                                 <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
-                                    <Icon size={15} className="text-gray-500" />
+                                    <Icon size={16} className="text-gray-500" />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-900">{label}</p>

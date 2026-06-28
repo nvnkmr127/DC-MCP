@@ -170,7 +170,7 @@ export default function ReviewsIndex({ written, received, users }: Props) {
                     </div>
                     <Button onClick={() => setShowWrite(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> Write Review
+                        <Plus size={16} /> Write Review
                     </Button>
                 </div>
 

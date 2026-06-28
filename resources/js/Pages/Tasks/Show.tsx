@@ -162,7 +162,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                             href={`/tasks/${task.id}/edit`}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50"
                         >
-                            <Edit size={13} /> Edit
+                            <Edit size={16} /> Edit
                         </Link>
                         <Button
                             type="button"
@@ -178,7 +178,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                             }}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-red-200 rounded-lg text-red-600 hover:bg-red-50"
                         >
-                            <Trash2 size={13} /> Delete
+                            <Trash2 size={16} /> Delete
                         </Button>
                     </div>
                 </div>
@@ -221,7 +221,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                                 : 'border-transparent text-gray-500 hover:text-gray-700',
                                         )}
                                     >
-                                        <Icon size={15} /> {label}
+                                        <Icon size={16} /> {label}
                                         {count !== null && count > 0 && (
                                             <span className="px-1.5 py-0.5 bg-gray-100 text-gray-700 text-xs rounded-full">{count}</span>
                                         )}
@@ -310,7 +310,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                                     }}
                                                     className="p-1.5 text-gray-300 hover:text-red-500 transition-colors rounded opacity-0 group-hover:opacity-100 shrink-0"
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={16} />
                                                 </Button>
                                             </div>
                                         ))}

@@ -44,7 +44,7 @@ export default function ClientEdit({ client }: Props) {
                         href={`/clients/${client.id}`}
                         className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
                     >
-                        <ArrowLeft size={17} />
+                        <ArrowLeft size={20} />
                     </Link>
                     <div>
                         <h1 className="text-[15px] font-bold text-gray-900">Edit Client</h1>
@@ -171,7 +171,7 @@ export default function ClientEdit({ client }: Props) {
                                 disabled={form.processing}
                                 className="flex items-center gap-1.5 px-5 py-2.5 disabled:opacity-50" 
                             >
-                                <Save size={14} />
+                                <Save size={16} />
                                 {form.processing ? 'Saving…' : 'Save Changes'}
                             </Button>
                             <Link

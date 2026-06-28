@@ -83,13 +83,13 @@ export default function KnowledgeBaseIndex({ articles, categories, filters }: Pr
                     <h1 className="text-lg font-bold text-gray-900">Knowledge Base</h1>
                     <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> New Article
+                        <Plus size={16} /> New Article
                     </Button>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <div className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2">
-                        <Search size={14} className="text-gray-400" />
+                        <Search size={16} className="text-gray-400" />
                         <input type="text" placeholder="Search articles…" value={search}
                             onChange={e => setSearch(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && applyFilter()}
@@ -163,7 +163,7 @@ export default function KnowledgeBaseIndex({ articles, categories, filters }: Pr
                             <p className="text-xs text-gray-500 mb-2 line-clamp-2">{a.body.slice(0, 120)}{a.body.length > 120 ? '…' : ''}</p>
                             <div className="flex items-center justify-between text-[10px] text-gray-400">
                                 <span>{a.author.name ?? 'Unknown'} · {a.created_at}</span>
-                                <span className="flex items-center gap-1"><Eye size={9} /> {a.view_count}</span>
+                                <span className="flex items-center gap-1"><Eye size={12} /> {a.view_count}</span>
                             </div>
                             {a.tags.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">

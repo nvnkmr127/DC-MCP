@@ -52,7 +52,7 @@ function ReportModal({ clientId, onClose }: { clientId: string; onClose: () => v
                         <div className="flex items-center justify-between mb-1">
                             <label className="text-xs text-gray-500 font-medium">Metrics (key / value)</label>
                             <Button type="button" onClick={() => setMetrics(m => [...m, { key: '', value: '' }])}
-                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</Button>
+                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={12} /> Add</Button>
                         </div>
                         {metrics.map((m, i) => (
                             <div key={i} className="flex gap-2 mb-1.5">
@@ -63,7 +63,7 @@ function ReportModal({ clientId, onClose }: { clientId: string; onClose: () => v
                                     onChange={e => { const n = [...metrics]; n[i].value = e.target.value; setMetrics(n); }}
                                     className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500" />
                                 <Button type="button" onClick={() => setMetrics(m => m.filter((_, j) => j !== i))} className="text-gray-400 hover:text-rose-500">
-                                    <X size={13} />
+                                    <X size={16} />
                                 </Button>
                             </div>
                         ))}
@@ -277,7 +277,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                         <div className="flex items-start gap-4">
                             {/* Avatar */}
                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center shrink-0">
-                                <Building2 size={22} className="text-white" />
+                                <Building2 size={24} className="text-white" />
                             </div>
                             <div>
                                 <div className="flex items-center gap-2.5 flex-wrap">
@@ -295,18 +295,18 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                 <div className="flex flex-wrap items-center gap-4 mt-2">
                                     {client.email && (
                                         <a href={`mailto:${client.email}`} className="flex items-center gap-1.5 text-[12px] text-gray-500 hover:text-indigo-600 transition-colors">
-                                            <Mail size={13} /> {client.email}
+                                            <Mail size={16} /> {client.email}
                                         </a>
                                     )}
                                     {client.phone && (
                                         <a href={`tel:${client.phone}`} className="flex items-center gap-1.5 text-[12px] text-gray-500 hover:text-indigo-600 transition-colors">
-                                            <Phone size={13} /> {client.phone}
+                                            <Phone size={16} /> {client.phone}
                                         </a>
                                     )}
                                     {client.website && (
                                         <a href={client.website} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[12px] text-gray-500 hover:text-indigo-600 transition-colors">
-                                            <Globe size={13} /> {client.website.replace(/^https?:\/\//, '')}
-                                            <ExternalLink size={10} />
+                                            <Globe size={16} /> {client.website.replace(/^https?:\/\//, '')}
+                                            <ExternalLink size={12} />
                                         </a>
                                     )}
                                     {client.industry && (
@@ -328,7 +328,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                 href={`/clients/${client.id}/edit`}
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
                             >
-                                <Edit size={13} /> Edit
+                                <Edit size={16} /> Edit
                             </Link>
                             <Button
                                 onClick={async () => {
@@ -343,7 +343,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                 }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] border border-red-200 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
                             >
-                                <Trash2 size={13} /> Delete
+                                <Trash2 size={16} /> Delete
                             </Button>
                         </div>
                     </div>
@@ -390,7 +390,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                             <Button onClick={() => setScoreOpen(true)}
                                 className="bg-white rounded-xl border border-gray-100 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-center hover:border-indigo-200 transition-colors group">
                                 <div className="flex items-center justify-center gap-1 mb-0.5">
-                                    <Star size={14} className={client.success_score !== null ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
+                                    <Star size={16} className={client.success_score !== null ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
                                     <p className="text-2xl font-bold text-gray-900">{client.success_score ?? '—'}</p>
                                 </div>
                                 <p className="text-[11px] text-gray-400">Success Score</p>
@@ -494,17 +494,17 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                                             <>
                                                                 <Button onClick={() => router.post(`/client-updates/${r.id}/draft`)}
                                                                     className="flex items-center gap-1 px-2.5 py-1 border border-indigo-200 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50">
-                                                                    <Sparkles size={11} /> AI Draft
+                                                                    <Sparkles size={12} /> AI Draft
                                                                 </Button>
                                                                 <Button onClick={() => router.post(`/client-updates/${r.id}/send`)}
                                                                     className="flex items-center gap-1 px-2.5 py-1 border border-emerald-200 text-emerald-600 text-xs font-medium rounded-lg hover:bg-emerald-50">
-                                                                    <Send size={11} /> Send
+                                                                    <Send size={12} /> Send
                                                                 </Button>
                                                             </>
                                                         )}
                                                         <Button onClick={() => setExpandedReportId(expandedReportId === r.id ? null : r.id)}
                                                             className="p-1 text-gray-400 hover:text-gray-600">
-                                                            <ChevronDown size={14} className={cn('transition-transform', expandedReportId === r.id && 'rotate-180')} />
+                                                            <ChevronDown size={16} className={cn('transition-transform', expandedReportId === r.id && 'rotate-180')} />
                                                         </Button>
                                                         <Button onClick={async () => {
                                                             const ok = await confirm({
@@ -517,7 +517,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                                             router.delete(`/client-updates/${r.id}`);
                                                         }}
                                                             className="p-1 text-gray-400 hover:text-rose-500">
-                                                            <Trash2 size={13} />
+                                                            <Trash2 size={16} />
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -570,7 +570,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                         </div>
                         {communications.length === 0 ? (
                             <div className="py-12 text-center">
-                                <MessageSquare size={28} className="text-gray-200 mx-auto mb-2" />
+                                <MessageSquare size={32} className="text-gray-200 mx-auto mb-2" />
                                 <p className="text-[13px] text-gray-400">No communications logged yet.</p>
                                 <Button onClick={() => setCommOpen(true)}
                                     className="mt-2 text-[12px] text-indigo-600 hover:text-indigo-700">
@@ -740,7 +740,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                                         router.delete(`/client-surveys/${s.id}`);
                                                     }}
                                                         className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
-                                                        <Trash2 size={13} />
+                                                        <Trash2 size={16} />
                                                     </Button>
                                                 </div>
                                             </div>

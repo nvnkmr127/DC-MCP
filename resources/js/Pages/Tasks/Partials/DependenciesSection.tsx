@@ -68,7 +68,7 @@ export const DependenciesSection: React.FC<DependenciesSectionProps> = ({
                                 }}
                                 className="p-1.5 text-gray-300 hover:text-rose-500 transition-colors rounded opacity-0 group-hover:opacity-100 shrink-0"
                             >
-                                <X size={13} />
+                                <X size={16} />
                             </Button>
                         </div>
                     ))}

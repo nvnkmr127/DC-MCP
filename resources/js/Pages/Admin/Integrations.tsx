@@ -9,6 +9,7 @@ import { Input, Label } from '@/Components/ui/Input';
 import { MonitorPlay, Activity } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/Components/ui/Tooltip';
 import Modal from '@/Components/ui/Modal';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
 import { 
     Plus, Trash2, RefreshCw, CheckCircle, XCircle, Settings, Globe, Key, 
     AlertTriangle, HelpCircle, ExternalLink, PlayCircle,
@@ -362,7 +363,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                         }}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 w-fit"
                     >
-                        <Plus size={15} /> Add Connection
+                        <Plus size={16} /> Add Connection
                     </Button>
                 )}
             </div>
@@ -455,7 +456,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                 isCustom ? "border-indigo-600 bg-indigo-50" : "border-gray-200 bg-white"
                                             )}
                                         >
-                                            <Globe size={30} className="mb-2 text-gray-400" />
+                                            <Globe size={32} className="mb-2 text-gray-400" />
                                             <span className="text-xs font-semibold text-gray-700">Custom HTTP</span>
                                         </Button>
                                     </div>
@@ -475,7 +476,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                 <div>
                                     <div className="mb-5 flex items-start gap-4 p-5 bg-gray-50 border border-gray-100 rounded-xl">
                                         <div className="text-4xl shrink-0 mt-1">
-                                            {isCustom ? <Globe size={40} className="text-gray-400" /> : (PROVIDER_ICONS[form.data.provider] ?? '🔌')}
+                                            {isCustom ? <Globe size={48} className="text-gray-400" /> : (PROVIDER_ICONS[form.data.provider] ?? '🔌')}
                                         </div>
                                         <div>
                                             <h4 className="text-base font-bold text-gray-900 capitalize mb-1">
@@ -489,7 +490,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                             {!isCustom && PROVIDER_DETAILS[form.data.provider]?.scopes && (
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div className="bg-white border border-gray-200 rounded-lg p-3">
-                                                        <h5 className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-1.5"><Key size={13} className="text-indigo-600" /> Required Permissions:</h5>
+                                                        <h5 className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-1.5"><Key size={16} className="text-indigo-600" /> Required Permissions:</h5>
                                                         <ul className="text-xs text-gray-600 list-disc pl-4 space-y-1">
                                                             {PROVIDER_DETAILS[form.data.provider].scopes.map((scope, idx) => (
                                                                 <li key={idx}>{scope}</li>
@@ -497,7 +498,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                         </ul>
                                                     </div>
                                                     <div className="bg-white border border-gray-200 rounded-lg p-3">
-                                                        <h5 className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-1.5"><RefreshCw size={13} className="text-blue-500" /> What will be synced:</h5>
+                                                        <h5 className="text-xs font-semibold text-gray-900 mb-2 flex items-center gap-1.5"><RefreshCw size={16} className="text-blue-500" /> What will be synced:</h5>
                                                         <ul className="text-xs text-gray-600 list-disc pl-4 space-y-1">
                                                             {PROVIDER_DETAILS[form.data.provider].synced_data?.map((data, idx) => (
                                                                 <li key={idx}>{data}</li>
@@ -523,7 +524,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                 target="_blank" rel="noopener noreferrer"
                                                 className="px-4 py-2 text-sm text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg font-medium flex items-center gap-1.5 transition-colors hidden sm:flex"
                                             >
-                                                <ExternalLink size={14} /> Setup Guide
+                                                <ExternalLink size={16} /> Setup Guide
                                             </a>
                                             <Button
                                                 type="button"
@@ -716,7 +717,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                 {!isCustom && (
                                     <div className="lg:col-span-2 bg-indigo-50/40 rounded-xl p-5 border border-indigo-100 hidden md:block">
                                         <h5 className="text-xs font-bold text-gray-800 mb-3 uppercase tracking-wider flex items-center gap-2">
-                                            <PlayCircle size={14} className="text-indigo-600" /> Connection Walkthrough
+                                            <PlayCircle size={16} className="text-indigo-600" /> Connection Walkthrough
                                         </h5>
                                         <div className="aspect-video bg-gray-200 rounded-lg mb-3 relative overflow-hidden group cursor-pointer border border-gray-300 shadow-sm flex items-center justify-center">
                                             <div className="absolute inset-0 bg-gradient-to-br from-indigo-200/50 to-purple-200/50 opacity-80 group-hover:opacity-100 transition-opacity"></div>
@@ -727,7 +728,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                         </div>
                                         <p className="text-xs text-gray-600 mb-3">Not sure where to find your API key or OAuth credentials? Watch this quick 45-second guide.</p>
                                         <a href={`https://docs.example.com/integrations/${form.data.provider}#credentials`} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 font-medium hover:text-indigo-800 flex items-center gap-1">
-                                            Read detailed instructions <ExternalLink size={10} />
+                                            Read detailed instructions <ExternalLink size={12} />
                                         </a>
                                     </div>
                                 )}
@@ -749,7 +750,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                         Connect your favorite external services and platforms to sync data seamlessly. The onboarding process takes just a few minutes.
                                     </p>
                                     <Button onClick={() => setShowForm(true)} className="px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm transition-colors w-full md:w-auto flex items-center justify-center md:justify-start gap-2">
-                                        <Plus size={18} /> Add First Connection
+                                        <Plus size={20} /> Add First Connection
                                     </Button>
                                 </div>
                                 <div className="flex-1 w-full bg-gray-50 rounded-2xl p-6 md:p-8 border border-gray-100 relative overflow-hidden">
@@ -842,7 +843,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                         return (
                                             <div className="mt-2 mb-3 bg-red-50 border border-red-100 rounded-lg p-3">
                                                 <div className="flex gap-2">
-                                                    <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                                                    <AlertTriangle size={16} className="text-red-500 shrink-0 mt-0.5" />
                                                     <div>
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <p className="text-xs font-semibold text-red-800">Sync Issue Detected</p>
@@ -877,7 +878,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                             rel="noopener noreferrer"
                                                             className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-[10px] font-semibold transition-colors flex items-center gap-1"
                                                         >
-                                                            <Globe size={10} /> View Dashboard
+                                                            <Globe size={12} /> View Dashboard
                                                         </a>
                                                     )}
                                                     <a
@@ -920,7 +921,7 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                             onClick={() => remove(conn.id)}
                                             className="ml-auto p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-red-50 transition-colors"
                                         >
-                                            <Trash2 size={13} />
+                                            <Trash2 size={16} />
                                         </Button>
                                     </div>
                                 </div>
@@ -998,25 +999,25 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
 
                     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Connection</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate Limit</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Synced</th>
-                                        <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                            <Table className="min-w-full divide-y divide-gray-200">
+                                <TableHeader className="bg-gray-50">
+                                    <TableRow>
+                                        <TableHead scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Connection</TableHead>
+                                        <TableHead scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Organization</TableHead>
+                                        <TableHead scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</TableHead>
+                                        <TableHead scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
+                                        <TableHead scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate Limit</TableHead>
+                                        <TableHead scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Synced</TableHead>
+                                        <TableHead scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="bg-white divide-y divide-gray-200">
                                     {global_connections.data.length === 0 ? (
-                                        <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-500">No connections found.</td></tr>
+                                        <TableRow><TableCell colSpan={7} className="px-6 py-12 text-center text-gray-500">No connections found.</TableCell></TableRow>
                                     ) : (
                                         global_connections.data.map((conn) => (
-                                            <tr key={conn.id} className="hover:bg-gray-50">
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                            <TableRow key={conn.id} className="hover:bg-gray-50">
+                                                <TableCell className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center">
                                                         <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-indigo-100 text-indigo-500 rounded-lg">
                                                             <Plug className="h-5 w-5" />
@@ -1026,18 +1027,18 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                             <div className="text-xs text-gray-500">{conn.provider}</div>
                                                         </div>
                                                     </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center text-sm text-gray-900">
                                                         <Building className="w-4 h-4 mr-1 text-gray-400" />
                                                         {conn.organization?.name || 'Unknown'}
                                                     </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm text-gray-900">{conn.user?.name || 'Unknown'}</div>
                                                     <div className="text-xs text-gray-500">{conn.user?.email || ''}</div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                                                         conn.status === 'active' ? 'bg-green-100 text-green-800' :
                                                         conn.status === 'error' ? 'bg-red-100 text-red-800' :
@@ -1050,8 +1051,8 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                             {conn.sync_error}
                                                         </div>
                                                     )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 whitespace-nowrap">
                                                     {(() => {
                                                         const rl = conn.settings?.rate_limits;
                                                         if (!rl || rl.limit === null) return <span className="text-sm text-gray-500">-</span>;
@@ -1070,11 +1071,11 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                             </div>
                                                         );
                                                     })()}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {conn.last_synced_at ? new Date(conn.last_synced_at).toLocaleString() : 'Never'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                                     <Link href={`/admin/mcp/${conn.id}/history`} className="text-indigo-600 hover:text-indigo-900">
                                                         History
                                                     </Link>
@@ -1086,12 +1087,12 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                                                             Impersonate
                                                         </Link>
                                                     )}
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         ))
                                     )}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                         {global_connections.last_page > 1 && (
                             <div className="px-6 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
@@ -1127,37 +1128,37 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-bold text-gray-900">Manage Providers</h2>
                                 <Button onClick={openAddProvider} className="flex items-center gap-2" >
-                                    <Plus size={15} /> Add Provider
+                                    <Plus size={16} /> Add Provider
                                 </Button>
                             </div>
                             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Provider</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
+                                <Table className="min-w-full divide-y divide-gray-200">
+                                    <TableHeader className="bg-gray-50">
+                                        <TableRow>
+                                            <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Provider</TableHead>
+                                            <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</TableHead>
+                                            <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</TableHead>
+                                            <TableHead className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody className="divide-y divide-gray-200">
                                         {providers_list.map(p => (
-                                            <tr key={p.id}>
-                                                <td className="px-6 py-4">
+                                            <TableRow key={p.id}>
+                                                <TableCell className="px-6 py-4">
                                                     <div className="text-sm font-medium text-gray-900">{p.name}</div>
                                                     <div className="text-xs text-gray-500">{p.description}</div>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-500 font-mono">{p.slug}</td>
-                                                <td className="px-6 py-4">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 text-sm text-gray-500 font-mono">{p.slug}</TableCell>
+                                                <TableCell className="px-6 py-4">
                                                     {p.is_active ? <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Active</span> : <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Disabled</span>}
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 text-right">
                                                     <Button onClick={() => openEditProvider(p)} className="text-indigo-600 hover:text-indigo-900"><Settings size={16}/></Button>
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         ))}
-                                    </tbody>
-                                </table>
+                                    </TableBody>
+                                </Table>
                             </div>
                         </div>
                     )}
@@ -1185,28 +1186,28 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                             </div>
                             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                                 <div className="px-6 py-4 border-b border-gray-200"><h3 className="font-semibold text-gray-900">Recent Errors</h3></div>
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Provider</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Connection</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Error</th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
+                                <Table className="min-w-full divide-y divide-gray-200">
+                                    <TableHeader className="bg-gray-50">
+                                        <TableRow>
+                                            <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Provider</TableHead>
+                                            <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Connection</TableHead>
+                                            <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Error</TableHead>
+                                            <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody className="divide-y divide-gray-200">
                                         {diagnostics.recentErrors.length === 0 ? (
-                                            <tr><td colSpan={4} className="px-6 py-8 text-center text-gray-500">No recent errors</td></tr>
+                                            <TableRow><TableCell colSpan={4} className="px-6 py-8 text-center text-gray-500">No recent errors</TableCell></TableRow>
                                         ) : diagnostics.recentErrors.map(e => (
-                                            <tr key={e.id}>
-                                                <td className="px-6 py-4 text-sm">{e.provider}</td>
-                                                <td className="px-6 py-4 text-sm">{e.connection_name}</td>
-                                                <td className="px-6 py-4 text-sm text-red-600 font-mono text-xs">{e.error_message}</td>
-                                                <td className="px-6 py-4 text-sm text-gray-500">{e.created_at}</td>
-                                            </tr>
+                                            <TableRow key={e.id}>
+                                                <TableCell className="px-6 py-4 text-sm">{e.provider}</TableCell>
+                                                <TableCell className="px-6 py-4 text-sm">{e.connection_name}</TableCell>
+                                                <TableCell className="px-6 py-4 text-sm text-red-600 font-mono text-xs">{e.error_message}</TableCell>
+                                                <TableCell className="px-6 py-4 text-sm text-gray-500">{e.created_at}</TableCell>
+                                            </TableRow>
                                         ))}
-                                    </tbody>
-                                </table>
+                                    </TableBody>
+                                </Table>
                             </div>
                         </div>
                     )}

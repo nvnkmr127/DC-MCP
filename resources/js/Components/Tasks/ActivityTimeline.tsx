@@ -14,10 +14,10 @@ export function ActivityTimeline({ activities }: { activities: any[] }) {
 
     const getIcon = (event: string) => {
         switch (event) {
-            case 'created': return <Plus size={14} className="text-emerald-500" />;
-            case 'status_changed': return <CheckCircle size={14} className="text-blue-500" />;
-            case 'assigned': return <User size={14} className="text-indigo-500" />;
-            default: return <Activity size={14} className="text-slate-500" />;
+            case 'created': return <Plus size={16} className="text-emerald-500" />;
+            case 'status_changed': return <CheckCircle size={16} className="text-blue-500" />;
+            case 'assigned': return <User size={16} className="text-indigo-500" />;
+            default: return <Activity size={16} className="text-slate-500" />;
         }
     };
 

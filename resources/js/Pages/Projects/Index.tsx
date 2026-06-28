@@ -71,7 +71,7 @@ export default function ProjectsIndex({ projects, filters }: Props) {
                 {/* Search + New */}
                 <div className="flex items-center gap-2 shrink-0">
                     <form onSubmit={handleSearch} className="relative">
-                        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                         <input
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -83,7 +83,7 @@ export default function ProjectsIndex({ projects, filters }: Props) {
                         href="/projects/create"
                         className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-[13px] font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm whitespace-nowrap"
                     >
-                        <Plus size={15} /> New Project
+                        <Plus size={16} /> New Project
                     </Link>
                 </div>
             </div>
@@ -102,7 +102,7 @@ export default function ProjectsIndex({ projects, filters }: Props) {
                         href="/projects/create"
                         className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-[13px] font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
                     >
-                        <Plus size={15} /> New Project
+                        <Plus size={16} /> New Project
                     </Link>
                 </div>
             )}
@@ -170,14 +170,14 @@ export default function ProjectsIndex({ projects, filters }: Props) {
                                             className="p-1.5 rounded-lg text-gray-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                                             title="Kanban board"
                                         >
-                                            <Kanban size={14} />
+                                            <Kanban size={16} />
                                         </Link>
                                         <Link
                                             href={`/projects/${project.id}`}
                                             className="p-1.5 rounded-lg text-gray-300 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                                             title="View details"
                                         >
-                                            <ChevronRight size={14} />
+                                            <ChevronRight size={16} />
                                         </Link>
                                     </div>
                                 </div>

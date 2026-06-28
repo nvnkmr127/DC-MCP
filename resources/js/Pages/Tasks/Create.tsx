@@ -44,7 +44,7 @@ export default function TaskCreate({ projects, members, defaults }: Props) {
             <div className="max-w-2xl mx-auto">
                 <div className="flex items-center gap-3 mb-6">
                     <Link href="/tasks" className="p-2 rounded-lg hover:bg-gray-100 text-gray-700">
-                        <ArrowLeft size={18} />
+                        <ArrowLeft size={20} />
                     </Link>
                     <h1 className="text-lg font-bold text-gray-900">New Task</h1>
                 </div>
@@ -67,7 +67,7 @@ export default function TaskCreate({ projects, members, defaults }: Props) {
 
                         <div>
                             <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1">
-                                <AlignLeft size={14} className="text-gray-400" /> Description
+                                <AlignLeft size={16} className="text-gray-400" /> Description
                             </label>
                             <RichTextEditor
                                 value={form.data.description}

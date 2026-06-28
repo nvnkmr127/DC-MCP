@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
 
 interface GSTInvoice {
     id: string; invoice_number: string; client_name: string; client_gstin: string | null;
@@ -69,15 +70,15 @@ export default function GSTReportIndex({ invoices, month }: Props) {
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1">
                             <Button onClick={() => navigate(prevMonth(month))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700">
-                                <ChevronLeft size={15} />
+                                <ChevronLeft size={16} />
                             </Button>
                             <span className="px-3 text-sm font-semibold text-gray-800 min-w-[150px] text-center">{monthLabel(month)}</span>
                             <Button onClick={() => navigate(nextMonth(month))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700">
-                                <ChevronRight size={15} />
+                                <ChevronRight size={16} />
                             </Button>
                         </div>
                         <Button onClick={downloadCSV} className="flex items-center gap-1.5" >
-                            <Download size={14} /> Download CSV
+                            <Download size={16} /> Download CSV
                         </Button>
                     </div>
                 </div>
@@ -89,43 +90,43 @@ export default function GSTReportIndex({ invoices, month }: Props) {
                 ) : (
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
-                                    <tr>
+                            <Table className="w-full text-sm">
+                                <TableHeader className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+                                    <TableRow>
                                         {['Client', 'GSTIN', 'Taxable Value', 'GST Rate', 'CGST', 'SGST', 'IGST', 'Total'].map(h => (
-                                            <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+                                            <TableHead key={h} className="px-4 py-3 text-left font-medium">{h}</TableHead>
                                         ))}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="divide-y divide-gray-100">
                                     {invoices.map(inv => {
                                         const cgst = inv.supply_type === 'intra' ? inv.gst_amount / 2 : 0;
                                         const sgst = cgst;
                                         const igst = inv.supply_type === 'inter' ? inv.gst_amount : 0;
                                         return (
-                                            <tr key={inv.id} className="hover:bg-gray-50">
-                                                <td className="px-4 py-3 font-medium text-gray-900">{inv.client_name}</td>
-                                                <td className="px-4 py-3 text-gray-500 font-mono text-xs">{inv.client_gstin ?? '—'}</td>
-                                                <td className="px-4 py-3">{fmt(inv.amount)}</td>
-                                                <td className="px-4 py-3">{inv.gst_rate}%</td>
-                                                <td className="px-4 py-3">{cgst > 0 ? fmt(cgst) : '—'}</td>
-                                                <td className="px-4 py-3">{sgst > 0 ? fmt(sgst) : '—'}</td>
-                                                <td className="px-4 py-3">{igst > 0 ? fmt(igst) : '—'}</td>
-                                                <td className="px-4 py-3 font-semibold">{fmt(inv.amount + inv.gst_amount)}</td>
-                                            </tr>
+                                            <TableRow key={inv.id} className="hover:bg-gray-50">
+                                                <TableCell className="px-4 py-3 font-medium text-gray-900">{inv.client_name}</TableCell>
+                                                <TableCell className="px-4 py-3 text-gray-500 font-mono text-xs">{inv.client_gstin ?? '—'}</TableCell>
+                                                <TableCell className="px-4 py-3">{fmt(inv.amount)}</TableCell>
+                                                <TableCell className="px-4 py-3">{inv.gst_rate}%</TableCell>
+                                                <TableCell className="px-4 py-3">{cgst > 0 ? fmt(cgst) : '—'}</TableCell>
+                                                <TableCell className="px-4 py-3">{sgst > 0 ? fmt(sgst) : '—'}</TableCell>
+                                                <TableCell className="px-4 py-3">{igst > 0 ? fmt(igst) : '—'}</TableCell>
+                                                <TableCell className="px-4 py-3 font-semibold">{fmt(inv.amount + inv.gst_amount)}</TableCell>
+                                            </TableRow>
                                         );
                                     })}
-                                    <tr className="bg-gray-50 font-semibold border-t-2 border-gray-200">
-                                        <td className="px-4 py-3 text-gray-900" colSpan={2}>Total</td>
-                                        <td className="px-4 py-3">{fmt(totalTaxable)}</td>
-                                        <td className="px-4 py-3">—</td>
-                                        <td className="px-4 py-3">{fmt(totalCGST)}</td>
-                                        <td className="px-4 py-3">{fmt(totalSGST)}</td>
-                                        <td className="px-4 py-3">{fmt(totalIGST)}</td>
-                                        <td className="px-4 py-3">{fmt(totalTaxable + totalGST)}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                    <TableRow className="bg-gray-50 font-semibold border-t-2 border-gray-200">
+                                        <TableCell className="px-4 py-3 text-gray-900" colSpan={2}>Total</TableCell>
+                                        <TableCell className="px-4 py-3">{fmt(totalTaxable)}</TableCell>
+                                        <TableCell className="px-4 py-3">—</TableCell>
+                                        <TableCell className="px-4 py-3">{fmt(totalCGST)}</TableCell>
+                                        <TableCell className="px-4 py-3">{fmt(totalSGST)}</TableCell>
+                                        <TableCell className="px-4 py-3">{fmt(totalIGST)}</TableCell>
+                                        <TableCell className="px-4 py-3">{fmt(totalTaxable + totalGST)}</TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
                         </div>
                     </div>
                 )}

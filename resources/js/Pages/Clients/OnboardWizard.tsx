@@ -81,7 +81,7 @@ export default function OnboardWizard() {
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <Link href="/clients" className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
-                            <ArrowLeft size={17} />
+                            <ArrowLeft size={20} />
                         </Link>
                         <h1 className="text-[18px] font-bold text-gray-900">Client Onboarding Wizard</h1>
                     </div>
@@ -168,7 +168,7 @@ export default function OnboardWizard() {
                                     <div className="flex justify-between items-center mb-3">
                                         <Label className="mb-0">Deliverables</Label>
                                         <Button type="button" size="sm" variant="outline" onClick={addDeliverable}>
-                                            <Plus size={14} className="mr-1" /> Add Deliverable
+                                            <Plus size={16} className="mr-1" /> Add Deliverable
                                         </Button>
                                     </div>
                                     <div className="space-y-3">
@@ -193,7 +193,7 @@ export default function OnboardWizard() {
                                                     <option value="monthly">Monthly</option>
                                                 </select>
                                                 <Button type="button" variant="ghost" size="sm" onClick={() => removeDeliverable(i)} className="text-red-500 hover:text-red-600 hover:bg-red-50">
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={16} />
                                                 </Button>
                                             </div>
                                         ))}
@@ -224,7 +224,7 @@ export default function OnboardWizard() {
                                     <div className="flex justify-between items-center mb-3">
                                         <Label className="mb-0">Pricing & Line Items</Label>
                                         <Button type="button" size="sm" variant="outline" onClick={addLineItem}>
-                                            <Plus size={14} className="mr-1" /> Add Line Item
+                                            <Plus size={16} className="mr-1" /> Add Line Item
                                         </Button>
                                     </div>
                                     <div className="space-y-3">
@@ -247,7 +247,7 @@ export default function OnboardWizard() {
                                                     <option value="annual">Annual</option>
                                                 </select>
                                                 <Button type="button" variant="ghost" size="sm" onClick={() => removeLineItem(i)} className="text-red-500 hover:text-red-600 hover:bg-red-50">
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={16} />
                                                 </Button>
                                             </div>
                                         ))}

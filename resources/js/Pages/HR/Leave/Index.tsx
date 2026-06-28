@@ -120,7 +120,7 @@ export default function LeaveIndex({ myRequests, teamRequests, balance, canRevie
                     </div>
                     <Button onClick={() => setShowApply(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> Apply for Leave
+                        <Plus size={16} /> Apply for Leave
                     </Button>
                 </div>
 
@@ -181,9 +181,9 @@ export default function LeaveIndex({ myRequests, teamRequests, balance, canRevie
                                             <div className="text-xs">
                                                 <div className="flex items-center gap-1.5 sm:justify-end text-gray-900 font-medium">
                                                     {r.status === 'approved' ? (
-                                                        <CheckCircle2 size={14} className="text-emerald-500" />
+                                                        <CheckCircle2 size={16} className="text-emerald-500" />
                                                     ) : (
-                                                        <XCircle size={14} className="text-rose-500" />
+                                                        <XCircle size={16} className="text-rose-500" />
                                                     )}
                                                     {r.status === 'approved' ? 'Approved' : 'Rejected'} by {r.reviewer?.name || 'Manager'}
                                                 </div>

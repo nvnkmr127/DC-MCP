@@ -101,7 +101,7 @@ export default function AnnouncementsIndex({ announcements, canPost }: Props) {
                         {canPost && (
                             <Button onClick={() => setOpen(true)}
                                 className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                                <Plus size={14} /> Post Announcement
+                                <Plus size={16} /> Post Announcement
                             </Button>
                         )}
                     </div>
@@ -110,7 +110,7 @@ export default function AnnouncementsIndex({ announcements, canPost }: Props) {
                 {pinned.length > 0 && (
                     <div className="space-y-3">
                         <h2 className="text-xs font-semibold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
-                            <Pin size={11} /> Pinned
+                            <Pin size={12} /> Pinned
                         </h2>
                         {pinned.map(a => (
                             <AnnouncementCard key={a.id} announcement={a} canPost={canPost} pinned />
@@ -147,7 +147,7 @@ function AnnouncementCard({ announcement: a, canPost, pinned }: { announcement: 
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                        {pinned && <Pin size={11} className="text-amber-500 shrink-0" />}
+                        {pinned && <Pin size={12} className="text-amber-500 shrink-0" />}
                         <p className="text-sm font-semibold text-gray-900">{a.title}</p>
                     </div>
                     <p className="text-xs text-gray-500 mb-3">{a.author.name} · {timeAgo(a.created_at)}</p>
@@ -168,7 +168,7 @@ function AnnouncementCard({ announcement: a, canPost, pinned }: { announcement: 
                         router.delete(`/announcements/${a.id}`);
                     }}
                         className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors shrink-0">
-                        <Trash2 size={13} />
+                        <Trash2 size={16} />
                     </Button>
                 )}
             </div>

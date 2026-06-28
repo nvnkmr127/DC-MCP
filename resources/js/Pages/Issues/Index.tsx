@@ -27,8 +27,8 @@ const STATUS_STYLES: Record<string, string> = {
     closed:      'bg-gray-100 text-gray-700',
 };
 const TYPE_ICONS: Record<string, React.ReactNode> = {
-    bug: <Bug size={13} className="text-rose-500" />, enhancement: <Zap size={13} className="text-blue-500" />,
-    question: <HelpCircle size={13} className="text-amber-500" />, feedback: <MessageSquare size={13} className="text-emerald-500" />,
+    bug: <Bug size={16} className="text-rose-500" />, enhancement: <Zap size={16} className="text-blue-500" />,
+    question: <HelpCircle size={16} className="text-amber-500" />, feedback: <MessageSquare size={16} className="text-emerald-500" />,
 };
 const BORDER_PRIORITY: Record<string, string> = {
     low: 'border-gray-200', medium: 'border-amber-200', high: 'border-orange-300', critical: 'border-rose-400',
@@ -116,7 +116,7 @@ export default function IssuesIndex({ issues, clients, users, filters }: Props) 
                     <h1 className="text-lg font-bold text-gray-900">Issue Tracker</h1>
                     <Button onClick={() => setReportOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> Report Issue
+                        <Plus size={16} /> Report Issue
                     </Button>
                 </div>
 
@@ -144,7 +144,7 @@ export default function IssuesIndex({ issues, clients, users, filters }: Props) 
                     {filtered.map(issue => (
                         <div key={issue.id} className={cn('bg-white rounded-xl border-l-2 border-r border-t border-b cursor-pointer', BORDER_PRIORITY[issue.priority] ?? 'border-gray-200')}>
                             <div className="px-4 py-3 flex items-center gap-3" onClick={() => setExpandedId(expandedId === issue.id ? null : issue.id)}>
-                                <div className="shrink-0">{TYPE_ICONS[issue.type] ?? <Bug size={13} />}</div>
+                                <div className="shrink-0">{TYPE_ICONS[issue.type] ?? <Bug size={16} />}</div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-gray-900">{issue.title}</p>
                                     <p className="text-xs text-gray-500 mt-0.5">
@@ -159,7 +159,7 @@ export default function IssuesIndex({ issues, clients, users, filters }: Props) 
                                     <span className={cn('px-2 py-0.5 rounded text-[10px] font-semibold', STATUS_STYLES[issue.status] ?? STATUS_STYLES.open)}>
                                         {issue.status.replace('_', ' ')}
                                     </span>
-                                    <ChevronDown size={13} className={cn('text-gray-400 transition-transform', expandedId === issue.id && 'rotate-180')} />
+                                    <ChevronDown size={16} className={cn('text-gray-400 transition-transform', expandedId === issue.id && 'rotate-180')} />
                                 </div>
                             </div>
                             {expandedId === issue.id && (

@@ -25,7 +25,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 disabled={!editor.can().chain().focus().toggleBold().run()}
                 className={cn(btnClass, editor.isActive('bold') && activeClass)}
             >
-                <Bold size={14} />
+                <Bold size={16} />
             </button>
             <button
                 type="button"
@@ -33,7 +33,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 disabled={!editor.can().chain().focus().toggleItalic().run()}
                 className={cn(btnClass, editor.isActive('italic') && activeClass)}
             >
-                <Italic size={14} />
+                <Italic size={16} />
             </button>
             <div className="w-px h-4 bg-gray-300 mx-1" />
             <button
@@ -41,21 +41,21 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
                 className={cn(btnClass, editor.isActive('bulletList') && activeClass)}
             >
-                <List size={14} />
+                <List size={16} />
             </button>
             <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
                 className={cn(btnClass, editor.isActive('orderedList') && activeClass)}
             >
-                <ListOrdered size={14} />
+                <ListOrdered size={16} />
             </button>
             <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleBlockquote().run()}
                 className={cn(btnClass, editor.isActive('blockquote') && activeClass)}
             >
-                <Quote size={14} />
+                <Quote size={16} />
             </button>
             <div className="flex-1" />
             <button
@@ -64,7 +64,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 disabled={!editor.can().chain().focus().undo().run()}
                 className={btnClass}
             >
-                <Undo size={14} />
+                <Undo size={16} />
             </button>
             <button
                 type="button"
@@ -72,7 +72,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 disabled={!editor.can().chain().focus().redo().run()}
                 className={btnClass}
             >
-                <Redo size={14} />
+                <Redo size={16} />
             </button>
         </div>
     );

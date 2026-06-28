@@ -55,7 +55,7 @@ export default function SurveyRespond({ survey, token, submitted: initialSubmitt
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 space-y-6">
                 <div className="text-center">
                     <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center mx-auto mb-3">
-                        <Smile size={22} className="text-indigo-500" />
+                        <Smile size={24} className="text-indigo-500" />
                     </div>
                     <h1 className="text-xl font-bold text-gray-900">How likely are you to recommend us?</h1>
                     {survey.client_name && (

@@ -10,6 +10,7 @@ import { Plus, SlidersHorizontal, CheckSquare, AlertCircle, Download, X, ArrowUp
 import { TASK_STATUS_DOT, TASK_PRIORITY_DOT } from '@/lib/constants';
 import { StatusBadge } from '@/Components/Shared/StatusBadge';
 import { Pagination } from '@/Components/ui/Pagination';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
 
 interface Props {
     tasks: PaginatedResponse<Task>;
@@ -111,7 +112,7 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
     };
 
     const SortableHeader = ({ column, label }: { column: string, label: string }) => (
-        <th 
+        <TableHead 
             className="text-left px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide cursor-pointer hover:bg-gray-100 select-none transition-colors group"
             onClick={(e) => toggleSort(column, e.shiftKey)}
             title="Click to sort, Shift+Click to multi-sort"
@@ -120,7 +121,7 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                 {label}
                 {getSortIndicator(column)}
             </div>
-        </th>
+        </TableHead>
     );
 
     function toggleSelect(id: string) {
@@ -172,7 +173,7 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                                 : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50',
                         )}
                     >
-                        <SlidersHorizontal size={13} />
+                        <SlidersHorizontal size={16} />
                         Filters
                         {activeFilterCount > 0 && (
                             <span className="min-w-[18px] h-[18px] text-[10px] font-bold bg-indigo-600 text-white rounded-full flex items-center justify-center px-1">
@@ -217,10 +218,10 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                         onClick={() => toast.success('Download ready')}
                         className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-[13px] font-semibold rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
                     >
-                        <Download size={14} /> Export CSV
+                        <Download size={16} /> Export CSV
                     </a>
                     <Link href="/tasks/create" className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-[13px] font-semibold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
-                        <Plus size={14} /> New Task
+                        <Plus size={16} /> New Task
                     </Link>
                 </div>
             </div>
@@ -311,7 +312,7 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                                     className="w-4 h-4 rounded border-red-300 text-red-600 focus:ring-red-500 cursor-pointer"
                                 />
                                 <div className="flex items-center gap-1.5 text-[13px] font-medium text-red-700">
-                                    <AlertCircle size={14} /> Overdue Only
+                                    <AlertCircle size={16} /> Overdue Only
                                 </div>
                             </label>
                         </div>
@@ -344,74 +345,74 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                         )}
                     </div>
                 ) : (
-                    <table className="w-full text-[13px]">
-                        <thead>
-                            <tr className="border-b border-gray-200 bg-gray-50/50">
-                                <th className="w-9 px-4 py-3">
+                    <Table className="w-full text-[13px]">
+                        <TableHeader>
+                            <TableRow className="border-b border-gray-200 bg-gray-50/50">
+                                <TableHead className="w-9 px-4 py-3">
                                     <input
                                         type="checkbox"
                                         checked={selected.length === tasks.data.length && tasks.data.length > 0}
                                         onChange={toggleAll}
                                         className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                                     />
-                                </th>
+                                </TableHead>
                                 <SortableHeader column="title" label="Task" />
-                                <th className="text-left px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Project</th>
+                                <TableHead className="text-left px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Project</TableHead>
                                 <SortableHeader column="status" label="Status" />
                                 <SortableHeader column="priority" label="Priority" />
-                                <th className="text-left px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Assignee</th>
+                                <TableHead className="text-left px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Assignee</TableHead>
                                 <SortableHeader column="due_date" label="Due" />
                                 <SortableHeader column="estimated_hours" label="Est." />
-                            </tr>
-                        </thead>
-                        <tbody>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {tasks.data.map((task) => {
                                 const due = dueDateLabel(task.due_date);
                                 const isSelected = selected.includes(task.id);
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={task.id}
                                         className={cn(
                                             'border-b border-gray-50 transition-colors hover:bg-gray-50/60',
                                             isSelected && 'bg-indigo-50/40',
                                         )}
                                     >
-                                        <td className="px-4 py-3">
+                                        <TableCell className="px-4 py-3">
                                             <input
                                                 type="checkbox"
                                                 checked={isSelected}
                                                 onChange={() => toggleSelect(task.id)}
                                                 className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                                             />
-                                        </td>
-                                        <td className="px-3 py-3 max-w-[240px]">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3 max-w-[240px]">
                                             <Link href={`/tasks/${task.id}`} className="font-medium text-gray-900 hover:text-indigo-600 transition-colors line-clamp-1 block">
                                                 {task.title}
                                             </Link>
-                                        </td>
-                                        <td className="px-3 py-3 text-gray-400 text-[12px] max-w-[120px] truncate">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3 text-gray-400 text-[12px] max-w-[120px] truncate">
                                             {task.project?.name ?? '—'}
-                                        </td>
-                                        <td className="px-3 py-3"><StatusBadge type="task-status" value={task.status} /></td>
-                                        <td className="px-3 py-3"><StatusBadge type="task-priority" value={task.priority} /></td>
-                                        <td className="px-3 py-3 text-[12px] text-gray-500 whitespace-nowrap">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3"><StatusBadge type="task-status" value={task.status} /></TableCell>
+                                        <TableCell className="px-3 py-3"><StatusBadge type="task-priority" value={task.priority} /></TableCell>
+                                        <TableCell className="px-3 py-3 text-[12px] text-gray-500 whitespace-nowrap">
                                             {task.assignee?.name ?? <span className="text-gray-300">Unassigned</span>}
-                                        </td>
-                                        <td className="px-3 py-3 whitespace-nowrap">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3 whitespace-nowrap">
                                             {task.due_date ? (
                                                 <span className={cn('text-[12px] font-medium', due.variant === 'destructive' ? 'text-red-600' : due.variant === 'warning' ? 'text-yellow-600' : 'text-gray-500')}>
                                                     {formatDate(task.due_date)}
                                                 </span>
                                             ) : <span className="text-gray-300 text-[12px]">—</span>}
-                                        </td>
-                                        <td className="px-3 py-3 text-[12px] text-gray-400">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3 text-[12px] text-gray-400">
                                             {task.estimated_hours > 0 ? `${task.estimated_hours}h` : '—'}
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
                 )}
 
                 <Pagination

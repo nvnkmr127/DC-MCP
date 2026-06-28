@@ -76,7 +76,7 @@ export default function PublicDashboard({ dashboard, token }: Props) {
                         </select>
 
                         <Button onClick={handlePrint} variant="outline" size="sm" className="bg-white">
-                            <Printer size={14} className="mr-2" /> Export PDF
+                            <Printer size={16} className="mr-2" /> Export PDF
                         </Button>
                     </div>
                 </div>

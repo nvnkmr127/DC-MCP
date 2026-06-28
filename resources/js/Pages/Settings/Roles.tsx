@@ -2,11 +2,11 @@ import React, { useState } from "react"
 import { Head, router, useForm } from "@inertiajs/react"
 import { Breadcrumbs } from "@/Components/Shared/Breadcrumbs";
 import AppLayout from "@/Layouts/AppLayout"
-import { DataTable } from "@/Components/ui/DataTable"
-import { ColumnDef } from "@tanstack/react-table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table"
+
 import { Badge } from "@/Components/ui/Badge"
 import { Button } from "@/Components/ui/Button"
-import { Shield, X, Check } from "lucide-react"
+import { Shield, X, Check, Edit2, Trash2 } from "lucide-react"
 
 type Role = {
   id: string
@@ -37,7 +37,7 @@ function Modal({ isOpen, onClose, title, children, maxWidth = "max-w-lg" }: { is
                 <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                     <h3 className="font-semibold text-slate-800">{title}</h3>
                     <Button onClick={onClose} variant="ghost" size="icon" >
-                        <X size={18} />
+                        <X size={20} />
                     </Button>
                 </div>
                 <div className="p-5 overflow-y-auto">
@@ -101,43 +101,7 @@ export default function Roles({ roles }: { roles: Role[] }) {
         });
     }
 
-    const columns: ColumnDef<Role>[] = [
-      {
-        accessorKey: "name",
-        header: "Role Name",
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-700 capitalize">{row.original.name.replace('_', ' ')}</span>
-            {row.original.is_system && (
-                <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase">System</span>
-            )}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "description",
-        header: "Description",
-        cell: ({ row }) => <span className="text-slate-500 text-sm">{row.original.description || '—'}</span>
-      },
-      {
-        accessorKey: "users_count",
-        header: "Active Users",
-        cell: ({ row }) => (
-          <Badge variant="gray">{row.original.users_count} users</Badge>
-        ),
-      },
-      {
-        id: "actions",
-        header: "",
-        cell: ({ row }) => (
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => openEditModal(row.original)}>
-              Edit Permissions
-            </Button>
-          </div>
-        ),
-      },
-    ];
+    
 
     return (
         <AppLayout title="Roles & Permissions">
@@ -162,12 +126,30 @@ export default function Roles({ roles }: { roles: Role[] }) {
               <Button onClick={() => setCreateModalOpen(true)}>Create Custom Role</Button>
             </div>
 
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-              <DataTable 
-                columns={columns} 
-                data={roles} 
-                searchKey="name" 
-              />
+            <div className="bg-white p-0 rounded-xl border border-slate-200 shadow-sm mt-6 overflow-hidden">
+        <Table>
+          <TableHeader className="bg-gray-50/50">
+            <TableRow>
+              <TableHead>Role Name</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {roles.map(r => (
+              <TableRow key={r.id}>
+                <TableCell className="font-medium text-gray-900">{r.name}</TableCell>
+                <TableCell className="text-gray-500">{r.description || '—'}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => handleEditClick(r)}><Edit2 className="w-4 h-4 text-gray-500 hover:text-indigo-600" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => router.delete(`/settings/roles/${r.id}`)}><Trash2 className="w-4 h-4 text-gray-500 hover:text-rose-600" /></Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
             </div>
           </div>
 
@@ -212,25 +194,25 @@ export default function Roles({ roles }: { roles: Role[] }) {
                   )}
 
                   <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                      <table className="w-full text-sm text-left">
-                          <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-                              <tr>
-                                  <th className="px-4 py-3">Resource</th>
+                      <Table className="w-full text-sm text-left">
+                          <TableHeader className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                              <TableRow>
+                                  <TableHead className="px-4 py-3">Resource</TableHead>
                                   {ACTIONS.map(action => (
-                                      <th key={action} className="px-4 py-3 text-center capitalize">{action}</th>
+                                      <TableHead key={action} className="px-4 py-3 text-center capitalize">{action}</TableHead>
                                   ))}
-                              </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
+                              </TableRow>
+                          </TableHeader>
+                          <TableBody className="divide-y divide-slate-100">
                               {RESOURCES.map(resource => {
                                   const resPerms = editForm.data.permissions?.[resource.key] || [];
                                   return (
-                                      <tr key={resource.key} className="hover:bg-slate-50/50">
-                                          <td className="px-4 py-3 font-medium text-slate-700">{resource.label}</td>
+                                      <TableRow key={resource.key} className="hover:bg-slate-50/50">
+                                          <TableCell className="px-4 py-3 font-medium text-slate-700">{resource.label}</TableCell>
                                           {ACTIONS.map(action => {
                                               const isChecked = resPerms.includes(action) || resPerms.includes('*');
                                               return (
-                                                  <td key={action} className="px-4 py-3 text-center">
+                                                  <TableCell key={action} className="px-4 py-3 text-center">
                                                       <label className="inline-flex items-center justify-center cursor-pointer">
                                                           <input 
                                                               type="checkbox" 
@@ -239,17 +221,17 @@ export default function Roles({ roles }: { roles: Role[] }) {
                                                               onChange={() => togglePermission(resource.key, action)}
                                                           />
                                                           <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isChecked ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-300 bg-white hover:border-indigo-400'}`}>
-                                                              {isChecked && <Check size={14} strokeWidth={3} />}
+                                                              {isChecked && <Check size={16} strokeWidth={3} />}
                                                           </div>
                                                       </label>
-                                                  </td>
+                                                  </TableCell>
                                               );
                                           })}
-                                      </tr>
+                                      </TableRow>
                                   );
                               })}
-                          </tbody>
-                      </table>
+                          </TableBody>
+                      </Table>
                   </div>
 
                   <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">

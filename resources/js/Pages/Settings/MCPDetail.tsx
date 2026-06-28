@@ -166,7 +166,7 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
 
             <div className="mb-5">
                 <Link href="/settings/mcp" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 w-fit">
-                    <ArrowLeft size={14} /> Back to Integrations
+                    <ArrowLeft size={16} /> Back to Integrations
                 </Link>
             </div>
 
@@ -221,7 +221,7 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                             router.delete(`/settings/mcp/${connection.id}`);
                         }}
                             className="ml-auto p-1.5 text-gray-400 hover:text-red-500 rounded hover:bg-red-50 transition-colors">
-                            <Trash2 size={14} />
+                            <Trash2 size={16} />
                         </Button>
                     </div>
                 </div>
@@ -320,7 +320,7 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                                         <div className="ml-auto">
                                             <Button type="button" onClick={handlePreview} disabled={isPreviewing}
                                                 className="flex items-center gap-1.5 disabled:opacity-50" size="sm" >
-                                                <Zap size={13} /> {isPreviewing ? 'Running Preview...' : 'Test Mapping Preview'}
+                                                <Zap size={16} /> {isPreviewing ? 'Running Preview...' : 'Test Mapping Preview'}
                                             </Button>
                                         </div>
                                     </div>
@@ -332,7 +332,7 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                                             <div className="bg-indigo-50 border-b border-indigo-100 px-4 py-2 flex justify-between items-center">
                                                 <h4 className="text-xs font-semibold text-indigo-900">Live Mapping Preview (1 Record)</h4>
                                                 <Button type="button" onClick={() => setPreviewResult(null)} className="text-indigo-400 hover:text-indigo-600 transition-colors">
-                                                    <XCircle size={14} />
+                                                    <XCircle size={16} />
                                                 </Button>
                                             </div>
                                             <div className="p-4 grid grid-cols-2 gap-4">
@@ -409,7 +409,7 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
                             <div className="flex gap-2 pt-1 border-t border-gray-200 pt-4">
                                 <Button type="submit" disabled={form.processing}
                                     className="flex items-center gap-1.5 disabled:opacity-50" >
-                                    <Save size={13} /> {form.processing ? 'Saving…' : 'Save Changes'}
+                                    <Save size={16} /> {form.processing ? 'Saving…' : 'Save Changes'}
                                 </Button>
                                 <Button type="button" onClick={() => setEditing(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
                                     Cancel

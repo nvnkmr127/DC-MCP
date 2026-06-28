@@ -138,7 +138,7 @@ function ProjectTemplateModal({ onClose }: { onClose: () => void }) {
                                             </div>
                                         </div>
                                         <Button type="button" onClick={() => removeTask(idx)} className="p-1 text-gray-400 hover:text-rose-500">
-                                            <Trash2 size={14} />
+                                            <Trash2 size={16} />
                                         </Button>
                                     </div>
                                 ))}
@@ -416,7 +416,7 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                                 
                                 <Button onClick={() => setUseTemplate(t)}
                                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-colors text-sm font-semibold rounded-lg">
-                                    <Play size={14} /> Use Template
+                                    <Play size={16} /> Use Template
                                 </Button>
                             </div>
                         ))}
@@ -481,7 +481,7 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                                                     ? 'border-amber-200 text-amber-600 hover:bg-amber-50'
                                                     : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
                                             )} title={rule.is_active ? 'Pause Rule' : 'Resume Rule'}>
-                                            {rule.is_active ? <Pause size={18} /> : <Play size={18} />}
+                                            {rule.is_active ? <Pause size={20} /> : <Play size={20} />}
                                         </Button>
                                         <Button onClick={async () => {
                                             const ok = await confirm({
@@ -494,7 +494,7 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                                             router.delete(`/recurring-tasks/${rule.id}`, { preserveScroll: true });
                                         }}
                                             className="p-2 rounded-lg border border-gray-200 text-gray-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 transition-colors flex items-center justify-center">
-                                            <Trash2 size={18} />
+                                            <Trash2 size={20} />
                                         </Button>
                                     </div>
                                 </div>

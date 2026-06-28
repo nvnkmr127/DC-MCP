@@ -37,7 +37,7 @@ export function ThemeToggle() {
                 )}
                 title="Light Mode"
             >
-                <Sun size={14} />
+                <Sun size={16} />
             </button>
             <button
                 onClick={() => setTheme('system')}
@@ -47,7 +47,7 @@ export function ThemeToggle() {
                 )}
                 title="System Default"
             >
-                <Monitor size={14} />
+                <Monitor size={16} />
             </button>
             <button
                 onClick={() => setTheme('dark')}
@@ -57,7 +57,7 @@ export function ThemeToggle() {
                 )}
                 title="Dark Mode"
             >
-                <Moon size={14} />
+                <Moon size={16} />
             </button>
         </div>
     );

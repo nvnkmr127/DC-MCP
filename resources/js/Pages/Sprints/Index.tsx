@@ -229,7 +229,7 @@ export default function SprintsIndex({ sprints, projects }: Props) {
                         {sprint.sprint_tasks.map(st => (
                             <div key={st.id} className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
-                                    <CheckSquare size={11} className={st.task?.status === 'done' ? 'text-emerald-500' : 'text-gray-400'} />
+                                    <CheckSquare size={12} className={st.task?.status === 'done' ? 'text-emerald-500' : 'text-gray-400'} />
                                     <span className="text-xs text-gray-700">{st.task?.title ?? '—'}</span>
                                 </div>
                                 <span className="text-xs text-gray-400">{st.story_points}pts</span>
@@ -255,7 +255,7 @@ export default function SprintsIndex({ sprints, projects }: Props) {
                     <h1 className="text-lg font-bold text-gray-900">Sprint Planner</h1>
                     <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> New Sprint
+                        <Plus size={16} /> New Sprint
                     </Button>
                 </div>
 

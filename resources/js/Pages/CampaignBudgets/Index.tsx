@@ -3,6 +3,7 @@ import { Button } from '@/Components/ui/Button';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
 import {
     Plus, X, ChevronLeft, ChevronRight, TrendingUp, DollarSign,
     PieChart, ArrowDownRight, AlertTriangle,
@@ -225,20 +226,20 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
                         {/* Month Selector */}
                         <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl p-1 shadow-sm">
                             <Button onClick={() => navigate(prevMonth(monthYear))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
-                                <ChevronLeft size={15} />
+                                <ChevronLeft size={16} />
                             </Button>
                             <span className="px-3 text-sm font-semibold text-gray-800 min-w-[140px] text-center">
                                 {monthLabel(monthYear)}
                             </span>
                             <Button onClick={() => navigate(nextMonth(monthYear))} className="p-2 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
-                                <ChevronRight size={15} />
+                                <ChevronRight size={16} />
                             </Button>
                         </div>
                         <Button
                             onClick={() => setShowModal(true)}
                             className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
                         >
-                            <Plus size={14} /> Add Budget
+                            <Plus size={16} /> Add Budget
                         </Button>
                     </div>
                 </div>
@@ -248,7 +249,7 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
                     <div className="space-y-1.5">
                         {budgets.filter(b => b.utilization > 90).map(b => (
                             <div key={b.id} className="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-xl px-4 py-2.5">
-                                <AlertTriangle size={14} className="text-rose-500 shrink-0" />
+                                <AlertTriangle size={16} className="text-rose-500 shrink-0" />
                                 <p className="text-sm text-rose-700 font-medium">
                                     Budget alert: <strong>{b.client?.name ?? 'Unknown'}</strong> — {CHANNEL_CONFIG[b.channel]?.label ?? b.channel} is{' '}
                                     <strong>{b.utilization}%</strong> spent ({fmt(b.spent_amount)} / {fmt(b.allocated_budget)})
@@ -268,7 +269,7 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
                     ].map(({ label, value, icon: Icon, bg, iconCls, valCls }) => (
                         <div key={label} className="bg-white rounded-2xl border border-gray-200 p-4 flex items-center gap-3 shadow-sm">
                             <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', bg)}>
-                                <Icon size={18} className={iconCls} />
+                                <Icon size={20} className={iconCls} />
                             </div>
                             <div>
                                 <p className="text-xs text-gray-500">{label}</p>
@@ -287,7 +288,7 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
                         </div>
 
                         <div className="w-24 h-24 mb-6 rounded-[2rem] bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-[0_8px_30px_rgba(99,102,241,0.25)] text-white transform rotate-3 hover:rotate-0 transition-transform duration-500 z-10">
-                            <PieChart size={40} className="transform -rotate-3 hover:rotate-0 transition-transform duration-500" />
+                            <PieChart size={48} className="transform -rotate-3 hover:rotate-0 transition-transform duration-500" />
                         </div>
                         
                         <h3 className="text-2xl font-extrabold text-gray-900 mb-3 tracking-tight z-10">No campaigns tracked yet.</h3>
@@ -299,7 +300,7 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
                             onClick={() => setShowModal(true)}
                             className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5 z-10 relative"
                         >
-                            <Plus size={18} />
+                            <Plus size={20} />
                             Add Budget
                         </Button>
                     </div>
@@ -329,34 +330,34 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
 
                                     {/* Channel rows */}
                                     <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="border-b border-gray-100">
-                                                    <th className="text-left px-5 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Channel</th>
-                                                    <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Allocated</th>
-                                                    <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Spent</th>
-                                                    <th className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Remaining</th>
-                                                    <th className="px-5 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wide w-40">Utilization</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-50">
+                                        <Table className="w-full text-sm">
+                                            <TableHeader>
+                                                <TableRow className="border-b border-gray-100">
+                                                    <TableHead className="text-left px-5 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Channel</TableHead>
+                                                    <TableHead className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Allocated</TableHead>
+                                                    <TableHead className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Spent</TableHead>
+                                                    <TableHead className="text-right px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">Remaining</TableHead>
+                                                    <TableHead className="px-5 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wide w-40">Utilization</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody className="divide-y divide-gray-50">
                                                 {entries.map((b) => {
                                                     const ch  = CHANNEL_CONFIG[b.channel] ?? CHANNEL_CONFIG.other;
                                                     const pct = Math.min(b.utilization, 100);
                                                     return (
-                                                        <tr key={b.id} className="hover:bg-gray-50/50 transition-colors">
-                                                            <td className="px-5 py-3.5">
+                                                        <TableRow key={b.id} className="hover:bg-gray-50/50 transition-colors">
+                                                            <TableCell className="px-5 py-3.5">
                                                                 <span className={cn('flex items-center gap-2 w-fit px-2.5 py-0.5 rounded-full text-xs font-semibold', ch.badge)}>
                                                                     <span className={cn('w-1.5 h-1.5 rounded-full', ch.dot)} />
                                                                     {ch.label}
                                                                 </span>
-                                                            </td>
-                                                            <td className="px-4 py-3.5 text-right font-medium text-gray-800">{fmt(b.allocated_budget)}</td>
-                                                            <td className="px-4 py-3.5 text-right font-medium text-gray-600">{fmt(b.spent_amount)}</td>
-                                                            <td className={cn('px-4 py-3.5 text-right font-semibold', b.remaining >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
+                                                            </TableCell>
+                                                            <TableCell className="px-4 py-3.5 text-right font-medium text-gray-800">{fmt(b.allocated_budget)}</TableCell>
+                                                            <TableCell className="px-4 py-3.5 text-right font-medium text-gray-600">{fmt(b.spent_amount)}</TableCell>
+                                                            <TableCell className={cn('px-4 py-3.5 text-right font-semibold', b.remaining >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
                                                                 {fmt(b.remaining)}
-                                                            </td>
-                                                            <td className="px-5 py-3.5">
+                                                            </TableCell>
+                                                            <TableCell className="px-5 py-3.5">
                                                                 <div className="flex items-center gap-2">
                                                                     <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                                                                         <div
@@ -368,12 +369,12 @@ export default function CampaignBudgetsIndex({ budgets, totalAllocated, totalSpe
                                                                         {b.utilization}%
                                                                     </span>
                                                                 </div>
-                                                            </td>
-                                                        </tr>
+                                                            </TableCell>
+                                                        </TableRow>
                                                     );
                                                 })}
-                                            </tbody>
-                                        </table>
+                                            </TableBody>
+                                        </Table>
                                     </div>
                                 </div>
                             );

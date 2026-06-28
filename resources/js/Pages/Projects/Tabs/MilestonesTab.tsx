@@ -1,6 +1,7 @@
 import React, { useState } from "react"
-import { DataTable } from "@/Components/ui/DataTable"
-import { ColumnDef } from "@tanstack/react-table"
+import { router } from "@inertiajs/react"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table"
+
 import { Button } from "@/Components/ui/Button"
 import { Badge } from "@/Components/ui/Badge"
 import { EmptyState } from "@/Components/Shared/EmptyState"
@@ -84,7 +85,7 @@ export default function MilestonesTab({ project, milestones, goals }: { project:
       header: "Linked OKR Goal",
       cell: ({ row }) => (
         row.original.goal ? (
-          <Badge variant="outline" className="flex items-center gap-1.5 w-max">
+          <Badge variant="default" className="flex items-center gap-1.5 w-max">
             <Target className="w-3 h-3 text-indigo-500" />
             {row.original.goal.title}
           </Badge>

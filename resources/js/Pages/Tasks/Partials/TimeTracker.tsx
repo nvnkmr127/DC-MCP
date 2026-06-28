@@ -83,7 +83,7 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
                         onClick={startGlobalTimer}
                         className="flex items-center gap-2" 
                     >
-                        <Play size={14} /> Start Timer
+                        <Play size={16} /> Start Timer
                     </Button>
                 ) : (
                     <Button
@@ -91,7 +91,7 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
                         onClick={stopGlobalTimer}
                         className="flex items-center gap-2" 
                     variant="destructive" >
-                        <Square size={14} /> Stop & Log
+                        <Square size={16} /> Stop & Log
                     </Button>
                 )}
 

@@ -7,6 +7,7 @@ import {
     Plus, X, AlertCircle, CheckCircle2, Minus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
 
 interface PnlData {
     month_year: string;
@@ -150,28 +151,28 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
                             <h2 className="text-sm font-semibold text-gray-700">Client Profitability</h2>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead className="bg-gray-50 text-xs text-gray-400 uppercase">
-                                    <tr>{['Client', 'Revenue', 'Profit', 'Margin', 'Hours'].map(h => <th key={h} className="px-4 py-2 text-left font-medium">{h}</th>)}</tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {clientProfit.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-gray-400">No data</td></tr>}
+                            <Table className="w-full text-sm">
+                                <TableHeader className="bg-gray-50 text-xs text-gray-400 uppercase">
+                                    <TableRow>{['Client', 'Revenue', 'Profit', 'Margin', 'Hours'].map(h => <TableHead key={h} className="px-4 py-2 text-left font-medium">{h}</TableHead>)}</TableRow>
+                                </TableHeader>
+                                <TableBody className="divide-y divide-gray-100">
+                                    {clientProfit.length === 0 && <TableRow><TableCell colSpan={5} className="px-4 py-6 text-center text-gray-400">No data</TableCell></TableRow>}
                                     {clientProfit.map(c => (
-                                        <tr key={c.id} className="hover:bg-gray-50">
-                                            <td className="px-4 py-2 font-medium text-gray-800">
+                                        <TableRow key={c.id} className="hover:bg-gray-50">
+                                            <TableCell className="px-4 py-2 font-medium text-gray-800">
                                                 <div className="flex items-center gap-2">
                                                     {c.health_status && <span className={cn('w-2 h-2 rounded-full inline-block', HEALTH_DOT[c.health_status] ?? 'bg-gray-300')} />}
                                                     {c.name}
                                                 </div>
-                                            </td>
-                                            <td className="px-4 py-2 text-gray-600">{fmt(c.revenue)}</td>
-                                            <td className={cn('px-4 py-2 font-semibold', c.profit >= 0 ? 'text-emerald-600' : 'text-rose-600')}>{fmt(c.profit)}</td>
-                                            <td className={cn('px-4 py-2', c.margin >= 20 ? 'text-emerald-600' : c.margin >= 0 ? 'text-amber-600' : 'text-rose-600')}>{c.margin}%</td>
-                                            <td className="px-4 py-2 text-gray-500">{c.hours_logged}h</td>
-                                        </tr>
+                                            </TableCell>
+                                            <TableCell className="px-4 py-2 text-gray-600">{fmt(c.revenue)}</TableCell>
+                                            <TableCell className={cn('px-4 py-2 font-semibold', c.profit >= 0 ? 'text-emerald-600' : 'text-rose-600')}>{fmt(c.profit)}</TableCell>
+                                            <TableCell className={cn('px-4 py-2', c.margin >= 20 ? 'text-emerald-600' : c.margin >= 0 ? 'text-amber-600' : 'text-rose-600')}>{c.margin}%</TableCell>
+                                            <TableCell className="px-4 py-2 text-gray-500">{c.hours_logged}h</TableCell>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                     </div>
 

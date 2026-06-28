@@ -29,7 +29,7 @@ export default function CompareReports({ report1, report2 }: Props) {
             <div className="bg-gray-50 border-b border-gray-100 px-6 py-4 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-gray-800 flex items-center gap-2">
-                        <FileText size={14} className="text-indigo-500" /> {label}
+                        <FileText size={16} className="text-indigo-500" /> {label}
                     </span>
                     <span className={cn(
                         "px-2 py-0.5 rounded-full text-[10px] font-bold capitalize",
@@ -71,7 +71,7 @@ export default function CompareReports({ report1, report2 }: Props) {
                     href="/internal-reports"
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gray-900"
                 >
-                    <ArrowLeft size={13} /> Back to reports
+                    <ArrowLeft size={16} /> Back to reports
                 </Link>
             </div>
 

@@ -103,21 +103,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ])->toResponse($request)->setStatusCode(403);
         });
 
-        $exceptions->render(function (\Spatie\Permission\Exceptions\UnauthorizedException $e, $request) {
-            Log::warning('Spatie Unauthorized exception', [
-                'user_id' => $request->user()?->id,
-                'path'    => $request->path(),
-                'method'  => $request->method(),
-                'ip'      => $request->ip(),
-            ]);
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json(['message' => 'Forbidden.'], 403);
-            }
 
-            return \Inertia\Inertia::render('Errors/403', [
-                'message' => "You don't have the necessary roles or permissions to access this page.",
-            ])->toResponse($request)->setStatusCode(403);
-        });
 
         $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, $request) {
             if ($request->expectsJson() || $request->is('api/*')) {

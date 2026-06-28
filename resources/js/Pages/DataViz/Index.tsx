@@ -94,7 +94,7 @@ export default function DataVizIndex() {
                     onClick={handleSaveDashboard}
                     className="flex items-center gap-1.5 transition-all shadow-md self-start" 
                 size="sm" >
-                    <Save size={13} /> Save Dashboard
+                    <Save size={16} /> Save Dashboard
                 </Button>
             </div>
 
@@ -104,7 +104,7 @@ export default function DataVizIndex() {
                 {/* Left controls */}
                 <div className="bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-5 h-fit">
                     <h3 className="text-xs font-bold text-gray-900 border-b border-gray-55 pb-2 flex items-center gap-1.5">
-                        <Plus size={14} className="text-indigo-500" /> Add New Widget
+                        <Plus size={16} className="text-indigo-500" /> Add New Widget
                     </h3>
 
                     {kpis.length === 0 ? (
@@ -187,7 +187,7 @@ export default function DataVizIndex() {
                                     <h4 className="text-xs font-bold text-gray-900 mb-2">{w.title}</h4>
                                     <div className="flex-1 bg-gray-50 border border-gray-100 rounded-xl p-6 flex items-center justify-center text-center text-xs text-gray-400 capitalize">
                                         <div className="space-y-1">
-                                            <BarChart2 size={18} className="mx-auto text-indigo-400" />
+                                            <BarChart2 size={20} className="mx-auto text-indigo-400" />
                                             <p className="font-semibold text-gray-600">{w.type.replace('_', ' ')}</p>
                                             <p className="text-[10px] text-gray-400 font-mono">{w.spec.metric_key}</p>
                                         </div>

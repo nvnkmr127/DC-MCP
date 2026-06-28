@@ -20,7 +20,7 @@ export default function KnowledgeBaseShow({ article }: Props) {
             <div className="max-w-3xl space-y-5">
                 <div className="flex items-center justify-between">
                     <Link href="/knowledge-base" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 w-fit">
-                        <ArrowLeft size={14} /> Knowledge Base
+                        <ArrowLeft size={16} /> Knowledge Base
                     </Link>
                     <Button onClick={async () => {
                         const ok = await confirm({
@@ -33,7 +33,7 @@ export default function KnowledgeBaseShow({ article }: Props) {
                         router.delete(`/knowledge-base/${article.id}`);
                     }}
                         className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
-                        <Trash2 size={14} />
+                        <Trash2 size={16} />
                     </Button>
                 </div>
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -49,7 +49,7 @@ export default function KnowledgeBaseShow({ article }: Props) {
                             <span>·</span>
                             <span>{article.created_at}</span>
                             <span>·</span>
-                            <span className="flex items-center gap-1"><Eye size={11} /> {article.view_count} views</span>
+                            <span className="flex items-center gap-1"><Eye size={12} /> {article.view_count} views</span>
                         </div>
                     </div>
                     <div className="prose prose-sm max-w-none">

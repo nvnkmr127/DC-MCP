@@ -92,7 +92,7 @@ export default function WorkflowsIndex({ workflows }: Props) {
                     </div>
                     <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> New Workflow
+                        <Plus size={16} /> New Workflow
                     </Button>
                 </div>
 
@@ -137,7 +137,7 @@ export default function WorkflowsIndex({ workflows }: Props) {
                                     router.delete(`/workflows/${w.id}`);
                                 }}
                                     className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
-                                    <Trash2 size={14} />
+                                    <Trash2 size={16} />
                                 </Button>
                             </div>
                         </div>

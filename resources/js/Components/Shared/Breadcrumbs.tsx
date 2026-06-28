@@ -22,7 +22,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
                 href="/dashboard" 
                 className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-gray-700"
             >
-                <Home size={14} />
+                <Home size={16} />
             </Link>
             
             {items.map((item, index) => {
@@ -30,7 +30,7 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
                 
                 return (
                     <div key={index} className="flex items-center">
-                        <ChevronRight size={14} className="mx-1 text-gray-300 shrink-0" />
+                        <ChevronRight size={16} className="mx-1 text-gray-300 shrink-0" />
                         {isLast || !item.href ? (
                             <span className="font-semibold text-gray-800" aria-current="page">
                                 {item.label}

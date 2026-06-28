@@ -25,19 +25,19 @@ interface SearchGroup {
 // Map groups to icons
 const getIconForGroup = (group: string) => {
     switch (group) {
-        case 'Projects': return <FolderKanban size={14} className="text-indigo-600" />;
-        case 'Tasks': return <CheckSquare size={14} className="text-emerald-600" />;
-        case 'Users': return <User size={14} className="text-blue-600" />;
-        case 'Clients': return <Briefcase size={14} className="text-orange-600" />;
-        case 'Invoices': return <CircleDollarSign size={14} className="text-green-600" />;
-        case 'Proposals': return <Send size={14} className="text-purple-600" />;
-        case 'SOWs': return <FileText size={14} className="text-rose-600" />;
-        case 'Sprints': return <Activity size={14} className="text-cyan-600" />;
-        case 'Prospects': return <FileCheck size={14} className="text-yellow-600" />;
-        case 'Goals': return <Flag size={14} className="text-red-600" />;
-        case 'Announcements': return <Megaphone size={14} className="text-teal-600" />;
-        case 'Knowledge Base': return <BookOpen size={14} className="text-pink-600" />;
-        default: return <Search size={14} className="text-gray-600" />;
+        case 'Projects': return <FolderKanban size={16} className="text-indigo-600" />;
+        case 'Tasks': return <CheckSquare size={16} className="text-emerald-600" />;
+        case 'Users': return <User size={16} className="text-blue-600" />;
+        case 'Clients': return <Briefcase size={16} className="text-orange-600" />;
+        case 'Invoices': return <CircleDollarSign size={16} className="text-green-600" />;
+        case 'Proposals': return <Send size={16} className="text-purple-600" />;
+        case 'SOWs': return <FileText size={16} className="text-rose-600" />;
+        case 'Sprints': return <Activity size={16} className="text-cyan-600" />;
+        case 'Prospects': return <FileCheck size={16} className="text-yellow-600" />;
+        case 'Goals': return <Flag size={16} className="text-red-600" />;
+        case 'Announcements': return <Megaphone size={16} className="text-teal-600" />;
+        case 'Knowledge Base': return <BookOpen size={16} className="text-pink-600" />;
+        default: return <Search size={16} className="text-gray-600" />;
     }
 };
 

@@ -96,7 +96,7 @@ export default function ReportsShow({ report }: Props) {
                     href="/internal-reports"
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gray-900"
                 >
-                    <ArrowLeft size={13} /> Back to reports
+                    <ArrowLeft size={16} /> Back to reports
                 </Link>
                 
                 <div className="flex gap-2">
@@ -126,7 +126,7 @@ export default function ReportsShow({ report }: Props) {
                 <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden h-[600px] flex flex-col">
                     <div className="bg-gray-50/50 border-b border-gray-100 px-6 py-4 flex items-center justify-between">
                         <span className="text-xs font-bold text-gray-800 flex items-center gap-2">
-                            <FileText size={14} className="text-indigo-500" /> Inline Preview
+                            <FileText size={16} className="text-indigo-500" /> Inline Preview
                         </span>
                         <span className={cn(
                             "px-2 py-0.5 rounded-full text-[10px] font-bold capitalize",
@@ -145,7 +145,7 @@ export default function ReportsShow({ report }: Props) {
                             />
                         ) : (
                             <div className="text-center max-w-sm">
-                                <RefreshCw className="animate-spin text-indigo-500 mx-auto mb-4" size={28} />
+                                <RefreshCw className="animate-spin text-indigo-500 mx-auto mb-4" size={32} />
                                 <h4 className="text-xs font-bold text-gray-900">Generating Report Preview</h4>
                                 <p className="text-[11px] text-gray-400 mt-1">This can take up to 30 seconds as headless Chrome compiles data vectors.</p>
                             </div>
@@ -216,7 +216,7 @@ export default function ReportsShow({ report }: Props) {
                                     <div className="flex flex-wrap gap-1.5">
                                         {report.recipients.map(e => (
                                             <span key={e} className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-lg text-[10px] font-semibold border border-emerald-100">
-                                                <Check size={9} /> {e}
+                                                <Check size={12} /> {e}
                                             </span>
                                         ))}
                                     </div>
@@ -228,7 +228,7 @@ export default function ReportsShow({ report }: Props) {
                     {/* Internal Comments Section */}
                     <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
                         <h3 className="text-xs font-bold text-gray-900 border-b border-gray-55 pb-2 flex items-center gap-2">
-                            <MessageSquare size={14} className="text-gray-400" /> Internal Notes & Annotations
+                            <MessageSquare size={16} className="text-gray-400" /> Internal Notes & Annotations
                         </h3>
                         <CommentsSection
                             submitUrl={`/internal-reports/${report.id}/comments`}

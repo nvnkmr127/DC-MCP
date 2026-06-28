@@ -92,7 +92,7 @@ export default function RateCardsIndex({ rateCards }: Props) {
                     </div>
                     <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> New Rate
+                        <Plus size={16} /> New Rate
                     </Button>
                 </div>
 
@@ -113,7 +113,7 @@ export default function RateCardsIndex({ rateCards }: Props) {
                                                     onChange={e => setEditData(d => ({ ...d, rate: parseFloat(e.target.value) }))}
                                                     className="w-28 border border-gray-300 rounded px-2 py-1 text-sm focus:ring-1 focus:ring-indigo-500" />
                                                 <Button onClick={() => saveEdit(r.id)} className="px-3 py-1 bg-indigo-600 text-white text-xs rounded-lg">Save</Button>
-                                                <Button onClick={() => setEditingId(null)} className="text-gray-400"><X size={13} /></Button>
+                                                <Button onClick={() => setEditingId(null)} className="text-gray-400"><X size={16} /></Button>
                                             </>
                                         ) : (
                                             <>
@@ -125,11 +125,11 @@ export default function RateCardsIndex({ rateCards }: Props) {
                                                 <div className="flex items-center gap-1.5">
                                                     <Button onClick={() => router.patch(`/rate-cards/${r.id}`, { is_active: !r.is_active })}
                                                         className="text-gray-400 hover:text-indigo-600 transition-colors">
-                                                        {r.is_active ? <ToggleRight size={18} className="text-indigo-600" /> : <ToggleLeft size={18} />}
+                                                        {r.is_active ? <ToggleRight size={20} className="text-indigo-600" /> : <ToggleLeft size={20} />}
                                                     </Button>
                                                     <Button onClick={() => { setEditingId(r.id); setEditData({}); }}
                                                         className="p-1 text-gray-400 hover:text-indigo-600 rounded hover:bg-indigo-50 transition-colors">
-                                                        <Edit2 size={13} />
+                                                        <Edit2 size={16} />
                                                     </Button>
                                                     <Button onClick={async () => {
                                                         const ok = await confirm({
@@ -142,7 +142,7 @@ export default function RateCardsIndex({ rateCards }: Props) {
                                                         router.delete(`/rate-cards/${r.id}`);
                                                     }}
                                                         className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
-                                                        <Trash2 size={13} />
+                                                        <Trash2 size={16} />
                                                     </Button>
                                                 </div>
                                             </>

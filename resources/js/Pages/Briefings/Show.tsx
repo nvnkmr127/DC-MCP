@@ -57,7 +57,7 @@ export default function BriefingShow({ briefing, tasks_today, calendar_events }:
                     </Link>
                     <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-500 shadow-[0_0_12px_rgba(234,179,8,0.15)] animate-pulse">
-                            <Zap size={14} className="fill-yellow-500/20" />
+                            <Zap size={16} className="fill-yellow-500/20" />
                         </div>
                         <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Start of Day</h1>
                     </div>
@@ -76,7 +76,7 @@ export default function BriefingShow({ briefing, tasks_today, calendar_events }:
                     <div className="lg:col-span-2 space-y-6">
                         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm min-h-[400px]">
                             <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                <Zap size={18} className="text-indigo-500" /> Morning Assistant
+                                <Zap size={20} className="text-indigo-500" /> Morning Assistant
                             </h2>
                             {briefing.status === 'generating' && (
                                 <div className="flex flex-col items-center py-12 text-center">
@@ -90,7 +90,7 @@ export default function BriefingShow({ briefing, tasks_today, calendar_events }:
                                 <div className="flex flex-col items-center py-12 text-center">
                                     <p className="text-gray-600 mb-4">Briefing generation failed.</p>
                                     <Button onClick={regenerate} className="flex items-center gap-2" >
-                                        <RefreshCw size={14} /> Retry
+                                        <RefreshCw size={16} /> Retry
                                     </Button>
                                 </div>
                             )}
@@ -99,7 +99,7 @@ export default function BriefingShow({ briefing, tasks_today, calendar_events }:
                                 <div className="flex flex-col items-center py-12 text-center">
                                     <p className="text-gray-500 mb-4">This briefing hasn't been generated yet.</p>
                                     <Button onClick={regenerate} className="flex items-center gap-2" >
-                                        <Zap size={14} /> Generate Now
+                                        <Zap size={16} /> Generate Now
                                     </Button>
                                 </div>
                             )}
@@ -181,7 +181,7 @@ export default function BriefingShow({ briefing, tasks_today, calendar_events }:
                                                 </span>
                                                 {task.due_date && (
                                                     <span className="flex items-center gap-1 text-gray-500 ml-auto">
-                                                        <Clock size={10} /> {formatDate(task.due_date)}
+                                                        <Clock size={12} /> {formatDate(task.due_date)}
                                                     </span>
                                                 )}
                                             </div>

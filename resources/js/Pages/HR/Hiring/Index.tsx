@@ -177,7 +177,7 @@ export default function HiringIndex({ openings }: Props) {
                                     </p>
                                 )}
                                 <div className="flex items-center gap-1 mt-2">
-                                    <Users size={11} className="text-gray-400" />
+                                    <Users size={12} className="text-gray-400" />
                                     <span className="text-xs text-gray-500">{o.candidates_count} candidate{o.candidates_count !== 1 ? 's' : ''}</span>
                                 </div>
                             </Button>
@@ -220,7 +220,7 @@ export default function HiringIndex({ openings }: Props) {
                                 </select>
                                 <Button onClick={() => setAddCandidate(selectedOpening)}
                                     className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-sm text-gray-600 rounded-lg hover:bg-gray-50">
-                                    <Plus size={13} /> Add
+                                    <Plus size={16} /> Add
                                 </Button>
                             </div>
                         </div>
@@ -248,7 +248,7 @@ export default function HiringIndex({ openings }: Props) {
                                                     {c.rating && (
                                                         <div className="flex gap-0.5 mt-1.5">
                                                             {[1,2,3,4,5].map(i => (
-                                                                <Star key={i} size={9} className={i <= c.rating! ? 'text-amber-400 fill-amber-400' : 'text-gray-200'} />
+                                                                <Star key={i} size={12} className={i <= c.rating! ? 'text-amber-400 fill-amber-400' : 'text-gray-200'} />
                                                             ))}
                                                         </div>
                                                     )}

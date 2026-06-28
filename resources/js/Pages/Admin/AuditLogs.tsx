@@ -6,6 +6,7 @@ import { Head, router } from '@inertiajs/react';
 import { Activity, Search, Filter, Eye, Clock, User as UserIcon } from 'lucide-react';
 import Modal from '@/Components/ui/Modal';
 import { Pagination } from '@/Components/ui/Pagination';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
 
 interface ActivityLog {
     id: number;
@@ -105,40 +106,40 @@ export default function AuditLogs({ logs, filters, subjectTypes }: Props) {
 
                     <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-white/5 border-b border-white/10 text-gray-300 text-sm">
-                                        <th className="p-4 font-medium">Timestamp</th>
-                                        <th className="p-4 font-medium">User</th>
-                                        <th className="p-4 font-medium">Description</th>
-                                        <th className="p-4 font-medium">Subject</th>
-                                        <th className="p-4 font-medium text-right">Details</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-sm divide-y divide-white/5">
+                            <Table className="w-full text-left border-collapse">
+                                <TableHeader>
+                                    <TableRow className="bg-white/5 border-b border-white/10 text-gray-300 text-sm">
+                                        <TableHead className="p-4 font-medium">Timestamp</TableHead>
+                                        <TableHead className="p-4 font-medium">User</TableHead>
+                                        <TableHead className="p-4 font-medium">Description</TableHead>
+                                        <TableHead className="p-4 font-medium">Subject</TableHead>
+                                        <TableHead className="p-4 font-medium text-right">Details</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="text-sm divide-y divide-white/5">
                                     {logs.data.map((log) => (
-                                        <tr key={log.id} className="hover:bg-white/5 transition-colors">
-                                            <td className="p-4 whitespace-nowrap text-gray-400">
+                                        <TableRow key={log.id} className="hover:bg-white/5 transition-colors">
+                                            <TableCell className="p-4 whitespace-nowrap text-gray-400">
                                                 <div className="flex items-center gap-1.5">
                                                     <Clock className="w-4 h-4" />
                                                     {new Date(log.created_at).toLocaleString()}
                                                 </div>
-                                            </td>
-                                            <td className="p-4 text-gray-300">
+                                            </TableCell>
+                                            <TableCell className="p-4 text-gray-300">
                                                 <div className="flex items-center gap-2">
                                                     <UserIcon className="w-4 h-4 text-gray-500" />
                                                     {log.user ? log.user.name : 'System'}
                                                 </div>
-                                            </td>
-                                            <td className="p-4 text-gray-200">
+                                            </TableCell>
+                                            <TableCell className="p-4 text-gray-200">
                                                 {log.description}
-                                            </td>
-                                            <td className="p-4 text-gray-400 text-xs">
+                                            </TableCell>
+                                            <TableCell className="p-4 text-gray-400 text-xs">
                                                 {log.subject_type ? (
                                                     <span>{log.subject_type.split('\\').pop()} (#{log.subject_id})</span>
                                                 ) : '-'}
-                                            </td>
-                                            <td className="p-4 text-right">
+                                            </TableCell>
+                                            <TableCell className="p-4 text-right">
                                                 {log.changes && (
                                                     <Button
                                                         onClick={() => setSelectedLog(log)}
@@ -148,18 +149,18 @@ export default function AuditLogs({ logs, filters, subjectTypes }: Props) {
                                                         <Eye className="w-4 h-4" />
                                                     </Button>
                                                 )}
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
                                     {logs.data.length === 0 && (
-                                        <tr>
-                                            <td colSpan={5} className="p-8 text-center text-gray-400">
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="p-8 text-center text-gray-400">
                                                 No audit logs found matching criteria.
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     )}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
 
                         <div className="bg-white/5 border-t border-white/10">

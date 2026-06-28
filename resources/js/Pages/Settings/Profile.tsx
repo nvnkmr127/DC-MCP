@@ -207,7 +207,7 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
 
                     <div className="flex items-center gap-2 mb-5">
                         <div className="w-6 h-6 rounded-md bg-indigo-50 flex items-center justify-center">
-                            <UserIcon size={13} className="text-indigo-600" />
+                            <UserIcon size={16} className="text-indigo-600" />
                         </div>
                         <h2 className="text-[13px] font-semibold text-gray-900">Profile Information</h2>
                     </div>
@@ -240,7 +240,7 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                         </Field>
                         <div className="pt-1">
                             <Button type="submit" disabled={profileForm.processing} className="flex items-center gap-1.5 disabled:opacity-50" >
-                                <Save size={13} /> {profileForm.processing ? 'Saving…' : 'Save changes'}
+                                <Save size={16} /> {profileForm.processing ? 'Saving…' : 'Save changes'}
                             </Button>
                         </div>
                     </form>
@@ -250,7 +250,7 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                 <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                     <div className="flex items-center gap-2 mb-5">
                         <div className="w-6 h-6 rounded-md bg-red-50 flex items-center justify-center">
-                            <Lock size={13} className="text-red-500" />
+                            <Lock size={16} className="text-red-500" />
                         </div>
                         <h2 className="text-[13px] font-semibold text-gray-900">Change Password</h2>
                     </div>
@@ -268,7 +268,7 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                         </div>
                         <div className="pt-1">
                             <Button type="submit" disabled={passwordForm.processing} className="flex items-center gap-1.5 disabled:opacity-50" variant="ghost" >
-                                <Lock size={13} /> {passwordForm.processing ? 'Updating…' : 'Update password'}
+                                <Lock size={16} /> {passwordForm.processing ? 'Updating…' : 'Update password'}
                             </Button>
                         </div>
                     </form>
@@ -278,7 +278,7 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                 <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                     <div className="flex items-center gap-2 mb-5">
                         <div className="w-6 h-6 rounded-md bg-blue-50 flex items-center justify-center">
-                            <LinkIcon size={13} className="text-blue-500" />
+                            <LinkIcon size={16} className="text-blue-500" />
                         </div>
                         <h2 className="text-[13px] font-semibold text-gray-900">Connected Accounts</h2>
                     </div>
@@ -290,7 +290,7 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                                 <div key={provider} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
-                                            <Globe size={14} className="text-gray-500" />
+                                            <Globe size={16} className="text-gray-500" />
                                         </div>
                                         <div>
                                             <p className="text-[13px] font-semibold text-gray-900 capitalize">{provider}</p>
@@ -315,7 +315,7 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                 <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                     <div className="flex items-center gap-2 mb-5">
                         <div className="w-6 h-6 rounded-md bg-violet-50 flex items-center justify-center">
-                            <Key size={13} className="text-violet-500" />
+                            <Key size={16} className="text-violet-500" />
                         </div>
                         <h2 className="text-[13px] font-semibold text-gray-900">API Tokens</h2>
                     </div>
@@ -355,7 +355,7 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                                         <p className="text-[11px] text-gray-500">Created: {new Date(token.created_at).toLocaleDateString()} · Last used: {token.last_used_at || 'Never'}</p>
                                     </div>
                                     <Button onClick={() => revokeToken(token.id)} className="text-red-500 hover:text-red-700 p-2 rounded hover:bg-red-50" title="Revoke Token">
-                                        <Trash2 size={14} />
+                                        <Trash2 size={16} />
                                     </Button>
                                 </div>
                             ))}
@@ -367,7 +367,7 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                 <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                     <div className="flex items-center gap-2 mb-5">
                         <div className="w-6 h-6 rounded-md bg-amber-50 flex items-center justify-center">
-                            <MonitorSmartphone size={13} className="text-amber-600" />
+                            <MonitorSmartphone size={16} className="text-amber-600" />
                         </div>
                         <h2 className="text-[13px] font-semibold text-gray-900">Active Sessions</h2>
                     </div>
@@ -401,7 +401,7 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                 <div className="bg-white rounded-xl border border-red-100 p-6">
                     <div className="flex items-center gap-2 mb-5">
                         <div className="w-6 h-6 rounded-md bg-red-50 flex items-center justify-center">
-                            <Trash2 size={13} className="text-red-500" />
+                            <Trash2 size={16} className="text-red-500" />
                         </div>
                         <h2 className="text-[13px] font-semibold text-red-600">Danger Zone</h2>
                     </div>

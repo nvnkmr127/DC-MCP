@@ -150,7 +150,7 @@ export default function ClientsIndex({ clients, filters }: Props) {
 
                 <div className="flex items-center gap-2 shrink-0">
                     <form onSubmit={handleSearch} className="relative">
-                        <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                         <input
                             value={search}
                             onChange={e => setSearch(e.target.value)}
@@ -163,7 +163,7 @@ export default function ClientsIndex({ clients, filters }: Props) {
                         variant="outline"
                         size="sm"
                     >
-                        <Plus size={14} className="mr-1" /> New Client
+                        <Plus size={16} className="mr-1" /> New Client
                     </Button>
                     <Button
                         onClick={() => router.visit('/clients/onboard')}
@@ -188,7 +188,7 @@ export default function ClientsIndex({ clients, filters }: Props) {
                         onClick={() => router.visit('/clients/create')}
                         size="md"
                     >
-                        <Plus size={14} className="mr-1" /> Add Client
+                        <Plus size={16} className="mr-1" /> Add Client
                     </Button>
                 </div>
             )}
@@ -213,7 +213,7 @@ export default function ClientsIndex({ clients, filters }: Props) {
                                 <div className="flex items-start justify-between gap-3 mb-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50 flex items-center justify-center shrink-0">
-                                            <Building2 size={18} className="text-indigo-400" />
+                                            <Building2 size={20} className="text-indigo-400" />
                                         </div>
                                         <div className="min-w-0">
                                             <Link
@@ -277,7 +277,7 @@ export default function ClientsIndex({ clients, filters }: Props) {
                                 <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between">
                                     {client.upsell_flagged ? (
                                         <span className="flex items-center gap-1 text-[11px] font-medium text-amber-600">
-                                            <DollarSign size={11} />
+                                            <DollarSign size={12} />
                                             {client.upsell_potential ? fmt(client.upsell_potential) + '/mo' : 'Upsell flagged'}
                                         </span>
                                     ) : <span />}
@@ -292,7 +292,7 @@ export default function ClientsIndex({ clients, filters }: Props) {
                                                 : 'text-gray-400 hover:text-amber-600 hover:bg-amber-50 opacity-0 group-hover:opacity-100',
                                         )}
                                     >
-                                        <DollarSign size={11} />
+                                        <DollarSign size={12} />
                                         {client.upsell_flagged ? 'Edit Upsell' : 'Flag Upsell'}
                                     </Button>
                                 </div>

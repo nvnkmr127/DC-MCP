@@ -8,6 +8,7 @@ import {
     Heart, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
 
 interface Retainer {
     id: string; name: string; monthly_value: number; currency: string;
@@ -96,45 +97,45 @@ export default function RevenueIndex({ retainers, stats, clients }: Props) {
                         <h2 className="text-sm font-semibold text-gray-700">Active Retainers</h2>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
-                                <tr>
+                        <Table className="w-full text-sm">
+                            <TableHeader className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+                                <TableRow>
                                     {['Client', 'Retainer', 'Monthly Value', 'Cycle', 'Status', 'Next Renewal', 'Health'].map(h => (
-                                        <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+                                        <TableHead key={h} className="px-4 py-3 text-left font-medium">{h}</TableHead>
                                     ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-y divide-gray-100">
                                 {retainers.length === 0 && (
-                                    <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">No retainers yet. Add your first client retainer.</td></tr>
+                                    <TableRow><TableCell colSpan={7} className="px-4 py-8 text-center text-gray-400">No retainers yet. Add your first client retainer.</TableCell></TableRow>
                                 )}
                                 {retainers.map(r => (
-                                    <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-4 py-3 font-medium text-gray-900">{r.client?.name ?? '—'}</td>
-                                        <td className="px-4 py-3 text-gray-700">{r.name}</td>
-                                        <td className="px-4 py-3 font-semibold text-gray-900">{fmt(r.monthly_value)}</td>
-                                        <td className="px-4 py-3 capitalize text-gray-600">{r.billing_cycle}</td>
-                                        <td className="px-4 py-3">
+                                    <TableRow key={r.id} className="hover:bg-gray-50 transition-colors">
+                                        <TableCell className="px-4 py-3 font-medium text-gray-900">{r.client?.name ?? '—'}</TableCell>
+                                        <TableCell className="px-4 py-3 text-gray-700">{r.name}</TableCell>
+                                        <TableCell className="px-4 py-3 font-semibold text-gray-900">{fmt(r.monthly_value)}</TableCell>
+                                        <TableCell className="px-4 py-3 capitalize text-gray-600">{r.billing_cycle}</TableCell>
+                                        <TableCell className="px-4 py-3">
                                             <span className="flex items-center gap-1.5">
                                                 {STATUS_ICON[r.status]}
                                                 <span className="capitalize">{r.status}</span>
                                             </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-600">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-gray-600">
                                             {r.next_renewal_date ?? '—'}
                                             {r.auto_renew && <span className="ml-1 text-xs text-emerald-500">(auto)</span>}
-                                        </td>
-                                        <td className="px-4 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
                                             {r.client?.health_status ? (
                                                 <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border', HEALTH_COLORS[r.client.health_status])}>
                                                     {r.client.health_score ?? '?'}
                                                 </span>
                                             ) : <span className="text-gray-300">—</span>}
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
             </div>

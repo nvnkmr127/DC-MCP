@@ -53,7 +53,7 @@ export default function TaskEdit({ task, projects, members }: Props) {
                         href={`/tasks/${task.id}`}
                         className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors"
                     >
-                        <ArrowLeft size={17} />
+                        <ArrowLeft size={20} />
                     </Link>
                     <div>
                         <h1 className="text-[15px] font-bold text-gray-900">Edit Task</h1>
@@ -81,7 +81,7 @@ export default function TaskEdit({ task, projects, members }: Props) {
                         {/* Description */}
                         <div>
                             <label className="flex items-center gap-1.5 text-[13px] font-semibold text-gray-700 mb-2">
-                                <AlignLeft size={14} className="text-gray-400" /> Description
+                                <AlignLeft size={16} className="text-gray-400" /> Description
                             </label>
                             <RichTextEditor
                                 value={form.data.description}
@@ -194,7 +194,7 @@ export default function TaskEdit({ task, projects, members }: Props) {
                                 disabled={form.processing}
                                 className="flex items-center gap-1.5 px-5 py-2.5 disabled:opacity-50" 
                             >
-                                <Save size={14} />
+                                <Save size={16} />
                                 {form.processing ? 'Saving…' : 'Save Changes'}
                             </Button>
                             <Link

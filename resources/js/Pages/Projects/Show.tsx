@@ -76,7 +76,7 @@ export default function ProjectShow({ project, tasks, goals, team, financials, i
                 {/* Budget Burn Rate Alert */}
                 {project.budget > 0 && (project.budget_used / project.budget) >= 0.9 && (
                     <div className="bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 mb-4 flex items-start gap-3">
-                        <AlertTriangle size={18} className="text-rose-600 shrink-0 mt-0.5" />
+                        <AlertTriangle size={20} className="text-rose-600 shrink-0 mt-0.5" />
                         <div>
                             <h3 className="text-sm font-semibold text-rose-800">High Budget Utilization Alert</h3>
                             <p className="text-sm text-rose-600 mt-0.5">
@@ -104,7 +104,7 @@ export default function ProjectShow({ project, tasks, goals, team, financials, i
                         </div>
                         <div className="flex items-center gap-2">
                             <Link href={`/tasks/create?project_id=${project.id}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700">
-                                <Plus size={14} /> Add Task
+                                <Plus size={16} /> Add Task
                             </Link>
                         </div>
                     </div>

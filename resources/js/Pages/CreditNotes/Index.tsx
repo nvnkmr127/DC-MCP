@@ -102,7 +102,7 @@ export default function CreditNotesIndex({ creditNotes, clients, invoices }: Pro
                     </div>
                     <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> New Credit Note
+                        <Plus size={16} /> New Credit Note
                     </Button>
                 </div>
 
@@ -151,7 +151,7 @@ export default function CreditNotesIndex({ creditNotes, clients, invoices }: Pro
                                         router.post(`/credit-notes/${creditNote.id}/apply`);
                                     }}
                                         className="p-1 text-gray-400 hover:text-emerald-600 rounded hover:bg-emerald-50 transition-colors" title="Apply">
-                                        <CheckCircle size={14} />
+                                        <CheckCircle size={16} />
                                     </Button>
                                 )}
                                 <Button onClick={async () => {
@@ -165,7 +165,7 @@ export default function CreditNotesIndex({ creditNotes, clients, invoices }: Pro
                                     router.delete(`/credit-notes/${creditNote.id}`);
                                 }}
                                     className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
-                                    <Trash2 size={14} />
+                                    <Trash2 size={16} />
                                 </Button>
                             </div>
                         </div>

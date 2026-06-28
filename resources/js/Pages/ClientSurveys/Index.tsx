@@ -80,7 +80,7 @@ export default function ClientSurveysIndex({ surveys, clients, npsStats }: Props
                     <h1 className="text-lg font-bold text-gray-900">NPS Surveys</h1>
                     <Button onClick={() => setSendOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> Send Survey
+                        <Plus size={16} /> Send Survey
                     </Button>
                 </div>
 
@@ -140,7 +140,7 @@ export default function ClientSurveysIndex({ surveys, clients, npsStats }: Props
                                     router.delete(`/client-surveys/${s.id}`);
                                 }}
                                     className="p-1 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
-                                    <Trash2 size={13} />
+                                    <Trash2 size={16} />
                                 </Button>
                             </div>
                         </div>

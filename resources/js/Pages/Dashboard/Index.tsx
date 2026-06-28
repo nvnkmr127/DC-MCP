@@ -21,6 +21,7 @@ import {
 } from '@/hooks/queries/useDashboards';
 import { Button } from '@/Components/ui/Button';
 import { Skeleton } from '@/Components/ui/Skeleton';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/Components/ui/Card";
 
 interface DashboardStats {
     my_active_tasks: number;
@@ -196,14 +197,14 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                         size="sm"
                                         
                                     size="icon" >
-                                        <Plus size={13} className="mr-1.5" /> Add Widget
+                                        <Plus size={16} className="mr-1.5" /> Add Widget
                                     </Button>
                                     <Button
                                         onClick={handleSaveLayout}
                                         size="sm"
                                         loading={saveMutation.isPending}
                                     >
-                                        <Save size={13} className="mr-1.5" /> Save Dashboard
+                                        <Save size={16} className="mr-1.5" /> Save Dashboard
                                     </Button>
                                 </>
                             ) : (
@@ -212,7 +213,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                     variant="outline"
                                     size="sm"
                                 >
-                                    <Edit3 size={13} className="mr-1.5" /> Edit Layout
+                                    <Edit3 size={16} className="mr-1.5" /> Edit Layout
                                 </Button>
                             )}
                             <select
@@ -233,7 +234,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                 variant="outline"
                                 size="sm"
                             >
-                                <Share2 size={13} className="mr-1.5" /> Share
+                                <Share2 size={16} className="mr-1.5" /> Share
                             </Button>
                             
                             <Button
@@ -241,7 +242,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                 variant="outline"
                                 size="sm"
                             >
-                                <Printer size={13} className="mr-1.5" /> Print PDF
+                                <Printer size={16} className="mr-1.5" /> Print PDF
                             </Button>
 
                             <Button
@@ -251,7 +252,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                 className="p-2 aspect-square rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700"
                                 title="Refresh data"
                             >
-                                <RefreshCw size={13} className={cn(isLoadingData && "animate-spin")} />
+                                <RefreshCw size={16} className={cn(isLoadingData && "animate-spin")} />
                             </Button>
                         </>
                     )}
@@ -270,7 +271,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                             {setup_checklist.filter(i => i.done).length} of {setup_checklist.length} steps complete
                         </span>
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border border-indigo-50 overflow-hidden">
+                    <Card className="overflow-hidden">
                         <div className="divide-y divide-gray-50">
                             {setup_checklist.map((item, idx) => (
                                 <div key={item.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
@@ -290,7 +291,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </Card>
                 </div>
             )}
 
@@ -300,11 +301,11 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                     {/* KPI Cards Skeleton */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mb-6">
                         {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                            <Card key={i} className="p-6">
                                 <Skeleton className="w-9 h-9 rounded-xl mb-4" />
                                 <Skeleton className="h-8 w-16 mb-2" />
                                 <Skeleton className="h-3 w-24" />
-                            </div>
+                            </Card>
                         ))}
                     </div>
                     {/* Command Center Skeleton */}
@@ -342,14 +343,14 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                             href="/projects/create" 
                             className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5 w-full sm:w-auto"
                         >
-                            <Plus size={18} />
+                            <Plus size={20} />
                             Create Project
                         </Link>
                         <Link 
                             href="/settings/import" 
                             className="flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-200 px-8 py-3.5 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm hover:shadow-md w-full sm:w-auto hover:-translate-y-0.5"
                         >
-                            <RefreshCw size={18} className="text-gray-400" />
+                            <RefreshCw size={20} className="text-gray-400" />
                             Import Data
                         </Link>
                     </div>
@@ -361,14 +362,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                         const spanCls = widget.position.w >= 6 ? 'md:col-span-6' : 'md:col-span-3';
 
                         return (
-                            <div
-                                key={widget.id}
-                                className={cn(
-                                    "bg-white border border-gray-100 rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 relative group",
-                                    spanCls,
-                                    editMode && "border-dashed border-indigo-400 bg-indigo-50/5"
-                                )}
-                            >
+                            <Card key={widget.id} className={cn("p-6 transition-all duration-300 relative group", spanCls, editMode && "border-dashed border-indigo-400 bg-indigo-50/5")} >
                                 {editMode && (
                                     <Button
                                         onClick={() => handleRemoveWidget(widget.id)}
@@ -426,7 +420,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                 ) : (
                                     <div className="text-xs text-gray-400 py-4 text-center">No visualization available or loading failed.</div>
                                 )}
-                            </div>
+                            </Card>
                         );
                     })}
                 </div>
@@ -443,10 +437,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                         ].map((kpi) => {
                             const Icon = kpi.icon;
                             return (
-                                <div key={kpi.label} className={cn(
-                                    "bg-white rounded-2xl p-5 border shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all duration-300 hover:-translate-y-0.5",
-                                    kpi.urgent ? "border-rose-100 hover:border-rose-200" : "border-gray-100/80 hover:border-gray-200/80"
-                                )}>
+                                <Card key={kpi.label} className={cn("p-6 transition-all duration-300 hover:-translate-y-0.5", kpi.urgent ? "border-rose-100 hover:border-rose-200" : "hover:border-gray-200")}>
                                     <div className="flex items-center justify-between mb-4">
                                         <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", kpi.bg)}>
                                             <Icon size={16} className={kpi.color} />
@@ -454,7 +445,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                     </div>
                                     <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight tabular-nums">{kpi.value}</h3>
                                     <p className="text-[11px] text-gray-400 mt-1 font-semibold uppercase tracking-wider">{kpi.label}</p>
-                                </div>
+                                </Card>
                             );
                         })}
                     </div>
@@ -468,7 +459,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                             {/* Morning Briefing */}
                             <div className="bg-gradient-to-br from-indigo-50 to-white rounded-2xl border border-indigo-100 p-6 shadow-sm relative overflow-hidden">
                                 <div className="absolute top-0 right-0 p-8 opacity-5">
-                                    <Zap size={100} />
+                                    <Zap size={48} />
                                 </div>
                                 <div className="flex items-center justify-between mb-4 relative z-10">
                                     <div className="flex items-center gap-3">
@@ -491,7 +482,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                             {briefing.digest_text}
                                         </div>
                                     ) : (
-                                        <div className="py-6 text-center bg-white/60 backdrop-blur rounded-xl border border-white/40 border-dashed">
+                                        <Card className="p-6 text-center bg-white/60 backdrop-blur border-white/40 border-dashed">
                                             <p className="text-sm text-gray-500 mb-4">You have no briefing compiled for today.</p>
                                             <Link
                                                 href="/briefings/generate"
@@ -501,13 +492,13 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                             >
                                                 <Zap size={16} /> Generate Briefing
                                             </Link>
-                                        </div>
+                                        </Card>
                                     )}
                                 </div>
                             </div>
 
                             {/* Today's Calendar */}
-                            <div className="bg-white rounded-2xl border border-gray-100/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col flex-1">
+                            <Card className="flex flex-col flex-1">
                                 <div className="p-5 border-b border-gray-50 flex items-center gap-2">
                                     <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                                         <Calendar size={16} />
@@ -545,7 +536,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                         </div>
                                     )}
                                 </div>
-                            </div>
+                            </Card>
 
                         </div>
 
@@ -553,7 +544,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                         <div className="lg:col-span-4 flex flex-col gap-6">
                             
                             {/* Overdue Tasks */}
-                            <div className="bg-white rounded-2xl border border-rose-100/60 shadow-[0_4px_20px_rgba(225,29,72,0.03)] flex flex-col h-[320px]">
+                            <Card className="flex flex-col h-[320px]">
                                 <div className="p-5 border-b border-rose-50 flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
@@ -590,10 +581,10 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                         </div>
                                     )}
                                 </div>
-                            </div>
+                            </Card>
 
                             {/* Pending Approvals */}
-                            <div className="bg-white rounded-2xl border border-amber-100/60 shadow-[0_4px_20px_rgba(217,119,6,0.03)] flex flex-col flex-1 min-h-[320px]">
+                            <Card className="flex flex-col flex-1 min-h-[320px]">
                                 <div className="p-5 border-b border-amber-50 flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
@@ -634,7 +625,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                         </div>
                                     )}
                                 </div>
-                            </div>
+                            </Card>
 
                         </div>
                     </div>
@@ -644,13 +635,13 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
             {/* Share Modal */}
             {shareModalOpen && activeDb && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm print:hidden">
-                    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-md overflow-hidden">
+                    <Card className="w-full max-w-md overflow-hidden">
                         <div className="p-5 border-b border-slate-100 flex items-center justify-between">
                             <h2 className="text-lg font-bold text-slate-800 flex items-center">
-                                <Share2 size={18} className="mr-2 text-indigo-500" /> Share Dashboard
+                                <Share2 size={20} className="mr-2 text-indigo-500" /> Share Dashboard
                             </h2>
                             <Button onClick={() => setShareModalOpen(false)} className="text-slate-400 hover:text-slate-600">
-                                <X size={18} />
+                                <X size={20} />
                             </Button>
                         </div>
                         <div className="p-6">
@@ -690,7 +681,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                 </div>
                             )}
                         </div>
-                    </div>
+                    </Card>
                 </div>
             )}
         </AppLayout>

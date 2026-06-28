@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { cn } from '@/lib/utils';
 import { UserPlus, Users } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
 
 interface Member {
     id: string;
@@ -61,7 +62,7 @@ export default function TeamSettings({ members, roles }: Props) {
                     onClick={() => setShowInvite(!showInvite)}
                     className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700"
                 >
-                    <UserPlus size={15} /> Invite Member
+                    <UserPlus size={16} /> Invite Member
                 </Button>
             </div>
 
@@ -126,28 +127,28 @@ export default function TeamSettings({ members, roles }: Props) {
                         <p className="text-gray-500 text-sm">No team members yet.</p>
                     </div>
                 ) : (
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-gray-100 bg-gray-50">
-                                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Name</th>
-                                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
-                                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Roles</th>
-                                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
+                    <Table className="w-full text-sm">
+                        <TableHeader>
+                            <TableRow className="border-b border-gray-100 bg-gray-50">
+                                <TableHead className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Name</TableHead>
+                                <TableHead className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Email</TableHead>
+                                <TableHead className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Roles</TableHead>
+                                <TableHead className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-gray-100">
                             {members.map(member => (
-                                <tr key={member.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3">
+                                <TableRow key={member.id} className="hover:bg-gray-50">
+                                    <TableCell className="px-4 py-3">
                                         <div className="flex items-center gap-2">
                                             <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 text-xs flex items-center justify-center font-semibold">
                                                 {member.name[0]}
                                             </div>
                                             <span className="font-medium text-gray-900">{member.name}</span>
                                         </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-gray-500">{member.email}</td>
-                                    <td className="px-4 py-3">
+                                    </TableCell>
+                                    <TableCell className="px-4 py-3 text-gray-500">{member.email}</TableCell>
+                                    <TableCell className="px-4 py-3">
                                         <select 
                                             value={member.roles[0]?.id ?? ''}
                                             onChange={(e) => {
@@ -160,16 +161,16 @@ export default function TeamSettings({ members, roles }: Props) {
                                                 <option key={r.id} value={r.id}>{r.name}</option>
                                             ))}
                                         </select>
-                                    </td>
-                                    <td className="px-4 py-3">
+                                    </TableCell>
+                                    <TableCell className="px-4 py-3">
                                         <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', member.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700')}>
                                             {member.is_active ? 'Active' : 'Inactive'}
                                         </span>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
                 )}
             </div>
         </AppLayout>

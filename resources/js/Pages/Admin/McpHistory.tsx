@@ -3,6 +3,7 @@ import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Clock, ServerCrash, CheckCircle2 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
 
 interface SyncLog {
     id: number;
@@ -69,31 +70,31 @@ export default function McpHistory({ connection, logs }: Props) {
                     {/* Logs Table */}
                     <div className="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
-                                <thead className="bg-gray-50 dark:bg-slate-900/50">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Processed</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Metadata</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
+                            <Table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                                <TableHeader className="bg-gray-50 dark:bg-slate-900/50">
+                                    <TableRow>
+                                        <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</TableHead>
+                                        <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</TableHead>
+                                        <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</TableHead>
+                                        <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Processed</TableHead>
+                                        <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</TableHead>
+                                        <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Metadata</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
                                     {logs.data.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                        <TableRow>
+                                            <TableCell colSpan={6} className="px-6 py-12 text-center text-gray-500">
                                                 No sync logs found for this connection.
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ) : (
                                         logs.data.map((log) => (
-                                            <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50">
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                                            <TableRow key={log.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/50">
+                                                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
                                                     {new Date(log.created_at).toLocaleString()}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`px-2 py-1 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${
                                                         log.status === 'success' ? 'bg-green-100 text-green-800' :
                                                         log.status === 'running' ? 'bg-blue-100 text-blue-800' :
@@ -108,17 +109,17 @@ export default function McpHistory({ connection, logs }: Props) {
                                                             {log.error_message}
                                                         </div>
                                                     )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {log.duration_ms ? `${(log.duration_ms / 1000).toFixed(2)}s` : '-'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {log.records_processed ?? '-'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {log.bytes_transferred ? `${(log.bytes_transferred / 1024).toFixed(2)} KB` : '-'}
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-500 max-w-sm">
+                                                </TableCell>
+                                                <TableCell className="px-6 py-4 text-sm text-gray-500 max-w-sm">
                                                     {log.metadata ? (
                                                         <details className="cursor-pointer">
                                                             <summary className="text-indigo-500 hover:text-indigo-600">View JSON</summary>
@@ -127,12 +128,12 @@ export default function McpHistory({ connection, logs }: Props) {
                                                             </pre>
                                                         </details>
                                                     ) : '-'}
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         ))
                                     )}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                         
                         {logs.last_page > 1 && (

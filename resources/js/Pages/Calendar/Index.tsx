@@ -128,14 +128,14 @@ export default function CalendarIndex({ events, year, month }: Props) {
                 </div>
                 
                 <p className="text-xs text-gray-400 flex items-center gap-1.5 self-end sm:self-auto">
-                    <Clock size={13} /> Default Timezone: Asia/Kolkata (IST)
+                    <Clock size={16} /> Default Timezone: Asia/Kolkata (IST)
                 </p>
             </div>
 
             {events.length === 0 && (
                 <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-indigo-50 border border-indigo-100 rounded-2xl p-5 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                        <Calendar size={120} />
+                        <Calendar size={48} />
                     </div>
                     <div className="relative z-10">
                         <h3 className="text-[14px] font-bold text-indigo-900 mb-1">Your calendar is looking empty this month</h3>
@@ -211,9 +211,9 @@ export default function CalendarIndex({ events, year, month }: Props) {
                                                         title={ev.title}
                                                     >
                                                         {isMilestone ? (
-                                                            <Flag size={9} className="shrink-0 text-purple-500 fill-purple-500/20" />
+                                                            <Flag size={12} className="shrink-0 text-purple-500 fill-purple-500/20" />
                                                         ) : ev.status === 'done' ? (
-                                                            <CheckCircle2 size={10} className="shrink-0 text-emerald-500" />
+                                                            <CheckCircle2 size={12} className="shrink-0 text-emerald-500" />
                                                         ) : (
                                                             <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', priority.dot)} />
                                                         )}
@@ -263,11 +263,11 @@ export default function CalendarIndex({ events, year, month }: Props) {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1.5">
                                             <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
-                                                <Calendar size={11} /> {formatEventDate(ev.date)}
+                                                <Calendar size={12} /> {formatEventDate(ev.date)}
                                             </span>
                                             {isMilestone ? (
                                                 <span className="px-2 py-0.5 bg-purple-50 border border-purple-100 text-purple-700 text-[9px] font-bold rounded-full uppercase tracking-wider flex items-center gap-1">
-                                                    <Flag size={9} className="fill-purple-500/10" /> Milestone
+                                                    <Flag size={12} className="fill-purple-500/10" /> Milestone
                                                 </span>
                                             ) : (
                                                 <span className={cn('px-2 py-0.5 border text-[9px] font-bold rounded-full uppercase tracking-wider capitalize', priority.bg, priority.text, priority.border)}>
@@ -287,12 +287,12 @@ export default function CalendarIndex({ events, year, month }: Props) {
                                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2.5 text-[10px] text-gray-400">
                                             {ev.project && (
                                                 <span className="flex items-center gap-1 font-medium bg-gray-50 border border-gray-100/60 rounded-md py-0.5 px-1.5">
-                                                    <Folder size={10} className="text-indigo-400" /> {ev.project.name}
+                                                    <Folder size={12} className="text-indigo-400" /> {ev.project.name}
                                                 </span>
                                             )}
                                             {ev.assignee && (
                                                 <span className="flex items-center gap-1">
-                                                    <User size={10} /> {ev.assignee.name}
+                                                    <User size={12} /> {ev.assignee.name}
                                                 </span>
                                             )}
                                         </div>
@@ -301,7 +301,7 @@ export default function CalendarIndex({ events, year, month }: Props) {
                                     {/* Status Icon */}
                                     {ev.status === 'done' && (
                                         <div className="shrink-0 p-1 bg-emerald-50 rounded-lg">
-                                            <CheckCircle2 size={15} className="text-emerald-500" />
+                                            <CheckCircle2 size={16} className="text-emerald-500" />
                                         </div>
                                     )}
                                 </Link>

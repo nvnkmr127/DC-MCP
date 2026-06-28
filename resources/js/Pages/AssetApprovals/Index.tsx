@@ -95,7 +95,7 @@ export default function AssetApprovalsIndex({ approvals, clients, filters }: Pro
                     <h1 className="text-lg font-bold text-gray-900">Asset Approval Workflow</h1>
                     <Button onClick={() => setSubmitOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> Submit Asset
+                        <Plus size={16} /> Submit Asset
                     </Button>
                 </div>
 
@@ -130,7 +130,7 @@ export default function AssetApprovalsIndex({ approvals, clients, filters }: Pro
                                         {TYPE_LABELS[a.type] ?? a.type} · {a.client?.name ?? '—'} · {a.submitter?.name ?? '—'}
                                     </p>
                                 </div>
-                                <ChevronDown size={13} className={cn('text-gray-400 transition-transform shrink-0', expandedId === a.id && 'rotate-180')} />
+                                <ChevronDown size={16} className={cn('text-gray-400 transition-transform shrink-0', expandedId === a.id && 'rotate-180')} />
                             </div>
                             {expandedId === a.id && (
                                 <div className="border-t border-gray-100 px-4 pb-4 pt-3 space-y-3">
@@ -138,7 +138,7 @@ export default function AssetApprovalsIndex({ approvals, clients, filters }: Pro
                                     {a.asset_url && (
                                         <a href={a.asset_url} target="_blank" rel="noreferrer"
                                             className="flex items-center gap-1.5 text-sm text-indigo-600 font-medium">
-                                            <ExternalLink size={13} /> View Asset
+                                            <ExternalLink size={16} /> View Asset
                                         </a>
                                     )}
                                     {a.feedback && (

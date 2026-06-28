@@ -36,7 +36,7 @@ export default function ClientCreate() {
             <div className="max-w-2xl mx-auto">
                 <div className="flex items-center gap-3 mb-6">
                     <Link href="/clients" className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
-                        <ArrowLeft size={17} />
+                        <ArrowLeft size={20} />
                     </Link>
                     <h1 className="text-[15px] font-bold text-gray-900">New Client</h1>
                 </div>
@@ -160,7 +160,7 @@ export default function ClientCreate() {
                                 disabled={form.processing}
                                 className="flex items-center gap-1.5 px-5 py-2.5 disabled:opacity-50" 
                             >
-                                <Save size={14} />
+                                <Save size={16} />
                                 {form.processing ? 'Creating…' : 'Create Client'}
                             </Button>
                             <Link href="/clients" className="px-4 py-2.5 text-[13px] text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">

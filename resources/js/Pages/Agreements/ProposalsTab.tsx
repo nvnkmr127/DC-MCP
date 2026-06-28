@@ -106,7 +106,7 @@ function ProposalModal({ clients, onClose }: { clients: Client[]; onClose: () =>
                                         <option value="annual">Annual</option>
                                     </select>
                                     <Button type="button" onClick={() => removeItem(i)} className="col-span-1 text-gray-400 hover:text-rose-500 flex justify-center">
-                                        <X size={13} />
+                                        <X size={16} />
                                     </Button>
                                 </div>
                             ))}
@@ -147,7 +147,7 @@ export default function ProposalsIndex({ proposals, stats, clients }: Props) {
                     <h1 className="text-lg font-bold text-gray-900">Proposals</h1>
                     <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> New Proposal
+                        <Plus size={16} /> New Proposal
                     </Button>
                 </div>
 
@@ -186,23 +186,23 @@ export default function ProposalsIndex({ proposals, stats, clients }: Props) {
                             <div className="flex items-center gap-1">
                                 <Link href={`/proposals/${p.id}`}
                                     className="p-1.5 text-gray-400 hover:text-indigo-600 rounded hover:bg-indigo-50 transition-colors">
-                                    <Eye size={14} />
+                                    <Eye size={16} />
                                 </Link>
                                 {p.status === 'draft' && (
                                     <Button onClick={() => router.post(`/proposals/${p.id}/send`)}
                                         className="p-1.5 text-gray-400 hover:text-blue-600 rounded hover:bg-blue-50 transition-colors">
-                                        <Send size={14} />
+                                        <Send size={16} />
                                     </Button>
                                 )}
                                 {p.status === 'sent' && (
                                     <>
                                         <Button onClick={() => router.post(`/proposals/${p.id}/accept`)}
                                             className="p-1.5 text-gray-400 hover:text-emerald-600 rounded hover:bg-emerald-50 transition-colors">
-                                            <CheckCircle size={14} />
+                                            <CheckCircle size={16} />
                                         </Button>
                                         <Button onClick={() => router.post(`/proposals/${p.id}/reject`)}
                                             className="p-1.5 text-gray-400 hover:text-rose-600 rounded hover:bg-rose-50 transition-colors">
-                                            <XCircle size={14} />
+                                            <XCircle size={16} />
                                         </Button>
                                     </>
                                 )}
@@ -217,7 +217,7 @@ export default function ProposalsIndex({ proposals, stats, clients }: Props) {
                                     router.delete(`/proposals/${p.id}`);
                                 }}
                                     className="p-1.5 text-gray-400 hover:text-rose-500 rounded hover:bg-rose-50 transition-colors">
-                                    <Trash2 size={14} />
+                                    <Trash2 size={16} />
                                 </Button>
                             </div>
                         </div>

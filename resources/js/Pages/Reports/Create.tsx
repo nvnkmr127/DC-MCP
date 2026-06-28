@@ -154,7 +154,7 @@ export default function ReportsCreate({ projects, clients }: Props) {
                     href="/internal-reports"
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-gray-900"
                 >
-                    <ArrowLeft size={13} /> Back to reports
+                    <ArrowLeft size={16} /> Back to reports
                 </Link>
             </div>
 
@@ -202,14 +202,14 @@ export default function ReportsCreate({ projects, clients }: Props) {
                                         "w-8 h-8 rounded-xl flex items-center justify-center shrink-0",
                                         form.data.template === t.id ? "bg-indigo-50 text-indigo-600" : "bg-gray-50 text-gray-400"
                                     )}>
-                                        <FileText size={15} />
+                                        <FileText size={16} />
                                     </div>
                                     <div>
                                         <h4 className="text-xs font-bold text-gray-900">{t.name}</h4>
                                         <p className="text-[11px] text-gray-400 mt-1">{t.desc}</p>
                                     </div>
                                     {form.data.template === t.id && (
-                                        <Check size={14} className="text-indigo-600 ml-auto shrink-0 self-center" />
+                                        <Check size={16} className="text-indigo-600 ml-auto shrink-0 self-center" />
                                     )}
                                 </label>
                             ))}
@@ -392,7 +392,7 @@ export default function ReportsCreate({ projects, clients }: Props) {
                             <div className="border border-gray-100 rounded-2xl p-4 bg-gray-50/50 space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
-                                        <Calendar size={14} className="text-indigo-500" />
+                                        <Calendar size={16} className="text-indigo-500" />
                                         <div>
                                             <h4 className="text-xs font-bold text-gray-900">Recurring Automation</h4>
                                             <p className="text-[10px] text-gray-400">Run and send this report repeatedly.</p>
@@ -459,7 +459,7 @@ export default function ReportsCreate({ projects, clients }: Props) {
                                 onClick={() => setStep(step + 1)}
                                 className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition-all shadow-md"
                             >
-                                Continue <ArrowRight size={13} />
+                                Continue <ArrowRight size={16} />
                             </Button>
                         ) : (
                             <Button

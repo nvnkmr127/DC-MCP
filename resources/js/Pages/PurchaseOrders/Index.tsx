@@ -4,6 +4,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import { Plus, X, ChevronDown, Trash2 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/Components/ui/Table";
 
 interface LineItem { description: string; quantity: number; unit_price: number; total: number; }
 interface PO { id: string; po_number: string; issue_date: string; expected_delivery: string | null; total_amount: number; status: string; notes: string | null; line_items: LineItem[]; vendor_id: string | null; }
@@ -66,7 +67,7 @@ function POModal({ vendors, onClose }: { vendors: Vendor[]; onClose: () => void 
                         <div className="flex items-center justify-between mb-1">
                             <label className="text-xs text-gray-500 font-medium">Line Items *</label>
                             <Button type="button" onClick={() => setItems(i => [...i, { description: '', quantity: '1', unit_price: '' }])}
-                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={11} /> Add</Button>
+                                className="text-xs text-indigo-600 font-medium flex items-center gap-1"><Plus size={12} /> Add</Button>
                         </div>
                         {items.map((item, i) => (
                             <div key={i} className="grid grid-cols-12 gap-2 mb-1.5 items-center">
@@ -80,7 +81,7 @@ function POModal({ vendors, onClose }: { vendors: Vendor[]; onClose: () => void 
                                     onChange={e => { const n = [...items]; n[i].unit_price = e.target.value; setItems(n); }}
                                     className="col-span-3 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:ring-1 focus:ring-indigo-500" />
                                 <Button type="button" onClick={() => setItems(it => it.filter((_, j) => j !== i))} className="col-span-1 text-gray-400 hover:text-rose-500 flex justify-center">
-                                    <X size={13} />
+                                    <X size={16} />
                                 </Button>
                             </div>
                         ))}
@@ -120,7 +121,7 @@ export default function PurchaseOrdersIndex({ purchaseOrders, vendors }: Props) 
                     <h1 className="text-lg font-bold text-gray-900">Purchase Orders</h1>
                     <Button onClick={() => setModalOpen(true)}
                         className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> New PO
+                        <Plus size={16} /> New PO
                     </Button>
                 </div>
 
@@ -152,30 +153,30 @@ export default function PurchaseOrdersIndex({ purchaseOrders, vendors }: Props) 
                                         <option key={s} value={s}>{s}</option>
                                     ))}
                                 </select>
-                                <ChevronDown size={13} className={cn('text-gray-400 transition-transform', expandedId === po.id && 'rotate-180')} />
+                                <ChevronDown size={16} className={cn('text-gray-400 transition-transform', expandedId === po.id && 'rotate-180')} />
                             </div>
                             {expandedId === po.id && (
                                 <div className="border-t border-gray-100 px-5 py-3">
-                                    <table className="w-full text-xs">
-                                        <thead>
-                                            <tr className="text-gray-500">
-                                                <th className="text-left pb-1">Description</th>
-                                                <th className="text-right pb-1">Qty</th>
-                                                <th className="text-right pb-1">Unit Price</th>
-                                                <th className="text-right pb-1">Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-50">
+                                    <Table className="w-full text-xs">
+                                        <TableHeader>
+                                            <TableRow className="text-gray-500">
+                                                <TableHead className="text-left pb-1">Description</TableHead>
+                                                <TableHead className="text-right pb-1">Qty</TableHead>
+                                                <TableHead className="text-right pb-1">Unit Price</TableHead>
+                                                <TableHead className="text-right pb-1">Total</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody className="divide-y divide-gray-50">
                                             {(po.line_items ?? []).map((li, i) => (
-                                                <tr key={i} className="text-gray-700">
-                                                    <td className="py-1">{li.description}</td>
-                                                    <td className="py-1 text-right">{li.quantity}</td>
-                                                    <td className="py-1 text-right">{fmt(li.unit_price)}</td>
-                                                    <td className="py-1 text-right font-medium">{fmt(li.total)}</td>
-                                                </tr>
+                                                <TableRow key={i} className="text-gray-700">
+                                                    <TableCell className="py-1">{li.description}</TableCell>
+                                                    <TableCell className="py-1 text-right">{li.quantity}</TableCell>
+                                                    <TableCell className="py-1 text-right">{fmt(li.unit_price)}</TableCell>
+                                                    <TableCell className="py-1 text-right font-medium">{fmt(li.total)}</TableCell>
+                                                </TableRow>
                                             ))}
-                                        </tbody>
-                                    </table>
+                                        </TableBody>
+                                    </Table>
                                     {po.notes && <p className="mt-2 text-xs text-gray-500">{po.notes}</p>}
                                 </div>
                             )}

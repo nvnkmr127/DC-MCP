@@ -87,7 +87,7 @@ export default function Login({ demo_accounts = [] }: Props) {
                             onClick={() => setShowPw(!showPw)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         >
-                            {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                            {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                         </Button>
                     </div>
                     {errors.password && <p className="mt-1.5 text-[11px] text-red-500 font-medium">{errors.password}</p>}

@@ -151,7 +151,7 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
                         </div>
                         <Button onClick={() => setAddOpen(true)}
                             className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                            <Plus size={14} /> Add Freelancer
+                            <Plus size={16} /> Add Freelancer
                         </Button>
                     </div>
                 </div>
@@ -195,7 +195,7 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
                                     </Button>
                                     <Button onClick={() => setExpandedId(expandedId === f.id ? null : f.id)}
                                         className="p-1.5 text-gray-400 hover:text-gray-600">
-                                        <ChevronDown size={14} className={cn('transition-transform', expandedId === f.id && 'rotate-180')} />
+                                        <ChevronDown size={16} className={cn('transition-transform', expandedId === f.id && 'rotate-180')} />
                                     </Button>
                                 </div>
                             </div>

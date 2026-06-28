@@ -64,7 +64,7 @@ function TaskCard({ task, isDragging = false }: { task: Task; isDragging?: boole
                         due.variant === 'warning'     ? 'bg--50 text--800' :
                                                         'bg-gray-50 text-gray-700',
                     )}>
-                        <Clock size={9} /> {formatDate(task.due_date)}
+                        <Clock size={12} /> {formatDate(task.due_date)}
                     </span>
                 )}
                 {task.estimated_hours > 0 && (
@@ -99,7 +99,7 @@ function SortableTaskCard({ task }: { task: Task }) {
                     {...listeners}
                     className="mt-3 p-0.5 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" 
                 variant="ghost" size="icon" >
-                    <GripVertical size={13} />
+                    <GripVertical size={16} />
                 </Button>
                 <div className="flex-1">
                     <TaskCard task={task} isDragging={isDragging} />
@@ -169,7 +169,7 @@ export default function KanbanTab({ project, tasks: initialTasks }: Props) {
                                         onClick={() => router.get(`/tasks/create?project_id=${project.id}&status=${col}`)}
                                         className="p-1 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-white transition-colors"
                                     >
-                                        <Plus size={14} />
+                                        <Plus size={16} />
                                     </Button>
                                 </div>
 
