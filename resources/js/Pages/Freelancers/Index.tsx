@@ -4,6 +4,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import { Plus, X, ChevronDown, UserX, Users, Search } from 'lucide-react';
+import { StatusBadge } from '@/Components/Shared/StatusBadge';
 
 interface Assignment { id: string; project: { id: string; name: string } | null; agreed_rate: number | null; start_date: string | null; end_date: string | null; hours_worked: number; total_paid: number; status: string; notes: string | null; }
 interface Freelancer { id: string; name: string; email: string | null; phone: string | null; skill_set: string | null; status: string; rate_per_hour: number | null; payment_method: string | null; notes: string | null; assignments_count: number; assignments: Assignment[]; }
@@ -20,7 +21,7 @@ function FreelancerModal({ onClose }: { onClose: () => void }) {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-3">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-[15px] font-bold text-gray-900">Add Freelancer</h2>
+                    <h2 className="text-[15px] font-bold text-gray-900">Add Contractor/Freelancer</h2>
                     <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
                 </div>
                 <form onSubmit={e => { e.preventDefault(); form.post('/freelancers', { onSuccess: onClose }); }} className="space-y-3">
@@ -62,7 +63,7 @@ function FreelancerModal({ onClose }: { onClose: () => void }) {
                         <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
                         <Button type="submit" disabled={form.processing || !form.data.name}
                             className="disabled:opacity-50" >
-                            {form.processing ? 'Adding…' : 'Add Freelancer'}
+                            {form.processing ? 'Adding…' : 'Add Contractor/Freelancer'}
                         </Button>
                     </div>
                 </form>
@@ -133,17 +134,17 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
     );
 
     return (
-        <AppLayout title="Freelancers">
-            <Head title="Freelancers" />
+        <AppLayout title="Contractors & Freelancers">
+            <Head title="Contractors & Freelancers" />
             <div className="max-w-4xl space-y-5">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-lg font-bold text-gray-900">Freelancer Management</h1>
+                    <h1 className="text-lg font-bold text-gray-900">Contractor & Freelancer Management</h1>
                     <div className="flex items-center gap-3">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
                                 type="text"
-                                placeholder="Search freelancers..."
+                                placeholder="Search contractors & freelancers..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 w-64"
@@ -151,7 +152,7 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
                         </div>
                         <Button onClick={() => setAddOpen(true)}
                             className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                            <Plus size={16} /> Add Freelancer
+                            <Plus size={16} /> Add Contractor/Freelancer
                         </Button>
                     </div>
                 </div>
@@ -162,10 +163,10 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
                             <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 shadow-sm flex items-center justify-center mx-auto mb-4">
                                 <Users size={20} className="text-gray-400" />
                             </div>
-                            <p className="text-[14px] font-semibold text-gray-900 mb-1">No freelancers added</p>
-                            <p className="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Build your external talent pool. Add freelancers to assign them to projects, track their hours, and manage payments all in one place.</p>
+                            <p className="text-[14px] font-semibold text-gray-900 mb-1">No contractors or freelancers added</p>
+                            <p className="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Build your external talent pool. Add contractors or freelancers to assign them to projects, track their hours, and manage payments all in one place.</p>
                             <Button onClick={() => setAddOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
-                                Add First Freelancer
+                                Add First Contractor/Freelancer
                             </Button>
                         </div>
                     ) : (

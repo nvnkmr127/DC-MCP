@@ -74,13 +74,13 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
 
     return (
         <AppLayout>
-            <Head title="P&L Dashboard" />
+            <Head title="Profit & Loss Dashboard" />
             <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">P&L Dashboard</h1>
+                        <h1 className="text-2xl font-bold text-gray-900">Profit & Loss Dashboard</h1>
                         <p className="text-sm text-gray-500 mt-0.5">Revenue, costs, and profitability</p>
                     </div>
                     <MonthNav monthYear={monthYear} onChange={navigate} />

@@ -5,6 +5,7 @@ import { router, useForm } from '@inertiajs/react';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Plus, X, FileText, Trash2, ChevronDown, ChevronUp, Upload, CheckCircle2, RotateCcw, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { StatusBadge } from '@/Components/Shared/StatusBadge';
 
 interface DeliverableSubmission {
     id: string; status: 'submitted' | 'approved' | 'revision_requested';
@@ -133,7 +134,7 @@ function SowCard({ sow, canReview }: { sow: Sow; canReview?: boolean }) {
                     <Button
                         onClick={async () => {
                             const ok = await confirm({
-                                title: 'Delete this SOW?',
+                                title: 'Delete this Statement of Work?',
                                 description: 'This cannot be undone.',
                                 confirmText: 'Delete',
                                 variant: 'destructive',
@@ -257,14 +258,14 @@ export default function SowTab({ sows, clients, retainers, canReview }: Props) {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">SOW Tracker</h1>
+                        <h1 className="text-2xl font-bold text-gray-900">Statements of Work Tracker</h1>
                         <p className="text-sm text-gray-500 mt-0.5">Statement of Work & deliverables per client</p>
                     </div>
                     <Button
                         onClick={() => setShowCreate(true)}
                         className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
                     >
-                        <Plus className="w-4 h-4" /> New SOW
+                        <Plus className="w-4 h-4" /> New Statement of Work
                     </Button>
                 </div>
 
@@ -273,7 +274,7 @@ export default function SowTab({ sows, clients, retainers, canReview }: Props) {
                     {sows.length === 0 && (
                         <div className="bg-white rounded-xl border border-gray-200 px-5 py-10 text-center">
                             <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                            <p className="text-gray-500 text-sm">No SOWs yet. Create your first Statement of Work.</p>
+                            <p className="text-gray-500 text-sm">No Statements of Work yet. Create your first Statement of Work.</p>
                         </div>
                     )}
                     {sows.map(sow => <SowCard key={sow.id} sow={sow} canReview={canReview} />)}
@@ -285,7 +286,7 @@ export default function SowTab({ sows, clients, retainers, canReview }: Props) {
                 <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white">
-                            <h2 className="text-base font-semibold text-gray-900">New SOW</h2>
+                            <h2 className="text-base font-semibold text-gray-900">New Statement of Work</h2>
                             <Button onClick={() => setShowCreate(false)} className="text-gray-400 hover:text-gray-600">
                                 <X className="w-5 h-5" />
                             </Button>
@@ -311,9 +312,9 @@ export default function SowTab({ sows, clients, retainers, canReview }: Props) {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">SOW Title *</label>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Statement of Work Title *</label>
                                 <input type="text" value={form.data.title} onChange={e => form.setData('title', e.target.value)}
-                                    placeholder="e.g. Q1 2026 Digital Marketing SOW"
+                                    placeholder="e.g. Q1 2026 Digital Marketing Statement of Work"
                                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
                                 {form.errors.title && <p className="text-xs text-rose-500 mt-1">{form.errors.title}</p>}
                             </div>
@@ -377,7 +378,7 @@ export default function SowTab({ sows, clients, retainers, canReview }: Props) {
                                 <Button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</Button>
                                 <Button type="submit"
                                     >
-                                    Create SOW
+                                    Create Statement of Work
                                 </Button>
                             </div>
                         </form>
