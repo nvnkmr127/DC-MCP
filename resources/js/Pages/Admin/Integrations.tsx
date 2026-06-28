@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, router, useForm, Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -338,6 +339,12 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
     return (
         <AppLayout title="Integrations & MCP">
             <Head title="Integrations & MCP" />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Admin', href: '/admin' },
+                    { label: 'Integrations & MCP' }
+                ]} />
+            </div>
             <TooltipProvider delayDuration={200}>
 
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
@@ -357,6 +364,21 @@ export default function AdminIntegrationsSettings({ connections, builtin_provide
                         <Plus size={15} /> Add Connection
                     </button>
                 )}
+            </div>
+
+            {/* MCP Help Block */}
+            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6 flex gap-3">
+                <HelpCircle className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                <div className="text-sm text-indigo-900">
+                    <p className="font-semibold mb-1">Model Context Protocol (MCP)</p>
+                    <p className="text-indigo-800/80 leading-relaxed mb-2">
+                        MCP securely connects our AI features to your external tools and databases. By configuring integrations here, you enable the workspace to automatically sync data and take actions on your behalf across different platforms.
+                    </p>
+                    <ul className="list-disc list-inside text-indigo-800/80 space-y-1">
+                        <li><strong>Workspace</strong> connections are private to your organization.</li>
+                        <li><strong>Global</strong> connections are managed by the system administrator.</li>
+                    </ul>
+                </div>
             </div>
 
             {/* Tabs for Super Admins */}

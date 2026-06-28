@@ -14,6 +14,7 @@ interface PaginationProps {
     labelSingular?: string;
     labelPlural?: string;
     className?: string;
+    alwaysShowCount?: boolean;
 }
 
 export const Pagination: React.FC<PaginationProps> = ({
@@ -22,8 +23,11 @@ export const Pagination: React.FC<PaginationProps> = ({
     labelSingular = 'item',
     labelPlural = 'items',
     className,
+    alwaysShowCount = true,
 }) => {
-    if (!meta || meta.last_page <= 1) return null;
+    if (!meta) return null;
+    
+    if (meta.last_page <= 1 && !alwaysShowCount) return null;
 
     const startItem = (meta.current_page - 1) * meta.per_page + 1;
     const endItem = Math.min(meta.current_page * meta.per_page, meta.total);
@@ -35,7 +39,7 @@ export const Pagination: React.FC<PaginationProps> = ({
                 {startItem}–{endItem} of {meta.total} {label}
             </p>
             <div className="flex gap-1">
-                {Array.from({ length: meta.last_page }, (_, i) => i + 1).map((page) => (
+                {meta.last_page > 1 && Array.from({ length: meta.last_page }, (_, i) => i + 1).map((page) => (
                     <button
                         key={page}
                         type="button"

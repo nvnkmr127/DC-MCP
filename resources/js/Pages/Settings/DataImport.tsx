@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Upload, Download, FileSpreadsheet, AlertCircle } from 'lucide-react';
@@ -32,6 +33,12 @@ export default function DataImport() {
     return (
         <AppLayout title="Data Import">
             <Head title="Data Import" />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Settings', href: '/settings' },
+                    { label: 'Data Import' }
+                ]} />
+            </div>
 
             <div className="mb-6 flex items-center justify-between">
                 <div>

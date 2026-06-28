@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn, getInitials } from '@/lib/utils';
@@ -155,6 +156,12 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
     return (
         <AppLayout title="Account Settings">
             <Head title="Account Settings" />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Settings', href: '/settings' },
+                    { label: 'Account Settings' }
+                ]} />
+            </div>
 
             <div className="max-w-2xl space-y-5">
                 {/* Avatar + identity card */}

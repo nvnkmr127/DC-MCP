@@ -1,4 +1,5 @@
 import React from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { Trash2, RotateCcw, AlertCircle, FolderKanban, CheckSquare } from 'lucide-react';
@@ -23,6 +24,12 @@ export default function Trash({ items, retentionDays }: Props) {
     return (
         <AppLayout title="Trash & Recovery">
             <Head title="Trash" />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Settings', href: '/settings' },
+                    { label: 'Trash' }
+                ]} />
+            </div>
 
             <div className="mb-6 flex items-center justify-between">
                 <div>

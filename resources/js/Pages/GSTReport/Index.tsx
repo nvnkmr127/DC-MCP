@@ -2,6 +2,7 @@ import React from 'react';
 import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface GSTInvoice {
@@ -52,6 +53,7 @@ export default function GSTReportIndex({ invoices, month }: Props) {
         a.href = URL.createObjectURL(blob);
         a.download = `GST-Report-${month}.csv`;
         a.click();
+        toast.success('Download ready');
     }
 
     return (

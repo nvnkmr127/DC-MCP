@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
-import { Plus, X, ChevronDown, UserX } from 'lucide-react';
+import { Plus, X, ChevronDown, UserX, Users, Search } from 'lucide-react';
 
 interface Assignment { id: string; project: { id: string; name: string } | null; agreed_rate: number | null; start_date: string | null; end_date: string | null; hours_worked: number; total_paid: number; status: string; notes: string | null; }
 interface Freelancer { id: string; name: string; email: string | null; phone: string | null; skill_set: string | null; status: string; rate_per_hour: number | null; payment_method: string | null; notes: string | null; assignments_count: number; assignments: Assignment[]; }
@@ -123,6 +123,13 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
     const [addOpen, setAddOpen] = useState(false);
     const [assignFor, setAssignFor] = useState<Freelancer | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const filteredFreelancers = freelancers.filter(f => 
+        (f.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (f.skill_set || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (f.email || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <AppLayout title="Freelancers">
@@ -130,19 +137,38 @@ export default function FreelancersIndex({ freelancers, projects }: Props) {
             <div className="max-w-4xl space-y-5">
                 <div className="flex items-center justify-between">
                     <h1 className="text-lg font-bold text-gray-900">Freelancer Management</h1>
-                    <button onClick={() => setAddOpen(true)}
-                        className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus size={14} /> Add Freelancer
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                                type="text"
+                                placeholder="Search freelancers..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 w-64"
+                            />
+                        </div>
+                        <button onClick={() => setAddOpen(true)}
+                            className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
+                            <Plus size={14} /> Add Freelancer
+                        </button>
+                    </div>
                 </div>
 
                 <div className="space-y-3">
-                    {freelancers.length === 0 && (
-                        <div className="bg-white rounded-xl border border-dashed border-gray-200 px-5 py-10 text-center text-sm text-gray-400">
-                            No freelancers yet.
+                    {filteredFreelancers.length === 0 ? (
+                        <div className="bg-white rounded-xl border border-gray-200 px-5 py-16 text-center shadow-sm">
+                            <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 shadow-sm flex items-center justify-center mx-auto mb-4">
+                                <Users size={20} className="text-gray-400" />
+                            </div>
+                            <p className="text-[14px] font-semibold text-gray-900 mb-1">No freelancers added</p>
+                            <p className="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Build your external talent pool. Add freelancers to assign them to projects, track their hours, and manage payments all in one place.</p>
+                            <button onClick={() => setAddOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                                Add First Freelancer
+                            </button>
                         </div>
-                    )}
-                    {freelancers.map(f => (
+                    ) : (
+                        filteredFreelancers.map(f => (
                         <div key={f.id} className="bg-white rounded-xl border border-gray-200">
                             <div className="px-5 py-4 flex items-center gap-4">
                                 <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-sm shrink-0">

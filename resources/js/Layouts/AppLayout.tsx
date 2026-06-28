@@ -19,7 +19,7 @@ import {
     ListChecks, Star, ReceiptText, Package, Percent,
     FileCheck, MessageSquare, UserPlus, BookOpen, Smile,
     BarChart2, Workflow, ShoppingCart, FileX, Trophy, Send,
-    Megaphone, Trash2, CheckCheck, UploadCloud
+    Megaphone, Trash2, CheckCheck, UploadCloud, WifiOff
 } from 'lucide-react';
 
 interface NavItem {
@@ -92,11 +92,12 @@ const NAV_SECTIONS = [
 ];
 
 export default function AppLayout({ children, title }: { children: React.ReactNode; title?: string }) {
-    const { auth, app, flash, mcp_errors } = usePage<PageProps & { mcp_errors?: any[] }>().props;
+    const { auth, app, flash, mcp_errors, errors } = usePage<PageProps & { mcp_errors?: any[], errors?: Record<string, string> }>().props;
     const { hasRole } = usePermissions();
     const [collapsed, setCollapsed] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
+    const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({ main: true, financial: false, insights: false, hr: false, manage: false, mcp: false });
     const userMenuRef = useRef<HTMLDivElement>(null);
     const user = auth.user!;
@@ -130,7 +131,23 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
     useEffect(() => {
         if (flash?.success) toast.success(flash.success);
         if (flash?.error)   toast.error(flash.error);
-    }, [flash?.success, flash?.error]);
+        
+        // Global form error handling
+        if (errors && Object.keys(errors).length > 0) {
+            toast.error('Please check the form for errors.');
+        }
+    }, [flash?.success, flash?.error, errors]);
+
+    useEffect(() => {
+        const handleOnline = () => setIsOffline(false);
+        const handleOffline = () => setIsOffline(true);
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
 
     useEffect(() => {
         function handleKey(e: KeyboardEvent) {
@@ -390,14 +407,33 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
             {/* ──────────── MAIN ──────────── */}
             <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
+                {/* Offline Indicator Banner */}
+                {isOffline && (
+                    <div className="bg-red-500 text-white px-6 py-2.5 text-xs font-semibold flex items-center justify-center z-50 shadow-md">
+                        <span className="flex items-center gap-2">
+                            <WifiOff size={14} className="animate-pulse" />
+                            You are offline. Changes will not be saved until your connection is restored.
+                        </span>
+                    </div>
+                )}
+
                 {/* MCP Connection Errors Banner */}
                 {mcp_errors && mcp_errors.length > 0 && (
-                    <div className="bg-red-50 border-b border-red-100 text-red-700 px-6 py-2.5 text-xs font-semibold flex items-center justify-between z-20 shadow-sm">
-                        <span className="flex items-center gap-2">
-                            <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
-                            Your {mcp_errors.map(e => e.label || e.provider.replace('_', ' ')).join(', ')} integration{mcp_errors.length > 1 ? 's are' : ' is'} disconnected or failing. Please reconnect.
-                        </span>
-                        <Link href="/settings/mcp" className="bg-red-100 hover:bg-red-200 px-3 py-1 rounded transition-colors text-red-800">
+                    <div className="bg-red-50 border-b border-red-100 text-red-700 px-6 py-2.5 z-20 shadow-sm flex items-start justify-between">
+                        <div className="flex gap-2 min-w-0">
+                            <span className="flex h-2 w-2 rounded-full bg-red-500 animate-pulse mt-1.5 shrink-0"></span>
+                            <div className="flex flex-col gap-1 min-w-0">
+                                <span className="text-xs font-semibold">
+                                    Your {mcp_errors.map(e => e.label || e.provider.replace('_', ' ')).join(', ')} integration{mcp_errors.length > 1 ? 's are' : ' is'} disconnected or failing. Please reconnect.
+                                </span>
+                                {mcp_errors.some(e => e.error) && (
+                                    <div className="text-[11px] font-mono opacity-80 max-w-4xl truncate">
+                                        {mcp_errors.filter(e => e.error).map(e => `${e.label || e.provider.replace('_', ' ')}: ${e.error}`).join(' | ')}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <Link href="/settings/mcp" className="bg-red-100 hover:bg-red-200 px-3 py-1 rounded transition-colors text-red-800 text-xs font-semibold shrink-0 mt-0.5 ml-4">
                             Fix Connections
                         </Link>
                     </div>

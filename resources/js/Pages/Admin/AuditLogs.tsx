@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, router } from '@inertiajs/react';
 import { Activity, Search, Filter, Eye, Clock, User as UserIcon } from 'lucide-react';
 import Modal from '@/Components/ui/Modal';
+import { Pagination } from '@/Components/ui/Pagination';
 
 interface ActivityLog {
     id: number;
@@ -19,33 +21,42 @@ interface Props {
         data: ActivityLog[];
         current_page: number;
         last_page: number;
+        total: number;
+        per_page: number;
         links: { url: string | null; label: string; active: boolean }[];
     };
-    filters: { search?: string; subject_type?: string };
+    filters: { search?: string; subject_type?: string; date?: string };
     subjectTypes: string[];
 }
 
 export default function AuditLogs({ logs, filters, subjectTypes }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [subjectType, setSubjectType] = useState(filters.subject_type || '');
+    const [date, setDate] = useState(filters.date || '');
     const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
 
     useEffect(() => {
         const handler = setTimeout(() => {
-            if (search !== (filters.search || '') || subjectType !== (filters.subject_type || '')) {
+            if (search !== (filters.search || '') || subjectType !== (filters.subject_type || '') || date !== (filters.date || '')) {
                 router.get(
                     '/admin/audit-logs',
-                    { search, subject_type: subjectType },
+                    { search, subject_type: subjectType, date },
                     { preserveState: true, replace: true }
                 );
             }
         }, 300);
         return () => clearTimeout(handler);
-    }, [search, subjectType]);
+    }, [search, subjectType, date]);
 
     return (
         <AppLayout title="Audit Logs">
             <Head title="Audit Logs | Admin" />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Admin', href: '/admin' },
+                    { label: 'Audit Logs | Admin' }
+                ]} />
+            </div>
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -70,6 +81,12 @@ export default function AuditLogs({ logs, filters, subjectTypes }: Props) {
                                     <option key={st} value={st}>{st}</option>
                                 ))}
                             </select>
+                            <input
+                                type="date"
+                                value={date}
+                                onChange={e => setDate(e.target.value)}
+                                className="bg-white/5 border-white/10 text-gray-300 rounded-lg text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            />
                             <div className="relative w-full md:w-64">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Search className="h-4 w-4 text-gray-400" />
@@ -144,30 +161,16 @@ export default function AuditLogs({ logs, filters, subjectTypes }: Props) {
                             </table>
                         </div>
 
-                        {logs.last_page > 1 && (
-                            <div className="px-6 py-4 border-t border-white/10 bg-white/5 flex items-center justify-between">
-                                <div className="text-sm text-gray-400">
-                                    Showing page {logs.current_page} of {logs.last_page}
-                                </div>
-                                <div className="flex space-x-2">
-                                    {logs.links.map((link, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => link.url && router.get(link.url)}
-                                            disabled={!link.url}
-                                            className={`px-3 py-1 rounded text-sm ${
-                                                link.active 
-                                                ? 'bg-indigo-600 text-white' 
-                                                : link.url 
-                                                    ? 'bg-white/5 text-gray-300 hover:bg-white/10' 
-                                                    : 'bg-transparent text-gray-600 cursor-not-allowed'
-                                            }`}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        <div className="bg-white/5 border-t border-white/10">
+                            <Pagination 
+                                meta={logs}
+                                onPageChange={(page) => router.get('/admin/audit-logs', { ...filters, page }, { preserveState: true, preserveScroll: true })}
+                                labelSingular="log"
+                                labelPlural="logs"
+                                alwaysShowCount={true}
+                                className="border-none"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>

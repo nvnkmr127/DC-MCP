@@ -77,6 +77,7 @@ export default function ReportsShow({ report }: Props) {
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
+            toast.success('Download ready');
         } catch (error) {
             toast.error('Failed to download PDF.');
         } finally {

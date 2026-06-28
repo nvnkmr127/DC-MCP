@@ -273,11 +273,14 @@ export default function GoalsIndex({ goals, byPeriod, currentPeriod, orgProgress
                 </div>
 
                 {shownGoals.length === 0 ? (
-                    <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
-                        <Flag className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                        <p className="text-sm text-gray-400">No goals for {PERIOD_LABELS[activePeriod]} {year}.</p>
-                        <button onClick={() => setAddOpen(true)} className="mt-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium">
-                            Add the first goal →
+                    <div className="bg-white rounded-xl border border-gray-200 py-16 text-center shadow-sm">
+                        <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto mb-4">
+                            <Flag className="w-5 h-5 text-gray-400" />
+                        </div>
+                        <p className="text-[14px] font-semibold text-gray-900 mb-1">No goals for {PERIOD_LABELS[activePeriod]} {year}</p>
+                        <p className="text-[13px] text-gray-500 mb-6 max-w-sm mx-auto">Align your team by setting objectives and measurable key results.</p>
+                        <button onClick={() => setAddOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                            Create First OKR
                         </button>
                     </div>
                 ) : (

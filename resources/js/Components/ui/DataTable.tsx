@@ -23,12 +23,14 @@ import {
 
 import { Button } from "./Button"
 import { Input } from "./Input"
+import { Skeleton } from "./Skeleton"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   searchKey?: string
   onBulkDelete?: (selectedRows: TData[]) => void
+  isLoading?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -36,6 +38,7 @@ export function DataTable<TData, TValue>({
   data,
   searchKey,
   onBulkDelete,
+  isLoading = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -104,7 +107,17 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={`skeleton-${i}`}>
+                  {columns.map((col, j) => (
+                    <TableCell key={`col-${j}`}>
+                      <Skeleton className="h-4 w-full max-w-[200px]" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}

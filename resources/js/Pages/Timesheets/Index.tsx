@@ -3,6 +3,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import WorkloadLayout from '@/Layouts/WorkloadLayout';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, Play, Square, Clock } from 'lucide-react';
+import { useConfirm } from '@/hooks/useConfirm';
 
 interface TimeEntry {
     id: string; task_id: string | null; task_title: string | null; project_name: string | null;
@@ -53,6 +54,7 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
     const [addOpen, setAddOpen] = useState(false);
     const [addDay, setAddDay] = useState<string | null>(null);
     const form = useForm({ task_id: '', hours: '', description: '', logged_date: '', is_billable: 'true' });
+    const confirm = useConfirm();
 
     const activeTimer = entries.find(e => e.timer_started_at);
 
@@ -83,7 +85,16 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                     <div></div>
                     <div className="flex items-center gap-3">
                         {activeTimer ? (
-                            <button onClick={() => router.post(`/timesheets/timer/${activeTimer.id}/stop`)}
+                            <button onClick={async () => {
+                                const ok = await confirm({
+                                    title: 'Stop Timer & Log Time?',
+                                    description: 'Are you sure these hours are correct? The time entry will be locked once stopped.',
+                                    confirmText: 'Stop & Log',
+                                });
+                                if (ok) {
+                                    router.post(`/timesheets/timer/${activeTimer.id}/stop`);
+                                }
+                            }}
                                 className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white text-sm font-medium rounded-lg hover:bg-rose-700">
                                 <Square className="w-4 h-4" /> Stop Timer
                             </button>
@@ -124,7 +135,16 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                         <p className="text-sm text-rose-700 font-medium">
                             Timer running — {activeTimer.task_title ?? 'No task'} (started {activeTimer.timer_started_at ? new Date(activeTimer.timer_started_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''})
                         </p>
-                        <button onClick={() => router.post(`/timesheets/timer/${activeTimer.id}/stop`)}
+                        <button onClick={async () => {
+                            const ok = await confirm({
+                                title: 'Stop Timer & Log Time?',
+                                description: 'Are you sure these hours are correct? The time entry will be locked once stopped.',
+                                confirmText: 'Stop & Log',
+                            });
+                            if (ok) {
+                                router.post(`/timesheets/timer/${activeTimer.id}/stop`);
+                            }
+                        }}
                             className="ml-auto px-3 py-1 bg-rose-600 text-white text-xs rounded-lg hover:bg-rose-700 font-medium">
                             Stop
                         </button>

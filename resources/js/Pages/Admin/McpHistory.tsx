@@ -1,4 +1,5 @@
 import React from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Clock, ServerCrash, CheckCircle2 } from 'lucide-react';
@@ -40,6 +41,12 @@ export default function McpHistory({ connection, logs }: Props) {
     return (
         <AppLayout title={`Sync History - ${connection.name}`}>
             <Head title={`Sync History - ${connection.name} | Admin`} />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Admin', href: '/admin' },
+                    { label: `Sync History - ${connection.name} | Admin` }
+                ]} />
+            </div>
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">

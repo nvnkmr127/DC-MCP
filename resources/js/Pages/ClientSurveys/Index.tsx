@@ -21,6 +21,21 @@ const STATUS_STYLES: Record<string, string> = {
 
 function SendModal({ clients, onClose }: { clients: Client[]; onClose: () => void }) {
     const form = useForm({ client_id: '' });
+    const confirm = useConfirm();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const selectedClient = clients.find(c => c.id === form.data.client_id);
+        const ok = await confirm({
+            title: 'Send NPS Survey?',
+            description: `This will generate and send an NPS survey email to ${selectedClient?.name}. Are you sure?`,
+            confirmText: 'Send Survey',
+        });
+        if (ok) {
+            form.post('/client-surveys/send', { onSuccess: onClose });
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-3">
@@ -28,7 +43,7 @@ function SendModal({ clients, onClose }: { clients: Client[]; onClose: () => voi
                     <h2 className="text-[15px] font-bold text-gray-900">Send NPS Survey</h2>
                     <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
                 </div>
-                <form onSubmit={e => { e.preventDefault(); form.post('/client-surveys/send', { onSuccess: onClose }); }} className="space-y-3">
+                <form onSubmit={handleSubmit} className="space-y-3">
                     <div>
                         <label className="text-xs text-gray-500 font-medium">Client *</label>
                         <select value={form.data.client_id} onChange={e => form.setData('client_id', e.target.value)}

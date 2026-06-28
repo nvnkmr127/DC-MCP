@@ -82,6 +82,11 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
     }
 
     const [skipTimeCheck, setSkipTimeCheck] = useState(false);
+    const [optimisticStatus, setOptimisticStatus] = useState(task.status);
+
+    React.useEffect(() => {
+        setOptimisticStatus(task.status);
+    }, [task.status]);
 
     async function updateStatus(status: string) {
         if (status === 'done' && task.time_entries.length === 0 && !skipTimeCheck) {
@@ -93,9 +98,11 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
             });
             if (ok) {
                 setSkipTimeCheck(true);
+                setOptimisticStatus(status);
                 router.patch(`/tasks/${task.id}`, { status }, { 
                     preserveScroll: true, 
-                    onSuccess: () => setSkipTimeCheck(false) 
+                    onSuccess: () => setSkipTimeCheck(false),
+                    onError: () => setOptimisticStatus(task.status)
                 });
             } else {
                 setActiveTab('time');
@@ -103,9 +110,11 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
             return;
         }
         
+        setOptimisticStatus(status);
         router.patch(`/tasks/${task.id}`, { status }, { 
             preserveScroll: true,
-            onSuccess: () => setSkipTimeCheck(false)
+            onSuccess: () => setSkipTimeCheck(false),
+            onError: () => setOptimisticStatus(task.status)
         });
     }
 
@@ -137,11 +146,16 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
 
                 {/* Breadcrumb + actions */}
                 <div className="flex items-center justify-between mb-4">
-                    <Breadcrumbs items={[
-                        { label: 'Projects', href: '/projects' },
-                        { label: task.project?.name ?? 'Project', href: `/projects/${task.project_id}` },
-                        { label: task.title }
-                    ]} />
+                    <Breadcrumbs items={
+                        task.project_id ? [
+                            { label: 'Projects', href: '/projects' },
+                            { label: task.project?.name ?? 'Project', href: `/projects/${task.project_id}` },
+                            { label: task.title }
+                        ] : [
+                            { label: 'Tasks', href: '/tasks' },
+                            { label: task.title }
+                        ]
+                    } />
                     <div className="flex items-center gap-2">
                         <Link
                             href={`/tasks/${task.id}/edit`}
@@ -177,7 +191,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                 <p className="text-sm text-gray-600 leading-relaxed mb-4">{task.description}</p>
                             )}
                             <div className="flex items-center gap-2 flex-wrap">
-                                <StatusBadge type="task-status" value={task.status} />
+                                <StatusBadge type="task-status" value={optimisticStatus} />
                                 <StatusBadge type="task-priority" value={task.priority} />
                                 {task.tags?.map((tag) => (
                                     <span key={tag} className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full text-xs">#{tag}</span>
@@ -325,7 +339,7 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
                                 <div>
                                     <dt className="text-xs text-gray-500 mb-0.5">Status</dt>
                                     <select
-                                        value={task.status}
+                                        value={optimisticStatus}
                                         onChange={(e) => updateStatus(e.target.value)}
                                         className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
                                     >

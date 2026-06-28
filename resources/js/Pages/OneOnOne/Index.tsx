@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import SyncsLayout from '@/Layouts/SyncsLayout';
 import { cn } from '@/lib/utils';
-import { Plus, X, CheckCircle2, Circle, Users2 } from 'lucide-react';
+import { Plus, X, CheckCircle2, Circle, Users2, Search } from 'lucide-react';
 
 const MOOD_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
     great:     { label: 'Great',     color: 'text-emerald-700 bg-emerald-100', dot: 'bg-emerald-500' },
@@ -195,9 +195,17 @@ function AddNoteModal({ teamMembers, onClose }: { teamMembers: Props['teamMember
 export default function OneOnOneIndex({ teamMembers, notes, latestByMember }: Props) {
     const [selectedMember, setSelectedMember] = useState<string | null>(null);
     const [addOpen, setAddOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const memberNotes = selectedMember
-        ? notes.filter(n => n.member.id === selectedMember)
+        ? notes.filter(n => 
+            n.member.id === selectedMember && 
+            (
+                (n.wins || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (n.challenges || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                n.action_items.some(a => a.text.toLowerCase().includes(searchQuery.toLowerCase()))
+            )
+        )
         : [];
 
     const latestMap: Record<string, Note> = {};
@@ -212,10 +220,22 @@ export default function OneOnOneIndex({ teamMembers, notes, latestByMember }: Pr
                         <h1 className="text-2xl font-bold text-gray-900">1:1 Notes</h1>
                         <p className="text-sm text-gray-500 mt-0.5">Weekly check-ins with your team</p>
                     </div>
-                    <button onClick={() => setAddOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                        <Plus className="w-4 h-4" /> Add Note
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                                type="text"
+                                placeholder="Search notes..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 w-64"
+                            />
+                        </div>
+                        <button onClick={() => setAddOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
+                            <Plus className="w-4 h-4" /> Add Note
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex gap-5">

@@ -28,6 +28,10 @@ class AuditLogController extends Controller
             $query->where('subject_type', 'like', '%' . $request->input('subject_type') . '%');
         }
 
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->input('date'));
+        }
+
         $logs = $query->paginate(30)->withQueryString();
 
         $subjectTypes = Activity::select('subject_type')
@@ -40,7 +44,7 @@ class AuditLogController extends Controller
 
         return Inertia::render('Admin/AuditLogs', [
             'logs' => $logs,
-            'filters' => $request->only(['search', 'subject_type']),
+            'filters' => $request->only(['search', 'subject_type', 'date']),
             'subjectTypes' => $subjectTypes,
         ]);
     }

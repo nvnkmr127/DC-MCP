@@ -131,6 +131,24 @@ export default function CalendarIndex({ events, year, month }: Props) {
                 </p>
             </div>
 
+            {events.length === 0 && (
+                <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-indigo-50 border border-indigo-100 rounded-2xl p-5 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                        <Calendar size={120} />
+                    </div>
+                    <div className="relative z-10">
+                        <h3 className="text-[14px] font-bold text-indigo-900 mb-1">Your calendar is looking empty this month</h3>
+                        <p className="text-[13px] text-indigo-700/80">Tasks with due dates and project milestones will automatically appear here once created.</p>
+                    </div>
+                    <Link
+                        href="/tasks/create"
+                        className="relative z-10 shrink-0 px-4 py-2 bg-indigo-600 text-white text-[13px] font-semibold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm"
+                    >
+                        Create a Task
+                    </Link>
+                </div>
+            )}
+
             {/* Calendar Main Grid Card */}
             <div className="bg-white rounded-2xl border border-gray-200/60 shadow-[0_4px_20px_rgba(0,0,0,0.02)] overflow-hidden mb-8">
                 {/* Day headers */}

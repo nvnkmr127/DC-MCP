@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import {
@@ -164,6 +165,12 @@ export default function ClientPortalSettings({ clients, pendingRequests }: Props
     return (
         <AppLayout title="Client Portal">
             <Head title="Client Portal Management" />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Settings', href: '/settings' },
+                    { label: 'Client Portal Management' }
+                ]} />
+            </div>
 
             <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
 

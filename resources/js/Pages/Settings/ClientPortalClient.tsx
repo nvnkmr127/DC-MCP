@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -117,6 +118,12 @@ export default function ClientPortalClientPage({ client, users, shares, projects
     return (
         <AppLayout title={`Portal — ${client.name}`}>
             <Head title={`Portal — ${client.name}`} />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Settings', href: '/settings' },
+                    { label: `Portal — ${client.name}` }
+                ]} />
+            </div>
 
             <div className="mb-5">
                 <Link href="/settings/client-portal" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 w-fit">

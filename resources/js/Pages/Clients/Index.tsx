@@ -9,6 +9,7 @@ import { Button } from '@/Components/ui/Button';
 import { Input, Label, TextArea } from '@/Components/ui/Input';
 import { Badge } from '@/Components/ui/Badge';
 import { CLIENT_STATUS_CONFIG, CLIENT_TIER_CONFIG } from '@/lib/constants';
+import { Pagination } from '@/Components/ui/Pagination';
 
 const fmt = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
 
@@ -300,6 +301,16 @@ export default function ClientsIndex({ clients, filters }: Props) {
                     })}
                 </div>
             )}
+            
+            <div className="mt-6">
+                <Pagination 
+                    meta={clients.meta} 
+                    onPageChange={(page) => router.get('/clients', { ...filters, page }, { preserveState: true, preserveScroll: true })} 
+                    labelSingular="client"
+                    labelPlural="clients"
+                    alwaysShowCount={true}
+                />
+            </div>
         </AppLayout>
     );
 }

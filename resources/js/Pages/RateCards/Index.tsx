@@ -4,6 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
 import { cn } from '@/lib/utils';
 import { Plus, X, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { PageHelp } from '@/Components/Shared/PageHelp';
 
 interface RateCard { id: string; service_name: string; category: string | null; description: string | null; unit: string; rate: number; currency: string; is_active: boolean; sort_order: number; }
 interface Props { rateCards: RateCard[]; }
@@ -82,7 +83,10 @@ export default function RateCardsIndex({ rateCards }: Props) {
             <div className="max-w-4xl space-y-5">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-lg font-bold text-gray-900">Rate Card</h1>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-lg font-bold text-gray-900">Rate Card</h1>
+                            <PageHelp content="Rate cards map roles to hourly rates for project billing. By default, projects use standard rates unless a custom rate card is applied." />
+                        </div>
                         <p className="text-xs text-gray-500 mt-0.5">{rateCards.length} services · {categories.length} categories</p>
                     </div>
                     <button onClick={() => setModalOpen(true)}

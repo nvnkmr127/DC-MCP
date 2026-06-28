@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
-import { Plus, X, Star, ChevronRight, Users, Briefcase } from 'lucide-react';
+import { Plus, X, Star, ChevronRight, Users, Briefcase, Search } from 'lucide-react';
 
 interface Candidate {
     id: string; name: string; email: string | null; phone: string | null;
@@ -140,6 +140,8 @@ export default function HiringIndex({ openings }: Props) {
     const [selectedOpening, setSelectedOpening] = useState<Opening | null>(openings[0] ?? null);
     const [addCandidate, setAddCandidate] = useState<Opening | null>(null);
     const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [stageFilter, setStageFilter] = useState<string>('');
 
     const formatSalary = (n: number) => '₹' + new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(n);
 
@@ -196,14 +198,37 @@ export default function HiringIndex({ openings }: Props) {
                                 <h2 className="text-base font-bold text-gray-900">{selectedOpening.title}</h2>
                                 <p className="text-xs text-gray-500">{selectedOpening.candidates.length} candidates</p>
                             </div>
-                            <button onClick={() => setAddCandidate(selectedOpening)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-sm text-gray-600 rounded-lg hover:bg-gray-50">
-                                <Plus size={13} /> Add Candidate
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <div className="relative">
+                                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search candidates..."
+                                        value={searchQuery}
+                                        onChange={e => setSearchQuery(e.target.value)}
+                                        className="pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 w-48"
+                                    />
+                                </div>
+                                <select 
+                                    value={stageFilter} 
+                                    onChange={e => setStageFilter(e.target.value)}
+                                    className="border border-gray-200 rounded-lg text-xs py-1.5 pl-3 pr-8 focus:ring-2 focus:ring-indigo-500"
+                                >
+                                    <option value="">All Stages</option>
+                                    {STAGES.map(s => <option key={s} value={s}>{STAGE_LABELS[s]}</option>)}
+                                </select>
+                                <button onClick={() => setAddCandidate(selectedOpening)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-sm text-gray-600 rounded-lg hover:bg-gray-50">
+                                    <Plus size={13} /> Add
+                                </button>
+                            </div>
                         </div>
                         <div className="flex gap-3 overflow-x-auto pb-3 flex-1">
-                            {STAGES.map(stage => {
-                                const cols = selectedOpening.candidates.filter(c => c.stage === stage);
+                            {STAGES.filter(s => !stageFilter || s === stageFilter).map(stage => {
+                                const cols = selectedOpening.candidates.filter(c => 
+                                    c.stage === stage &&
+                                    (c.name || '').toLowerCase().includes(searchQuery.toLowerCase())
+                                );
                                 return (
                                     <div key={stage} className="flex-shrink-0 w-48">
                                         <div className="flex items-center justify-between mb-2">

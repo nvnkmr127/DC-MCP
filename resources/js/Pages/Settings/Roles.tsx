@@ -141,6 +141,12 @@ export default function Roles({ roles }: { roles: Role[] }) {
     return (
         <AppLayout title="Roles & Permissions">
           <Head title="Roles & Permissions" />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Settings', href: '/settings' },
+                    { label: 'Roles & Permissions' }
+                ]} />
+            </div>
 
           <div className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
             <div className="mb-8 flex items-center justify-between">

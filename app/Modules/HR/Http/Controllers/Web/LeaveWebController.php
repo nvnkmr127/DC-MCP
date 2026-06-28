@@ -119,7 +119,7 @@ class LeaveWebController extends Controller
             'days'           => $days,
         ]);
 
-        return back()->with('success', 'Leave request submitted.');
+        return back()->with('success', 'Leave request submitted. Your request is pending approval.');
     }
 
     public function approve(Request $request, LeaveRequest $leave): RedirectResponse

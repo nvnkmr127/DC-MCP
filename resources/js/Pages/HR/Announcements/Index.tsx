@@ -3,7 +3,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import { useConfirm } from '@/hooks/useConfirm';
-import { Pin, Trash2, Plus, X, Megaphone } from 'lucide-react';
+import { Pin, Trash2, Plus, X, Megaphone, Search } from 'lucide-react';
 
 interface Announcement {
     id: string; title: string; body: string; is_pinned: boolean;
@@ -67,8 +67,15 @@ function PostModal({ onClose }: { onClose: () => void }) {
 
 export default function AnnouncementsIndex({ announcements, canPost }: Props) {
     const [open, setOpen] = useState(false);
-    const pinned = announcements.filter(a => a.is_pinned);
-    const rest = announcements.filter(a => !a.is_pinned);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const filteredAnnouncements = announcements.filter(a => 
+        (a.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (a.body || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const pinned = filteredAnnouncements.filter(a => a.is_pinned);
+    const rest = filteredAnnouncements.filter(a => !a.is_pinned);
 
     return (
         <AppLayout title="Announcements">
@@ -79,12 +86,24 @@ export default function AnnouncementsIndex({ announcements, canPost }: Props) {
                         <h1 className="text-lg font-bold text-gray-900">Team Announcements</h1>
                         <p className="text-sm text-gray-500 mt-0.5">{announcements.length} active announcement{announcements.length !== 1 ? 's' : ''}</p>
                     </div>
-                    {canPost && (
-                        <button onClick={() => setOpen(true)}
-                            className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
-                            <Plus size={14} /> Post Announcement
-                        </button>
-                    )}
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                                type="text"
+                                placeholder="Search announcements..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 w-64"
+                            />
+                        </div>
+                        {canPost && (
+                            <button onClick={() => setOpen(true)}
+                                className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700">
+                                <Plus size={14} /> Post Announcement
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {pinned.length > 0 && (

@@ -100,6 +100,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
+            toast.success('Download ready');
         } catch (error) {
             toast.error('Failed to download PDF.');
         } finally {
@@ -310,8 +311,17 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                             <tbody className="divide-y divide-gray-50">
                                 {reports.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="text-center py-12 text-gray-400">
-                                            No reports generated yet. Click "New Report" to create your first report.
+                                        <td colSpan={compareMode ? 6 : 5} className="py-16 text-center">
+                                            <div className="flex flex-col items-center justify-center">
+                                                <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 shadow-sm flex items-center justify-center mx-auto mb-4">
+                                                    <FileText size={20} className="text-gray-400" />
+                                                </div>
+                                                <p className="text-[14px] font-semibold text-gray-900 mb-1">No reports generated yet</p>
+                                                <p className="text-[13px] text-gray-500 max-w-sm mb-6">Create your first client report. Start from scratch or use templates for monthly summaries, SEO audits, and campaign results.</p>
+                                                <button onClick={() => setModalOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                                                    Create New Report
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ) : (

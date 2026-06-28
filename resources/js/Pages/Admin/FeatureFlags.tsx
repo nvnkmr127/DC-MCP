@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, router } from '@inertiajs/react';
 import { Flag, Plus, Trash2, Globe, Building } from 'lucide-react';
@@ -53,6 +54,12 @@ export default function FeatureFlags({ flags, organizations }: Props) {
     return (
         <AppLayout title="Feature Flags">
             <Head title="Feature Flags | Admin" />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Admin', href: '/admin' },
+                    { label: 'Feature Flags | Admin' }
+                ]} />
+            </div>
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">

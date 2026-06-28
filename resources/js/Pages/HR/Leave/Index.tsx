@@ -96,6 +96,17 @@ function ApplyModal({ onClose }: { onClose: () => void }) {
 
 export default function LeaveIndex({ myRequests, teamRequests, balance, canReview }: Props) {
     const [showApply, setShowApply] = useState(false);
+    const [statusFilter, setStatusFilter] = useState<string>('');
+    const [monthFilter, setMonthFilter] = useState<string>('');
+
+    const filteredRequests = myRequests.filter(r => {
+        if (statusFilter && r.status !== statusFilter) return false;
+        if (monthFilter) {
+            const rMonth = r.from_date.slice(0, 7); // YYYY-MM
+            if (rMonth !== monthFilter) return false;
+        }
+        return true;
+    });
 
     return (
         <AppLayout title="Leave Management">
@@ -119,14 +130,32 @@ export default function LeaveIndex({ myRequests, teamRequests, balance, canRevie
                 </div>
 
                 <div className="bg-white rounded-xl border border-gray-200">
-                    <div className="px-5 py-4 border-b border-gray-100">
+                    <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                         <h2 className="text-sm font-semibold text-gray-700">My Leave Requests</h2>
+                        <div className="flex gap-2">
+                            <input 
+                                type="month" 
+                                value={monthFilter} 
+                                onChange={e => setMonthFilter(e.target.value)} 
+                                className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:ring-2 focus:ring-indigo-500"
+                            />
+                            <select 
+                                value={statusFilter} 
+                                onChange={e => setStatusFilter(e.target.value)}
+                                className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:ring-2 focus:ring-indigo-500"
+                            >
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
                     </div>
-                    {myRequests.length === 0 ? (
+                    {filteredRequests.length === 0 ? (
                         <div className="py-8 text-center text-gray-400 text-sm">No leave requests yet.</div>
                     ) : (
                         <div className="divide-y divide-gray-100">
-                            {myRequests.map(r => (
+                            {filteredRequests.map(r => (
                                 <div key={r.id} className="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div>
                                         <div className="flex items-center gap-2 flex-wrap mb-1">

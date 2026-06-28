@@ -49,9 +49,16 @@ export const TimeTracker: React.FC<TimeTrackerProps> = ({ taskId, timeEntries })
         router.post('/timesheets/timer/start', { task_id: taskId }, { preserveScroll: true });
     }
 
-    function stopGlobalTimer() {
+    async function stopGlobalTimer() {
         if (activeTimer) {
-            router.post(`/timesheets/timer/${activeTimer.id}/stop`, {}, { preserveScroll: true });
+            const ok = await confirm({
+                title: 'Stop Timer & Log Time?',
+                description: 'Are you sure these hours are correct? The time entry will be locked once stopped.',
+                confirmText: 'Stop & Log',
+            });
+            if (ok) {
+                router.post(`/timesheets/timer/${activeTimer.id}/stop`, {}, { preserveScroll: true });
+            }
         }
     }
 

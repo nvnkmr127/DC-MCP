@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import { Activity, CheckSquare, Clock } from 'lucide-react';
+import { PageHelp } from '@/Components/Shared/PageHelp';
 
 interface Props {
     title: string;
@@ -24,7 +25,10 @@ export default function WorkloadLayout({ title, currentTab, children }: Props) {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Team Workload</h1>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Team Workload</h1>
+                            <PageHelp content="Track team capacity, active tasks, and time entries. Use the tabs to switch between high-level overviews and granular task management." />
+                        </div>
                         <p className="text-sm text-gray-500 mt-1">Manage team capacity, active tasks, and time entries.</p>
                     </div>
                 </div>

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Plus, X, TrendingUp, Users, DollarSign, ArrowRight, Phone, Mail } from 'lucide-react';
+import { Plus, X, TrendingUp, Users, DollarSign, ArrowRight, Mail } from 'lucide-react';
+import { PageHelp } from '@/Components/Shared/PageHelp';
 import { cn } from '@/lib/utils';
 
 type Stage = 'lead' | 'meeting_scheduled' | 'proposal_sent' | 'negotiation' | 'won' | 'lost';
@@ -143,7 +144,10 @@ export default function PipelineIndex({ prospects, byStage, totalPipeline, weigh
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Sales Pipeline</h1>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-2xl font-bold text-gray-900">Sales Pipeline</h1>
+                            <PageHelp content="Track prospective clients from initial contact to closed deal. Drag and drop deals across stages." />
+                        </div>
                         <p className="text-sm text-gray-500 mt-0.5">Track prospects from lead to close</p>
                     </div>
                     <button
@@ -154,46 +158,61 @@ export default function PipelineIndex({ prospects, byStage, totalPipeline, weigh
                     </button>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-4">
-                    {[
-                        { label: 'Total Pipeline', value: fmt(totalPipeline), icon: DollarSign, color: 'text-violet-600', bg: 'bg-violet-50' },
-                        { label: 'Weighted Pipeline', value: fmt(weightedPipeline), icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                        { label: 'Active Deals', value: String(prospects.filter(p => !['won','lost'].includes(p.stage)).length), icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-                    ].map(({ label, value, icon: Icon, color, bg }) => (
-                        <div key={label} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
-                            <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', bg)}>
-                                <Icon className={cn('w-5 h-5', color)} />
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500">{label}</p>
-                                <p className="text-lg font-bold text-gray-900">{value}</p>
+                {prospects.length === 0 ? (
+                    <div className="bg-white rounded-xl border border-gray-200 px-5 py-16 text-center shadow-sm">
+                        <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 shadow-sm flex items-center justify-center mx-auto mb-4">
+                            <TrendingUp size={20} className="text-gray-400" />
+                        </div>
+                        <p className="text-[14px] font-semibold text-gray-900 mb-1">Your sales pipeline is empty</p>
+                        <p className="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Track your prospects, visualize your sales funnel, and close more deals by adding your first prospect.</p>
+                        <button onClick={() => setShowCreate(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                            Add First Prospect
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        {/* Stats */}
+                        <div className="grid grid-cols-3 gap-4">
+                            {[
+                                { label: 'Total Pipeline', value: fmt(totalPipeline), icon: DollarSign, color: 'text-violet-600', bg: 'bg-violet-50' },
+                                { label: 'Weighted Pipeline', value: fmt(weightedPipeline), icon: TrendingUp, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                                { label: 'Active Deals', value: String(prospects.filter(p => !['won','lost'].includes(p.stage)).length), icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+                            ].map(({ label, value, icon: Icon, color, bg }) => (
+                                <div key={label} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+                                    <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', bg)}>
+                                        <Icon className={cn('w-5 h-5', color)} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500">{label}</p>
+                                        <p className="text-lg font-bold text-gray-900">{value}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Kanban */}
+                        <div className="overflow-x-auto pb-4 mt-6">
+                            <div className="flex gap-4 min-w-max">
+                                {STAGES.map(({ key, label, header }) => (
+                                    <div key={key} className="w-64 shrink-0">
+                                        <div className={cn('flex items-center justify-between px-3 py-2 rounded-t-xl border', header)}>
+                                            <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
+                                            <span className="text-xs font-bold">{(byStage[key] ?? []).length}</span>
+                                        </div>
+                                        <div className="bg-gray-50 rounded-b-xl border border-t-0 border-gray-200 p-2 space-y-2 min-h-32">
+                                            {(byStage[key] ?? []).map(p => (
+                                                <ProspectCard key={p.id} prospect={p} />
+                                            ))}
+                                            {(byStage[key] ?? []).length === 0 && (
+                                                <p className="text-xs text-gray-400 text-center py-6">No deals</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
-                    ))}
-                </div>
-
-                {/* Kanban */}
-                <div className="overflow-x-auto pb-4">
-                    <div className="flex gap-4 min-w-max">
-                        {STAGES.map(({ key, label, header }) => (
-                            <div key={key} className="w-64 shrink-0">
-                                <div className={cn('flex items-center justify-between px-3 py-2 rounded-t-xl border', header)}>
-                                    <span className="text-xs font-semibold uppercase tracking-wide">{label}</span>
-                                    <span className="text-xs font-bold">{(byStage[key] ?? []).length}</span>
-                                </div>
-                                <div className="bg-gray-50 rounded-b-xl border border-t-0 border-gray-200 p-2 space-y-2 min-h-32">
-                                    {(byStage[key] ?? []).map(p => (
-                                        <ProspectCard key={p.id} prospect={p} />
-                                    ))}
-                                    {(byStage[key] ?? []).length === 0 && (
-                                        <p className="text-xs text-gray-400 text-center py-6">No deals</p>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                    </>
+                )}
             </div>
 
             {/* Create Modal */}

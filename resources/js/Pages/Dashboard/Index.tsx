@@ -166,7 +166,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
         window.print();
     };
 
-    const loading = isLoadingConfigs || isLoadingData || saveMutation.isPending;
+    const isConfigsLoading = isLoadingConfigs || saveMutation.isPending;
 
     // Build visual representation of current config/layout
     const dashboardConfig = activeDb ? { ...activeDb, layout: localLayout } : null;
@@ -251,7 +251,7 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                 className="p-2 aspect-square rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700"
                                 title="Refresh data"
                             >
-                                <RefreshCw size={13} className={cn(loading && "animate-spin")} />
+                                <RefreshCw size={13} className={cn(isLoadingData && "animate-spin")} />
                             </Button>
                         </>
                     )}
@@ -295,16 +295,30 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
             )}
 
             {/* Loading / Custom layout view */}
-            {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="bg-white border border-gray-100 dark:bg-slate-900 dark:border-slate-800 rounded-2xl p-6 h-[200px] shadow-sm">
-                            <Skeleton className="h-4 w-24 mb-4" />
-                            <Skeleton className="h-10 w-12 mb-4" />
-                            <Skeleton className="h-4 w-full" />
+            {isConfigsLoading ? (
+                <>
+                    {/* KPI Cards Skeleton */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mb-6">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                                <Skeleton className="w-9 h-9 rounded-xl mb-4" />
+                                <Skeleton className="h-8 w-16 mb-2" />
+                                <Skeleton className="h-3 w-24" />
+                            </div>
+                        ))}
+                    </div>
+                    {/* Command Center Skeleton */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                        <div className="lg:col-span-8 flex flex-col gap-6">
+                            <Skeleton className="h-[220px] rounded-2xl w-full border border-gray-100" />
+                            <Skeleton className="h-[300px] rounded-2xl w-full border border-gray-100" />
                         </div>
-                    ))}
-                </div>
+                        <div className="lg:col-span-4 flex flex-col gap-6">
+                            <Skeleton className="h-[320px] rounded-2xl w-full border border-gray-100" />
+                            <Skeleton className="h-[320px] rounded-2xl w-full border border-gray-100" />
+                        </div>
+                    </div>
+                </>
             ) : isCompletelyEmpty ? (
                 <div className="flex flex-col items-center justify-center bg-white rounded-[2rem] border border-gray-100/80 shadow-sm p-16 mt-6 relative overflow-hidden min-h-[500px]">
                     <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
@@ -373,7 +387,18 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                     )}
                                 </div>
 
-                                {widget.type === 'metric_card' ? (
+                                {isLoadingData && !data ? (
+                                    <div className="w-full flex flex-col justify-center gap-4 py-2">
+                                        {widget.type === 'metric_card' ? (
+                                            <div className="flex items-end gap-2">
+                                                <Skeleton className="h-9 w-20" />
+                                                <Skeleton className="h-4 w-10 mb-1" />
+                                            </div>
+                                        ) : (
+                                            <Skeleton className="h-[200px] w-full rounded-xl" />
+                                        )}
+                                    </div>
+                                ) : widget.type === 'metric_card' ? (
                                     <div className="flex items-baseline gap-2">
                                         <span className="text-3xl font-extrabold text-gray-900 tracking-tight tabular-nums">
                                             {data?.summary?.total ?? 0}
@@ -515,7 +540,8 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                     ) : (
                                         <div className="py-12 flex flex-col items-center justify-center text-center">
                                             <Calendar size={32} className="text-gray-200 mb-3" />
-                                            <p className="text-sm font-medium text-gray-500">Your agenda is clear for today.</p>
+                                            <p className="text-sm font-medium text-gray-900 mb-1">Your calendar is clear.</p>
+                                            <p className="text-xs text-gray-500 max-w-[200px]">New events and meetings will appear here.</p>
                                         </div>
                                     )}
                                 </div>
@@ -559,7 +585,8 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                     ) : (
                                         <div className="h-full flex flex-col items-center justify-center text-center">
                                             <CheckCircle2 size={32} className="text-emerald-300 mb-3" />
-                                            <p className="text-sm font-medium text-gray-500">No overdue tasks!</p>
+                                            <p className="text-sm font-medium text-gray-900 mb-1">No overdue tasks!</p>
+                                            <p className="text-xs text-gray-500 max-w-[200px]">Check with your manager or browse available projects.</p>
                                         </div>
                                     )}
                                 </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, useForm, router } from '@inertiajs/react';import AppLayout from '@/Layouts/AppLayout';
 
 interface OrgData {
@@ -28,6 +29,12 @@ export default function OrganizationSettings({ organization }: Props) {
     return (
         <AppLayout title="Organization Settings">
             <Head title="Organization Settings" />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Settings', href: '/settings' },
+                    { label: 'Organization Settings' }
+                ]} />
+            </div>
 
             <div className="max-w-xl">
                 <div className="bg-white rounded-xl border border-gray-200 p-6">

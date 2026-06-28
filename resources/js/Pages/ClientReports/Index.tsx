@@ -151,7 +151,14 @@ export default function ClientReportsIndex({ reports, clients }: Props) {
                                                 className="flex items-center gap-1 px-2.5 py-1.5 border border-indigo-200 text-indigo-600 text-xs font-medium rounded-lg hover:bg-indigo-50">
                                                 <Sparkles size={11} /> AI Draft
                                             </button>
-                                            <button onClick={() => router.post(`/client-updates/${r.id}/send`)}
+                                            <button onClick={async () => {
+                                                const ok = await confirm({
+                                                    title: 'Send Report?',
+                                                    description: `This will email the monthly update to ${r.client?.name ?? 'the client'}. Are you sure?`,
+                                                    confirmText: 'Send Email',
+                                                });
+                                                if (ok) router.post(`/client-updates/${r.id}/send`);
+                                            }}
                                                 className="flex items-center gap-1 px-2.5 py-1.5 border border-emerald-200 text-emerald-600 text-xs font-medium rounded-lg hover:bg-emerald-50">
                                                 <Send size={11} /> Send
                                             </button>

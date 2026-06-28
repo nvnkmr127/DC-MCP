@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, router, useForm, Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -338,6 +339,12 @@ export default function MCPSettings({ connections, builtin_providers, global_con
     return (
         <AppLayout title="Integrations & MCP">
             <Head title="Integrations & MCP" />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Settings', href: '/settings' },
+                    { label: 'Integrations & MCP' }
+                ]} />
+            </div>
             <TooltipProvider delayDuration={200}>
 
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">

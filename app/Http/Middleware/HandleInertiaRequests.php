@@ -55,6 +55,7 @@ class HandleInertiaRequests extends Middleware
                     'id' => $c->id,
                     'provider' => $c->provider,
                     'label' => $c->label,
+                    'error' => $c->sync_error,
                 ])
                 ->toArray();
         }

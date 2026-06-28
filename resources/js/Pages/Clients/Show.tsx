@@ -6,6 +6,7 @@ import SowTab from '../Agreements/SowTab';
 import { useConfirm } from '@/hooks/useConfirm';
 import { cn, formatDate } from '@/lib/utils';
 import type { Client, Project } from '@/types';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { ArrowLeft, Edit, Trash2, Globe, Mail, Phone, Building2, ExternalLink, Plus, X, MessageSquare, Phone as PhoneIcon, AtSign, Star, Sparkles, Send, ChevronDown, Smile } from 'lucide-react';
 
 interface Metric { key: string; value: string; }
@@ -262,10 +263,11 @@ export default function ClientShow({ client, communications, proposals, sows, ca
 
             <div className="max-w-4xl mx-auto">
                 {/* Breadcrumb */}
-                <div className="flex items-center gap-2 text-[12px] text-gray-500 mb-4">
-                    <Link href="/clients" className="hover:text-indigo-600 transition-colors">Clients</Link>
-                    <span>/</span>
-                    <span className="text-gray-900 font-medium">{client.name}</span>
+                <div className="mb-4">
+                    <Breadcrumbs items={[
+                        { label: 'Clients', href: '/clients' },
+                        { label: client.name }
+                    ]} />
                 </div>
 
                 {/* Header card */}

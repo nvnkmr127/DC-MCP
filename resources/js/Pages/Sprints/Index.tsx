@@ -288,9 +288,15 @@ export default function SprintsIndex({ sprints, projects }: Props) {
                 )}
 
                 {sprints.length === 0 && (
-                    <div className="bg-white rounded-xl border border-dashed border-gray-200 px-5 py-12 text-center">
-                        <GitMerge size={24} className="text-gray-300 mx-auto mb-2" />
-                        <p className="text-sm text-gray-400">No sprints yet. Create your first sprint.</p>
+                    <div className="bg-white rounded-xl border border-gray-200 px-5 py-16 text-center shadow-sm">
+                        <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 shadow-sm flex items-center justify-center mx-auto mb-4">
+                            <GitMerge size={20} className="text-gray-400" />
+                        </div>
+                        <p className="text-[14px] font-semibold text-gray-900 mb-1">Welcome to Sprint Planning!</p>
+                        <p className="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Organize your tasks into time-boxed sprints to focus your team and deliver work incrementally.</p>
+                        <button onClick={() => setModalOpen(true)} className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                            Create First Sprint
+                        </button>
                     </div>
                 )}
             </div>

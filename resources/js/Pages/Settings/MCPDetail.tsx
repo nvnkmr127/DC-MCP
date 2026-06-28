@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -155,6 +156,12 @@ export default function MCPDetail({ connection, outboundActions = [] }: Props) {
     return (
         <AppLayout title={connection.label}>
             <Head title={connection.label} />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Settings', href: '/settings' },
+                    { label: connection.label }
+                ]} />
+            </div>
 
             <div className="mb-5">
                 <Link href="/settings/mcp" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 w-fit">

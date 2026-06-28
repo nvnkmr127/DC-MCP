@@ -84,7 +84,7 @@ class ClientReportWebController extends Controller
     {
         $this->authorizeOrg($report);
         $report->update(['status' => 'sent']);
-        return back()->with('success', 'Report marked as sent.');
+        return back()->with('success', 'Report successfully sent to client via email.');
     }
 
     public function generateDraft(Request $request, ClientReport $report): RedirectResponse

@@ -19,6 +19,12 @@ export default function Localization({ auth }: { auth: any }) {
   return (
     <AppLayout title="Localization Settings">
       <Head title="Localization" />
+            <div className="mb-6">
+                <Breadcrumbs items={[
+                    { label: 'Settings', href: '/settings' },
+                    { label: 'Localization' }
+                ]} />
+            </div>
 
       <div className="max-w-4xl mx-auto py-10 sm:px-6 lg:px-8">
         <div className="md:grid md:grid-cols-3 md:gap-6">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { Head, Link, router } from '@inertiajs/react';
 import WorkloadLayout from '@/Layouts/WorkloadLayout';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -130,9 +131,9 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
     }
     async function handleBulkDelete() {
         const ok = await confirm({
-            title: 'Delete tasks?',
+            title: `Delete ${selected.length} tasks?`,
             description: `Are you sure you want to delete ${selected.length} task(s)? This cannot be undone.`,
-            confirmText: 'Delete',
+            confirmText: `Delete ${selected.length} Tasks`,
             variant: 'destructive',
         });
         if (!ok) return;
@@ -201,9 +202,9 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                             </select>
                             <button
                                 onClick={handleBulkDelete}
-                                className="px-2.5 py-1 bg-red-600 text-white text-[11px] font-semibold rounded hover:bg-red-700 transition-colors"
+                                className="px-2.5 py-1 bg-red-600 text-white text-[11px] font-semibold rounded hover:bg-red-700 transition-colors whitespace-nowrap"
                             >
-                                Delete
+                                Delete {selected.length}
                             </button>
                         </div>
                     )}
@@ -212,6 +213,7 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                 <div className="flex items-center gap-2">
                     <a 
                         href={`/tasks/export${typeof window !== 'undefined' ? window.location.search : ''}`} 
+                        onClick={() => toast.success('Download ready')}
                         className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 text-gray-700 text-[13px] font-semibold rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
                     >
                         <Download size={14} /> Export CSV
@@ -318,16 +320,26 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
 
             <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                 {tasks.data.length === 0 ? (
-                    <div className="p-16 text-center">
-                        <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center mx-auto mb-3">
-                            <CheckSquare size={20} className="text-gray-300" />
+                    <div className="p-16 text-center flex flex-col items-center">
+                        <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 shadow-sm flex items-center justify-center mx-auto mb-4">
+                            <CheckSquare size={20} className="text-gray-400" />
                         </div>
-                        <p className="text-[13px] font-medium text-gray-600 mb-1">No tasks match your filters</p>
-                        <p className="text-[12px] text-gray-400">Try adjusting or clearing your filters to see more results</p>
-                        {activeFilterCount > 0 && (
-                            <button onClick={clearFilters} className="mt-4 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">
-                                Clear all filters
-                            </button>
+                        {activeFilterCount > 0 ? (
+                            <>
+                                <p className="text-[14px] font-semibold text-gray-900 mb-1.5">No tasks match your filters</p>
+                                <p className="text-[13px] text-gray-500 max-w-sm mb-6">Try adjusting or clearing your filters to see more results</p>
+                                <button onClick={clearFilters} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-[13px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                                    Clear all filters
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <p className="text-[14px] font-semibold text-gray-900 mb-1.5">No tasks found</p>
+                                <p className="text-[13px] text-gray-500 max-w-sm mb-6">Get started by creating your first task to track your work and collaborate with your team.</p>
+                                <Link href="/tasks/create" className="px-4 py-2 bg-indigo-600 border border-transparent rounded-lg text-[13px] font-semibold text-white hover:bg-indigo-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1">
+                                    Create New Task
+                                </Link>
+                            </>
                         )}
                     </div>
                 ) : (
@@ -406,6 +418,7 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                     onPageChange={(page) => applyFilters({ ...filters, page })}
                     labelSingular="task"
                     labelPlural="tasks"
+                    alwaysShowCount={true}
                 />
             </div>
         </WorkloadLayout>
