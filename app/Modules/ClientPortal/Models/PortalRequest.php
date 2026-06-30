@@ -51,4 +51,14 @@ class PortalRequest extends BaseModel
     {
         return $this->belongsTo(\App\Modules\Auth\Models\User::class, 'actioned_by');
     }
+
+    public function comments()
+    {
+        return $this->morphMany(\App\Modules\ProjectManagement\Models\Comment::class, 'commentable');
+    }
+
+    public function attachments()
+    {
+        return $this->morphMany(\App\Modules\ProjectManagement\Models\Attachment::class, 'attachable');
+    }
 }

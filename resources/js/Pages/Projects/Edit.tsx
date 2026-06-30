@@ -11,16 +11,18 @@ interface Props {
     project: Project;
     clients: Array<{ id: string; name: string }>;
     members: Array<{ id: string; name: string }>;
+    goals: Array<{ id: string; title: string }>;
 }
 
 const inputCls = 'w-full px-3.5 py-2.5 border border-gray-200 rounded-lg text-[13px] bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all placeholder-gray-400';
 const labelCls = 'block text-[12px] font-semibold text-gray-700 mb-1.5';
 
-export default function ProjectEdit({ project, clients, members }: Props) {
+export default function ProjectEdit({ project, clients, members, goals }: Props) {
     const form = useForm({
         name:               project.name,
         description:        project.description ?? '',
         client_id:          project.client_id ?? '',
+        goal_id:            project.goal_id ?? '',
         status:             project.status,
         priority:           project.priority,
         start_date:         project.start_date ?? '',
@@ -90,8 +92,7 @@ export default function ProjectEdit({ project, clients, members }: Props) {
                             />
                         </div>
 
-                        {/* Client + Type */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                             <div>
                                 <label className={labelCls}>Client</label>
                                 <select
@@ -102,6 +103,19 @@ export default function ProjectEdit({ project, clients, members }: Props) {
                                     <option value="">No client (internal)</option>
                                     {clients.map(c => (
                                         <option key={c.id} value={c.id}>{c.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className={labelCls}>Goal</label>
+                                <select
+                                    value={form.data.goal_id}
+                                    onChange={e => form.setData('goal_id', e.target.value)}
+                                    className={inputCls}
+                                >
+                                    <option value="">No goal aligned</option>
+                                    {goals.map(g => (
+                                        <option key={g.id} value={g.id}>{g.title}</option>
                                     ))}
                                 </select>
                             </div>

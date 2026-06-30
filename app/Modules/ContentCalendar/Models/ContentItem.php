@@ -31,6 +31,7 @@ class ContentItem extends BaseModel
         'published_at',
         'approved_at',
         'meta',
+        'analytics_data',
         'tags',
         'sort_order',
     ];
@@ -41,6 +42,7 @@ class ContentItem extends BaseModel
         'published_at' => 'datetime',
         'approved_at'  => 'datetime',
         'meta'         => 'array',
+        'analytics_data'=> 'array',
         'tags'         => 'array',
     ];
 

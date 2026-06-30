@@ -10,6 +10,7 @@ interface TeamMember {
     total_tasks: number; urgent_tasks: number; overdue_tasks: number; due_today: number;
     total_estimated_hours: number; logged_hours_this_week: number;
     load_percent: number;
+    today_standup: { status: string; has_blockers: boolean; submitted_at: string | null; } | null;
 }
 interface ActiveTask {
     id: string; title: string; status: string; priority: string;
@@ -95,13 +96,32 @@ export default function CapacityIndex({ team, activeTasks, recentTimesheets, sta
                                 filterMember === member.id ? 'border-indigo-400 ring-2 ring-indigo-100' : 'border-gray-200 hover:border-gray-300'
                             )}
                         >
-                            <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold shrink-0">
-                                    {member.name[0]}
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold shrink-0">
+                                        {member.name[0]}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="font-semibold text-gray-900 text-sm truncate">{member.name}</p>
+                                        <p className="text-xs text-gray-500 capitalize">{member.role?.replace('_', ' ') ?? '—'}</p>
+                                    </div>
                                 </div>
-                                <div className="min-w-0">
-                                    <p className="font-semibold text-gray-900 text-sm truncate">{member.name}</p>
-                                    <p className="text-xs text-gray-500 capitalize">{member.role?.replace('_', ' ') ?? '—'}</p>
+                                <div className="shrink-0" title={member.today_standup ? `Submitted at ${member.today_standup.submitted_at || 'today'}` : 'Pending standup'}>
+                                    {member.today_standup ? (
+                                        member.today_standup.has_blockers ? (
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-md">
+                                                <AlertTriangle className="w-3 h-3" /> Blocked
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                                                <CheckSquare className="w-3 h-3" /> Done
+                                            </span>
+                                        )
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-500 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded-md">
+                                            Pending
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 

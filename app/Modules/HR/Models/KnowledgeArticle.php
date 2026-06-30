@@ -30,4 +30,9 @@ class KnowledgeArticle extends BaseModel
     {
         return $this->belongsTo(\App\Modules\Auth\Models\User::class, 'author_id');
     }
+
+    public function attachments()
+    {
+        return $this->morphMany(\App\Modules\ProjectManagement\Models\Attachment::class, 'attachable');
+    }
 }

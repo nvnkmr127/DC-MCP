@@ -19,7 +19,14 @@ class RoleMiddleware
         }
 
         $user = auth()->user();
-        if (!$user || !$user->hasRoles($roles)) {
+        
+        // Handle piped roles like 'ceo|project_manager'
+        $parsedRoles = [];
+        foreach ($roles as $roleGroup) {
+            $parsedRoles = array_merge($parsedRoles, explode('|', $roleGroup));
+        }
+
+        if (!$user || !$user->hasRoles($parsedRoles)) {
             Log::warning('Role check denied', [
                 'user_id'        => $user?->id,
                 'user_role'      => $user?->role,

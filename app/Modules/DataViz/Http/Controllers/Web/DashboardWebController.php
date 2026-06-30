@@ -137,6 +137,23 @@ class DashboardWebController extends Controller
             ->limit(10)
             ->get();
 
+        // Pending Leave Requests
+        $pendingLeaves = \App\Modules\HR\Models\LeaveRequest::with('user:id,name')
+            ->where('organization_id', $orgId)
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(fn($l) => [
+                'id' => $l->id,
+                'user_name' => $l->user?->name,
+                'type' => $l->type,
+                'from_date' => $l->from_date->toDateString(),
+                'to_date' => $l->to_date->toDateString(),
+                'days' => (float) $l->days,
+                'reason' => $l->reason,
+            ]);
+
         // Setup Checklist
         $teamInvited = \App\Modules\Auth\Models\User::where('organization_id', $orgId)->count() > 1;
         $projectCreated = Project::where('organization_id', $orgId)->count() > 0;
@@ -151,6 +168,21 @@ class DashboardWebController extends Controller
             ['id' => 'task', 'title' => 'Create First Task', 'done' => $taskCreated, 'href' => '/projects'],
         ];
 
+        $myActiveTasksList = Task::with('project:id,name')
+            ->where('organization_id', $orgId)
+            ->where('assigned_to', $user->id)
+            ->whereNotIn('status', ['done', 'cancelled'])
+            ->orderByRaw('due_date IS NULL, due_date ASC')
+            ->limit(10)
+            ->get()
+            ->map(fn($t) => [
+                'id'       => $t->id,
+                'title'    => $t->title,
+                'due_date' => $t->due_date?->toDateString(),
+                'status'   => is_object($t->status) ? $t->status->value : $t->status,
+                'project'  => $t->project ? ['name' => $t->project->name] : null,
+            ]);
+
         return Inertia::render('Dashboard/Index', [
             'stats' => [
                 'my_active_tasks'    => $myActiveTasks,
@@ -161,6 +193,7 @@ class DashboardWebController extends Controller
                 'tasks_by_status'    => $tasksByStatus,
                 'recent_activity'    => $recentActivity,
             ],
+            'my_active_tasks_list' => $myActiveTasksList,
             'briefing' => $briefing ? [
                 'id'          => $briefing->id,
                 'date'        => $briefing->date,
@@ -171,6 +204,7 @@ class DashboardWebController extends Controller
             'overdue_tasks_list' => $overdueTasksList,
             'today_calendar'     => $todayCalendar,
             'pending_approvals'  => $pendingApprovals,
+            'pending_leaves'     => $pendingLeaves,
         ]);
     }
 }

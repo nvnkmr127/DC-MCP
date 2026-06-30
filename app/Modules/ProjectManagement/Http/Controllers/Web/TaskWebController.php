@@ -177,7 +177,7 @@ class TaskWebController extends Controller
         }
 
         $task->load([
-            'project:id,name',
+            'project.client:id,name',
             'assignee:id,name',
             'creator:id,name',
             'comments.user:id,name',
@@ -246,7 +246,14 @@ class TaskWebController extends Controller
                 $task->toArray(),
                 [
                     'project_id'   => $task->project_id,
-                    'project'      => $task->project ? ['id' => $task->project->id, 'name' => $task->project->name] : null,
+                    'project'      => $task->project ? [
+                        'id' => $task->project->id, 
+                        'name' => $task->project->name,
+                        'client' => $task->project->client ? [
+                            'id' => $task->project->client->id,
+                            'name' => $task->project->client->name,
+                        ] : null
+                    ] : null,
                     'assignee'     => $task->assignee ? ['id' => $task->assignee->id, 'name' => $task->assignee->name] : null,
                     'due_date'     => $task->due_date?->toDateString(),
                     'comments'     => $task->comments->map(fn($c) => [

@@ -111,9 +111,9 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
             : <ArrowDown size={12} className="text-indigo-600 ml-1 inline" />;
     };
 
-    const SortableHeader = ({ column, label }: { column: string, label: string }) => (
+    const SortableHeader = ({ column, label, className = '' }: { column: string, label: string, className?: string }) => (
         <TableHead 
-            className="text-left px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide cursor-pointer hover:bg-gray-100 select-none transition-colors group"
+            className={cn("text-left px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide cursor-pointer hover:bg-gray-100 select-none transition-colors group", className)}
             onClick={(e) => toggleSort(column, e.shiftKey)}
             title="Click to sort, Shift+Click to multi-sort"
         >
@@ -189,26 +189,6 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                         variant="ghost" size="sm" >
                             <X size={12} /> Clear all
                         </Button>
-                    )}
-
-                    {selected.length > 0 && (
-                        <div className="flex items-center gap-2 ml-1 pl-3 border-l border-gray-200">
-                            <span className="text-[12px] text-gray-500">{selected.length} selected</span>
-                            <select 
-                                onChange={(e) => handleBulkUpdate('status', e.target.value)}
-                                value=""
-                                className="px-2 py-1 bg-white border border-gray-200 text-[11px] rounded hover:bg-gray-50 outline-none text-gray-600"
-                            >
-                                <option value="" disabled>Set Status...</option>
-                                {statuses.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
-                            </select>
-                            <Button
-                                onClick={handleBulkDelete}
-                                className="px-2.5 whitespace-nowrap" 
-                            variant="destructive" size="sm" >
-                                Delete {selected.length}
-                            </Button>
-                        </div>
                     )}
                 </div>
 
@@ -357,12 +337,12 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                                     />
                                 </TableHead>
                                 <SortableHeader column="title" label="Task" />
-                                <TableHead className="text-left px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Project</TableHead>
+                                <TableHead className="text-left px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Project</TableHead>
                                 <SortableHeader column="status" label="Status" />
-                                <SortableHeader column="priority" label="Priority" />
-                                <TableHead className="text-left px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Assignee</TableHead>
-                                <SortableHeader column="due_date" label="Due" />
-                                <SortableHeader column="estimated_hours" label="Est." />
+                                <SortableHeader column="priority" label="Priority" className="hidden md:table-cell" />
+                                <TableHead className="text-left px-3 py-3 text-[11px] font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Assignee</TableHead>
+                                <SortableHeader column="due_date" label="Due" className="hidden md:table-cell" />
+                                <SortableHeader column="estimated_hours" label="Est." className="hidden md:table-cell" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -390,22 +370,27 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                                                 {task.title}
                                             </Link>
                                         </TableCell>
-                                        <TableCell className="px-3 py-3 text-gray-400 text-[12px] max-w-[120px] truncate">
+                                        <TableCell className="px-3 py-3 text-gray-400 text-[12px] max-w-[120px] truncate hidden md:table-cell">
                                             {task.project?.name ?? '—'}
                                         </TableCell>
                                         <TableCell className="px-3 py-3"><StatusBadge type="task-status" value={task.status} /></TableCell>
-                                        <TableCell className="px-3 py-3"><StatusBadge type="task-priority" value={task.priority} /></TableCell>
-                                        <TableCell className="px-3 py-3 text-[12px] text-gray-500 whitespace-nowrap">
+                                        <TableCell className="px-3 py-3 hidden md:table-cell">
+                                            <div className="flex items-center gap-1.5 capitalize text-gray-700 text-[12px] font-medium">
+                                                <span className={cn("w-2 h-2 rounded-full shrink-0", TASK_PRIORITY_DOT[task.priority] || 'bg-gray-300')} />
+                                                {task.priority}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3 text-[12px] text-gray-500 whitespace-nowrap hidden md:table-cell">
                                             {task.assignee?.name ?? <span className="text-gray-300">Unassigned</span>}
                                         </TableCell>
-                                        <TableCell className="px-3 py-3 whitespace-nowrap">
+                                        <TableCell className="px-3 py-3 whitespace-nowrap hidden md:table-cell">
                                             {task.due_date ? (
                                                 <span className={cn('text-[12px] font-medium', due.variant === 'destructive' ? 'text-red-600' : due.variant === 'warning' ? 'text-yellow-600' : 'text-gray-500')}>
                                                     {formatDate(task.due_date)}
                                                 </span>
                                             ) : <span className="text-gray-300 text-[12px]">—</span>}
                                         </TableCell>
-                                        <TableCell className="px-3 py-3 text-[12px] text-gray-400">
+                                        <TableCell className="px-3 py-3 text-[12px] text-gray-400 hidden md:table-cell">
                                             {task.estimated_hours > 0 ? `${task.estimated_hours}h` : '—'}
                                         </TableCell>
                                     </TableRow>
@@ -423,6 +408,37 @@ export default function TasksIndex({ tasks, members = [], projects = [], filters
                     alwaysShowCount={true}
                 />
             </div>
+
+            {selected.length > 0 && (
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900/95 backdrop-blur-md border border-gray-700 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-5 z-50 animate-in slide-in-from-bottom-8 duration-300">
+                    <span className="text-[13px] font-semibold whitespace-nowrap">{selected.length} tasks selected</span>
+                    <div className="w-px h-5 bg-gray-700"></div>
+                    <div className="flex items-center gap-3">
+                        <select 
+                            onChange={(e) => handleBulkUpdate('status', e.target.value)}
+                            value=""
+                            className="px-3 py-1.5 bg-gray-800 border border-gray-700 text-[13px] font-medium rounded-lg hover:bg-gray-700 outline-none text-white focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                        >
+                            <option value="" disabled>Set Status...</option>
+                            {statuses.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+                        </select>
+                        <Button
+                            onClick={handleBulkDelete}
+                            className="px-4 py-1.5 whitespace-nowrap bg-rose-500 hover:bg-rose-600 text-white border-none shadow-sm h-auto font-semibold" 
+                            size="sm" 
+                        >
+                            Delete Tasks
+                        </Button>
+                        <Button
+                            onClick={() => setSelected([])}
+                            className="px-2 py-1.5 text-gray-400 hover:text-white bg-transparent hover:bg-gray-800 border-none h-auto"
+                            size="sm"
+                        >
+                            <X size={16} />
+                        </Button>
+                    </div>
+                </div>
+            )}
         </WorkloadLayout>
     );
 }

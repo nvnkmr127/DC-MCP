@@ -9,7 +9,7 @@ import { useConfirm } from '@/hooks/useConfirm';
 interface TimeEntry {
     id: string; task_id: string | null; task_title: string | null; project_name: string | null;
     hours: number; description: string | null; logged_date: string;
-    is_billable: boolean; timer_started_at: string | null;
+    is_billable: boolean; timer_started_at: string | null; status: 'pending' | 'approved' | 'flagged';
 }
 interface Props {
     entries: TimeEntry[]; weekStart: string; weekEnd: string;
@@ -54,6 +54,7 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
     const days = weekDays(weekStart);
     const [addOpen, setAddOpen] = useState(false);
     const [addDay, setAddDay] = useState<string | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const form = useForm({ task_id: '', hours: '', description: '', logged_date: '', is_billable: 'true' });
     const confirm = useConfirm();
 
@@ -83,7 +84,20 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
             <Head title="Timesheets" />
             <div className="space-y-5">
                 <div className="flex items-center justify-between">
-                    <div></div>
+                    <div>
+                        {isCeo && teamMembers.length > 0 && (
+                            <div className="flex items-center gap-3">
+                                <label className="text-sm font-medium text-gray-700">Team Member:</label>
+                                <select 
+                                    value={viewUserId}
+                                    onChange={e => router.get('/timesheets', { user_id: e.target.value, week: weekStart }, { preserveState: true })}
+                                    className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 min-w-[200px]"
+                                >
+                                    {teamMembers.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                                </select>
+                            </div>
+                        )}
+                    </div>
                     <div className="flex items-center gap-3">
                         {activeTimer ? (
                             <Button onClick={async () => {
@@ -114,8 +128,14 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-4">
                     <div className="bg-white rounded-xl border border-gray-200 p-4">
-                        <p className="text-xs text-gray-400">Total Hours</p>
+                        <div className="flex justify-between items-start mb-1">
+                            <p className="text-xs text-gray-400">Total Hours</p>
+                            <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Target: 40h</span>
+                        </div>
                         <p className="text-2xl font-bold text-gray-900 mt-1">{formatHours(totalHours)}</p>
+                        <div className="mt-3 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                            <div className={cn("h-full rounded-full", totalHours >= 40 ? 'bg-emerald-500' : 'bg-indigo-500')} style={{ width: `${Math.min(100, (totalHours / 40) * 100)}%` }} />
+                        </div>
                     </div>
                     <div className="bg-white rounded-xl border border-gray-200 p-4">
                         <p className="text-xs text-gray-400">Billable Hours</p>
@@ -182,12 +202,31 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                                     </div>
                                     <div className="px-2 py-1.5 space-y-1">
                                         {dayEntries.map(e => (
-                                            <div key={e.id} className={cn('rounded text-[10px] px-1.5 py-1 border',
+                                            <label key={e.id} className={cn('relative block rounded text-[10px] pl-6 pr-1.5 py-1.5 border cursor-pointer select-none transition-colors',
+                                                selectedIds.has(e.id) ? 'ring-1 ring-indigo-500 border-indigo-500 bg-indigo-50 text-indigo-900' :
                                                 e.is_billable ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-gray-50 border-gray-100 text-gray-600'
                                             )}>
-                                                <p className="font-medium truncate">{e.task_title ?? 'No task'}</p>
-                                                <p className="text-gray-400">{formatHours(e.hours)}{!e.is_billable && ' · NB'}</p>
-                                            </div>
+                                                {isCeo && (
+                                                    <input 
+                                                        type="checkbox" 
+                                                        className="absolute left-1.5 top-2 w-3 h-3 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                        checked={selectedIds.has(e.id)}
+                                                        onChange={(ev) => {
+                                                            const s = new Set(selectedIds);
+                                                            if (ev.target.checked) s.add(e.id);
+                                                            else s.delete(e.id);
+                                                            setSelectedIds(s);
+                                                        }}
+                                                    />
+                                                )}
+                                                {!isCeo && <div className="absolute left-2 top-2 w-1.5 h-1.5 rounded-full bg-current opacity-40" />}
+                                                <div className="flex justify-between items-start mb-0.5">
+                                                    <p className="font-semibold truncate pr-2">{e.task_title ?? 'No task'}</p>
+                                                    {e.status === 'approved' && <span className="shrink-0 inline-flex items-center justify-center w-3 h-3 bg-emerald-100 text-emerald-600 rounded-full text-[8px]">✓</span>}
+                                                    {e.status === 'flagged' && <span className="shrink-0 inline-flex items-center justify-center w-3 h-3 bg-rose-100 text-rose-600 rounded-full text-[8px]">!</span>}
+                                                </div>
+                                                <p className="text-opacity-80">{formatHours(e.hours)}{!e.is_billable && ' · NB'}</p>
+                                            </label>
                                         ))}
                                         <Button onClick={() => openAddFor(day)}
                                             className="w-full text-[10px] text-gray-300 hover:text-indigo-500 hover:bg-indigo-50 rounded py-1 transition-colors text-center">
@@ -200,7 +239,6 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                     </div>
                 </div>
 
-                {/* Add entry modal */}
                 {addOpen && (
                     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
                         <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
@@ -252,6 +290,43 @@ export default function TimesheetsIndex({ entries, weekStart, weekEnd, totalHour
                                 </div>
                             </form>
                         </div>
+                    </div>
+                )}
+
+                {/* Bulk Actions Bar */}
+                {selectedIds.size > 0 && (
+                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-4 z-40">
+                        <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                        <div className="w-px h-4 bg-gray-700" />
+                        <div className="flex items-center gap-2">
+                            <Button
+                                onClick={() => {
+                                    router.post('/timesheets/bulk-status', { entry_ids: Array.from(selectedIds), status: 'approved' }, { onSuccess: () => setSelectedIds(new Set()) });
+                                }}
+                                className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-3 py-1.5 h-auto rounded-lg"
+                            >
+                                Approve
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    router.post('/timesheets/bulk-status', { entry_ids: Array.from(selectedIds), status: 'flagged' }, { onSuccess: () => setSelectedIds(new Set()) });
+                                }}
+                                className="bg-rose-500 hover:bg-rose-600 text-white text-xs px-3 py-1.5 h-auto rounded-lg"
+                            >
+                                Flag
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    router.post('/timesheets/bulk-status', { entry_ids: Array.from(selectedIds), status: 'pending' }, { onSuccess: () => setSelectedIds(new Set()) });
+                                }}
+                                className="bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1.5 h-auto rounded-lg"
+                            >
+                                Clear Status
+                            </Button>
+                        </div>
+                        <button onClick={() => setSelectedIds(new Set())} className="ml-2 text-gray-400 hover:text-white transition-colors">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                     </div>
                 )}
             </div>

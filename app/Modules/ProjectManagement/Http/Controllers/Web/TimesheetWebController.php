@@ -49,6 +49,7 @@ class TimesheetWebController extends Controller
                 'logged_date'     => $e->logged_date?->toDateString(),
                 'is_billable'     => (bool) $e->is_billable,
                 'timer_started_at'=> $e->timer_started_at?->toISOString(),
+                'status'          => $e->status,
             ]);
 
         $totalHours    = $entries->sum('hours');
@@ -146,5 +147,23 @@ class TimesheetWebController extends Controller
         }
 
         return back()->with('success', 'Timer stopped. ' . number_format($hours, 2) . 'h logged.');
+    }
+
+    public function bulkUpdateStatus(Request $request): RedirectResponse
+    {
+        if (!$request->user()->hasRoles(['ceo', 'project_manager'])) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'entry_ids' => 'required|array',
+            'entry_ids.*' => 'uuid',
+            'status' => 'required|in:approved,flagged,pending',
+        ]);
+
+        TimeEntry::whereIn('id', $validated['entry_ids'])
+            ->update(['status' => $validated['status']]);
+
+        return back()->with('success', count($validated['entry_ids']) . ' entries marked as ' . $validated['status'] . '.');
     }
 }

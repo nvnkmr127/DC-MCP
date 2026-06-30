@@ -26,9 +26,14 @@ class Goal extends BaseModel
         'year'        => 'integer',
     ];
 
-        public function milestones(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function milestones(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Modules\ProjectManagement\Models\Milestone::class);
+    }
+
+    public function projects(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Modules\ProjectManagement\Models\Project::class);
     }
 
     public function owner(): BelongsTo

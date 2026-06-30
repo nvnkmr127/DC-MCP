@@ -15,6 +15,7 @@ interface Organization {
 interface FeatureFlag {
     id: number;
     feature: string;
+    description: string | null;
     organization_id: number | string | null;
     is_enabled: boolean;
     organization: Organization | null;
@@ -29,6 +30,7 @@ export default function FeatureFlags({ flags, organizations }: Props) {
     const [isCreating, setIsCreating] = useState(false);
     const [form, setForm] = useState({
         feature: '',
+        description: '',
         organization_id: '',
         is_enabled: false,
     });
@@ -38,7 +40,7 @@ export default function FeatureFlags({ flags, organizations }: Props) {
         router.post('/admin/feature-flags', form, {
             onSuccess: () => {
                 setIsCreating(false);
-                setForm({ feature: '', organization_id: '', is_enabled: false });
+                setForm({ feature: '', description: '', organization_id: '', is_enabled: false });
             }
         });
     };
@@ -98,8 +100,9 @@ export default function FeatureFlags({ flags, organizations }: Props) {
                                 <TableBody className="text-sm divide-y divide-white/5">
                                     {flags.map((flag) => (
                                         <TableRow key={flag.id} className="hover:bg-white/5 transition-colors">
-                                            <TableCell className="p-4 whitespace-nowrap text-gray-200 font-medium">
-                                                {flag.feature}
+                                            <TableCell className="p-4 whitespace-nowrap">
+                                                <p className="text-gray-200 font-medium">{flag.feature}</p>
+                                                {flag.description && <p className="text-xs text-gray-400 mt-0.5 max-w-sm truncate" title={flag.description}>{flag.description}</p>}
                                             </TableCell>
                                             <TableCell className="p-4 whitespace-nowrap text-gray-400">
                                                 {flag.organization ? (
@@ -175,6 +178,19 @@ export default function FeatureFlags({ flags, organizations }: Props) {
                             />
                         </div>
                         
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-1">
+                                Description (Optional)
+                            </label>
+                            <textarea
+                                value={form.description}
+                                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                                placeholder="What does this feature flag do? Any risks?"
+                                className="w-full bg-white/5 border-white/10 rounded-lg text-sm text-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
+                                rows={2}
+                            />
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-1">
                                 Scope (Organization)

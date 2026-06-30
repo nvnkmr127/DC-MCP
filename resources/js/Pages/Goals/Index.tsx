@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { cn } from '@/lib/utils';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Plus, X, Trash2, Flag } from 'lucide-react';
+import { StatusBadge } from '@/Components/Shared/StatusBadge';
 
 const PERIODS = ['q1', 'q2', 'q3', 'q4', 'annual'] as const;
 const PERIOD_LABELS: Record<string, string> = { q1: 'Q1', q2: 'Q2', q3: 'Q3', q4: 'Q4', annual: 'Annual' };
@@ -17,6 +18,7 @@ interface Goal {
     period: string; year: number; status: string; progress: number;
     key_results: KeyResult[];
     owner: { id: string; name: string } | null;
+    projects: { id: string; name: string; status: string; completion_pct: number }[];
 }
 interface Props {
     goals: Goal[]; byPeriod: Record<string, Goal[]>;
@@ -98,6 +100,25 @@ function GoalCard({ goal }: { goal: Goal }) {
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {goal.projects?.length > 0 && (
+                <div className="pt-2 mt-2 border-t border-gray-100">
+                    <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Aligned Projects</p>
+                    <div className="space-y-2">
+                        {goal.projects.map(p => (
+                            <div key={p.id} className="flex justify-between items-center text-sm">
+                                <a href={`/projects/${p.id}`} className="text-indigo-600 hover:underline truncate mr-2">
+                                    {p.name}
+                                </a>
+                                <div className="flex items-center shrink-0">
+                                    <StatusBadge value={p.status} />
+                                    <span className="ml-2 text-xs font-medium text-gray-500">{p.completion_pct}%</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 

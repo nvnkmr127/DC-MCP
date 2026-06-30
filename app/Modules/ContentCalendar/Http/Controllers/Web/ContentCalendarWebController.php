@@ -122,6 +122,7 @@ class ContentCalendarWebController extends Controller
             'assigned_to'  => 'sometimes|nullable|uuid',
             'project_id'   => 'sometimes|nullable|uuid',
             'tags'         => 'sometimes|nullable|array',
+            'analytics_data' => 'sometimes|nullable|array',
         ]);
 
         // Track approval
@@ -207,6 +208,7 @@ class ContentCalendarWebController extends Controller
             'project'      => $i->project ? ['id' => $i->project->id, 'name' => $i->project->name] : null,
             'assignee'     => $i->assignee ? ['id' => $i->assignee->id, 'name' => $i->assignee->name] : null,
             'task_id'      => $i->task_id,
+            'analytics_data' => $i->analytics_data ?? [],
         ];
     }
 

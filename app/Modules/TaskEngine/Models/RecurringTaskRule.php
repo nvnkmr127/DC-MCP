@@ -14,6 +14,7 @@ class RecurringTaskRule extends BaseModel
 
     protected $fillable = [
         'organization_id', 'client_id', 'project_id', 'title', 'description',
+        'target_type', 'target_template_id',
         'type', 'role_required', 'priority', 'frequency', 'frequency_day',
         'sla_hours', 'estimated_hours', 'is_active', 'last_spawned_at',
         'next_spawn_at', 'created_by',

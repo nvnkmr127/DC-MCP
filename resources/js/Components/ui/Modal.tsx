@@ -28,9 +28,9 @@ export default function Modal({
             <div className="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/80 transition-opacity" onClick={() => closeable && onClose()} />
 
             <div className="fixed inset-0 z-10 overflow-y-auto pointer-events-none">
-                <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div className="flex min-h-full items-end justify-center p-0 text-center sm:items-center sm:p-0">
                     <div
-                        className={`pointer-events-auto relative transform overflow-hidden rounded-xl bg-white dark:bg-slate-800 text-left shadow-xl transition-all sm:my-8 sm:w-full ${maxWidthClass}`}
+                        className={`pointer-events-auto relative transform overflow-hidden rounded-t-2xl sm:rounded-xl bg-white dark:bg-slate-800 text-left shadow-xl transition-all sm:my-8 w-full sm:w-full max-h-[95dvh] sm:max-h-none overflow-y-auto ${maxWidthClass}`}
                     >
                         {children}
                     </div>

@@ -16,7 +16,7 @@ class ClientCommunication extends BaseModel
     protected $fillable = [
         'organization_id', 'client_id', 'user_id', 'type',
         'contact_person', 'subject', 'notes', 'outcome',
-        'next_action', 'next_action_date', 'communicated_at',
+        'next_action', 'next_action_date', 'communicated_at', 'status'
     ];
 
     protected $casts = [
@@ -32,5 +32,15 @@ class ClientCommunication extends BaseModel
     public function user(): BelongsTo
     {
         return $this->belongsTo(\App\Modules\Auth\Models\User::class);
+    }
+
+    public function comments()
+    {
+        return $this->morphMany(\App\Modules\ProjectManagement\Models\Comment::class, 'commentable');
+    }
+
+    public function attachments()
+    {
+        return $this->morphMany(\App\Modules\ProjectManagement\Models\Attachment::class, 'attachable');
     }
 }

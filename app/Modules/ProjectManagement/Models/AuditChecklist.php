@@ -13,7 +13,7 @@ class AuditChecklist extends BaseModel
     protected $table = 'audit_checklists';
 
     protected $fillable = [
-        'organization_id', 'client_id', 'assigned_to', 'title',
+        'organization_id', 'client_id', 'project_id', 'asset_approval_id', 'assigned_to', 'title',
         'type', 'items', 'status', 'due_date',
     ];
 
@@ -25,6 +25,16 @@ class AuditChecklist extends BaseModel
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
+    }
+
+    public function assetApproval(): BelongsTo
+    {
+        return $this->belongsTo(AssetApproval::class);
     }
 
     public function assignee(): BelongsTo

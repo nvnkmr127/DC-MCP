@@ -25,6 +25,7 @@ class FeatureFlagController extends Controller
     {
         $data = $request->validate([
             'feature' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'organization_id' => 'nullable|exists:organizations,id',
             'is_enabled' => 'boolean',
         ]);

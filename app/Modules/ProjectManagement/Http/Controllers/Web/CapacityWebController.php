@@ -17,6 +17,11 @@ class CapacityWebController extends Controller
         $weekStart = now()->startOfWeek()->toDateString();
         $weekEnd = now()->endOfWeek()->toDateString();
 
+        $todayStandups = \App\Modules\Standup\Models\EodStandup::where('organization_id', $orgId)
+            ->whereDate('date', today())
+            ->get()
+            ->keyBy('user_id');
+
         $team = User::where('organization_id', $orgId)
             ->where('is_active', true)
             ->withCount([
@@ -42,12 +47,14 @@ class CapacityWebController extends Controller
             ->select('id', 'name', 'email')
             ->orderBy('name')
             ->get()
-            ->map(function($u) {
+            ->map(function($u) use ($todayStandups) {
                 $estimated = (float) $u->total_estimated_hours;
                 $logged = (float) $u->logged_hours_this_week;
                 // Standard 40h workweek for capacity
                 $capacity = 40;
                 $loadPercent = min(100, (int) round(($logged / $capacity) * 100));
+                
+                $standup = $todayStandups->get($u->id);
 
                 return [
                     'id'                     => $u->id,
@@ -61,6 +68,11 @@ class CapacityWebController extends Controller
                     'total_estimated_hours'  => $estimated,
                     'logged_hours_this_week' => $logged,
                     'load_percent'           => $loadPercent,
+                    'today_standup'          => $standup ? [
+                        'status' => $standup->status,
+                        'has_blockers' => !empty(trim((string)$standup->blockers)),
+                        'submitted_at' => $standup->submitted_at?->toTimeString(),
+                    ] : null,
                 ];
             });
 

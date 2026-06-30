@@ -147,14 +147,14 @@ export default function KanbanTab({ project, tasks: initialTasks }: Props) {
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
             >
-                <div className="flex gap-3 overflow-x-auto pb-4" style={{ height: 'calc(100vh - 18rem)' }}>
+                <div className="flex gap-4 sm:gap-3 overflow-x-auto pb-4 snap-x snap-mandatory sm:snap-none scroll-smooth" style={{ height: 'calc(100vh - 18rem)' }}>
                     {COLUMNS.map((col) => {
                         const colTasks = tasksByStatus[col] ?? [];
                         const topColor = COLUMN_TOP[col];
                         return (
                             <div
                                 key={col}
-                                className="flex flex-col w-[264px] shrink-0 bg-[#f0f1f3] rounded-xl overflow-hidden"
+                                className="flex flex-col w-[85vw] sm:w-[264px] shrink-0 bg-[#f0f1f3] rounded-xl overflow-hidden snap-center sm:snap-none"
                             >
                                 {/* Column header */}
                                 <div className="px-3 py-2.5 flex items-center justify-between">

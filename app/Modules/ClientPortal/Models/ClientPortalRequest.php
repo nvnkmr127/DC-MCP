@@ -37,4 +37,14 @@ class ClientPortalRequest extends BaseModel
     {
         return $this->belongsTo(Task::class);
     }
+
+    public function comments()
+    {
+        return $this->morphMany(\App\Modules\ProjectManagement\Models\Comment::class, 'commentable');
+    }
+
+    public function attachments()
+    {
+        return $this->morphMany(\App\Modules\ProjectManagement\Models\Attachment::class, 'attachable');
+    }
 }

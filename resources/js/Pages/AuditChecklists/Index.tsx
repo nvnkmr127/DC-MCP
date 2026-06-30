@@ -11,18 +11,20 @@ interface Checklist {
     id: string; title: string; type: string; status: string; due_date: string | null;
     items: CheckItem[];
     client: { id: string; name: string } | null;
+    project: { id: string; name: string } | null;
+    asset_approval: { id: string; title: string } | null;
 }
 interface Client { id: string; name: string; }
 interface User { id: string; name: string; }
-interface Props { checklists: Checklist[]; clients: Client[]; users: User[]; filters: Record<string, string>; }
+interface Props { checklists: Checklist[]; clients: Client[]; projects: { id: string; name: string }[]; assetApprovals: { id: string; title: string }[]; users: User[]; filters: Record<string, string>; }
 
 const TYPE_STYLES: Record<string, string> = {
     seo: 'bg-green-100 text-green-700', social: 'bg-pink-100 text-pink-700', ads: 'bg--100 text--800',
     content: 'bg-blue-100 text-blue-700', website: 'bg-violet-100 text-violet-700', general: 'bg-gray-100 text-gray-700',
 };
 
-function ChecklistModal({ clients, users, onClose }: { clients: Client[]; users: User[]; onClose: () => void }) {
-    const form = useForm({ title: '', type: 'general', client_id: '', assigned_to: '', due_date: '' });
+function ChecklistModal({ clients, projects, assetApprovals, users, onClose }: { clients: Client[]; projects: { id: string; name: string }[]; assetApprovals: { id: string; title: string }[]; users: User[]; onClose: () => void }) {
+    const form = useForm({ title: '', type: 'general', client_id: '', project_id: '', asset_approval_id: '', assigned_to: '', due_date: '' });
     const [items, setItems] = useState([{ label: '' }]);
 
     const submit = (e: React.FormEvent) => {
@@ -67,6 +69,22 @@ function ChecklistModal({ clients, users, onClose }: { clients: Client[]; users:
                             </select>
                         </div>
                         <div>
+                            <label className="text-xs text-gray-500 font-medium">Project</label>
+                            <select value={form.data.project_id} onChange={e => form.setData('project_id', e.target.value)}
+                                className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                                <option value="">No project</option>
+                                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-xs text-gray-500 font-medium">Asset Approval</label>
+                            <select value={form.data.asset_approval_id} onChange={e => form.setData('asset_approval_id', e.target.value)}
+                                className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                                <option value="">No asset</option>
+                                {assetApprovals.map(a => <option key={a.id} value={a.id}>{a.title}</option>)}
+                            </select>
+                        </div>
+                        <div>
                             <label className="text-xs text-gray-500 font-medium">Assigned To</label>
                             <select value={form.data.assigned_to} onChange={e => form.setData('assigned_to', e.target.value)}
                                 className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500">
@@ -105,7 +123,7 @@ function ChecklistModal({ clients, users, onClose }: { clients: Client[]; users:
     );
 }
 
-export default function AuditChecklistsIndex({ checklists, clients, users, filters }: Props) {
+export default function AuditChecklistsIndex({ checklists, clients, projects, assetApprovals, users, filters }: Props) {
     const [modalOpen, setModalOpen] = useState(false);
     const [expandedId, setExpandedId] = useState<string | null>(null);
     const [typeFilter, setTypeFilter] = useState(filters.type ?? '');
@@ -159,9 +177,12 @@ export default function AuditChecklistsIndex({ checklists, clients, users, filte
                                                 {cl.type}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-500">
-                                            {cl.client?.name ?? 'Internal'}
-                                            {cl.due_date ? ` · Due ${new Date(cl.due_date).toLocaleDateString('en-IN')}` : ''}
+                                        <p className="text-xs text-gray-500 flex flex-wrap items-center gap-1.5 mt-1">
+                                            {cl.client?.name && <span className="px-1.5 py-0.5 rounded bg-gray-100">{cl.client.name}</span>}
+                                            {cl.project?.name && <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">{cl.project.name}</span>}
+                                            {cl.asset_approval?.title && <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">{cl.asset_approval.title}</span>}
+                                            {!cl.client && !cl.project && !cl.asset_approval && <span>Internal</span>}
+                                            {cl.due_date && <span>· Due {new Date(cl.due_date).toLocaleDateString('en-IN')}</span>}
                                         </p>
                                         <div className="mt-2 flex items-center gap-2">
                                             <div className="flex-1 bg-gray-100 rounded-full h-1.5">
@@ -213,7 +234,7 @@ export default function AuditChecklistsIndex({ checklists, clients, users, filte
                     })}
                 </div>
             </div>
-            {modalOpen && <ChecklistModal clients={clients} users={users} onClose={() => setModalOpen(false)} />}
+            {modalOpen && <ChecklistModal clients={clients} projects={projects} assetApprovals={assetApprovals} users={users} onClose={() => setModalOpen(false)} />}
         </AppLayout>
     );
 }

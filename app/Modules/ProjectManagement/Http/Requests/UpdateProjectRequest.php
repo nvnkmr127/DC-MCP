@@ -24,6 +24,13 @@ class UpdateProjectRequest extends FormRequest
                     ->where('organization_id', $orgId)
                     ->whereNull('deleted_at'),
             ],
+            'goal_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('goals', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
             'name' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'type' => ['nullable', Rule::in([

@@ -11,6 +11,7 @@ class FeatureFlag extends Model
 
     protected $fillable = [
         'feature',
+        'description',
         'organization_id',
         'is_enabled',
     ];

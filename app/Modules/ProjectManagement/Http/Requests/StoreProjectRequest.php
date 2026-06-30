@@ -24,6 +24,13 @@ class StoreProjectRequest extends FormRequest
                     ->where('organization_id', $orgId)
                     ->whereNull('deleted_at'),
             ],
+            'goal_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('goals', 'id')
+                    ->where('organization_id', $orgId)
+                    ->whereNull('deleted_at'),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'type' => ['required', Rule::in([

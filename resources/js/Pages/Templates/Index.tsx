@@ -34,6 +34,8 @@ type RecurringRule = {
     priority: string;
     role_required: string | null;
     estimated_hours: number | null;
+    target_type: string;
+    target_template_id: string | null;
     is_active: boolean;
     last_spawned_at: string | null;
     next_spawn_at: string | null;
@@ -158,47 +160,6 @@ function ProjectTemplateModal({ onClose }: { onClose: () => void }) {
     );
 }
 
-function UseProjectTemplateModal({ template, clients, onClose }: { template: Template; clients: Client[]; onClose: () => void }) {
-    const form = useForm({ client_id: '', name: template.name, start_date: new Date().toISOString().slice(0, 10) });
-    return (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-3">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-[15px] font-bold text-gray-900">Use Template: {template.name}</h2>
-                    <Button onClick={onClose}><X size={16} className="text-gray-400" /></Button>
-                </div>
-                <form onSubmit={e => { e.preventDefault(); form.post(`/project-templates/${template.id}/create-project`, { onSuccess: onClose }); }} className="space-y-3">
-                    <div>
-                        <label className="text-xs text-gray-500 font-medium">Project Name *</label>
-                        <input type="text" value={form.data.name} onChange={e => form.setData('name', e.target.value)}
-                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
-                    </div>
-                    <div>
-                        <label className="text-xs text-gray-500 font-medium">Client *</label>
-                        <select value={form.data.client_id} onChange={e => form.setData('client_id', e.target.value)}
-                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500">
-                            <option value="">Select client…</option>
-                            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="text-xs text-gray-500 font-medium">Start Date *</label>
-                        <input type="date" value={form.data.start_date} onChange={e => form.setData('start_date', e.target.value)}
-                            className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
-                    </div>
-                    <div className="flex justify-end gap-2 pt-1">
-                        <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
-                        <Button type="submit" disabled={form.processing || !form.data.client_id || !form.data.name}
-                            className="disabled:opacity-50" variant="ghost" >
-                            {form.processing ? 'Creating…' : 'Create Project'}
-                        </Button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-}
-
 // ---------------------------------------------------------
 // Recurring Tasks Components
 // ---------------------------------------------------------
@@ -216,7 +177,7 @@ const PRIORITY_STYLES: Record<string, string> = {
     'critical': 'bg-rose-100 text-rose-800 ring-1 ring-inset ring-rose-300',
 };
 
-function AddRecurringRuleModal({ onClose }: { onClose: () => void }) {
+function AddRecurringRuleModal({ templates, onClose }: { templates: Template[]; onClose: () => void }) {
     const form = useForm({
         title: '',
         description: '',
@@ -224,6 +185,8 @@ function AddRecurringRuleModal({ onClose }: { onClose: () => void }) {
         priority: 'medium',
         role_required: '',
         estimated_hours: '',
+        target_type: 'task',
+        target_template_id: '',
     });
 
     return (
@@ -281,6 +244,27 @@ function AddRecurringRuleModal({ onClose }: { onClose: () => void }) {
                                 onChange={e => form.setData('estimated_hours', e.target.value)}
                                 className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
                         </div>
+                        <div>
+                            <label className="text-xs text-gray-500 font-medium">Action to spawn *</label>
+                            <select value={form.data.target_type} onChange={e => form.setData('target_type', e.target.value)}
+                                className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                                <option value="task">Single Task</option>
+                                <option value="project">Project (from template)</option>
+                                <option value="audit_checklist">Audit Checklist</option>
+                            </select>
+                        </div>
+                        {form.data.target_type === 'project' && (
+                            <div className="col-span-2">
+                                <label className="text-xs text-gray-500 font-medium">Project Template *</label>
+                                <select value={form.data.target_template_id} onChange={e => form.setData('target_template_id', e.target.value)}
+                                    className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" required>
+                                    <option value="">Select template…</option>
+                                    {templates.map(t => (
+                                        <option key={t.id} value={t.id}>{t.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                         <Button type="button" onClick={onClose} variant="ghost" >Cancel</Button>
@@ -304,7 +288,6 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
     
     // Modals state
     const [newTemplateOpen, setNewTemplateOpen] = useState(false);
-    const [useTemplate, setUseTemplate] = useState<Template | null>(null);
     const [newRuleOpen, setNewRuleOpen] = useState(false);
     
     const confirm = useConfirm();
@@ -414,7 +397,7 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                                     </div>
                                 </div>
                                 
-                                <Button onClick={() => setUseTemplate(t)}
+                                <Button onClick={() => router.get('/projects/create', { project_template_id: t.id })}
                                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200 hover:border-emerald-600 transition-colors text-sm font-semibold rounded-lg">
                                     <Play size={16} /> Use Template
                                 </Button>
@@ -442,6 +425,11 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
                                             <span className={cn('text-xs px-2.5 py-1 rounded-md font-semibold border', FREQ_STYLES[rule.frequency])}>
                                                 {rule.frequency.toUpperCase()}
                                             </span>
+                                            {rule.target_type && rule.target_type !== 'task' && (
+                                                <span className="text-xs px-2.5 py-1 rounded-md font-medium border border-indigo-200 bg-indigo-50 text-indigo-700">
+                                                    {rule.target_type === 'project' ? 'PROJECT' : 'CHECKLIST'}
+                                                </span>
+                                            )}
                                             <span className={cn('text-xs px-2.5 py-1 rounded-md font-medium border border-transparent', PRIORITY_STYLES[rule.priority])}>
                                                 {rule.priority}
                                             </span>
@@ -506,8 +494,7 @@ export default function TemplatesIndex({ templates, rules, clients, team }: Prop
 
             {/* Modals */}
             {newTemplateOpen && <ProjectTemplateModal onClose={() => setNewTemplateOpen(false)} />}
-            {useTemplate && <UseProjectTemplateModal template={useTemplate} clients={clients} onClose={() => setUseTemplate(null)} />}
-            {newRuleOpen && <AddRecurringRuleModal onClose={() => setNewRuleOpen(false)} />}
+            {newRuleOpen && <AddRecurringRuleModal templates={templates} onClose={() => setNewRuleOpen(false)} />}
         </AppLayout>
     );
 }

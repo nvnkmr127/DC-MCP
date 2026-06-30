@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/Components/ui/Button';
 import { Head, useForm, router } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import SettingsLayout from '@/Layouts/SettingsLayout';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { cn } from '@/lib/utils';
 import { UserPlus, Users } from 'lucide-react';
@@ -46,15 +46,8 @@ export default function TeamSettings({ members, roles }: Props) {
     }
 
     return (
-        <AppLayout title="Team">
+        <SettingsLayout title="Team" breadcrumbs={[{ label: 'Team' }]}>
             <Head title="Team" />
-
-            <div className="mb-6">
-                <Breadcrumbs items={[
-                    { label: 'Settings', href: '/settings' },
-                    { label: 'Team' }
-                ]} />
-            </div>
 
             <div className="flex items-center justify-between mb-6">
                 <p className="text-sm text-gray-500">{members.length} team member{members.length !== 1 ? 's' : ''}</p>
@@ -173,6 +166,6 @@ export default function TeamSettings({ members, roles }: Props) {
                     </Table>
                 )}
             </div>
-        </AppLayout>
+        </SettingsLayout>
     );
 }

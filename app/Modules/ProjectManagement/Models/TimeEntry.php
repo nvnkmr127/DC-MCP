@@ -22,6 +22,7 @@ class TimeEntry extends BaseModel
         'logged_date',
         'is_billable',
         'timer_started_at',
+        'status',
     ];
 
     protected $casts = [

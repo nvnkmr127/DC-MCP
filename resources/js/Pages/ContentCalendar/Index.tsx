@@ -32,6 +32,7 @@ interface ContentItem {
     project: { id: string; name: string } | null;
     assignee: { id: string; name: string } | null;
     task_id: string | null;
+    analytics_data?: Record<string, any> | null;
 }
 
 interface Props {
@@ -79,6 +80,7 @@ function CreateModal({ clients, projects, onClose }: {
         platform:   '' as Platform | '',
         status:     'idea' as Status,
         due_date:   '',
+        scheduled_at:'',
         tags:       [] as string[],
     });
 
@@ -145,6 +147,12 @@ function CreateModal({ clients, projects, onClose }: {
                             <Label>Due Date</Label>
                             <Input type="date" value={data.due_date} onChange={e => setData('due_date', e.target.value)} />
                         </div>
+                        <div>
+                            <Label>Scheduled At</Label>
+                            <Input type="datetime-local" value={data.scheduled_at} onChange={e => setData('scheduled_at', e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
                         <div>
                             <Label>Status</Label>
                             <select className="w-full text-sm border rounded-xl p-2 border-gray-200 bg-white" value={data.status} onChange={e => setData('status', e.target.value as Status)}>
@@ -227,6 +235,17 @@ function ContentCard({ item }: { item: ContentItem }) {
                             )}
                         </div>
                     )}
+                    
+                    {item.status === 'published' && item.analytics_data && Object.keys(item.analytics_data).length > 0 && (
+                        <div className="mt-2 p-2 bg-gray-50 rounded-lg border border-gray-100 flex items-center justify-start gap-4">
+                            {Object.entries(item.analytics_data).map(([k, v]) => (
+                                <div key={k}>
+                                    <p className="text-[10px] text-gray-400 capitalize">{k.replace('_', ' ')}</p>
+                                    <p className="text-xs font-semibold text-gray-700">{v as string}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
                 <Button onClick={() => setOpen(o => !o)} className="p-1 text-gray-400 hover:text-gray-600">
                     <ChevronDown className={cn('w-4 h-4 transition-transform', open && 'rotate-180')} />
@@ -237,11 +256,20 @@ function ContentCard({ item }: { item: ContentItem }) {
                 <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
                     {item.body && <p className="text-xs text-gray-600 leading-relaxed">{item.body}</p>}
                     <div className="flex gap-2 flex-wrap">
+                        {item.status === 'in_review' && (
+                            <Button
+                                onClick={() => router.patch(`/content/${item.id}`, { status: 'approved' }, { preserveScroll: true })}
+                                className="flex items-center gap-1 px-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                                size="sm" variant="ghost"
+                            >
+                                <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Approve
+                            </Button>
+                        )}
                         {!['published', 'cancelled'].includes(item.status) && (
                             <Button
                                 onClick={advance}
                                 className="flex items-center gap-1 px-2.5" 
-                            size="sm" >
+                            size="sm" variant="ghost" >
                                 <ArrowRight className="w-3 h-3" />
                                 Move to {STATUS_FLOW[STATUS_FLOW.indexOf(item.status) + 1]?.replace('_', ' ')}
                             </Button>

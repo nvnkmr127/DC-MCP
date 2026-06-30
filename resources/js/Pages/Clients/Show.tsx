@@ -8,7 +8,8 @@ import { useConfirm } from '@/hooks/useConfirm';
 import { cn, formatDate } from '@/lib/utils';
 import type { Client, Project } from '@/types';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
-import { ArrowLeft, Edit, Trash2, Globe, Mail, Phone, Building2, ExternalLink, Plus, X, MessageSquare, Phone as PhoneIcon, AtSign, Star, Sparkles, Send, ChevronDown, Smile } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Globe, Mail, Phone, Building2, ExternalLink, Plus, X, MessageSquare, Phone as PhoneIcon, AtSign, Star, Sparkles, Send, ChevronDown, Smile, CheckCircle2, FolderKanban, FileText, CheckSquare } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
 
 interface Metric { key: string; value: string; }
 
@@ -229,11 +230,13 @@ function ScoreModal({ clientId, current, onClose }: { clientId: string; current:
 }
 
 export default function ClientShow({ client, communications, proposals, sows, canReview, reports = [], surveys = [], invoices = [] }: any) {
-    const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'comms' | 'documents' | 'invoicing' | 'surveys'>('overview');
-    const [documentSubTab, setDocumentSubTab] = useState<'proposals'|'sows'|'reports'>('proposals');
+    const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'activity' | 'documents' | 'finance' | 'reports' | 'surveys'>('overview');
+    const [documentSubTab, setDocumentSubTab] = useState<'proposals'|'sows'>('proposals');
     const [commOpen, setCommOpen] = useState(false);
     const [scoreOpen, setScoreOpen] = useState(false);
     const [reportModalOpen, setReportModalOpen] = useState(false);
+    const { flash } = usePage<any>().props;
+    const [wizardOpen, setWizardOpen] = useState(flash?.show_wizard || false);
     const [expandedReportId, setExpandedReportId] = useState<string | null>(null);
     const confirm = useConfirm();
     const tier   = TIER_CONFIG[client.tier]   ?? TIER_CONFIG.standard;
@@ -255,6 +258,68 @@ export default function ClientShow({ client, communications, proposals, sows, ca
     return (
         <AppLayout title={client.name}>
             <Head title={client.name} />
+
+            {wizardOpen && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="p-8">
+                            <div className="flex justify-between items-start mb-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                                        <CheckCircle2 className="text-emerald-500" size={28} /> 
+                                        Client Created Successfully!
+                                    </h2>
+                                    <p className="text-[14px] text-gray-500 mt-2">What would you like to do next for <span className="font-semibold text-gray-800">{client.name}</span>?</p>
+                                </div>
+                                <button onClick={() => setWizardOpen(false)} className="text-gray-400 hover:bg-gray-100 hover:text-gray-600 rounded-full p-2 transition-colors">
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+                                <Link href={`/projects/create?client_id=${client.id}`} 
+                                    className="flex flex-col items-center justify-center p-6 bg-white border-2 border-gray-100 rounded-xl hover:border-indigo-500 hover:shadow-lg transition-all group text-center h-full">
+                                    <div className="w-14 h-14 rounded-full bg-indigo-50 flex items-center justify-center mb-4 group-hover:bg-indigo-500 transition-colors group-hover:scale-110 duration-200">
+                                        <FolderKanban size={28} className="text-indigo-600 group-hover:text-white transition-colors" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-gray-900 mb-1.5">Start a Project</h3>
+                                    <p className="text-[12px] text-gray-500 leading-relaxed px-2">Create a new project workspace from scratch or using a template.</p>
+                                </Link>
+
+                                <button onClick={() => {
+                                    setWizardOpen(false);
+                                    setActiveTab('documents');
+                                    setDocumentSubTab('proposals');
+                                }} 
+                                    className="flex flex-col items-center justify-center p-6 bg-white border-2 border-gray-100 rounded-xl hover:border-violet-500 hover:shadow-lg transition-all group text-center h-full">
+                                    <div className="w-14 h-14 rounded-full bg-violet-50 flex items-center justify-center mb-4 group-hover:bg-violet-500 transition-colors group-hover:scale-110 duration-200">
+                                        <FileText size={28} className="text-violet-600 group-hover:text-white transition-colors" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-gray-900 mb-1.5">Create Proposal</h3>
+                                    <p className="text-[12px] text-gray-500 leading-relaxed px-2">Draft and send a new proposal or estimate to the client.</p>
+                                </button>
+
+                                <button onClick={() => {
+                                    setWizardOpen(false);
+                                    router.post('/onboarding', { client_id: client.id });
+                                }} 
+                                    className="flex flex-col items-center justify-center p-6 bg-white border-2 border-gray-100 rounded-xl hover:border-emerald-500 hover:shadow-lg transition-all group text-center h-full">
+                                    <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mb-4 group-hover:bg-emerald-500 transition-colors group-hover:scale-110 duration-200">
+                                        <CheckSquare size={28} className="text-emerald-600 group-hover:text-white transition-colors" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-gray-900 mb-1.5">Setup Onboarding</h3>
+                                    <p className="text-[12px] text-gray-500 leading-relaxed px-2">Initialize the client onboarding checklist and structured flow.</p>
+                                </button>
+                            </div>
+                        </div>
+                        <div className="bg-gray-50 border-t border-gray-100 p-4 flex justify-end">
+                            <Button onClick={() => setWizardOpen(false)} variant="outline" className="text-sm">
+                                I'll do this later
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="max-w-4xl mx-auto">
                 {/* Breadcrumb */}
@@ -353,16 +418,17 @@ export default function ClientShow({ client, communications, proposals, sows, ca
 
                 {/* Tab bar */}
                 <div className="flex gap-1 mb-4 overflow-x-auto pb-1">
-                    {(['overview', 'projects', 'documents', 'invoicing', 'surveys', 'comms'] as const).map(tab => (
-                        <Button key={tab} onClick={() => setActiveTab(tab)}
+                    {(['overview', 'projects', 'documents', 'reports', 'finance', 'activity', 'surveys'] as const).map(tab => (
+                        <Button key={tab} onClick={() => setActiveTab(tab as any)}
                             className={cn('px-4 py-1.5 text-[13px] font-medium rounded-lg transition-colors whitespace-nowrap',
                                 activeTab === tab ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:bg-gray-100'
                             )}>
                             {tab === 'overview' ? 'Overview' : 
                              tab === 'projects' ? 'Projects' : 
                              tab === 'documents' ? 'Documents' : 
-                             tab === 'invoicing' ? 'Invoicing' : 
-                             tab === 'surveys' ? `NPS Feedback (${surveys.filter((s:any) => s.nps_score !== null).length})` : 
+                             tab === 'reports' ? 'Reports' : 
+                             tab === 'finance' ? 'Finance' : 
+                             tab === 'surveys' ? `NPS Feedback (${surveys.filter((s:any) => s.nps_score !== null).length})` :
                              `Activity (${communications.length})`}
                         </Button>
                     ))}
@@ -446,11 +512,13 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                         <div className="flex space-x-4 mb-4">
                             <Button onClick={() => setDocumentSubTab('proposals')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'proposals' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Proposals</Button>
                             <Button onClick={() => setDocumentSubTab('sows')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'sows' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Statements of Work</Button>
-                            <Button onClick={() => setDocumentSubTab('reports')} className={cn("px-4 py-2 text-sm rounded-md", documentSubTab === 'reports' ? 'bg-indigo-50 text-indigo-700 font-medium' : 'text-gray-600 hover:bg-gray-50')}>Reports & Updates</Button>
                         </div>
                         {documentSubTab === 'proposals' && <ProposalsTab proposals={proposals} stats={{}} clients={[]} />}
                         {documentSubTab === 'sows' && <SowTab sows={sows} clients={[]} retainers={[]} canReview={canReview} />}
-                        {documentSubTab === 'reports' && (
+                    </div>
+                )}
+                
+                {activeTab === 'reports' && (
                             <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                                 <div className="px-5 py-3.5 border-b border-gray-50 flex items-center justify-between">
                                     <h3 className="text-[13px] font-semibold text-gray-900">Monthly Updates / Reports</h3>
@@ -547,10 +615,8 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                                 )}
                             </div>
                         )}
-                    </div>
-                )}
 
-                {activeTab === 'comms' && (
+                {activeTab === 'activity' && (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                         <div className="px-5 py-3.5 border-b border-gray-50 flex items-center justify-between">
                             <h3 className="text-[13px] font-semibold text-gray-900">Communication Log</h3>
@@ -612,7 +678,7 @@ export default function ClientShow({ client, communications, proposals, sows, ca
                     </div>
                 )}
 
-                {activeTab === 'invoicing' && (
+                {activeTab === 'finance' && (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                         <div className="p-4 border-b border-gray-50">
                             <h3 className="text-[13px] font-semibold text-gray-900">Invoices</h3>

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Modules\Auth\Models\User;
 use App\Modules\ProjectManagement\Models\AuditChecklist;
 use App\Modules\ProjectManagement\Models\Client;
+use App\Modules\ProjectManagement\Models\Project;
+use App\Modules\ProjectManagement\Models\AssetApproval;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -18,7 +20,7 @@ class AuditChecklistWebController extends Controller
     {
         $orgId = $request->user()->organization_id;
 
-        $query = AuditChecklist::where('organization_id', $orgId)->with('client:id,name,company');
+        $query = AuditChecklist::where('organization_id', $orgId)->with(['client:id,name,company', 'project:id,name', 'assetApproval:id,title']);
 
         if ($request->filled('type')) {
             $query->where('type', $request->type);
@@ -35,14 +37,20 @@ class AuditChecklistWebController extends Controller
             'due_date'    => $c->due_date?->toDateString(),
             'items'       => $c->items ?? [],
             'client'      => $c->client ? ['id' => $c->client->id, 'name' => $c->client->company ?? $c->client->name] : null,
+            'project'     => $c->project ? ['id' => $c->project->id, 'name' => $c->project->name] : null,
+            'asset_approval' => $c->assetApproval ? ['id' => $c->assetApproval->id, 'title' => $c->assetApproval->title] : null,
         ]);
 
         $clients = Client::where('organization_id', $orgId)->select('id', 'name', 'company')->get();
+        $projects = Project::where('organization_id', $orgId)->select('id', 'name')->get();
+        $assetApprovals = AssetApproval::where('organization_id', $orgId)->select('id', 'title')->get();
         $users   = User::where('organization_id', $orgId)->select('id', 'name')->get();
 
         return Inertia::render('AuditChecklists/Index', [
             'checklists' => $checklists,
             'clients'    => $clients,
+            'projects'   => $projects,
+            'assetApprovals' => $assetApprovals,
             'users'      => $users,
             'filters'    => $request->only(['type', 'status']),
         ]);
@@ -60,6 +68,16 @@ class AuditChecklistWebController extends Controller
                 Rule::exists('clients', 'id')
                     ->where('organization_id', $orgId)
                     ->whereNull('deleted_at'),
+            ],
+            'project_id'   => [
+                'nullable',
+                'uuid',
+                Rule::exists('projects', 'id')->where('organization_id', $orgId)->whereNull('deleted_at'),
+            ],
+            'asset_approval_id' => [
+                'nullable',
+                'uuid',
+                Rule::exists('asset_approvals', 'id')->where('organization_id', $orgId)->whereNull('deleted_at'),
             ],
             'assigned_to' => [
                 'nullable',
@@ -84,6 +102,8 @@ class AuditChecklistWebController extends Controller
             'title'           => $validated['title'],
             'type'            => $validated['type'],
             'client_id'       => $validated['client_id'] ?? null,
+            'project_id'      => $validated['project_id'] ?? null,
+            'asset_approval_id'=> $validated['asset_approval_id'] ?? null,
             'assigned_to'     => $validated['assigned_to'] ?? null,
             'due_date'        => $validated['due_date'] ?? null,
         ]);

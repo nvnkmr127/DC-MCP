@@ -20,7 +20,9 @@ class GoalWebController extends Controller
 
         $goals = Goal::where('organization_id', $orgId)
             ->where('year', $year)
-            ->with('owner:id,name')
+            ->with(['owner:id,name', 'projects' => function ($q) {
+                $q->select('id', 'goal_id', 'name', 'status')->withCount(['tasks', 'tasks as completed_tasks_count' => fn($q) => $q->where('status', 'done')]);
+            }])
             ->orderBy('period')
             ->get()
             ->map(fn($g) => [
@@ -33,6 +35,12 @@ class GoalWebController extends Controller
                 'progress'    => $g->progress,
                 'key_results' => $g->key_results ?? [],
                 'owner'       => $g->owner ? ['id' => $g->owner->id, 'name' => $g->owner->name] : null,
+                'projects'    => $g->projects->map(fn($p) => [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'status' => $p->status,
+                    'completion_pct' => $p->completionPct($p->tasks_count, $p->completed_tasks_count),
+                ]),
             ]);
 
         $byPeriod = $goals->groupBy('period');

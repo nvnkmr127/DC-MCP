@@ -64,6 +64,16 @@ interface Props {
     schedules: Schedule[];
 }
 
+const TEMPLATES = [
+    { id: 'seo_report', name: 'SEO Performance Report', desc: 'Organic traffic, technical health, keywords, and backlink audit stats.' },
+    { id: 'ads_report', name: 'Paid Ads Performance', desc: 'Meta Ads and search engine ad spends, conversions, and ROAS audit.' },
+    { id: 'social_report', name: 'Social Media Growth', desc: 'Engagement rates, follower counts, and top performing content.' },
+    { id: 'sprint_report', name: 'Development Sprint Review', desc: 'Sprint goals, team velocity, task completions, and bottlenecks.' },
+    { id: 'full_service', name: 'Full Service Report', desc: 'Unified multi-channel report combining SEO, paid media, and social.' },
+    { id: 'financial_health', name: 'Financial Health Report', desc: 'P&L, payroll, margins, and revenue goals tracking.' },
+    { id: 'monthly_summary', name: 'Monthly Executive Summary', desc: 'High-level aggregation of all operations, revenue, and major milestones.' }
+];
+
 const PIE_COLORS = ['#6366f1', '#a855f7', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
 const QUICK_RANGES = [
     { label: 'Last 7 days',  days: 7 },
@@ -72,7 +82,7 @@ const QUICK_RANGES = [
 ];
 
 export default function ReportsIndex({ data, filters, reports, schedules }: Props) {
-    const [activeTab, setActiveTab] = useState<'analytics' | 'pdfs' | 'schedules'>('analytics');
+    const [activeTab, setActiveTab] = useState<'analytics' | 'templates' | 'pdfs' | 'schedules'>('analytics');
     const [from, setFrom] = useState(filters.from);
     const [to, setTo]     = useState(filters.to);
     const [emailModalReport, setEmailModalReport] = useState<Report | null>(null);
@@ -180,6 +190,7 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
             <div className="flex gap-2 border-b border-gray-100/60 pb-px mb-6">
                 {[
                     { id: 'analytics', label: 'Performance Analytics', icon: BarChart3 },
+                    { id: 'templates', label: 'Templates', icon: FileText },
                     { id: 'pdfs', label: 'Generated PDF Reports', icon: FileText },
                     { id: 'schedules', label: 'Report Schedules', icon: Calendar },
                 ].map(t => (
@@ -296,6 +307,27 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                 </>
             )}
 
+            {/* TAB CONTENT: TEMPLATES */}
+            {activeTab === 'templates' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {TEMPLATES.map(t => (
+                        <Card key={t.id} className="p-6 hover:shadow-md transition-shadow group flex flex-col">
+                            <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <FileText size={24} />
+                            </div>
+                            <h3 className="text-[15px] font-bold text-gray-900 mb-2">{t.name}</h3>
+                            <p className="text-[13px] text-gray-500 mb-6 flex-grow">{t.desc}</p>
+                            <Link
+                                href={`/internal-reports/create?template=${t.id}`}
+                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-900 text-xs font-bold rounded-xl transition-colors"
+                            >
+                                Use Template
+                            </Link>
+                        </Card>
+                    ))}
+                </div>
+            )}
+
             {/* TAB CONTENT: PDF REPORTS */}
             {activeTab === 'pdfs' && (
                 <div className="bg-white border border-gray-100 rounded-2xl shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden">
@@ -305,8 +337,8 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                 <TableRow className="border-b border-gray-100 bg-gray-50/70">
                                     {compareMode && <TableHead className="px-5 py-3 w-10 text-center"></TableHead>}
                                     <TableHead className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Report Title</TableHead>
-                                    <TableHead className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Period</TableHead>
-                                    <TableHead className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Project / Client</TableHead>
+                                    <TableHead className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider hidden md:table-cell">Period</TableHead>
+                                    <TableHead className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider hidden md:table-cell">Project / Client</TableHead>
                                     <TableHead className="px-5 py-3 text-left font-bold text-gray-400 uppercase tracking-wider">Status</TableHead>
                                     {!compareMode && <TableHead className="px-5 py-3 text-right font-bold text-gray-400 uppercase tracking-wider">Actions</TableHead>}
                                 </TableRow>
@@ -351,10 +383,10 @@ export default function ReportsIndex({ data, filters, reports, schedules }: Prop
                                                 <div className="text-sm font-bold text-gray-900">{rep.title}</div>
                                                 <div className="text-[10px] uppercase font-bold tracking-wider text-gray-400 mt-0.5">{rep.template.replace('_', ' ')}</div>
                                             </TableCell>
-                                            <TableCell className="px-5 py-4 text-xs font-semibold text-gray-500">
+                                            <TableCell className="px-5 py-4 text-xs font-semibold text-gray-500 hidden md:table-cell">
                                                 {rep.date_from} — {rep.date_to}
                                             </TableCell>
-                                            <TableCell className="px-5 py-4">
+                                            <TableCell className="px-5 py-4 hidden md:table-cell">
                                                 {rep.project ? (
                                                     <div className="text-xs font-bold text-gray-800">{rep.project.name}</div>
                                                 ) : rep.client ? (

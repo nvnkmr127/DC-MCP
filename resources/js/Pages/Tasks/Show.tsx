@@ -334,6 +334,24 @@ export default function TaskShow({ task, projectTasks = [] }: Props) {
 
                     {/* Sidebar */}
                     <div className="space-y-4">
+                        {task.project_id && (
+                            <div className="bg-indigo-50/50 rounded-xl border border-indigo-100 p-4">
+                                <h3 className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider mb-2">Project Context</h3>
+                                <Link href={`/projects/${task.project_id}`} className="block group">
+                                    <div className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                        {task.project?.name ?? 'Project'}
+                                    </div>
+                                    {task.project?.client && (
+                                        <div className="text-xs text-gray-500 mt-0.5 group-hover:text-indigo-500 transition-colors">
+                                            {task.project.client.name}
+                                        </div>
+                                    )}
+                                    <div className="text-xs font-medium text-indigo-600 mt-2 flex items-center gap-1 group-hover:underline">
+                                        View Project <span aria-hidden="true">&rarr;</span>
+                                    </div>
+                                </Link>
+                            </div>
+                        )}
                         <div className="bg-white rounded-xl border border-gray-200 p-4">
                             <h3 className="text-sm font-semibold text-gray-900 mb-3">Details</h3>
                             <dl className="space-y-2.5 text-sm">

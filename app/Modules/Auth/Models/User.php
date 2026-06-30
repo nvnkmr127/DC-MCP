@@ -126,6 +126,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get time entries for this user.
+     */
+    public function timeEntries(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Modules\ProjectManagement\Models\TimeEntry::class, 'user_id');
+    }
+
+    /**
      * Check if the user has any of the specified roles.
      *
      * @param array|string $roles

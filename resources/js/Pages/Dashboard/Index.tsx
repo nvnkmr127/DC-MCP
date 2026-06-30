@@ -4,7 +4,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { formatHours, timeAgo, getInitials, cn } from '@/lib/utils';
 import {
     CheckSquare, Clock, AlertTriangle, TrendingUp, TrendingDown,
-    FolderKanban, Users, ArrowRight, Zap, Minus, LayoutGrid, Edit3, Save, Plus, X, RefreshCw, Share2, Printer, Calendar, FileCheck, CheckCircle2
+    FolderKanban, Users, ArrowRight, Zap, Minus, LayoutGrid, Edit3, Save, Plus, X, RefreshCw, Share2, Printer, Calendar, FileCheck, CheckCircle2, ChevronDown, ChevronUp
 } from 'lucide-react';
 import {
     AreaChart, Area, BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
@@ -47,17 +47,31 @@ interface Props {
     overdue_tasks_list?: Array<{ id: string; title: string; due_date: string; status: string; project?: { name: string }; assignee?: { name: string } }>;
     today_calendar?: Array<{ id: string; title: string; date: string; status: string; priority: string; type: string; project?: { name: string }; url: string }>;
     pending_approvals?: Array<{ id: string; title: string; status: string; project?: { id: string; name: string }; client?: { name: string }; submitter?: { name: string }; created_at: string }>;
+    pending_leaves?: Array<{ id: string; user_name: string; type: string; from_date: string; to_date: string; days: number; reason: string; }>;
+    my_active_tasks_list?: Array<{ id: string; title: string; due_date: string; status: string; project?: { name: string }; }>;
 }
 
 const PIE_COLORS = ['#6366f1', '#a855f7', '#ec4899', '#3b82f6', '#10b981', '#f59e0b'];
 
-export default function DashboardIndex({ stats, briefing, setup_checklist, overdue_tasks_list = [], today_calendar = [], pending_approvals = [] }: Props) {
+export default function DashboardIndex({ stats, briefing, setup_checklist, overdue_tasks_list = [], today_calendar = [], pending_approvals = [], pending_leaves = [], my_active_tasks_list = [] }: Props) {
     const { data: dashboards, isLoading: isLoadingConfigs } = useDashboardsQuery();
     const [editMode, setEditMode] = useState(false);
     const [localLayout, setLocalLayout] = useState<Widget[]>([]);
     const [activeDb, setActiveDb] = useState<DashboardConfig | null>(null);
     const [rangePreset, setRangePreset] = useState('last_30_days');
     const [shareModalOpen, setShareModalOpen] = useState(false);
+
+    const [isChecklistCollapsed, setIsChecklistCollapsed] = useState(false);
+    const [isChecklistDismissed, setIsChecklistDismissed] = useState(false);
+
+    useEffect(() => {
+        setIsChecklistDismissed(localStorage.getItem('hideSetup') === 'true');
+    }, []);
+
+    const handleDismissChecklist = () => {
+        setIsChecklistDismissed(true);
+        localStorage.setItem('hideSetup', 'true');
+    };
 
     const getDateRange = (range: string) => {
         const today = new Date();
@@ -260,38 +274,50 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
             </div>
 
             {/* Setup Checklist / Empty State CTA */}
-            {setup_checklist && setup_checklist.some(i => !i.done) && (
+            {setup_checklist && setup_checklist.length > 0 && !isChecklistDismissed && (
                 <div className="mb-8 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-6 shadow-sm print:hidden">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-bold text-gray-900 tracking-tight flex items-center">
-                            <CheckSquare className="mr-2 text-indigo-600" size={20} />
-                            Setup Checklist
-                        </h2>
-                        <span className="text-sm font-semibold text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full">
-                            {setup_checklist.filter(i => i.done).length} of {setup_checklist.length} steps complete
-                        </span>
-                    </div>
-                    <Card className="overflow-hidden">
-                        <div className="divide-y divide-gray-50">
-                            {setup_checklist.map((item, idx) => (
-                                <div key={item.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className={cn("w-6 h-6 rounded-full flex items-center justify-center shrink-0 border", item.done ? "bg-emerald-500 border-emerald-500 text-white" : "bg-gray-100 border-gray-300 text-transparent")}>
-                                            {item.done && <CheckSquare size={12} className="text-white" />}
-                                        </div>
-                                        <span className={cn("text-sm font-medium", item.done ? "text-gray-400 line-through" : "text-gray-900")}>
-                                            {item.title}
-                                        </span>
-                                    </div>
-                                    {!item.done && item.href && (
-                                        <Link href={item.href} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
-                                            Complete task
-                                        </Link>
-                                    )}
-                                </div>
-                            ))}
+                        <div className="flex items-center gap-4">
+                            <h2 className="text-lg font-bold text-gray-900 tracking-tight flex items-center">
+                                <CheckSquare className="mr-2 text-indigo-600" size={20} />
+                                Setup Checklist
+                            </h2>
+                            <span className="text-xs font-semibold text-indigo-700 bg-indigo-100 px-2.5 py-1 rounded-full">
+                                {setup_checklist.filter(i => i.done).length} of {setup_checklist.length} completed
+                            </span>
                         </div>
-                    </Card>
+                        <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => setIsChecklistCollapsed(!isChecklistCollapsed)} className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100 h-8 w-8 p-0">
+                                {isChecklistCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={handleDismissChecklist} className="text-indigo-600 hover:text-indigo-800 hover:bg-indigo-100 h-8 w-8 p-0">
+                                <X size={18} />
+                            </Button>
+                        </div>
+                    </div>
+                    {!isChecklistCollapsed && (
+                        <Card className="overflow-hidden">
+                            <div className="divide-y divide-gray-50">
+                                {setup_checklist.map((item, idx) => (
+                                    <div key={item.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className={cn("w-6 h-6 rounded-full flex items-center justify-center shrink-0 border", item.done ? "bg-emerald-500 border-emerald-500 text-white" : "bg-gray-100 border-gray-300 text-transparent")}>
+                                                {item.done && <CheckSquare size={12} className="text-white" />}
+                                            </div>
+                                            <span className={cn("text-sm font-medium", item.done ? "text-gray-400 line-through" : "text-gray-900")}>
+                                                {item.title}
+                                            </span>
+                                        </div>
+                                        {!item.done && item.href && (
+                                            <Link href={item.href} className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+                                                Complete task
+                                            </Link>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
+                    )}
                 </div>
             )}
 
@@ -428,26 +454,51 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                 /* Fallback clean static dashboard layout if config not present */
                 <>
                     {/* KPI Cards */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mb-6">
-                        {[
-                            { label: 'Active Tasks', value: stats.my_active_tasks, icon: CheckSquare, color: 'text-indigo-600', bg: 'bg-indigo-50/50', border: 'border-indigo-100/60' },
-                            { label: 'Overdue Tasks', value: stats.my_overdue_tasks, icon: AlertTriangle, color: 'text-rose-600', bg: 'bg-rose-50/50', border: 'border-rose-100/60', urgent: stats.my_overdue_tasks > 0 },
-                            { label: 'Hours Tracked', value: `${stats.my_hours_this_week}h`, icon: Clock, color: 'text-sky-600', bg: 'bg-sky-50/50', border: 'border-sky-100/60' },
-                            { label: 'Active Campaigns', value: stats.active_projects, icon: FolderKanban, color: 'text-emerald-600', bg: 'bg-emerald-50/50', border: 'border-emerald-100/60' }
-                        ].map((kpi) => {
-                            const Icon = kpi.icon;
-                            return (
-                                <Card key={kpi.label} className={cn("p-6 transition-all duration-300 hover:-translate-y-0.5", kpi.urgent ? "border-rose-100 hover:border-rose-200" : "hover:border-gray-200")}>
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", kpi.bg)}>
-                                            <Icon size={16} className={kpi.color} />
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 mb-6">
+                                    {/* Hero Metrics */}
+                                    <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                        {[
+                                            { label: 'Active Tasks', value: stats.my_active_tasks, icon: CheckSquare, color: 'text-indigo-600', bg: 'bg-indigo-50/50' },
+                                            { label: 'Overdue Tasks', value: stats.my_overdue_tasks, icon: AlertTriangle, color: 'text-rose-600', bg: 'bg-rose-50/50', urgent: stats.my_overdue_tasks > 0 },
+                                        ].map((kpi) => {
+                                            const Icon = kpi.icon;
+                                            return (
+                                    <Card key={kpi.label} className={cn("p-6 transition-all duration-300 hover:-translate-y-0.5", kpi.urgent ? "border-rose-100 hover:border-rose-200" : "hover:border-indigo-100", "bg-gradient-to-br from-white to-gray-50/50")}>
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", kpi.bg)}>
+                                                <Icon size={20} className={kpi.color} />
+                                            </div>
                                         </div>
+                                        <h3 className="text-4xl font-extrabold text-gray-900 tracking-tight tabular-nums">{kpi.value}</h3>
+                                        <p className="text-xs text-gray-400 mt-2 font-semibold uppercase tracking-wider">{kpi.label}</p>
+                                    </Card>
+                                );
+                            })}
                                     </div>
-                                    <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight tabular-nums">{kpi.value}</h3>
-                                    <p className="text-[11px] text-gray-400 mt-1 font-semibold uppercase tracking-wider">{kpi.label}</p>
-                                </Card>
-                            );
-                        })}
+                                    {/* Secondary Metrics */}
+                                    <div className="md:col-span-4 grid grid-cols-2 gap-4">
+                                        {[
+                                            { label: 'Hours Tracked', value: `${stats.my_hours_this_week}h`, icon: Clock, color: 'text-sky-600', bg: 'bg-sky-50/50' },
+                                            { label: 'Active Campaigns', value: stats.active_projects, icon: FolderKanban, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
+                                            { label: 'Team Overdue', value: stats.team_overdue_tasks, icon: Users, color: 'text-amber-600', bg: 'bg-amber-50/50' },
+                                            { label: 'Total Tasks', value: totalTasks, icon: LayoutGrid, color: 'text-violet-600', bg: 'bg-violet-50/50' }
+                                        ].map((kpi) => {
+                                            const Icon = kpi.icon;
+                                            return (
+                                                <Card key={kpi.label} className="p-4 hover:border-gray-200 transition-colors flex flex-col justify-center">
+                                                    <div className="flex flex-col gap-1.5">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <div className={cn("w-6 h-6 rounded-lg flex items-center justify-center", kpi.bg)}>
+                                                                <Icon size={12} className={kpi.color} />
+                                                            </div>
+                                                            <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider truncate">{kpi.label}</p>
+                                                        </div>
+                                            <h3 className="text-xl font-bold text-gray-900 tabular-nums">{kpi.value}</h3>
+                                        </div>
+                                    </Card>
+                                );
+                            })}
+                                    </div>
                     </div>
 
                     {/* Command Center: Start-of-Day Flow */}
@@ -457,42 +508,36 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                         <div className="lg:col-span-8 flex flex-col gap-6">
                             
                             {/* Morning Briefing */}
-                            <div className="bg-gradient-to-br from-indigo-50 to-white rounded-2xl border border-indigo-100 p-6 shadow-sm relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-8 opacity-5">
-                                    <Zap size={48} />
-                                </div>
-                                <div className="flex items-center justify-between mb-4 relative z-10">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md">
-                                            <Zap size={20} className="fill-indigo-400" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-base font-bold text-gray-900 tracking-tight">Morning Briefing</h3>
-                                            <p className="text-xs font-medium text-indigo-600/80">AI-powered daily digest</p>
-                                        </div>
-                                    </div>
-                                    <Link href="/briefings" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-white px-3 py-1.5 rounded-lg border border-indigo-100 shadow-sm transition-all hover:shadow">
-                                        View Full Digest
+                                        <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm relative overflow-hidden">
+                                            <div className="flex items-center justify-between mb-3 relative z-10">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-lg bg-gray-50 text-gray-600 flex items-center justify-center border border-gray-100">
+                                                        <Zap size={16} />
+                                                    </div>
+                                                    <h3 className="text-sm font-bold text-gray-900 tracking-tight">Morning Briefing</h3>
+                                                </div>
+                                                <Link href="/briefings" className="text-[11px] font-semibold text-gray-500 hover:text-gray-900 transition-colors">
+                                                    View Full Digest &rarr;
                                     </Link>
                                 </div>
                                 
-                                <div className="relative z-10">
+                                            <div className="relative z-10 pl-10">
                                     {briefing?.digest_text ? (
-                                        <div className="prose prose-sm prose-indigo max-w-none text-gray-700 leading-relaxed font-medium">
+                                                    <div className="prose prose-sm max-w-none text-gray-500 leading-relaxed font-medium line-clamp-2">
                                             {briefing.digest_text}
                                         </div>
                                     ) : (
-                                        <Card className="p-6 text-center bg-white/60 backdrop-blur border-white/40 border-dashed">
-                                            <p className="text-sm text-gray-500 mb-4">You have no briefing compiled for today.</p>
+                                                        <div className="py-1 flex items-center justify-between">
+                                                            <p className="text-xs text-gray-500">No briefing compiled for today.</p>
                                             <Link
                                                 href="/briefings/generate"
                                                 method="post"
                                                 as="button"
-                                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md shadow-indigo-200 inline-flex items-center gap-2"
+                                                                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg transition-colors inline-flex items-center gap-1.5"
                                             >
-                                                <Zap size={16} /> Generate Briefing
+                                                                <Zap size={12} /> Generate
                                             </Link>
-                                        </Card>
+                                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -537,6 +582,65 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                     )}
                                 </div>
                             </Card>
+
+                                        {/* My Active Tasks */}
+                                        <Card className="flex flex-col flex-1 mt-6">
+                                            <div className="p-5 border-b border-indigo-50 flex items-center gap-2 justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                                        <CheckSquare size={16} />
+                                                    </div>
+                                                    <h3 className="text-sm font-bold text-gray-900 tracking-wide">My Active Tasks</h3>
+                                                </div>
+                                                <Link href="/tasks" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700">
+                                                    View All &rarr;
+                                                </Link>
+                                            </div>
+                                            <div className="p-5">
+                                                {my_active_tasks_list.length > 0 ? (
+                                                    <div className="space-y-3">
+                                                        {my_active_tasks_list.map(task => (
+                                                            <div key={task.id} className="flex items-center gap-4 p-3 bg-white rounded-xl border border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:border-indigo-100 transition-colors group">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <Link href={`/tasks/${task.id}`} className="text-sm font-bold text-gray-900 group-hover:text-indigo-600 truncate block transition-colors">
+                                                                        {task.title}
+                                                                    </Link>
+                                                                    <div className="flex items-center gap-3 mt-1 text-xs font-medium">
+                                                                        <span className={cn(
+                                                                            "px-2 py-0.5 rounded-full",
+                                                                            task.status === 'in_progress' ? 'bg-indigo-50 text-indigo-700' :
+                                                                                task.status === 'in_review' ? 'bg-amber-50 text-amber-700' :
+                                                                                    'bg-gray-100 text-gray-600'
+                                                                        )}>
+                                                                            {task.status.replace('_', ' ')}
+                                                                        </span>
+                                                                        {task.project && (
+                                                                            <span className="text-gray-500 truncate">{task.project.name}</span>
+                                                                        )}
+                                                                        {task.due_date && (
+                                                                            <>
+                                                                                <span className="text-gray-300">•</span>
+                                                                                <span className={cn(
+                                                                                    "truncate",
+                                                                                    new Date(task.due_date) < new Date() ? 'text-rose-600 font-semibold' : 'text-gray-500'
+                                                                                )}>
+                                                                                    Due {new Date(task.due_date).toLocaleDateString()}
+                                                                                </span>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="py-8 flex flex-col items-center justify-center text-center">
+                                                        <CheckCircle2 size={32} className="text-emerald-300 mb-3" />
+                                                        <p className="text-sm font-medium text-gray-900 mb-1">No active tasks assigned to you!</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </Card>
 
                         </div>
 
@@ -626,6 +730,66 @@ export default function DashboardIndex({ stats, briefing, setup_checklist, overd
                                     )}
                                 </div>
                             </Card>
+
+                                        {/* Pending Leaves */}
+                                        <Card className="flex flex-col flex-1 min-h-[320px]">
+                                            <div className="p-5 border-b border-indigo-50 flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                                        <Calendar size={16} />
+                                                    </div>
+                                                    <h3 className="text-sm font-bold text-gray-900 tracking-wide">Leave Approvals</h3>
+                                                </div>
+                                                {pending_leaves.length > 0 && (
+                                                    <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2.5 py-1 rounded-md">
+                                                        {pending_leaves.length}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="p-4 overflow-y-auto flex-1">
+                                                {pending_leaves.length > 0 ? (
+                                                    <div className="space-y-3">
+                                                        {pending_leaves.map(leave => (
+                                                            <div key={leave.id} className="p-3 bg-indigo-50/30 rounded-xl border border-indigo-100/50 flex flex-col h-full">
+                                                                <div className="flex items-center justify-between mb-1">
+                                                                    <div className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">
+                                                                        {leave.user_name}
+                                                                    </div>
+                                                                    <span className="text-[10px] font-medium bg-white text-gray-600 px-1.5 py-0.5 rounded border border-gray-100">
+                                                                        {leave.type.replace('_', ' ')}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="text-xs font-semibold text-gray-900 mb-2">
+                                                                    {leave.from_date} to {leave.to_date} ({leave.days} day{leave.days !== 1 ? 's' : ''})
+                                                                </div>
+                                                                {leave.reason && (
+                                                                    <p className="text-[11px] text-gray-500 mb-3 italic line-clamp-2">"{leave.reason}"</p>
+                                                                )}
+                                                                <div className="flex items-center gap-2 mt-auto pt-1">
+                                                                    <Button
+                                                                        onClick={() => router.post(`/leave/${leave.id}/approve`)}
+                                                                        className="flex-1 h-7 text-[11px] bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 border-none shadow-none"
+                                                                    >
+                                                                        Approve
+                                                                    </Button>
+                                                                    <Button
+                                                                        onClick={() => router.post(`/leave/${leave.id}/reject`)}
+                                                                        className="flex-1 h-7 text-[11px] bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800 border-none shadow-none"
+                                                                    >
+                                                                        Deny
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="h-full flex flex-col items-center justify-center text-center">
+                                                        <Calendar size={32} className="text-gray-200 mb-3" />
+                                                        <p className="text-sm font-medium text-gray-500">No pending leave requests.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </Card>
 
                         </div>
                     </div>

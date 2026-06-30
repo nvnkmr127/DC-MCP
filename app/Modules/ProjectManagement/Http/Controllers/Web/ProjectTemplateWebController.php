@@ -116,48 +116,4 @@ class ProjectTemplateWebController extends Controller
         return back()->with('success', 'Template deleted.');
     }
 
-    public function createProject(Request $request, ProjectTemplate $template): RedirectResponse
-    {
-        $this->authorizeOrg($template);
-
-        $orgId = $request->user()->organization_id;
-        $validated = $request->validate([
-            'client_id'  => [
-                'required',
-                'uuid',
-                Rule::exists('clients', 'id')
-                    ->where('organization_id', $orgId)
-                    ->whereNull('deleted_at'),
-            ],
-            'name'       => 'required|string|max:255',
-            'start_date' => 'required|date',
-        ]);
-
-        $project = Project::create([
-            'organization_id' => $orgId,
-            'client_id'       => $validated['client_id'],
-            'name'            => $validated['name'],
-            'start_date'      => $validated['start_date'],
-            'status'          => 'planning',
-            'priority'        => 'medium',
-        ]);
-
-        $startDate = Carbon::parse($validated['start_date']);
-        foreach ($template->tasks ?? [] as $taskDef) {
-            $dueDate = $startDate->copy()->addDays($taskDef['offset_days'] ?? 0);
-            $priority = ($taskDef['priority'] ?? 'medium') === 'urgent' ? 'critical' : ($taskDef['priority'] ?? 'medium');
-            Task::create([
-                'organization_id' => $orgId,
-                'project_id'      => $project->id,
-                'created_by'      => $request->user()->id,
-                'title'           => $taskDef['title'],
-                'priority'        => $priority,
-                'due_date'        => $dueDate,
-                'estimated_hours' => $taskDef['estimated_hours'] ?? null,
-                'status'          => 'todo',
-            ]);
-        }
-
-        return redirect("/projects/{$project->id}")->with('success', 'Project created from template.');
-    }
 }

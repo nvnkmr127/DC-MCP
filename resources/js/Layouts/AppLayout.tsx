@@ -6,6 +6,7 @@ import type { PageProps } from '@/types';
 import { toast } from 'sonner';
 import { SearchOverlay } from '@/Components/Shared/SearchOverlay';
 import { ThemeToggle } from '@/Components/Shared/ThemeToggle';
+import { GlobalTimer } from '@/Components/Shared/GlobalTimer';
 import { useNotificationPoller } from '@/hooks/useNotificationPoller';
 import axios from 'axios';
 import {
@@ -19,7 +20,7 @@ import {
     ListChecks, Star, ReceiptText, Package, Percent,
     FileCheck, MessageSquare, UserPlus, BookOpen, Smile,
     BarChart2, Workflow, ShoppingCart, FileX, Trophy, Send,
-    Megaphone, Trash2, CheckCheck, UploadCloud, WifiOff
+    Megaphone, Trash2, CheckCheck, UploadCloud, WifiOff, Menu
 } from 'lucide-react';
 
 interface NavItem {
@@ -59,27 +60,23 @@ const NAV_ITEMS: NavItem[] = [
     { label: 'Asset Approvals', href: '/asset-approvals', icon: CheckCircle2, section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'QA Checklists', href: '/audit-checklists', icon: ListChecks, section: 'main' },
     { label: 'Agreements',      href: '/agreements',       icon: FileText,       section: 'main', roles: ['ceo', 'project_manager'] },
-    { label: 'Client Updates', href: '/client-updates',   icon: FileCheck,  section: 'main', roles: ['ceo', 'project_manager'] },
+    { label: 'Client-Facing Reports', href: '/client-updates',   icon: FileCheck,  section: 'main', roles: ['ceo', 'project_manager'] },
     { label: 'Client Surveys',    href: '/client-surveys',   icon: Smile,      section: 'main', roles: ['ceo', 'project_manager'] },
-    { label: 'Daily Briefing', href: '/briefings',    icon: Sun,      section: 'insights' },
-    { label: 'AI Suggestions', href: '/suggestions',  icon: Sparkles, section: 'insights', roles: ['ceo', 'project_manager'] },
+    { label: 'Daily Briefings', href: '/insights', icon: FileText, section: 'insights' },
     { label: 'Internal Reports',        href: '/internal-reports',      icon: BarChart3, section: 'insights' },
+    { label: 'Help & Resources', href: '/help', icon: HelpCircle, section: 'insights' },
     // HR section
     { label: 'Leave',           href: '/leave',         icon: Calendar,       section: 'hr' },
     { label: 'Performance Reviews',         href: '/reviews',       icon: Star,           section: 'hr', roles: ['ceo', 'project_manager'] },
     { label: 'Announcements',   href: '/announcements', icon: Megaphone,      section: 'hr' },
     { label: 'Hiring',          href: '/hiring',        icon: UserPlus,       section: 'hr', roles: ['ceo', 'project_manager'] },
-    { label: 'Contractors & Freelancers',     href: '/freelancers',   icon: Users2,         section: 'hr', roles: ['ceo', 'project_manager'] },
+    { label: 'Freelancers',     href: '/freelancers',   icon: Users2,         section: 'hr', roles: ['ceo', 'project_manager'] },
     { label: 'Knowledge Base',  href: '/knowledge-base', icon: BookOpen,      section: 'hr' },
     // Manage
     { label: 'System Health',  href: '/settings/health', icon: Activity,      section: 'manage', roles: ['ceo'] },
-    { label: 'Client Portal',  href: '/settings/client-portal', icon: Globe,   section: 'manage', roles: ['ceo'] },    { label: 'Settings',       href: '/settings',               icon: Settings, section: 'manage' },
-    { label: 'Trash',          href: '/settings/trash',         icon: Trash2,   section: 'manage' },
-    { label: 'Data Import',    href: '/settings/import',        icon: UploadCloud, section: 'manage' },
+    { label: 'Settings',       href: '/settings',               icon: Settings, section: 'manage' },
     { label: 'Audit Logs',     href: '/admin/audit-logs',       icon: ClipboardList, section: 'manage', roles: ['super_admin'] },
     { label: 'Feature Flags',  href: '/admin/feature-flags',    icon: Flag,          section: 'manage', roles: ['super_admin'] },
-    // MCP
-    { label: 'Integrations',   href: '/settings/mcp',           icon: Plug,    section: 'mcp', roles: ['ceo', 'project_manager'] },
 ];
 
 const NAV_SECTIONS = [
@@ -95,6 +92,7 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
     const { auth, app, flash, mcp_errors, errors } = usePage<PageProps & { mcp_errors?: any[], errors?: Record<string, string> }>().props;
     const { hasRole } = usePermissions();
     const [collapsed, setCollapsed] = useState(false);
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
     const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
@@ -219,11 +217,21 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
     return (
         <div className="flex h-screen bg-[#f4f5f7] overflow-hidden">
 
+            {/* Mobile Sidebar Overlay */}
+            {mobileSidebarOpen && (
+                <div 
+                    className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
+                    onClick={() => setMobileSidebarOpen(false)}
+                />
+            )}
+
             {/* ──────────── SIDEBAR ──────────── */}
             <aside className={cn(
-                'relative flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out print:hidden',
+                'absolute lg:relative flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out print:hidden h-full z-50',
                 'bg-slate-900 dark:bg-slate-950 border-r border-slate-800 shadow-xl',
-                collapsed ? 'w-[58px]' : 'w-[230px]',
+                !mobileSidebarOpen && '-translate-x-full lg:translate-x-0',
+                'w-[260px] lg:w-auto',
+                collapsed ? 'lg:w-[58px]' : 'lg:w-[230px]',
             )}>
 
                 {/* Logo row */}
@@ -242,7 +250,13 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                             </div>
                             <button
                                 onClick={() => setCollapsed(true)}
-                                className="p-1 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-white/5 transition-colors"
+                                className="hidden lg:block p-1 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-white/5 transition-colors"
+                            >
+                                <ChevronLeft size={14} />
+                            </button>
+                            <button
+                                onClick={() => setMobileSidebarOpen(false)}
+                                className="lg:hidden p-1 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-white/5 transition-colors"
                             >
                                 <ChevronLeft size={14} />
                             </button>
@@ -253,7 +267,7 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                 {collapsed && (
                     <button
                         onClick={() => setCollapsed(false)}
-                        className="flex items-center justify-center mx-auto mt-2.5 w-8 h-8 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-white/5 transition-colors"
+                        className="hidden lg:flex items-center justify-center mx-auto mt-2.5 w-8 h-8 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-white/5 transition-colors"
                     >
                         <ChevronRight size={14} />
                     </button>
@@ -307,13 +321,14 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                                                 <Link
                                                     key={item.href}
                                                     href={item.href}
+                                                    onClick={() => setMobileSidebarOpen(false)}
                                                     title={collapsed ? item.label : undefined}
                                                     className={cn(
-                                                        'flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-200 relative group',
+                                                        'flex items-center gap-2.5 px-3 py-2 min-h-[44px] rounded-xl text-[13px] font-medium transition-all duration-200 relative group',
                                                         active
                                                             ? 'bg-indigo-600/15 text-indigo-100 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] border border-indigo-500/30'
                                                             : 'text-slate-400 hover:bg-white/5 hover:text-slate-100 border border-transparent',
-                                                        collapsed && 'justify-center',
+                                                        collapsed && 'justify-center min-w-[44px]',
                                                     )}
                                                 >
                                                     <Icon
@@ -453,8 +468,12 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                 )}
 
                 {/* Topbar */}
-                <header                    className="h-[56px] bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center px-6 gap-3 z-10 flex-shrink-0 shadow-[0_1px_10px_rgba(0,0,0,0.01)]"
-                >
+                <header className="h-[56px] bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center px-6 gap-3 z-10 flex-shrink-0 shadow-[0_1px_10px_rgba(0,0,0,0.01)]">
+                    <div className="flex items-center gap-2 lg:hidden">
+                        <button onClick={() => setMobileSidebarOpen(true)} className="p-1.5 -ml-2 rounded-lg text-gray-500 hover:bg-gray-100">
+                            <Menu size={20} />
+                        </button>
+                    </div>
                     <div className="flex-1 min-w-0">
                         {title && (
                             <h1 className="text-[15px] font-semibold text-gray-900 truncate">{title}</h1>
@@ -505,6 +524,9 @@ export default function AppLayout({ children, title }: { children: React.ReactNo
                                 </span>
                             )}
                         </Link>
+
+                        {/* Global Timer */}
+                        <GlobalTimer />
 
                         {/* Quick create */}
                         <button className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm">

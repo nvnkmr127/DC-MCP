@@ -86,6 +86,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/timesheets',                                [TimesheetWebController::class, 'index'])->name('web.timesheets.index');
     Route::post('/timesheets/timer/start',                   [TimesheetWebController::class, 'startTimer'])->name('web.timesheets.timer.start');
     Route::post('/timesheets/timer/{timeEntry}/stop',        [TimesheetWebController::class, 'stopTimer'])->name('web.timesheets.timer.stop');
+    Route::post('/timesheets/bulk-status',                   [TimesheetWebController::class, 'bulkUpdateStatus'])->name('web.timesheets.bulk-status');
 
     // Calendar
     Route::get('/calendar',                    [CalendarWebController::class, 'index'])->name('web.calendar.index');
@@ -108,7 +109,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/project-templates',                        [ProjectTemplateWebController::class, 'store'])->name('web.project-templates.store');
     Route::patch('/project-templates/{template}',            [ProjectTemplateWebController::class, 'update'])->name('web.project-templates.update');
     Route::delete('/project-templates/{template}',           [ProjectTemplateWebController::class, 'destroy'])->name('web.project-templates.destroy');
-    Route::post('/project-templates/{template}/create-project', [ProjectTemplateWebController::class, 'createProject'])->name('web.project-templates.create-project');
+
 
     // Deliverable Submissions
     Route::post('/sow/deliverables/{sowDeliverable}/submit',        [DeliverableWebController::class, 'submit'])->name('web.deliverables.submit');

@@ -17,12 +17,15 @@ interface ActionItem { id: string; text: string; done: boolean; due_date: string
 interface Note {
     id: string; meeting_date: string; wins: string | null; challenges: string | null;
     action_items: ActionItem[]; mood: string | null; next_meeting_date: string | null;
+    template_name?: string | null; performance_review_id?: string | null;
     manager: { id: string; name: string }; member: { id: string; name: string };
 }
 interface Props {
     teamMembers: { id: string; name: string }[];
     notes: Note[];
     latestByMember: Note[];
+    performanceReviews: { id: string; title: string; employee_id: string; employee_name: string }[];
+    templates: { id: string; name: string; questions: string }[];
 }
 
 function NoteCard({ note, defaultExpanded }: { note: Note; defaultExpanded?: boolean }) {
@@ -44,6 +47,16 @@ function NoteCard({ note, defaultExpanded }: { note: Note; defaultExpanded?: boo
                     {mood && (
                         <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', mood.color)}>
                             {mood.label}
+                        </span>
+                    )}
+                    {note.template_name && (
+                        <span className="text-[10px] px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full font-medium capitalize">
+                            {note.template_name.replace('_', ' ')}
+                        </span>
+                    )}
+                    {note.performance_review_id && (
+                        <span className="text-[10px] px-2 py-0.5 bg-purple-50 text-purple-700 rounded-full font-medium">
+                            Review Linked
                         </span>
                     )}
                     {note.next_meeting_date && (
@@ -92,10 +105,11 @@ function NoteCard({ note, defaultExpanded }: { note: Note; defaultExpanded?: boo
     );
 }
 
-function AddNoteModal({ teamMembers, onClose }: { teamMembers: Props['teamMembers']; onClose: () => void }) {
+function AddNoteModal({ teamMembers, performanceReviews, templates, onClose }: { teamMembers: Props['teamMembers']; performanceReviews: Props['performanceReviews']; templates: Props['templates']; onClose: () => void }) {
     const form = useForm({
         member_id: '', meeting_date: new Date().toISOString().slice(0, 10),
         wins: '', challenges: '', mood: '', next_meeting_date: '',
+        template_name: '', performance_review_id: '',
     });
     const [actionItems, setActionItems] = useState<{ text: string; due_date: string }[]>([]);
 
@@ -111,6 +125,17 @@ function AddNoteModal({ teamMembers, onClose }: { teamMembers: Props['teamMember
         };
         router.post('/one-on-one', data, { onSuccess: onClose });
     }
+
+    const handleTemplateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const val = e.target.value;
+        form.setData('template_name', val);
+        const template = templates.find(t => t.id === val);
+        if (template) {
+            form.setData('challenges', template.questions);
+        }
+    };
+
+    const filteredReviews = form.data.member_id ? performanceReviews.filter(r => r.employee_id === form.data.member_id) : [];
 
     return (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
@@ -133,6 +158,25 @@ function AddNoteModal({ teamMembers, onClose }: { teamMembers: Props['teamMember
                             <label className="text-xs text-gray-500 font-medium">Meeting Date *</label>
                             <input type="date" value={form.data.meeting_date} onChange={e => form.setData('meeting_date', e.target.value)}
                                 className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label className="text-xs text-gray-500 font-medium">Use Template</label>
+                            <select value={form.data.template_name} onChange={handleTemplateChange}
+                                className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500">
+                                <option value="">No template</option>
+                                {templates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-xs text-gray-500 font-medium">Link to Performance Review</label>
+                            <select value={form.data.performance_review_id} onChange={e => form.setData('performance_review_id', e.target.value)}
+                                className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500"
+                                disabled={!form.data.member_id}>
+                                <option value="">No linked review</option>
+                                {filteredReviews.map(r => <option key={r.id} value={r.id}>{r.title}</option>)}
+                            </select>
                         </div>
                     </div>
                     <div>
@@ -193,7 +237,7 @@ function AddNoteModal({ teamMembers, onClose }: { teamMembers: Props['teamMember
     );
 }
 
-export default function OneOnOneIndex({ teamMembers, notes, latestByMember }: Props) {
+export default function OneOnOneIndex({ teamMembers, notes, latestByMember, performanceReviews, templates }: Props) {
     const [selectedMember, setSelectedMember] = useState<string | null>(null);
     const [addOpen, setAddOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -299,7 +343,7 @@ export default function OneOnOneIndex({ teamMembers, notes, latestByMember }: Pr
                     </div>
                 </div>
 
-                {addOpen && <AddNoteModal teamMembers={teamMembers} onClose={() => setAddOpen(false)} />}
+                {addOpen && <AddNoteModal teamMembers={teamMembers} performanceReviews={performanceReviews} templates={templates} onClose={() => setAddOpen(false)} />}
             </div>
         </SyncsLayout>
     );

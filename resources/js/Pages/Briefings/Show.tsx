@@ -3,7 +3,7 @@ import { Button } from '@/Components/ui/Button';
 import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
 import { cn, formatDate } from '@/lib/utils';
-import { Zap, ArrowLeft, RefreshCw, Loader2, Calendar, CheckSquare, Clock } from 'lucide-react';
+import { Zap, ArrowLeft, RefreshCw, Loader2, Calendar, CheckSquare, Clock, Sparkles } from 'lucide-react';
 
 interface BriefingData {
     id: string;
@@ -30,13 +30,29 @@ interface CalendarEvent {
     end: string;
 }
 
+interface Suggestion {
+    id: string; title: string; description: string | null; role_required: string | null;
+    priority: 'low' | 'medium' | 'high' | 'critical' | 'urgent';
+    due_date: string | null; estimated_hours: number | null;
+    status: 'pending' | 'approved' | 'rejected' | 'modified';
+    suggested_by: string; reasoning: string | null; rejection_reason: string | null;
+    approved_at: string | null; created_at: string;
+    project: { id: string; name: string } | null;
+    client: { id: string; name: string } | null;
+    approver: { id: string; name: string } | null;
+    task: { id: string; title: string; status: string } | null;
+}
+
 interface Props {
     briefing: BriefingData;
     tasks_today: TaskData[];
     calendar_events: CalendarEvent[];
+    suggestions: Suggestion[];
+    projects: { id: string; name: string }[];
+    clients: { id: string; name: string }[];
 }
 
-export default function BriefingShow({ briefing, tasks_today, calendar_events }: Props) {
+export default function BriefingShow({ briefing, tasks_today, calendar_events, suggestions, projects, clients }: Props) {
     function regenerate() {
         router.post('/briefings/generate');
     }
@@ -113,6 +129,55 @@ export default function BriefingShow({ briefing, tasks_today, calendar_events }:
                                 <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{briefing.digest_text}</p>
                             ) : null}
                         </div>
+
+                        {/* AI Task Suggestions */}
+                        {suggestions && suggestions.length > 0 && (
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                    <Sparkles size={20} className="text-indigo-500" />
+                                    Task Suggestions from this Briefing
+                                </h3>
+                                <div className="grid gap-4">
+                                    {suggestions.map(s => (
+                                        <div key={s.id} className={cn(
+                                            'bg-white rounded-xl border p-4 shadow-sm transition-all',
+                                            s.status === 'approved' ? 'border-emerald-200 bg-emerald-50/30' :
+                                            s.status === 'rejected' ? 'border-gray-200 bg-gray-50' : 'border-indigo-100'
+                                        )}>
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-gray-900">{s.title}</h4>
+                                                    {s.description && <p className="text-xs text-gray-600 mt-1">{s.description}</p>}
+                                                    {s.reasoning && <p className="text-xs text-indigo-600 italic mt-2">"{s.reasoning}"</p>}
+                                                </div>
+                                                <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider',
+                                                    s.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                                                    s.status === 'rejected' ? 'bg-gray-200 text-gray-700' : 'bg-indigo-100 text-indigo-700'
+                                                )}>
+                                                    {s.status}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="flex gap-2 mt-3 items-center text-xs text-gray-500">
+                                                {s.priority && <span className="uppercase font-medium border rounded px-1.5 py-0.5">{s.priority}</span>}
+                                                {s.project && <span>Project: {s.project.name}</span>}
+                                            </div>
+
+                                            {s.status === 'pending' && (
+                                                <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
+                                                    <Button onClick={() => router.post(`/suggestions/${s.id}/approve`, {})} className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 h-auto">
+                                                        Approve
+                                                    </Button>
+                                                    <Button onClick={() => router.post(`/suggestions/${s.id}/reject`, { reason: 'Dismissed from Briefing' })} className="bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 text-xs px-3 py-1.5 h-auto">
+                                                        Dismiss
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Column: Context Widgets */}

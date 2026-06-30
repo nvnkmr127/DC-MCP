@@ -29,16 +29,21 @@ const TEMPLATES = [
     { id: 'ads_report', name: 'Paid Ads Performance', desc: 'Meta Ads and search engine ad spends, conversions, and ROAS audit.' },
     { id: 'social_report', name: 'Social Media Growth', desc: 'Engagement rates, follower counts, and top performing content.' },
     { id: 'sprint_report', name: 'Development Sprint Review', desc: 'Sprint goals, team velocity, task completions, and bottlenecks.' },
-    { id: 'full_service', name: 'Full Service Report', desc: 'Unified multi-channel report combining SEO, paid media, and social.' }
+    { id: 'full_service', name: 'Full Service Report', desc: 'Unified multi-channel report combining SEO, paid media, and social.' },
+    { id: 'financial_health', name: 'Financial Health Report', desc: 'P&L, payroll, margins, and revenue goals tracking.' },
+    { id: 'monthly_summary', name: 'Monthly Executive Summary', desc: 'High-level aggregation of all operations, revenue, and major milestones.' }
 ];
 
 export default function ReportsCreate({ projects, clients }: Props) {
     const [step, setStep] = useState(1);
     const [scheduleReport, setScheduleReport] = useState(false);
 
+    const queryParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const defaultTemplate = queryParams.get('template') || 'seo_report';
+
     const form = useForm({
         title: '',
-        template: 'seo_report',
+        template: defaultTemplate,
         type: 'custom',
         project_id: '',
         client_id: '',

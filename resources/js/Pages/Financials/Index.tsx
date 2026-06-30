@@ -77,6 +77,14 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
             <Head title="Profit & Loss Dashboard" />
             <div className="max-w-7xl mx-auto space-y-6">
 
+                {/* Mobile Banner */}
+                <div className="md:hidden bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-sm text-amber-800">
+                        <strong>Best on desktop.</strong> This high-density financial table is optimized for larger screens. Swipe horizontally to view all columns.
+                    </p>
+                </div>
+
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
@@ -87,7 +95,7 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
                 </div>
 
                 {/* P&L Summary */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* Revenue */}
                     <div className="bg-white rounded-xl border border-gray-200 p-5">
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Revenue</p>
@@ -97,12 +105,20 @@ export default function FinancialsIndex({ pnl, clientProfit, cashForecast, trend
                             <div className="flex justify-between text-gray-600"><span>Invoices paid</span><span className="font-medium">{fmt(pnl.revenue.invoices)}</span></div>
                         </div>
                     </div>
-                    {/* Costs */}
+                    {/* Payroll (Promoted) */}
                     <div className="bg-white rounded-xl border border-gray-200 p-5">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Total Costs</p>
-                        <p className="text-3xl font-bold text-rose-600">{fmt(pnl.costs.total)}</p>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Total Payroll</p>
+                        <p className="text-3xl font-bold text-rose-600">{fmt(pnl.costs.payroll)}</p>
                         <div className="mt-3 space-y-1 text-sm">
-                            <div className="flex justify-between text-gray-600"><span>Payroll</span><span className="font-medium">{fmt(pnl.costs.payroll)}</span></div>
+                            <div className="flex justify-between text-gray-600"><span>% of Revenue</span><span className="font-medium">{pnl.revenue.total > 0 ? Math.round((pnl.costs.payroll / pnl.revenue.total) * 100) : 0}%</span></div>
+                            <div className="flex justify-between text-gray-600"><span>% of Costs</span><span className="font-medium">{pnl.costs.total > 0 ? Math.round((pnl.costs.payroll / pnl.costs.total) * 100) : 0}%</span></div>
+                        </div>
+                    </div>
+                    {/* Operating Costs */}
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Operating Costs</p>
+                        <p className="text-3xl font-bold text-amber-600">{fmt(pnl.costs.expenses + pnl.costs.vendors)}</p>
+                        <div className="mt-3 space-y-1 text-sm">
                             <div className="flex justify-between text-gray-600"><span>Expenses</span><span className="font-medium">{fmt(pnl.costs.expenses)}</span></div>
                             <div className="flex justify-between text-gray-600"><span>Vendors/Tools</span><span className="font-medium">{fmt(pnl.costs.vendors)}</span></div>
                         </div>

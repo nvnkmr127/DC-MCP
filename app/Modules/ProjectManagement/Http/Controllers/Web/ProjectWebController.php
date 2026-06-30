@@ -73,14 +73,18 @@ class ProjectWebController extends Controller
             ->select('id', 'name', 'service_type', 'description')
             ->orderBy('name')
             ->get();
+            
+        $goals = \App\Modules\Revenue\Models\Goal::where('organization_id', $request->user()->organization_id)->get(['id', 'title']);
 
         return Inertia::render('Projects/Create', [
             'clients' => $clients,
             'members' => $members,
             'templates' => $templates,
+            'goals' => $goals,
             'defaults' => [
-                'status'     => 'planning',
-                'project_id' => $request->query('project_id'),
+                'status'              => 'planning',
+                'project_id'          => $request->query('project_id'),
+                'project_template_id' => $request->query('project_template_id'),
             ],
         ]);
     }
@@ -223,11 +227,13 @@ class ProjectWebController extends Controller
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
+        $goals = \App\Modules\Revenue\Models\Goal::where('organization_id', $request->user()->organization_id)->get(['id', 'title']);
 
         return Inertia::render('Projects/Edit', [
             'project' => $project->load('client'),
             'clients' => $clients,
             'members' => $members,
+            'goals' => $goals,
         ]);
     }
 

@@ -69,7 +69,10 @@ class ClientWebController extends Controller
     public function store(StoreClientRequest $request)
     {
         $client = $this->clientService->createClient($request->validated());
-        return redirect()->route('web.clients.show', $client)->with('success', 'Client created.');
+        return redirect()->route('web.clients.show', $client)->with([
+            'success' => 'Client created.',
+            'show_wizard' => true
+        ]);
     }
 
     public function show(Request $request, Client $client)

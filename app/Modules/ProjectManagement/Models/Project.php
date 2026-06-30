@@ -29,6 +29,7 @@ class Project extends BaseModel
     protected $fillable = [
         'organization_id',
         'client_id',
+        'goal_id',
         'name',
         'slug',
         'description',
@@ -60,6 +61,11 @@ class Project extends BaseModel
         'budget_used' => 'decimal:2',
         'deleted_at' => 'datetime',
     ];
+
+    public function goal(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Revenue\Models\Goal::class);
+    }
 
     /**
      * Get the client that owns the project.

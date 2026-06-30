@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from '@/Components/ui/Button';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
-import { Head, useForm, router } from '@inertiajs/react';import AppLayout from '@/Layouts/AppLayout';
+import { Head, useForm, router } from '@inertiajs/react';
+import SettingsLayout from '@/Layouts/SettingsLayout';
 
 interface OrgData {
     id: string;
@@ -28,14 +29,8 @@ export default function OrganizationSettings({ organization }: Props) {
     }
 
     return (
-        <AppLayout title="Organization Settings">
+        <SettingsLayout title="Organization Settings" breadcrumbs={[{ label: 'Organization Settings' }]}>
             <Head title="Organization Settings" />
-            <div className="mb-6">
-                <Breadcrumbs items={[
-                    { label: 'Settings', href: '/settings' },
-                    { label: 'Organization Settings' }
-                ]} />
-            </div>
 
             <div className="max-w-xl">
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -94,6 +89,6 @@ export default function OrganizationSettings({ organization }: Props) {
                     </form>
                 </div>
             </div>
-        </AppLayout>
+        </SettingsLayout>
     );
 }

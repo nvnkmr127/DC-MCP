@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/Components/ui/Button';
 import { Breadcrumbs } from '@/Components/Shared/Breadcrumbs';
 import { Head, useForm, usePage } from '@inertiajs/react';
-import AppLayout from '@/Layouts/AppLayout';
+import SettingsLayout from '@/Layouts/SettingsLayout';
 import { cn, getInitials } from '@/lib/utils';
 import { User, PageProps } from '@/types';
 import { User as UserIcon, Lock, Globe, Save, Key, MonitorSmartphone, Link as LinkIcon, Download, Trash2, Copy, Check } from 'lucide-react';
@@ -155,14 +155,8 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
     }
 
     return (
-        <AppLayout title="Account Settings">
+        <SettingsLayout title="Account Settings" breadcrumbs={[{ label: 'Account Settings' }]}>
             <Head title="Account Settings" />
-            <div className="mb-6">
-                <Breadcrumbs items={[
-                    { label: 'Settings', href: '/settings' },
-                    { label: 'Account Settings' }
-                ]} />
-            </div>
 
             <div className="max-w-2xl space-y-5">
                 {/* Avatar + identity card */}
@@ -425,6 +419,6 @@ export default function ProfileSettings({ user, sessions, tokens, connectedAccou
                     </div>
                 </div>
             </div>
-        </AppLayout>
+        </SettingsLayout>
     );
 }

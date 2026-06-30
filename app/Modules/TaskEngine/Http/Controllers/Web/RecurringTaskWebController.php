@@ -29,9 +29,11 @@ class RecurringTaskWebController extends Controller
                 'priority'        => $r->priority,
                 'role_required'   => $r->role_required,
                 'estimated_hours' => $r->estimated_hours,
-                'is_active'       => $r->is_active,
-                'last_spawned_at' => $r->last_spawned_at?->toDateString(),
-                'next_spawn_at'   => $r->next_spawn_at?->toDateString(),
+                'target_type'        => $r->target_type,
+                'target_template_id' => $r->target_template_id,
+                'is_active'          => $r->is_active,
+                'last_spawned_at'    => $r->last_spawned_at?->toDateString(),
+                'next_spawn_at'      => $r->next_spawn_at?->toDateString(),
                 'client'          => $r->client ? ['id' => $r->client->id, 'name' => $r->client->name] : null,
                 'project'         => $r->project ? ['id' => $r->project->id, 'name' => $r->project->name] : null,
             ]);
@@ -54,8 +56,10 @@ class RecurringTaskWebController extends Controller
             'priority'        => 'required|in:low,medium,high,critical',
             'role_required'   => 'nullable|in:ceo,project_manager,analyst,marketer,developer,designer,copywriter',
             'estimated_hours' => 'nullable|numeric|min:0',
-            'client_id'       => 'nullable|uuid',
-            'project_id'      => 'nullable|uuid',
+            'client_id'          => 'nullable|uuid',
+            'project_id'         => 'nullable|uuid',
+            'target_type'        => 'required|in:task,project,audit_checklist',
+            'target_template_id' => 'nullable|uuid',
         ]);
 
         $nextSpawn = match ($validated['frequency']) {

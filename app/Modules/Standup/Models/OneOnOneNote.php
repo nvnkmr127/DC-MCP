@@ -15,7 +15,7 @@ class OneOnOneNote extends BaseModel
     protected $fillable = [
         'organization_id', 'manager_id', 'member_id',
         'meeting_date', 'wins', 'challenges', 'action_items',
-        'mood', 'next_meeting_date',
+        'mood', 'next_meeting_date', 'performance_review_id', 'template_name',
     ];
 
     protected $casts = [
@@ -33,4 +33,11 @@ class OneOnOneNote extends BaseModel
     {
         return $this->belongsTo(\App\Modules\Auth\Models\User::class, 'member_id');
     }
+
+    public function performanceReview(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\HR\Models\PerformanceReview::class, 'performance_review_id');
+    }
+
+
 }

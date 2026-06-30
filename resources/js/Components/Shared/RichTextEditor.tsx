@@ -35,7 +35,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
             >
                 <Italic size={16} />
             </button>
-            <div className="w-px h-4 bg-gray-300 mx-1" />
+            <div className="w-px h-4 bg-gray-300 mx-1 hidden md:block" />
             <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -46,14 +46,14 @@ const MenuBar = ({ editor }: { editor: any }) => {
             <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                className={cn(btnClass, editor.isActive('orderedList') && activeClass)}
+                className={cn(btnClass, 'hidden md:block', editor.isActive('orderedList') && activeClass)}
             >
                 <ListOrdered size={16} />
             </button>
             <button
                 type="button"
                 onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                className={cn(btnClass, editor.isActive('blockquote') && activeClass)}
+                className={cn(btnClass, 'hidden md:block', editor.isActive('blockquote') && activeClass)}
             >
                 <Quote size={16} />
             </button>
@@ -62,7 +62,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 type="button"
                 onClick={() => editor.chain().focus().undo().run()}
                 disabled={!editor.can().chain().focus().undo().run()}
-                className={btnClass}
+                className={cn(btnClass, 'hidden md:block')}
             >
                 <Undo size={16} />
             </button>
@@ -70,7 +70,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
                 type="button"
                 onClick={() => editor.chain().focus().redo().run()}
                 disabled={!editor.can().chain().focus().redo().run()}
-                className={btnClass}
+                className={cn(btnClass, 'hidden md:block')}
             >
                 <Redo size={16} />
             </button>
